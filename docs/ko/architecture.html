@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>아키텍처 · nav_study</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css?v=9faafaea">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Crect width='24' height='24' rx='6' fill='%230b1020'/%3E%3Cpath d='M5 18V11h7V6h7' stroke='%23818cf8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='5' cy='18' r='2.4' fill='%23818cf8'/%3E%3Ccircle cx='19' cy='6' r='2.4' fill='%2322d3ee'/%3E%3C/svg%3E">
+<script src="../assets/site.js?v=9faafaea"></script>
+</head>
+<body>
+<header class="topbar">
+  <button id="menu-btn" class="iconbtn menu-btn" aria-label="menu"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  <a class="brand" href="../index.html"><svg class="logo" width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true"><defs><linearGradient id="navlg" x1="3" y1="21" x2="21" y2="3" gradientUnits="userSpaceOnUse"><stop stop-color="#6366f1"/><stop offset="1" stop-color="#06b6d4"/></linearGradient></defs><path d="M4 19V11h8V5h8" stroke="url(#navlg)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="4" cy="19" r="2.6" fill="url(#navlg)"/><circle cx="20" cy="5" r="2.6" fill="url(#navlg)"/></svg><span class="wm">nav<span class="wm-dim">_study</span></span></a>
+  <nav class="topnav"><a href="../ko/index.html">개요</a><a href="../ko/algorithms/index.html">알고리즘</a><a href="../ko/maps.html">맵</a><a href="../ko/benchmarks.html">벤치마크</a></nav>
+  <span class="spacer"></span>
+  <div class="search"><svg class="s-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg><input id="search-input" type="search" placeholder="검색 / Search…" data-base="../" autocomplete="off"><div id="search-results" class="search-results"></div></div>
+  <div class="lang-toggle" role="group" aria-label="language"><svg class="g-ico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.5 2.5 3.8 5.6 3.8 9s-1.3 6.5-3.8 9c-2.5-2.5-3.8-5.6-3.8-9S9.5 5.5 12 3Z"/></svg><a href="../ko/architecture.html" class="active">KO</a><span class="l-sep">/</span><a href="../en/architecture.html" class="">EN</a></div>
+</header>
+<div class="layout">
+<aside class="sidebar"><h4>개요</h4>
+<a href="../ko/index.html">개요</a>
+<a href="../ko/algorithms/index.html">알고리즘 목록</a>
+<h4>Global planning</h4>
+<a href="../ko/algorithms/bfs.html">BFS</a>
+<a href="../ko/algorithms/dijkstra.html">Dijkstra</a>
+<a href="../ko/algorithms/astar.html">A*</a>
+<a href="../ko/algorithms/rrt.html">RRT</a>
+<a href="../ko/algorithms/rrt_star.html">RRT*</a>
+<a href="../ko/algorithms/fast_rrt.html">Fast-RRT</a>
+<h4>Local planning <span class="soon">예정</span></h4>
+<span class="planned">DWA</span>
+<span class="planned">Pure Pursuit</span>
+<span class="planned">VFH</span>
+<span class="planned">MPC</span>
+<h4>Multi-agent <span class="soon">예정</span></h4>
+<span class="planned">Prioritized A*</span>
+<span class="planned">Joint-space A*</span>
+<span class="planned">CBS</span>
+<h4>Maps</h4>
+<a href="../ko/maps.html">맵 표현</a>
+<h4>레퍼런스</h4>
+<a href="../ko/architecture.html" class="active">아키텍처</a>
+<a href="../ko/benchmarks.html">벤치마크</a>
+<a href="../ko/references.html">참고 문헌</a></aside>
+<main class="content"><article class="content-inner"><h1 id="_1">아키텍처<a class="anchor" href="#_1" title="Permanent link">¶</a></h1>
+<h2 id="_2">저장소 구조<a class="anchor" href="#_2" title="Permanent link">¶</a></h2>
+<pre><code>.
+├── spec/                        # 언어 공용 계약 (구현보다 우선하는 single source of truth)
+│   ├── trace_schema.json        #   step-by-step trace 이벤트 JSON Schema
+│   ├── param_schema.json        #   알고리즘 파라미터 선언(name/type/range/default) 스키마
+│   └── map_formats.md           #   맵 파일 포맷 정의 (grid / graph / topology / continuous)
+├── maps/                        # 공용 벤치마크 맵 + start/goal 시나리오
+├── configs/                     # 알고리즘별 파라미터 yaml (언어 공용)
+├── cpp/                         # C++20 구현 (include/nav_study + src + demos + GoogleTest)
+├── python/                      # Python 구현 (nav_study 패키지 + demos + pytest)
+└── tools/                       # viz(trace 재생기) + bench(매트릭스 러너) — Python
+</code></pre>
+<p>C++ 과 Python 은 <strong>같은 설계를 각자 idiomatic 하게</strong> 구현한 독립 트리다. 클래스/메서드 개념 이름,
+파라미터 이름, trace 이벤트가 동일하므로 한쪽을 읽으면 다른 쪽도 읽힌다. 언어 간 공유물(trace schema,
+param yaml, map 데이터, 시나리오)은 반드시 <code>spec/</code>, <code>configs/</code>, <code>maps/</code> 에 두고 양쪽에서 로드한다.</p>
+<h2 id="_3">의존 방향<a class="anchor" href="#_3" title="Permanent link">¶</a></h2>
+<pre><code>demos ──▶ algorithms ──▶ core ◀── maps ◀── tools/viz·bench
+                          ▲                     │
+                          └── spec (포맷 계약) ──┘
+</code></pre>
+<ul>
+<li><code>core</code> 는 stdlib(+ numpy / Eigen)만 의존한다. 알고리즘·맵 모듈을 알지 못한다.</li>
+<li><code>maps</code> 는 <code>core</code> 만 의존한다.</li>
+<li>알고리즘 모듈은 <code>core</code> 의 추상 인터페이스에만 의존한다. <strong>구체 맵 클래스 직접 참조 금지</strong>, 알고리즘 모듈 간 상호 의존 금지.</li>
+<li><code>tools/viz</code>, <code>tools/bench</code> 는 spec 포맷과 <code>core</code>/<code>maps</code> 로더에만 의존한다. 알고리즘 내부 상태 접근 금지 — 시각화에 필요한 모든 정보는 trace 이벤트로 방출되어야 한다.</li>
+<li><code>demos</code> 는 최상위 조립 계층: 알고리즘 + maps + configs 를 묶기만 한다. 로직 금지.</li>
+</ul>
+<h2 id="capability">Capability 모델<a class="anchor" href="#capability" title="Permanent link">¶</a></h2>
+<p>알고리즘은 구체 맵 타입이 아니라 <strong>capability 인터페이스</strong>를 요구한다. 맵 타입은 지원 가능한
+capability 를 adapter 로 구현하고, 하나의 맵을 여러 알고리즘에 붙여 테스트할 수 있다.</p>
+<table class="spec-table">
+<thead>
+<tr>
+<th>capability</th>
+<th>핵심 메서드</th>
+<th>요구 알고리즘</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>DiscreteSpace</code></td>
+<td><code>neighbors(state) -&gt; [(state, cost)]</code>, <code>heuristic(a, b)</code></td>
+<td>BFS, Dijkstra, A*, CBS low-level</td>
+</tr>
+<tr>
+<td><code>SamplingSpace</code></td>
+<td><code>sample()</code>, <code>is_state_valid(s)</code>, <code>is_motion_valid(a, b)</code>, <code>distance(a, b)</code>, <code>steer(a, b, eta)</code></td>
+<td>RRT 계열</td>
+</tr>
+<tr>
+<td><code>ObstacleQuery</code></td>
+<td><code>is_collision(footprint, pose)</code>, <code>distance_to_nearest(p)</code></td>
+<td>DWA, VFH, MPC 등 local planner</td>
+</tr>
+</tbody>
+</table>
+<p>맵 타입 × capability 지원 매트릭스:</p>
+<table>
+<thead>
+<tr>
+<th>맵 타입</th>
+<th style="text-align: center;">DiscreteSpace</th>
+<th style="text-align: center;">SamplingSpace</th>
+<th style="text-align: center;">ObstacleQuery</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>OccupancyGrid2D</code> <sup id="fnref:elfes"><a class="footnote-ref" href="#fn:elfes">1</a></sup></td>
+<td style="text-align: center;">O (4/8-connected)</td>
+<td style="text-align: center;">O</td>
+<td style="text-align: center;">O</td>
+</tr>
+<tr>
+<td><code>GraphMap</code></td>
+<td style="text-align: center;">O</td>
+<td style="text-align: center;">X</td>
+<td style="text-align: center;">X</td>
+</tr>
+<tr>
+<td><code>TopologyMap</code></td>
+<td style="text-align: center;">O (semantic edge cost)</td>
+<td style="text-align: center;">X</td>
+<td style="text-align: center;">X</td>
+</tr>
+<tr>
+<td><code>ContinuousMap</code></td>
+<td style="text-align: center;">X (격자화 adapter 경유 O)</td>
+<td style="text-align: center;">O</td>
+<td style="text-align: center;">O</td>
+</tr>
+</tbody>
+</table>
+<p>Planner 는 <code>required_capabilities()</code> 를 선언하고, bench runner / demo 는 실행 전
+<code>map.supports(capability)</code> 로 호환성을 검사한다. 비호환 조합은 에러가 아니라 "incompatible" 로
+리포트에 기록된다.</p>
+<p><code>OccupancyGrid2D</code> 의 <code>DiscreteSpace</code> adapter 는 8-connected 이동(직교 1.0 / 대각 √2 × resolution)을
+제공하며, 대각 이동은 양쪽 직교 셀이 모두 free 일 때만 허용한다 (corner cutting 방지). heuristic 은
+octile distance 로, 이 이동 모델에서 admissible 하다.</p>
+<h2 id="trace-step-by-step">Trace — step-by-step 시각화의 계약<a class="anchor" href="#trace-step-by-step" title="Permanent link">¶</a></h2>
+<p>알고리즘은 탐색 진행을 <code>TraceRecorder</code> 로 방출한다. 이벤트 목록/필드는 <code>spec/trace_schema.json</code> 이
+정의하는 언어 공용 계약이다.</p>
+<table>
+<thead>
+<tr>
+<th>이벤트</th>
+<th>의미</th>
+<th>방출 알고리즘</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>planning_started</code></td>
+<td>실행 시작 (algorithm, map, params 스냅샷)</td>
+<td>전체</td>
+</tr>
+<tr>
+<td><code>node_expanded</code></td>
+<td>노드를 닫힌 집합으로 확정</td>
+<td>BFS, Dijkstra, A*</td>
+</tr>
+<tr>
+<td><code>edge_added</code></td>
+<td>트리/탐색 그래프에 간선 추가</td>
+<td>전체</td>
+</tr>
+<tr>
+<td><code>sample_drawn</code></td>
+<td>무작위 샘플 추출</td>
+<td>RRT 계열</td>
+</tr>
+<tr>
+<td><code>rewire</code></td>
+<td>기존 노드의 부모 교체 (비용 개선)</td>
+<td>RRT*, Fast-RRT</td>
+</tr>
+<tr>
+<td><code>candidate_evaluated</code></td>
+<td>후보 평가 (local planner 용)</td>
+<td>DWA 등 (계획)</td>
+</tr>
+<tr>
+<td><code>constraint_added</code> / <code>conflict_found</code></td>
+<td>제약/충돌 (multi-agent 용)</td>
+<td>CBS (계획)</td>
+</tr>
+<tr>
+<td><code>path_found</code></td>
+<td>(개선된) 경로 발견</td>
+<td>전체</td>
+</tr>
+<tr>
+<td><code>planning_finished</code></td>
+<td>종료 + 공통 metric</td>
+<td>전체</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>trace 는 JSON Lines 파일로 저장되고 <code>tools/viz/replay.py</code> 가 맵 위에 재생한다. C++ 데모도 같은
+  포맷을 출력하므로 <strong>시각화 코드는 하나</strong>다.</li>
+<li>trace 방출은 기본 off(성능 측정 시) / demo·viz 시 on. hot loop 에서 recorder 가 null 이면
+  zero-cost 다.</li>
+<li>상태 표현: 연속 공간은 <code>[x, y(, theta)]</code> world 좌표(float), grid 는 <code>[row, col]</code>(int),
+  graph/topology 는 노드 id 문자열. world ↔ grid 변환은 맵 클래스만 담당한다.</li>
+</ul>
+<h2 id="_4">파라미터 추상화<a class="anchor" href="#_4" title="Permanent link">¶</a></h2>
+<ul>
+<li>각 알고리즘은 자신의 <code>ParamSet</code> 을 선언한다: 이름, 타입, 기본값, 유효 범위. 선언 형식은
+  <code>spec/param_schema.json</code> 을 따른다.</li>
+<li>값은 <code>configs/&lt;category&gt;/&lt;algorithm&gt;.yaml</code> 에서 로드하고 로드 시점에 선언 기반 검증(범위 밖 → 에러)을
+  수행한다. 코드에 매직 넘버로 파라미터를 심지 않는다.</li>
+<li>같은 yaml 을 C++/Python 양쪽이 그대로 읽는다.</li>
+</ul>
+<h2 id="references">References<a class="anchor" href="#references" title="Permanent link">¶</a></h2>
+<div class="footnote">
+<hr />
+<ol>
+<li id="fn:elfes">
+<p>Elfes, A. (1989). "Using occupancy grids for mobile robot perception and navigation." <em>Computer</em>, 22(6), 46–57. <a href="https://doi.org/10.1109/2.30720">doi:10.1109/2.30720</a>&#160;<a class="footnote-backref" href="#fnref:elfes" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+</li>
+</ol>
+</div><nav class="pager"><a href="../ko/maps.html"><div class="dir">← 이전</div><div class="ttl">맵 표현</div></a><a class="next" href="../ko/benchmarks.html"><div class="dir">다음 →</div><div class="ttl">벤치마크</div></a></nav></article></main>
+<aside class="toc" id="toc"></aside>
+</div>
+<div class="backdrop"></div>
+<footer class="site-footer">
+  <p>nav_study — robot navigation planning algorithms · C++ / Python dual implementation</p>
+  <p>Built as a static site · <a href="../ko/index.html">한국어</a> · <a href="../en/index.html">English</a></p>
+</footer>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script" async></script>
+</body></html>

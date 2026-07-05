@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RRT · nav_study</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=9faafaea">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Crect width='24' height='24' rx='6' fill='%230b1020'/%3E%3Cpath d='M5 18V11h7V6h7' stroke='%23818cf8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='5' cy='18' r='2.4' fill='%23818cf8'/%3E%3Ccircle cx='19' cy='6' r='2.4' fill='%2322d3ee'/%3E%3C/svg%3E">
+<script src="../../assets/site.js?v=9faafaea"></script>
+</head>
+<body>
+<header class="topbar">
+  <button id="menu-btn" class="iconbtn menu-btn" aria-label="menu"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  <a class="brand" href="../../index.html"><svg class="logo" width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true"><defs><linearGradient id="navlg" x1="3" y1="21" x2="21" y2="3" gradientUnits="userSpaceOnUse"><stop stop-color="#6366f1"/><stop offset="1" stop-color="#06b6d4"/></linearGradient></defs><path d="M4 19V11h8V5h8" stroke="url(#navlg)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="4" cy="19" r="2.6" fill="url(#navlg)"/><circle cx="20" cy="5" r="2.6" fill="url(#navlg)"/></svg><span class="wm">nav<span class="wm-dim">_study</span></span></a>
+  <nav class="topnav"><a href="../../ko/index.html">개요</a><a href="../../ko/algorithms/index.html">알고리즘</a><a href="../../ko/maps.html">맵</a><a href="../../ko/benchmarks.html">벤치마크</a></nav>
+  <span class="spacer"></span>
+  <div class="search"><svg class="s-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg><input id="search-input" type="search" placeholder="검색 / Search…" data-base="../../" autocomplete="off"><div id="search-results" class="search-results"></div></div>
+  <div class="lang-toggle" role="group" aria-label="language"><svg class="g-ico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.5 2.5 3.8 5.6 3.8 9s-1.3 6.5-3.8 9c-2.5-2.5-3.8-5.6-3.8-9S9.5 5.5 12 3Z"/></svg><a href="../../ko/algorithms/rrt.html" class="active">KO</a><span class="l-sep">/</span><a href="../../en/algorithms/rrt.html" class="">EN</a></div>
+</header>
+<div class="layout">
+<aside class="sidebar"><h4>개요</h4>
+<a href="../../ko/index.html">개요</a>
+<a href="../../ko/algorithms/index.html">알고리즘 목록</a>
+<h4>Global planning</h4>
+<a href="../../ko/algorithms/bfs.html">BFS</a>
+<a href="../../ko/algorithms/dijkstra.html">Dijkstra</a>
+<a href="../../ko/algorithms/astar.html">A*</a>
+<a href="../../ko/algorithms/rrt.html" class="active">RRT</a>
+<a href="../../ko/algorithms/rrt_star.html">RRT*</a>
+<a href="../../ko/algorithms/fast_rrt.html">Fast-RRT</a>
+<h4>Local planning <span class="soon">예정</span></h4>
+<span class="planned">DWA</span>
+<span class="planned">Pure Pursuit</span>
+<span class="planned">VFH</span>
+<span class="planned">MPC</span>
+<h4>Multi-agent <span class="soon">예정</span></h4>
+<span class="planned">Prioritized A*</span>
+<span class="planned">Joint-space A*</span>
+<span class="planned">CBS</span>
+<h4>Maps</h4>
+<a href="../../ko/maps.html">맵 표현</a>
+<h4>레퍼런스</h4>
+<a href="../../ko/architecture.html">아키텍처</a>
+<a href="../../ko/benchmarks.html">벤치마크</a>
+<a href="../../ko/references.html">참고 문헌</a></aside>
+<main class="content"><article class="content-inner"><h1 id="rrt-rapidly-exploring-random-tree">RRT — Rapidly-exploring Random Tree<a class="anchor" href="#rrt-rapidly-exploring-random-tree" title="Permanent link">¶</a></h1>
+<table class="spec-table">
+<thead>
+<tr>
+<th>항목</th>
+<th>내용</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>분류</td>
+<td>sampling-based, single-query</td>
+</tr>
+<tr>
+<td>요구 capability</td>
+<td><code>SamplingSpace</code></td>
+</tr>
+<tr>
+<td>완전성</td>
+<td>probabilistically complete</td>
+</tr>
+<tr>
+<td>최적성</td>
+<td><strong>비최적</strong> — 첫 feasible 경로를 반환</td>
+</tr>
+<tr>
+<td>복잡도</td>
+<td>반복당 nearest-neighbor 탐색이 지배 (naive O(n))</td>
+</tr>
+<tr>
+<td>원 논문</td>
+<td>LaValle (1998) <sup id="fnref2:lavalle98"><a class="footnote-ref" href="#fn:lavalle98">1</a></sup> · LaValle &amp; Kuffner (2001) <sup id="fnref4:lavalle01"><a class="footnote-ref" href="#fn:lavalle01">2</a></sup></td>
+</tr>
+</tbody>
+</table>
+<h2 id="_1">배경<a class="anchor" href="#_1" title="Permanent link">¶</a></h2>
+<p>RRT<sup id="fnref:lavalle98"><a class="footnote-ref" href="#fn:lavalle98">1</a></sup> 는 격자화가 비현실적인 <strong>고차원 연속 상태 공간</strong>을 위해 제안된 sampling 기반
+planner 다. 공간을 미리 이산화하는 대신, 무작위 샘플을 향해 트리를 조금씩 뻗으며 자유 공간을
+탐색한다. 핵심 성질은 <strong>Voronoi bias</strong> — 트리에서 가장 가까운 노드가 확장되므로, Voronoi 영역이
+큰(= 아직 탐색되지 않은 쪽의) 노드가 선택될 확률이 높아 트리가 미탐색 공간으로 "빠르게" 뻗는다.
+kinodynamic 제약(비홀로노믹 차량 등)을 steer 함수에 자연스럽게 흡수할 수 있어 로보틱스 전반에서
+표준 도구가 되었다<sup id="fnref:lavalle01"><a class="footnote-ref" href="#fn:lavalle01">2</a></sup>.</p>
+<h2 id="_2">동작 원리<a class="anchor" href="#_2" title="Permanent link">¶</a></h2>
+<pre><code>RRT(start, goal):
+    T ← {start}
+    for i in 1..max_iterations:
+        x_rand ← (goal with prob. goal_bias) else sample()
+        x_near ← nearest(T, x_rand)
+        x_new  ← steer(x_near, x_rand, step_size)     # x_near 에서 η 만큼 전진
+        if is_motion_valid(x_near, x_new):
+            T.add(x_new, parent = x_near)
+            if distance(x_new, goal) ≤ goal_tolerance:
+                return path(start → x_new) + goal
+    return failure
+</code></pre>
+<ul>
+<li><strong>goal bias</strong>: 확률 <code>goal_bias</code> 로 무작위 샘플 대신 goal 자체를 샘플한다. 순수 균등 샘플링은
+  goal 도달이 느리므로 실용 구현의 표준 기법이다<sup id="fnref2:lavalle01"><a class="footnote-ref" href="#fn:lavalle01">2</a></sup>.</li>
+<li><strong>steer</strong>: 샘플 방향으로 최대 <code>step_size</code>(η) 만큼만 전진한다. 트리 성장 속도와 장애물 통과
+  성능의 트레이드오프를 결정한다.</li>
+</ul>
+<h2 id="_3">성질<a class="anchor" href="#_3" title="Permanent link">¶</a></h2>
+<ul>
+<li><strong>완전성</strong>: probabilistically complete — 해가 존재하면 반복 수 → ∞ 에서 발견 확률이 1 로 수렴한다<sup id="fnref3:lavalle01"><a class="footnote-ref" href="#fn:lavalle01">2</a></sup>.
+  유한 반복에서는 실패할 수 있다 (<code>max_iterations</code> 소진).</li>
+<li><strong>최적성</strong>: 없음. 첫 feasible 경로를 그대로 반환하며, 실제로 Karaman &amp; Frazzoli 는 RRT 가
+  최적 경로에 수렴할 확률이 0 임을 증명했다<sup id="fnref:karaman"><a class="footnote-ref" href="#fn:karaman">3</a></sup>. 최적성이 필요하면 <a href="rrt_star.html">RRT*</a> 를 쓴다.</li>
+<li><strong>결과가 확률적</strong>: 같은 문제라도 seed 에 따라 경로 모양·비용이 달라진다. 이 저장소는 <code>seed</code>
+  파라미터로 재현성을 고정한다.</li>
+</ul>
+<h2 id="_4">파라미터<a class="anchor" href="#_4" title="Permanent link">¶</a></h2>
+<table>
+<thead>
+<tr>
+<th>이름</th>
+<th>타입</th>
+<th>기본값</th>
+<th>범위</th>
+<th>설명</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>max_iterations</code></td>
+<td>int</td>
+<td>5000</td>
+<td>[1, 200000]</td>
+<td>최대 확장 반복 수. 초과 시 실패 반환</td>
+</tr>
+<tr>
+<td><code>step_size</code></td>
+<td>float</td>
+<td>0.5</td>
+<td>[0.01, 100.0]</td>
+<td>steer 확장 거리 η (m)</td>
+</tr>
+<tr>
+<td><code>goal_bias</code></td>
+<td>float</td>
+<td>0.05</td>
+<td>[0.0, 1.0]</td>
+<td>goal 을 직접 sample 할 확률</td>
+</tr>
+<tr>
+<td><code>goal_tolerance</code></td>
+<td>float</td>
+<td>0.3</td>
+<td>[0.0, 100.0]</td>
+<td>goal 도달 판정 반경 (m)</td>
+</tr>
+<tr>
+<td><code>seed</code></td>
+<td>int</td>
+<td>1</td>
+<td>[0, 2^31−1]</td>
+<td>난수 시드 (재현성)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_5">확률적 완전성과 비최적성<a class="anchor" href="#_5" title="Permanent link">¶</a></h2>
+<p><strong>확률적 완전성.</strong> clearance <span class="arithmatex">\(&gt;0\)</span> 인 feasible 경로가 존재하면, RRT 가 <span class="arithmatex">\(n\)</span> 샘플 후에도 이를 찾지
+못할 확률은 지수적으로 0 에 수렴한다:</p>
+<div class="arithmatex">\[
+P[\text{$n$ 샘플 후 실패}]\;\le\;a\,e^{-b\,n},\qquad a,b&gt;0.
+\]</div>
+<p>따라서 <span class="arithmatex">\(\lim_{n\to\infty}P[\text{성공}]=1\)</span> (LaValle &amp; Kuffner). 유한 반복에서는 실패할 수 있다.</p>
+<p><strong>Voronoi bias (왜 "rapidly" 인가).</strong> 균등 샘플 <span class="arithmatex">\(x_{rand}\)</span> 에 대해 트리 노드 <span class="arithmatex">\(v\)</span> 가 nearest 로
+뽑혀 확장될 확률은 그 Voronoi 셀의 부피에 비례한다:</p>
+<div class="arithmatex">\[
+P[\text{$v$ 에서 확장}]\;=\;\frac{\mu\!\left(\mathrm{Vor}(v)\right)}{\mu(X_{\text{free}})}.
+\]</div>
+<p>미탐색 영역에 접한 노드의 Voronoi 셀이 크므로 트리가 그쪽으로 편향 성장한다.</p>
+<p><strong>비최적성.</strong> <span class="arithmatex">\(Y_n^{\text{RRT}}\)</span> 를 <span class="arithmatex">\(n\)</span> 반복 후 경로 비용이라 할 때, Karaman &amp; Frazzoli 는</p>
+<div class="arithmatex">\[
+P\!\left[\lim_{n\to\infty}Y_n^{\text{RRT}}=c^*\right]=0
+\]</div>
+<p>임을 보였다 — 첫 연결 시 정한 부모를 이후 절대 바꾸지 않기 때문에 준최적 비용으로 거의 확실히
+수렴한다. 최적성이 필요하면 <a href="rrt_star.html">RRT*</a> 를 쓴다.</p>
+<h2 id="_6">구현 노트<a class="anchor" href="#_6" title="Permanent link">¶</a></h2>
+<ul>
+<li>C++: <code>cpp/src/global_planning/rrt.cpp</code>, Python: <code>python/nav_study/global_planning/rrt.py</code></li>
+<li><code>SamplingSpace</code> capability (<code>sample</code> / <code>is_state_valid</code> / <code>is_motion_valid</code> / <code>distance</code> / <code>steer</code>)
+  에만 의존한다. occupancy grid 위에서는 셀 중심이 아닌 <strong>연속 world 좌표</strong>를 탐색한다.</li>
+<li>motion validity 는 선분을 resolution 간격으로 보간해 검사한다 (맵 adapter 책임).</li>
+<li>C++/Python 은 같은 seed 라도 난수 스트림이 달라 경로가 다를 수 있다 — parity 는 "값 일치"가 아니라
+  "통계적 동등 + 계약 일치"로 검증한다.</li>
+</ul>
+<h2 id="trace">방출 trace 이벤트<a class="anchor" href="#trace" title="Permanent link">¶</a></h2>
+<p><code>planning_started</code> → (<code>sample_drawn</code>, <code>edge_added</code>)* → <code>path_found</code> → <code>planning_finished</code></p>
+<h2 id="demo">Demo<a class="anchor" href="#demo" title="Permanent link">¶</a></h2>
+<p><code>maze01</code> — 트리(하늘색)가 자유 공간으로 뻗다가 goal 반경에 닿는 즉시 종료한다.
+경로(보라→빨강)가 지그재그인 것이 RRT 의 전형적 특징이다.</p>
+<p><img alt="RRT on maze01" src="../../assets/rrt/maze01.gif" /></p>
+<p>탐색 중간 과정 (좌 → 우: 초반 / 중반 / 최종 경로):</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;"></th>
+<th style="text-align: center;"></th>
+<th style="text-align: center;"></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;"><img alt="early" src="../../assets/rrt/maze01_snap_02.png" /></td>
+<td style="text-align: center;"><img alt="mid" src="../../assets/rrt/maze01_snap_05.png" /></td>
+<td style="text-align: center;"><img alt="final" src="../../assets/rrt/maze01_final.png" /></td>
+</tr>
+</tbody>
+</table>
+<p><code>open01</code> 최종 결과:</p>
+<p><img alt="RRT on open01" src="../../assets/rrt/open01_final.png" /></p>
+<p>측정치 (Python, seed = 1, trace on):</p>
+<table>
+<thead>
+<tr>
+<th>map</th>
+<th>path cost</th>
+<th>samples</th>
+<th>tree size</th>
+<th>비고</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>maze01</td>
+<td>18.414</td>
+<td>229</td>
+<td>132</td>
+<td>첫 해 즉시 반환 — <a href="rrt_star.html">RRT*</a> 는 13.46</td>
+</tr>
+<tr>
+<td>open01</td>
+<td>14.371</td>
+<td>177</td>
+<td>135</td>
+<td><a href="rrt_star.html">RRT*</a> 는 12.05</td>
+</tr>
+</tbody>
+</table>
+<p>수백 샘플만에 해를 찾는 대신 경로 품질을 포기한다 — RRT* 대비 19–37% 긴 경로.</p>
+<p>재현:</p>
+<pre><code class="language-bash">python python/demos/demo_rrt.py \
+  --map maps/grid/maze01.yaml --scenario maps/scenarios/maze01_s1.yaml \
+  --params configs/global_planning/rrt.yaml --trace out/rrt.jsonl --seed 1
+python tools/viz/replay.py out/rrt.jsonl --gif out/rrt.gif
+</code></pre>
+<h2 id="references">References<a class="anchor" href="#references" title="Permanent link">¶</a></h2>
+<div class="footnote">
+<hr />
+<ol>
+<li id="fn:lavalle98">
+<p>LaValle, S. M. (1998). "Rapidly-exploring random trees: A new tool for path planning." Technical Report TR 98-11, Computer Science Dept., Iowa State University. <a href="https://lavalle.pl/papers/Lav98c.pdf">PDF</a>&#160;<a class="footnote-backref" href="#fnref:lavalle98" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:lavalle98" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+</li>
+<li id="fn:lavalle01">
+<p>LaValle, S. M., &amp; Kuffner, J. J. (2001). "Randomized kinodynamic planning." <em>The International Journal of Robotics Research</em>, 20(5), 378–400. <a href="https://doi.org/10.1177/02783640122067453">doi:10.1177/02783640122067453</a> · <a href="https://lavalle.pl/papers/LavKuf01b.pdf">PDF</a>&#160;<a class="footnote-backref" href="#fnref:lavalle01" title="Jump back to footnote 2 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:lavalle01" title="Jump back to footnote 2 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:lavalle01" title="Jump back to footnote 2 in the text">&#8617;</a><a class="footnote-backref" href="#fnref4:lavalle01" title="Jump back to footnote 2 in the text">&#8617;</a></p>
+</li>
+<li id="fn:karaman">
+<p>Karaman, S., &amp; Frazzoli, E. (2011). "Sampling-based algorithms for optimal motion planning." <em>The International Journal of Robotics Research</em>, 30(7), 846–894. <a href="https://doi.org/10.1177/0278364911406761">doi:10.1177/0278364911406761</a> · <a href="https://arxiv.org/abs/1105.1186">PDF (arXiv)</a>&#160;<a class="footnote-backref" href="#fnref:karaman" title="Jump back to footnote 3 in the text">&#8617;</a></p>
+</li>
+</ol>
+</div><nav class="pager"><a href="../../ko/algorithms/astar.html"><div class="dir">← 이전</div><div class="ttl">A*</div></a><a class="next" href="../../ko/algorithms/rrt_star.html"><div class="dir">다음 →</div><div class="ttl">RRT*</div></a></nav></article></main>
+<aside class="toc" id="toc"></aside>
+</div>
+<div class="backdrop"></div>
+<footer class="site-footer">
+  <p>nav_study — robot navigation planning algorithms · C++ / Python dual implementation</p>
+  <p>Built as a static site · <a href="../../ko/index.html">한국어</a> · <a href="../../en/index.html">English</a></p>
+</footer>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script" async></script>
+</body></html>

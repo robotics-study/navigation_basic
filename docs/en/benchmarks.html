@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Benchmarks · nav_study</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css?v=9faafaea">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Crect width='24' height='24' rx='6' fill='%230b1020'/%3E%3Cpath d='M5 18V11h7V6h7' stroke='%23818cf8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='5' cy='18' r='2.4' fill='%23818cf8'/%3E%3Ccircle cx='19' cy='6' r='2.4' fill='%2322d3ee'/%3E%3C/svg%3E">
+<script src="../assets/site.js?v=9faafaea"></script>
+</head>
+<body>
+<header class="topbar">
+  <button id="menu-btn" class="iconbtn menu-btn" aria-label="menu"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  <a class="brand" href="../index.html"><svg class="logo" width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true"><defs><linearGradient id="navlg" x1="3" y1="21" x2="21" y2="3" gradientUnits="userSpaceOnUse"><stop stop-color="#6366f1"/><stop offset="1" stop-color="#06b6d4"/></linearGradient></defs><path d="M4 19V11h8V5h8" stroke="url(#navlg)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="4" cy="19" r="2.6" fill="url(#navlg)"/><circle cx="20" cy="5" r="2.6" fill="url(#navlg)"/></svg><span class="wm">nav<span class="wm-dim">_study</span></span></a>
+  <nav class="topnav"><a href="../en/index.html">Overview</a><a href="../en/algorithms/index.html">Algorithms</a><a href="../en/maps.html">Maps</a><a href="../en/benchmarks.html">Benchmarks</a></nav>
+  <span class="spacer"></span>
+  <div class="search"><svg class="s-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg><input id="search-input" type="search" placeholder="검색 / Search…" data-base="../" autocomplete="off"><div id="search-results" class="search-results"></div></div>
+  <div class="lang-toggle" role="group" aria-label="language"><svg class="g-ico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.5 2.5 3.8 5.6 3.8 9s-1.3 6.5-3.8 9c-2.5-2.5-3.8-5.6-3.8-9S9.5 5.5 12 3Z"/></svg><a href="../ko/benchmarks.html" class="">KO</a><span class="l-sep">/</span><a href="../en/benchmarks.html" class="active">EN</a></div>
+</header>
+<div class="layout">
+<aside class="sidebar"><h4>Overview</h4>
+<a href="../en/index.html">Overview</a>
+<a href="../en/algorithms/index.html">All algorithms</a>
+<h4>Global planning</h4>
+<a href="../en/algorithms/bfs.html">BFS</a>
+<a href="../en/algorithms/dijkstra.html">Dijkstra</a>
+<a href="../en/algorithms/astar.html">A*</a>
+<a href="../en/algorithms/rrt.html">RRT</a>
+<a href="../en/algorithms/rrt_star.html">RRT*</a>
+<a href="../en/algorithms/fast_rrt.html">Fast-RRT</a>
+<h4>Local planning <span class="soon">planned</span></h4>
+<span class="planned">DWA</span>
+<span class="planned">Pure Pursuit</span>
+<span class="planned">VFH</span>
+<span class="planned">MPC</span>
+<h4>Multi-agent <span class="soon">planned</span></h4>
+<span class="planned">Prioritized A*</span>
+<span class="planned">Joint-space A*</span>
+<span class="planned">CBS</span>
+<h4>Maps</h4>
+<a href="../en/maps.html">Map representations</a>
+<h4>Reference</h4>
+<a href="../en/architecture.html">Architecture</a>
+<a href="../en/benchmarks.html" class="active">Benchmarks</a>
+<a href="../en/references.html">References</a></aside>
+<main class="content"><article class="content-inner"><h1 id="benchmarks">Benchmarks<a class="anchor" href="#benchmarks" title="Permanent link">¶</a></h1>
+<p><code>tools/bench/run_matrix.py</code> runs the (scenario × algorithm) combinations as per-language demo
+subprocesses, collecting success, path cost, expanded/samples, and runtime, and writes a report.</p>
+<pre><code class="language-bash">python tools/bench/run_matrix.py --out out/report.md
+</code></pre>
+<p>Environment: Apple Silicon macOS, Python 3 / C++20 Release. seed = 1, parameters at the
+<code>configs/global_planning/</code> defaults. Maps: <code>maze01</code> (narrow-corridor maze) and <code>open01</code> (open field).</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Runtimes were measured with <strong>trace emission on</strong> (demo mode). For the sampling algorithms, which
+emit hundreds of thousands of events, trace I/O dominates, so read them as <strong>relative comparisons</strong>
+between algorithms/languages, not absolute numbers.</p>
+</div>
+<h2 id="per-group-comparison">Per-group comparison<a class="anchor" href="#per-group-comparison" title="Permanent link">¶</a></h2>
+<p>Even within one category, the axis of comparison differs. <strong>Discrete search</strong> (BFS·Dijkstra·A*)
+searches the grid optimally, so path cost is identical and what matters is <strong>how few nodes it
+expands</strong>. <strong>Sampling</strong> (RRT·RRT*·Fast-RRT) searches continuous space probabilistically, so what
+matters is <strong>path quality (cost) and convergence</strong>. Each group is therefore compared on a different
+metric. (Local planning and Multi-agent are planned — groups appear here once implemented.)</p>
+<h3 id="discrete-search-bfs-vs-dijkstra-vs-a">Discrete search — BFS vs Dijkstra vs A*<a class="anchor" href="#discrete-search-bfs-vs-dijkstra-vs-a" title="Permanent link">¶</a></h3>
+<p>All three return the <strong>same optimal path</strong> (maze01 28.728, open01 25.213). The difference is how many
+nodes they expand to find it.</p>
+<p><img alt="Discrete search — nodes expanded" src="../assets/bench/discrete_expanded.png" /></p>
+<table class="spec-table">
+<thead>
+<tr>
+<th>algorithm</th>
+<th style="text-align: right;">maze01 expanded</th>
+<th style="text-align: right;">open01 expanded</th>
+<th>path cost</th>
+<th>Python / C++ runtime</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BFS</td>
+<td style="text-align: right;">221</td>
+<td style="text-align: right;">267</td>
+<td>optimal (same)</td>
+<td>1.7 / 1.0 ms</td>
+</tr>
+<tr>
+<td>Dijkstra</td>
+<td style="text-align: right;">211</td>
+<td style="text-align: right;">267</td>
+<td>optimal (same)</td>
+<td>2.4 / 1.0 ms</td>
+</tr>
+<tr>
+<td><strong>A*</strong></td>
+<td style="text-align: right;"><strong>108</strong></td>
+<td style="text-align: right;"><strong>71</strong></td>
+<td>optimal (same)</td>
+<td>1.7 / 0.8 ms</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>A*</strong>'s heuristic clearly pays off — half the expansions of Dijkstra on maze01 (108 vs 211) and
+  under a quarter on open01 (71 vs 267). It finds the same optimum with far less search.</li>
+<li>BFS and Dijkstra have no heuristic and grow the frontier evenly, so their expansion counts are
+  similar. (BFS matching the optimum here is a coincidence of this map — see <a href="algorithms/bfs.html">BFS</a>.)</li>
+</ul>
+<h3 id="sampling-based-rrt-vs-rrt-vs-fast-rrt">Sampling-based — RRT vs RRT* vs Fast-RRT<a class="anchor" href="#sampling-based-rrt-vs-rrt-vs-fast-rrt" title="Permanent link">¶</a></h3>
+<p>RRT stops at the first feasible solution; RRT*/Fast-RRT spend the full 8,000-iteration budget
+improving the path. What matters is the final <strong>path cost</strong> and its shape.</p>
+<p><img alt="Sampling-based — path cost" src="../assets/bench/sampling_cost.png" /></p>
+<table>
+<thead>
+<tr>
+<th>algorithm</th>
+<th style="text-align: right;">maze01 cost</th>
+<th style="text-align: right;">open01 cost</th>
+<th>budget</th>
+<th style="text-align: right;">maze01 waypoints</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>RRT</td>
+<td style="text-align: right;">18.41</td>
+<td style="text-align: right;">14.37</td>
+<td>first solution</td>
+<td style="text-align: right;">39</td>
+</tr>
+<tr>
+<td>RRT*</td>
+<td style="text-align: right;"><strong>13.46</strong></td>
+<td style="text-align: right;"><strong>12.05</strong></td>
+<td>8,000 iters</td>
+<td style="text-align: right;">18</td>
+</tr>
+<tr>
+<td>Fast-RRT</td>
+<td style="text-align: right;">13.47</td>
+<td style="text-align: right;">12.05</td>
+<td>8,000 iters</td>
+<td style="text-align: right;"><strong>5</strong></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>RRT</strong> is fastest (hundreds of samples, a few ms) but its path is 19–37% longer than
+  <a href="algorithms/rrt_star.html">RRT*</a> (feasible-but-suboptimal).</li>
+<li><strong>RRT*</strong> and <strong>Fast-RRT</strong> converge near-optimal, so their costs are essentially equal. The
+  difference is path shape — Fast-RRT's shortcut cuts waypoints to under a third, giving a path that
+  is easy to follow without post-processing.</li>
+</ul>
+<h3 id="language-performance-c-vs-python">Language performance — C++ vs Python<a class="anchor" href="#language-performance-c-vs-python" title="Permanent link">¶</a></h3>
+<p>For the same algorithm and budget the result quality is equivalent (sampling costs differ by
+0.1–0.6% due to different random streams) while C++ runs <strong>8–10× faster</strong>. The discrete algorithms
+are deterministic and produce byte-identical results across languages.</p>
+<p><img alt="Sampling-based runtime — C++ vs Python" src="../assets/bench/sampling_runtime.png" /></p>
+<h2 id="full-matrix-raw">Full matrix (raw)<a class="anchor" href="#full-matrix-raw" title="Permanent link">¶</a></h2>
+<h3 id="maze01">maze01<a class="anchor" href="#maze01" title="Permanent link">¶</a></h3>
+<table>
+<thead>
+<tr>
+<th>algorithm</th>
+<th>path cost</th>
+<th>expanded / samples</th>
+<th>Python runtime</th>
+<th>C++ runtime</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BFS</td>
+<td>28.728</td>
+<td>221 expanded</td>
+<td>1.7 ms</td>
+<td>1.0 ms</td>
+</tr>
+<tr>
+<td>Dijkstra</td>
+<td>28.728</td>
+<td>211 expanded</td>
+<td>2.4 ms</td>
+<td>1.0 ms</td>
+</tr>
+<tr>
+<td>A*</td>
+<td>28.728</td>
+<td>108 expanded</td>
+<td>1.7 ms</td>
+<td>0.8 ms</td>
+</tr>
+<tr>
+<td>RRT</td>
+<td>18.414 (py) / 16.888 (cpp)</td>
+<td>229 / 246 samples</td>
+<td>3.4 ms</td>
+<td>0.4 ms</td>
+</tr>
+<tr>
+<td>RRT*</td>
+<td>13.458 / 13.471</td>
+<td>8,000 samples</td>
+<td>9.15 s</td>
+<td>1.09 s</td>
+</tr>
+<tr>
+<td>Fast-RRT</td>
+<td>13.467 / 13.544</td>
+<td>8,000 samples</td>
+<td>18.16 s</td>
+<td>1.92 s</td>
+</tr>
+</tbody>
+</table>
+<h3 id="open01">open01<a class="anchor" href="#open01" title="Permanent link">¶</a></h3>
+<table>
+<thead>
+<tr>
+<th>algorithm</th>
+<th>path cost</th>
+<th>expanded / samples</th>
+<th>Python runtime</th>
+<th>C++ runtime</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BFS</td>
+<td>25.213</td>
+<td>267 expanded</td>
+<td>2.0 ms</td>
+<td>0.4 ms</td>
+</tr>
+<tr>
+<td>Dijkstra</td>
+<td>25.213</td>
+<td>267 expanded</td>
+<td>2.9 ms</td>
+<td>0.6 ms</td>
+</tr>
+<tr>
+<td>A*</td>
+<td>25.213</td>
+<td>71 expanded</td>
+<td>1.3 ms</td>
+<td>0.3 ms</td>
+</tr>
+<tr>
+<td>RRT</td>
+<td>14.371 / 13.920</td>
+<td>177 / 229 samples</td>
+<td>2.6 ms</td>
+<td>0.4 ms</td>
+</tr>
+<tr>
+<td>RRT*</td>
+<td>12.047 / 12.048</td>
+<td>8,000 samples</td>
+<td>8.35 s</td>
+<td>0.98 s</td>
+</tr>
+<tr>
+<td>Fast-RRT</td>
+<td>12.048 / 12.049</td>
+<td>8,000 samples</td>
+<td>18.02 s</td>
+<td>1.87 s</td>
+</tr>
+</tbody>
+</table>
+<h2 id="how-the-matrix-runner-works">How the matrix runner works<a class="anchor" href="#how-the-matrix-runner-works" title="Permanent link">¶</a></h2>
+<ul>
+<li>Runs every yaml in <code>maps/scenarios/</code> × algorithm. Adding a map/scenario includes it automatically.</li>
+<li>Checks the planner's <code>required_capabilities()</code> against the map's capabilities, recording an
+  <strong>incompatible combination as "incompatible" rather than an error</strong> (e.g. <code>GraphMap</code> × RRT).</li>
+<li>Calls each language's demo CLI as a subprocess and collects the single-line JSON metric from stdout
+  into a shared format, so the runner is unchanged as languages are added.</li>
+</ul><nav class="pager"><a href="../en/architecture.html"><div class="dir">← Prev</div><div class="ttl">Architecture</div></a><a class="next" href="../en/references.html"><div class="dir">Next →</div><div class="ttl">References</div></a></nav></article></main>
+<aside class="toc" id="toc"></aside>
+</div>
+<div class="backdrop"></div>
+<footer class="site-footer">
+  <p>nav_study — robot navigation planning algorithms · C++ / Python dual implementation</p>
+  <p>Built as a static site · <a href="../ko/index.html">한국어</a> · <a href="../en/index.html">English</a></p>
+</footer>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script" async></script>
+</body></html>
