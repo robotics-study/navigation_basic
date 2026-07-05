@@ -1,5 +1,5 @@
 #include "demo_common.hpp"
-#include "navigation/global_planning/rrt_star.hpp"
+#include "navigation/global_planning/sampling/rrt_star.hpp"
 
 int main(int argc, char** argv) {
   try {

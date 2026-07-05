@@ -46,12 +46,12 @@ All six implemented algorithms satisfy **C++ / Python parity** — on the same m
 ```bash
 # Python (>= 3.10)
 cd python && pip install -e ".[dev,viz]" && cd ..
-pytest python/tests                                  # 62 tests
+pytest python/tests                                  # 79 tests
 
 # C++ (C++20, CMake >= 3.20)
 cmake -S cpp -B cpp/build -DCMAKE_BUILD_TYPE=Release
 cmake --build cpp/build -j
-ctest --test-dir cpp/build                           # 32 tests
+ctest --test-dir cpp/build                           # 45 tests
 
 # run a demo (identical CLI in both languages) + visualize
 python python/demos/demo_astar.py \

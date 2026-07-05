@@ -1,5 +1,5 @@
 #include "demo_common.hpp"
-#include "navigation/global_planning/dijkstra.hpp"
+#include "navigation/global_planning/search/dijkstra.hpp"
 
 int main(int argc, char** argv) {
   try {

@@ -7,9 +7,13 @@
 #include <gtest/gtest.h>
 
 #include "navigation/core/trace.hpp"
-#include "navigation/global_planning/fast_rrt.hpp"
-#include "navigation/global_planning/rrt.hpp"
-#include "navigation/global_planning/rrt_star.hpp"
+#include "navigation/global_planning/sampling/bit_star.hpp"
+#include "navigation/global_planning/sampling/fast_rrt.hpp"
+#include "navigation/global_planning/sampling/fmt_star.hpp"
+#include "navigation/global_planning/sampling/prm.hpp"
+#include "navigation/global_planning/sampling/prm_star.hpp"
+#include "navigation/global_planning/sampling/rrt.hpp"
+#include "navigation/global_planning/sampling/rrt_star.hpp"
 #include "test_util.hpp"
 
 using namespace navigation;
@@ -53,6 +57,38 @@ std::string fast_rrt_cfg() {
                           "  - {name: neighbor_radius, type: float, default: 1.5, min: 0.01, max: 100, description: r}\n"
                           "  - {name: reached_radius, type: float, default: 0.4, min: 0.0, max: 100, description: rr}\n"
                           "  - {name: steering_attempts, type: int, default: 10, min: 1, max: 100, description: sa}\n"
+                          "  - {name: seed, type: int, default: 7, min: 0, max: 2147483647, description: s}\n");
+}
+
+// Batch planners over the open 5m x 5m grid: sample budgets sized so start/goal
+// are reliably connected while staying fast.
+std::string prm_cfg() {
+  return test::write_temp("prm.yaml",
+                          "algorithm: prm\ncategory: global_planning\nparams:\n"
+                          "  - {name: num_samples, type: int, default: 600, min: 1, max: 200000, description: n}\n"
+                          "  - {name: connection_radius, type: float, default: 2.0, min: 0.01, max: 100, description: r}\n"
+                          "  - {name: seed, type: int, default: 7, min: 0, max: 2147483647, description: s}\n");
+}
+std::string prm_star_cfg() {
+  return test::write_temp("prm_star.yaml",
+                          "algorithm: prm_star\ncategory: global_planning\nparams:\n"
+                          "  - {name: num_samples, type: int, default: 600, min: 1, max: 200000, description: n}\n"
+                          "  - {name: gamma, type: float, default: 30.0, min: 0.01, max: 1000, description: g}\n"
+                          "  - {name: seed, type: int, default: 7, min: 0, max: 2147483647, description: s}\n");
+}
+std::string fmt_star_cfg() {
+  return test::write_temp("fmt_star.yaml",
+                          "algorithm: fmt_star\ncategory: global_planning\nparams:\n"
+                          "  - {name: num_samples, type: int, default: 600, min: 1, max: 200000, description: n}\n"
+                          "  - {name: gamma, type: float, default: 30.0, min: 0.01, max: 1000, description: g}\n"
+                          "  - {name: seed, type: int, default: 7, min: 0, max: 2147483647, description: s}\n");
+}
+std::string bit_star_cfg() {
+  return test::write_temp("bit_star.yaml",
+                          "algorithm: bit_star\ncategory: global_planning\nparams:\n"
+                          "  - {name: batch_size, type: int, default: 120, min: 1, max: 100000, description: b}\n"
+                          "  - {name: max_batches, type: int, default: 5, min: 1, max: 10000, description: mb}\n"
+                          "  - {name: gamma, type: float, default: 30.0, min: 0.01, max: 1000, description: g}\n"
                           "  - {name: seed, type: int, default: 7, min: 0, max: 2147483647, description: s}\n");
 }
 
@@ -139,6 +175,42 @@ TEST(Sampling, FastRrtFindsValidPath) {
   }
 }
 
+TEST(Sampling, PrmFindsValidPath) {
+  auto g = test::make_grid(open_rows());
+  Point start{0.25, 0.25}, goal{4.75, 4.75};
+  global_planning::PrmPlanner p(core::ParamSet::from_yaml(prm_cfg()));
+  auto r = p.plan(g, start, goal, nullptr);
+  ASSERT_TRUE(r.success);
+  expect_path_valid(g, r.path, start, goal, 1e-9);
+}
+
+TEST(Sampling, PrmStarFindsValidPath) {
+  auto g = test::make_grid(open_rows());
+  Point start{0.25, 0.25}, goal{4.75, 4.75};
+  global_planning::PrmStarPlanner p(core::ParamSet::from_yaml(prm_star_cfg()));
+  auto r = p.plan(g, start, goal, nullptr);
+  ASSERT_TRUE(r.success);
+  expect_path_valid(g, r.path, start, goal, 1e-9);
+}
+
+TEST(Sampling, FmtStarFindsValidPath) {
+  auto g = test::make_grid(open_rows());
+  Point start{0.25, 0.25}, goal{4.75, 4.75};
+  global_planning::FmtStarPlanner p(core::ParamSet::from_yaml(fmt_star_cfg()));
+  auto r = p.plan(g, start, goal, nullptr);
+  ASSERT_TRUE(r.success);
+  expect_path_valid(g, r.path, start, goal, 1e-9);
+}
+
+TEST(Sampling, BitStarFindsValidPath) {
+  auto g = test::make_grid(open_rows());
+  Point start{0.25, 0.25}, goal{4.75, 4.75};
+  global_planning::BitStarPlanner p(core::ParamSet::from_yaml(bit_star_cfg()));
+  auto r = p.plan(g, start, goal, nullptr);
+  ASSERT_TRUE(r.success);
+  expect_path_valid(g, r.path, start, goal, 1e-9);
+}
+
 // (b) no-path case: a full wall separates start from goal ---------------------
 
 TEST(Sampling, NoPathAcrossFullWall) {
@@ -154,6 +226,15 @@ TEST(Sampling, NoPathAcrossFullWall) {
   auto r = rs.plan(g, start, goal, nullptr);
   EXPECT_FALSE(r.success);
   EXPECT_TRUE(r.path.empty());
+
+  global_planning::PrmPlanner prm(core::ParamSet::from_yaml(prm_cfg()));
+  EXPECT_FALSE(prm.plan(g, start, goal, nullptr).success);
+  global_planning::PrmStarPlanner prm_star(core::ParamSet::from_yaml(prm_star_cfg()));
+  EXPECT_FALSE(prm_star.plan(g, start, goal, nullptr).success);
+  global_planning::FmtStarPlanner fmt(core::ParamSet::from_yaml(fmt_star_cfg()));
+  EXPECT_FALSE(fmt.plan(g, start, goal, nullptr).success);
+  global_planning::BitStarPlanner bit(core::ParamSet::from_yaml(bit_star_cfg()));
+  EXPECT_FALSE(bit.plan(g, start, goal, nullptr).success);
 }
 
 // (c) param validation failure -----------------------------------------------

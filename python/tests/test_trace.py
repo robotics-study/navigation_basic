@@ -9,7 +9,7 @@ from pathlib import Path
 from conftest import config, open_grid
 
 from navigation.core.trace import TraceRecorder, open_trace
-from navigation.global_planning.astar import AStar
+from navigation.global_planning import AStar
 
 
 def _emit_sample_trace() -> list[dict[str, object]]:

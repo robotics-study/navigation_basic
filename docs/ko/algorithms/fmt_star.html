@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FMT* · navigation study</title>
+<meta name="description" content="Janson 등 은 고정된 하나의 표본 배치 위에서 트리를 cost-to-come 순으로 바깥으로">
+<meta name="robots" content="index,follow">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b1020" media="(prefers-color-scheme: dark)">
+<link rel="canonical" href="https://robotics-study.github.io/navigation/ko/algorithms/fmt_star.html">
+<link rel="alternate" hreflang="ko" href="https://robotics-study.github.io/navigation/ko/algorithms/fmt_star.html">
+<link rel="alternate" hreflang="en" href="https://robotics-study.github.io/navigation/en/algorithms/fmt_star.html">
+<link rel="alternate" hreflang="x-default" href="https://robotics-study.github.io/navigation/en/algorithms/fmt_star.html">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="navigation study">
+<meta property="og:title" content="FMT* · navigation study">
+<meta property="og:description" content="Janson 등 은 고정된 하나의 표본 배치 위에서 트리를 cost-to-come 순으로 바깥으로">
+<meta property="og:url" content="https://robotics-study.github.io/navigation/ko/algorithms/fmt_star.html">
+<meta property="og:image" content="https://robotics-study.github.io/navigation/assets/fmt_star/maze01_final.png">
+<meta property="og:image:alt" content="FMT*">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:locale:alternate" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="FMT* · navigation study">
+<meta name="twitter:description" content="Janson 등 은 고정된 하나의 표본 배치 위에서 트리를 cost-to-come 순으로 바깥으로">
+<meta name="twitter:image" content="https://robotics-study.github.io/navigation/assets/fmt_star/maze01_final.png">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "FMT*", "description": "Janson 등 은 고정된 하나의 표본 배치 위에서 트리를 cost-to-come 순으로 바깥으로", "image": "https://robotics-study.github.io/navigation/assets/fmt_star/maze01_final.png", "inLanguage": "ko", "url": "https://robotics-study.github.io/navigation/ko/algorithms/fmt_star.html", "isPartOf": {"@type": "WebSite", "name": "navigation study", "url": "https://robotics-study.github.io/navigation/"}}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=becfdb97">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Crect width='24' height='24' rx='6' fill='%230b1020'/%3E%3Cpath d='M4 19V11h8V5h8' stroke='%23818cf8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='4' cy='19' r='2.4' fill='%23818cf8'/%3E%3Ccircle cx='20' cy='5' r='2.4' fill='%2322d3ee'/%3E%3C/svg%3E">
+<script src="../../assets/site.js?v=becfdb97"></script>
+</head>
+<body>
+<header class="topbar">
+  <button id="menu-btn" class="iconbtn menu-btn" aria-label="menu"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  <div class="brandcrumb">
+    <a class="brand hub" href="https://robotics-study.github.io/" aria-label="robotics-study home"><svg class="logo" width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true"><defs><linearGradient id="navlg" x1="0" y1="1" x2="1" y2="0"><stop stop-color="#6366f1"/><stop offset="1" stop-color="#06b6d4"/></linearGradient></defs><path d="M4 19V11h8V5h8" stroke="url(#navlg)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="4" cy="19" r="2.6" fill="url(#navlg)"/><circle cx="20" cy="5" r="2.6" fill="url(#navlg)"/></svg><span class="wm">robotics<span class="wm-dim"> study</span></span></a>
+    <span class="crumb-sep" aria-hidden="true">/</span>
+    <a class="brand" href="../../index.html"><span class="wm">navigation<span class="wm-dim"> study</span></span></a>
+  </div>
+  <nav class="topnav"><a href="../../ko/index.html">개요</a><a href="../../ko/algorithms/index.html">알고리즘</a><a href="../../ko/maps.html">맵</a><a href="../../ko/benchmarks.html">벤치마크</a><a href="https://github.com/robotics-study/navigation" target="_blank" rel="noopener">GitHub<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a></nav>
+  <span class="spacer"></span>
+  <div class="search"><svg class="s-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg><input id="search-input" type="search" placeholder="검색 / Search…" data-base="../../" autocomplete="off"><div id="search-results" class="search-results"></div></div>
+  <div class="lang-toggle" role="group" aria-label="language"><svg class="g-ico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.5 2.5 3.8 5.6 3.8 9s-1.3 6.5-3.8 9c-2.5-2.5-3.8-5.6-3.8-9S9.5 5.5 12 3Z"/></svg><a href="../../ko/algorithms/fmt_star.html" class="active">KO</a><span class="l-sep">/</span><a href="../../en/algorithms/fmt_star.html" class="">EN</a></div>
+</header>
+<div class="layout">
+<aside class="sidebar"><h4>개요</h4>
+<a href="../../ko/index.html">개요</a>
+<a href="../../ko/algorithms/index.html">알고리즘 목록</a>
+<h4>Global planning</h4>
+<details class="nav-sub"><summary>Search</summary><div class="nav-sub-body"><a href="../../ko/algorithms/bfs.html">BFS</a><a href="../../ko/algorithms/dijkstra.html">Dijkstra</a><a href="../../ko/algorithms/astar.html">A*</a><a href="../../ko/algorithms/dstar_lite.html">D* Lite</a><a href="../../ko/algorithms/theta_star.html">Theta*</a><a href="../../ko/algorithms/hybrid_astar.html">Hybrid A*</a></div></details>
+<details class="nav-sub" open><summary>Sampling</summary><div class="nav-sub-body"><a href="../../ko/algorithms/prm.html">PRM</a><a href="../../ko/algorithms/rrt.html">RRT</a><a href="../../ko/algorithms/rrt_star.html">RRT*</a><a href="../../ko/algorithms/prm_star.html">PRM*</a><a href="../../ko/algorithms/fmt_star.html" class="active">FMT*</a><a href="../../ko/algorithms/bit_star.html">BIT*</a><a href="../../ko/algorithms/fast_rrt.html">Fast-RRT</a></div></details>
+<a href="../../ko/benchmarks.html">벤치마크</a>
+<h4>Local planning <span class="soon">예정</span></h4>
+<span class="planned">DWA</span>
+<span class="planned">Pure Pursuit</span>
+<span class="planned">VFH</span>
+<span class="planned">MPC</span>
+<span class="planned">벤치마크</span>
+<h4>Multi-agent <span class="soon">예정</span></h4>
+<span class="planned">Prioritized A*</span>
+<span class="planned">Joint-space A*</span>
+<span class="planned">CBS</span>
+<span class="planned">벤치마크</span>
+<h4>Maps</h4>
+<a href="../../ko/maps.html">맵 표현</a>
+<h4>레퍼런스</h4>
+<a href="../../ko/architecture.html">아키텍처</a>
+<a href="../../ko/references.html">참고 문헌</a></aside>
+<main class="content"><article class="content-inner"><h1 id="fmt-fast-marching-tree">FMT* (Fast Marching Tree)<a class="anchor" href="#fmt-fast-marching-tree" title="Permanent link">¶</a></h1>
+<div class="code-links"><span class="cl-label">소스 코드</span><a href="https://github.com/robotics-study/navigation/blob/main/cpp/src/global_planning/sampling/fmt_star.cpp" target="_blank" rel="noopener">C++</a><a href="https://github.com/robotics-study/navigation/blob/main/cpp/include/navigation/global_planning/sampling/fmt_star.hpp" target="_blank" rel="noopener">C++ header</a><a href="https://github.com/robotics-study/navigation/blob/main/python/navigation/global_planning/sampling/fmt_star.py" target="_blank" rel="noopener">Python</a><a href="https://github.com/robotics-study/navigation/blob/main/python/demos/demo_fmt_star.py" target="_blank" rel="noopener">demo</a></div>
+<table class="spec-table">
+<thead>
+<tr>
+<th>항목</th>
+<th>내용</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>분류</td>
+<td>sampling-based, batch, asymptotically optimal</td>
+</tr>
+<tr>
+<td>요구 capability</td>
+<td><code>SamplingSpace</code></td>
+</tr>
+<tr>
+<td>완전성</td>
+<td>probabilistically complete</td>
+</tr>
+<tr>
+<td>최적성</td>
+<td><strong>asymptotically optimal</strong> — 표본 수 → ∞ 에서 최적 경로에 확률 1 로 수렴</td>
+</tr>
+<tr>
+<td>복잡도</td>
+<td>단일 배치 1-pass + lazy 충돌 검사 → PRM*/RRT* 보다 충돌 검사 수가 적다</td>
+</tr>
+<tr>
+<td>원 논문</td>
+<td>Janson, Schmerling, Clark &amp; Pavone (2015) <sup id="fnref4:janson"><a class="footnote-ref" href="#fn:janson">1</a></sup></td>
+</tr>
+</tbody>
+</table>
+<h2 id="_1">배경<a class="anchor" href="#_1" title="Permanent link">¶</a></h2>
+<p>Janson 등<sup id="fnref:janson"><a class="footnote-ref" href="#fn:janson">1</a></sup> 은 <strong>고정된 하나의 표본 배치</strong> 위에서 트리를 cost-to-come 순으로 바깥으로
+"행진(march)"시키는 lazy 동적 계획법으로 점근 최적을 달성하는 FMT* 를 제안했다. RRT* 처럼
+rewire 를 반복하지도, PRM* 처럼 모든 쌍을 미리 잇지도 않는다 — <strong>단 한 번의 pass</strong> 로 표본
+그래프 위의 최적 cost-to-come 을 계산한다.</p>
+<p>핵심은 두 가지다. (1) frontier(open) 노드 중 <strong>cost-to-come 이 가장 작은</strong> <span class="arithmatex">\(z\)</span> 를 꺼내 그
+근방의 미방문 표본을 확장한다 — Dijkstra 의 파면(wavefront)과 같은 순서다. (2) 각 표본 <span class="arithmatex">\(x\)</span> 를
+붙일 때, 근방 open 이웃 중 <span class="arithmatex">\(\mathrm{cost}(y)+\lVert y-x\rVert\)</span> 를 최소화하는 <span class="arithmatex">\(y\)</span> 를 고르고
+<strong>그 한 간선만</strong> 충돌 검사한다(lazy). 충돌하면 <span class="arithmatex">\(x\)</span> 는 미방문으로 남아 이후 다른 <span class="arithmatex">\(z\)</span> 에서
+붙을 기회를 얻는다.</p>
+<p>연결 반경은 <a href="prm_star.html">PRM*</a>·<a href="bit_star.html">BIT*</a> 와 같은 줄어드는 반경
+<span class="arithmatex">\(r_n=\gamma\sqrt{\log n/n}\)</span> 을 쓴다.</p>
+<h2 id="_2">동작 원리<a class="anchor" href="#_2" title="Permanent link">¶</a></h2>
+<pre><code>FMT_STAR(start, goal):
+    V ← {start, goal} ∪ sample_free(num_samples)    # 단일 고정 배치
+    r ← gamma · sqrt(log n / n)                      # 줄어드는 반경 (d = 2)
+    N ← radius_neighbors(V, r)                        # 배치당 1회 근방 그래프
+    cost[start] ← 0;  open ← {start};  z ← start
+    while true:
+        for x in N[z] if x unvisited:
+            y* ← argmin_{y ∈ N[x] ∩ open} cost[y] + ‖y − x‖   # 국소 최적 open 부모
+            if y* exists and is_motion_valid(y*, x):          # lazy: 이 간선만 검사
+                parent[x] ← y*;  cost[x] ← cost[y*] + ‖y* − x‖
+                open.add(x)                                   # frontier 로 승격
+        open.remove(z)                                # z 는 닫힘
+        z ← open 에서 cost 최소 노드 (min-heap pop)
+        if open 이 비면: break                        # 도달 불가
+        if z == goal: success; break
+    return path(goal)
+</code></pre>
+<p>frontier 는 cost-to-come 을 키로 하는 <strong>min-heap</strong> 이다. FMT* 는 open 노드의 cost 를 결코
+낮추지 않으므로 heap 항목은 항상 유효하고, <code>in_open</code> 플래그로 지연 멤버십을 판정하면 충분하다.</p>
+<h2 id="_3">성질<a class="anchor" href="#_3" title="Permanent link">¶</a></h2>
+<ul>
+<li><strong>완전성</strong>: probabilistically complete<sup id="fnref2:janson"><a class="footnote-ref" href="#fn:janson">1</a></sup>.</li>
+<li><strong>최적성</strong>: <strong>asymptotically optimal.</strong> 줄어드는 반경과 cost-to-come 행진 순서만으로 표본
+  그래프 위 최적 cost-to-come 을 복원한다 — rewire 없이 1-pass<sup id="fnref3:janson"><a class="footnote-ref" href="#fn:janson">1</a></sup>.</li>
+<li><strong>비용</strong>: <strong>lazy 충돌 검사</strong> — 표본마다 국소 최적 간선 하나만 검사하므로, 후보 간선을 폭넓게
+  검사하는 PRM*/RRT* 보다 충돌 검사 횟수가 적다. 충돌 검사가 비싼 문제에서 특히 유리하다.</li>
+</ul>
+<h2 id="_4">파라미터<a class="anchor" href="#_4" title="Permanent link">¶</a></h2>
+<table>
+<thead>
+<tr>
+<th>이름</th>
+<th>타입</th>
+<th>기본값</th>
+<th>범위</th>
+<th>설명</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>num_samples</code></td>
+<td>int</td>
+<td>1500</td>
+<td>[1, 200000]</td>
+<td>단일 배치로 뿌리는 충돌 없는 샘플 수 (start/goal 제외)</td>
+</tr>
+<tr>
+<td><code>gamma</code></td>
+<td>float</td>
+<td>30.0</td>
+<td>[0.01, 1000.0]</td>
+<td>marching 연결 반경 계수 γ. r_n = γ·(log n / n)^(1/2)</td>
+</tr>
+<tr>
+<td><code>seed</code></td>
+<td>int</td>
+<td>1</td>
+<td>[0, 2^31−1]</td>
+<td>난수 시드 (재현성)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_5">행진 규칙과 점근적 최적성<a class="anchor" href="#_5" title="Permanent link">¶</a></h2>
+<p><strong>연결 반경.</strong> <a href="prm_star.html">PRM*</a> 와 같은</p>
+<div class="arithmatex">\[
+r_n=\gamma\left(\frac{\log n}{n}\right)^{1/d},\qquad d=2
+\]</div>
+<p>를 쓴다. 이 반경이 기대 이웃 수를 <span class="arithmatex">\(\Theta(\log n)\)</span> 로 유지한다.</p>
+<p><strong>행진(dynamic programming).</strong> frontier <span class="arithmatex">\(H\)</span> 에서 cost-to-come 최소 노드 <span class="arithmatex">\(z\)</span> 를 꺼내, 근방
+미방문 표본 <span class="arithmatex">\(x\in N(z)\)</span> 마다</p>
+<div class="arithmatex">\[
+y^*=\arg\min_{y\in N(x)\cap H}\Bigl(\mathrm{cost}(y)+\lVert y-x\rVert\Bigr),\qquad
+\mathrm{cost}(x)=\mathrm{cost}(y^*)+\lVert y^*-x\rVert
+\]</div>
+<p>로 붙이되 <strong>간선 <span class="arithmatex">\((y^*,x)\)</span> 하나만</strong> 충돌 검사한다(lazy). <span class="arithmatex">\(z\)</span> 를 cost 오름차순으로 꺼내는
+순서가 Dijkstra 파면과 같아, 한 번 닫힌 노드의 cost 는 최종값이다.</p>
+<p><strong>정리 (점근적 최적성, Janson et al. 2015).</strong> 위 반경 하에서 FMT* 가 반환하는 비용 <span class="arithmatex">\(Y_n\)</span> 은</p>
+<div class="arithmatex">\[
+P\!\left[\lim_{n\to\infty}Y_n=c^*\right]=1.
+\]</div>
+<p><em>직관.</em> lazy 검사가 놓치는 간선은 국소 최적이 아니므로 최적 경로 비용에 기여하지 않는다.
+표본이 조밀해지면 각 최적 부분 경로가 근방 그래프 안에 <span class="arithmatex">\(\epsilon\)</span> 오차로 존재하고, 행진 순서가
+이를 정확히 복원한다.</p>
+<h2 id="_6">구현 노트<a class="anchor" href="#_6" title="Permanent link">¶</a></h2>
+<ul>
+<li>C++: <code>cpp/src/global_planning/fmt_star.cpp</code>, Python: <code>python/navigation/global_planning/fmt_star.py</code></li>
+<li>배치 표본 위 근방 그래프(<code>radius_neighbors</code>)와 줄어드는 반경(<code>rgg_radius</code>)은
+  <a href="prm_star.html">PRM*</a>·<a href="bit_star.html">BIT*</a> 와 공유하는 <code>sampling_common</code> / <code>_sampling</code> 에 있다.</li>
+<li>FMT* 는 트리를 한 번에 마칭하므로 <a href="prm.html">PRM</a> 계열의 로드맵(<code>roadmap_common</code> / <code>_roadmap</code>)이
+  아니라 배치 근방 그래프 위에서 직접 동작한다.</li>
+</ul>
+<h2 id="trace">방출 trace 이벤트<a class="anchor" href="#trace" title="Permanent link">¶</a></h2>
+<p><code>planning_started</code> → <code>sample_drawn</code>* → (<code>edge_added</code>, <code>node_expanded</code>)* → <code>path_found</code> → <code>planning_finished</code></p>
+<p><code>sample_drawn</code> 은 배치 표본, <code>edge_added</code> 는 표본을 붙일 때의 간선, <code>node_expanded</code> 는 행진에서
+frontier 최소 노드 <span class="arithmatex">\(z\)</span> 를 꺼내는 순간이다 — 이 둘이 파면 확장 과정으로 번갈아 방출된다.</p>
+<h2 id="demo">Demo<a class="anchor" href="#demo" title="Permanent link">¶</a></h2>
+<p><code>maze01</code> — 표본 배치가 뿌려진 뒤, 파면이 start 에서 바깥으로 cost 오름차순으로 번지며 트리를
+키운다. goal 에 파면이 닿는 순간 최적 경로가 확정된다.</p>
+<p><img alt="FMT* on maze01" src="../../assets/fmt_star/maze01.gif" /></p>
+<p>탐색 중간 과정 (좌 → 우: 파면 초반 / 확산 / 최종 경로):</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;"></th>
+<th style="text-align: center;"></th>
+<th style="text-align: center;"></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;"><img alt="early" src="../../assets/fmt_star/maze01_snap_02.png" /></td>
+<td style="text-align: center;"><img alt="mid" src="../../assets/fmt_star/maze01_snap_05.png" /></td>
+<td style="text-align: center;"><img alt="final" src="../../assets/fmt_star/maze01_final.png" /></td>
+</tr>
+</tbody>
+</table>
+<p><code>open01</code> 최종 결과 — 거의 직선에 가깝다:</p>
+<p><img alt="FMT* on open01" src="../../assets/fmt_star/open01_final.png" /></p>
+<p>측정치 (Python, seed = 1, trace on):</p>
+<table>
+<thead>
+<tr>
+<th>map</th>
+<th>path cost</th>
+<th>표본 수</th>
+<th>expanded (행진 frontier 노드)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>maze01</td>
+<td>13.595</td>
+<td>1,502</td>
+<td>1,090</td>
+</tr>
+<tr>
+<td>open01</td>
+<td>12.058</td>
+<td>—</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p>C++ 구현도 동일 시나리오를 미러링하며, 언어 간 난수 스트림 차이 범위 안에서 같은 결과를 낸다.</p>
+<p>재현:</p>
+<pre><code class="language-bash">python python/demos/demo_fmt_star.py \
+  --map maps/grid/maze01.yaml --scenario maps/scenarios/maze01_s1.yaml \
+  --params configs/global_planning/fmt_star.yaml --trace out/fmt_star.jsonl
+python tools/viz/replay.py out/fmt_star.jsonl --gif out/fmt_star.gif
+</code></pre>
+<h2 id="references">References<a class="anchor" href="#references" title="Permanent link">¶</a></h2>
+<div class="footnote">
+<hr />
+<ol>
+<li id="fn:janson">
+<p>Janson, L., Schmerling, E., Clark, A., &amp; Pavone, M. (2015). "Fast marching tree: A fast marching sampling-based method for optimal motion planning in many dimensions." <em>The International Journal of Robotics Research</em>, 34(7), 883–921. <a href="https://doi.org/10.1177/0278364915577958">doi:10.1177/0278364915577958</a> · <a href="https://arxiv.org/abs/1306.3532">PDF (arXiv)</a>&#160;<a class="footnote-backref" href="#fnref:janson" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:janson" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:janson" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref4:janson" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+</li>
+<li id="fn:karaman">
+<p>Karaman, S., &amp; Frazzoli, E. (2011). "Sampling-based algorithms for optimal motion planning." <em>The International Journal of Robotics Research</em>, 30(7), 846–894. <a href="https://doi.org/10.1177/0278364911406761">doi:10.1177/0278364911406761</a> · <a href="https://arxiv.org/abs/1105.1186">PDF (arXiv)</a>&#160;<a class="footnote-backref" href="#fnref:karaman" title="Jump back to footnote 2 in the text">&#8617;</a></p>
+</li>
+</ol>
+</div><nav class="pager"><a href="../../ko/algorithms/prm_star.html"><div class="dir">← 이전</div><div class="ttl">PRM*</div></a><a class="next" href="../../ko/algorithms/bit_star.html"><div class="dir">다음 →</div><div class="ttl">BIT*</div></a></nav></article></main>
+<aside class="toc" id="toc"></aside>
+</div>
+<div class="backdrop"></div>
+<footer class="site-footer">
+  <p>navigation study — robot navigation planning algorithms · C++ / Python dual implementation</p>
+  <p>Built as a static site · <a href="../../ko/index.html">한국어</a> · <a href="../../en/index.html">English</a></p>
+</footer>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script" async></script>
+</body></html>

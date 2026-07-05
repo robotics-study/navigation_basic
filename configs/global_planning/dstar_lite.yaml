@@ -1,0 +1,12 @@
+algorithm: dstar_lite
+category: global_planning
+params:
+  - name: sensor_radius
+    type: int
+    default: 3
+    min: 1
+    max: 50
+    description: >-
+      로봇 센서의 반경 (단위: cell). 매 스텝 로봇 셀 기준 Euclidean disk
+      (dr² + dc² ≤ r²) 안의 셀에 대해 실제 점유를 감지한다. 클수록 더 멀리 있는
+      장애물을 미리 발견해 재계획이 줄어든다. (Koenig & Likhachev 2002)

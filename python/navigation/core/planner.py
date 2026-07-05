@@ -10,10 +10,17 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Generic, TypeVar
 
-from .capabilities import Capability, DiscreteSpace, SamplingSpace
+from .capabilities import (
+    Capability,
+    DiscreteSpace,
+    DynamicGridSpace,
+    LineOfSightSpace,
+    SamplingSpace,
+    SE2CollisionSpace,
+)
 from .params import ParamSet
 from .trace import TraceRecorder
-from .types import Cell, PlanResult, Point, StateT
+from .types import Cell, PlanResult, Point, Pose, StateT
 
 SpaceT = TypeVar("SpaceT")
 
@@ -44,3 +51,6 @@ class GlobalPlanner(ABC, Generic[StateT, SpaceT]):
 # Convenience aliases mirroring the C++ `DiscretePlanner` / `SamplingPlanner`.
 DiscretePlanner = GlobalPlanner[Cell, DiscreteSpace[Cell]]
 SamplingPlanner = GlobalPlanner[Point, SamplingSpace[Point]]
+LineOfSightPlanner = GlobalPlanner[Cell, LineOfSightSpace[Cell]]
+DynamicGridPlanner = GlobalPlanner[Cell, DynamicGridSpace[Cell]]
+SE2CollisionPlanner = GlobalPlanner[Pose, SE2CollisionSpace[Pose]]

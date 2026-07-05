@@ -41,7 +41,8 @@ OccupancyGrid2D OccupancyGrid2D::from_image(const PgmImage& img, double resoluti
 }
 
 std::set<Capability> OccupancyGrid2D::capabilities() const {
-  return {Capability::DISCRETE_SPACE, Capability::SAMPLING_SPACE};
+  return {Capability::DISCRETE_SPACE, Capability::SAMPLING_SPACE, Capability::LINE_OF_SIGHT_SPACE,
+          Capability::DYNAMIC_GRID_SPACE, Capability::SE2_COLLISION_SPACE};
 }
 
 bool OccupancyGrid2D::in_bounds(int row, int col) const {
@@ -65,31 +66,23 @@ Cell OccupancyGrid2D::world_to_cell(double x, double y) const {
 }
 
 std::vector<std::pair<Cell, double>> OccupancyGrid2D::neighbors(const Cell& s) const {
-  // Orthogonals first, then diagonals — a fixed cross-language emission order so
-  // the deterministic searches (with a stable tie-break) expand nodes and settle
-  // on the same optimal path in both C++ and Python.
-  static const int kOrthoR[] = {-1, 1, 0, 0};
-  static const int kOrthoC[] = {0, 0, -1, 1};
-  static const int kDiagR[] = {-1, -1, 1, 1};
-  static const int kDiagC[] = {-1, 1, -1, 1};
-  const double kSqrt2 = std::sqrt(2.0);
+  // Ground-truth successors: a cell is enterable iff in bounds and actually free.
+  return neighbors_impl(s, [this](int row, int col) { return is_free(row, col); });
+}
 
-  std::vector<std::pair<Cell, double>> out;
-  for (int i = 0; i < 4; ++i) {
-    int nr = s.row + kOrthoR[i], nc = s.col + kOrthoC[i];
-    if (is_free(nr, nc)) out.push_back({Cell{nr, nc}, 1.0});
-  }
-  if (connectivity_ == 4) return out;
-  for (int i = 0; i < 4; ++i) {
-    int dr = kDiagR[i], dc = kDiagC[i];
-    int nr = s.row + dr, nc = s.col + dc;
-    if (!is_free(nr, nc)) continue;
-    // No corner-cutting: a diagonal is blocked if either shared orthogonal cell
-    // is occupied (the robot would clip an obstacle corner).
-    if (!is_free(s.row + dr, s.col) || !is_free(s.row, s.col + dc)) continue;
-    out.push_back({Cell{nr, nc}, kSqrt2});
-  }
-  return out;
+std::vector<std::pair<Cell, double>> OccupancyGrid2D::passable_neighbors(
+    const Cell& s, const std::set<Cell>& blocked) const {
+  // Belief successors: a cell is enterable iff in bounds and not (yet) known blocked;
+  // real occupancy is invisible here (only is_blocked reads it). Same worker + corner
+  // rule as neighbors(), so a discovered-free grid gives identical successors to truth.
+  return neighbors_impl(s, [this, &blocked](int row, int col) {
+    return in_bounds(row, col) && blocked.find(Cell{row, col}) == blocked.end();
+  });
+}
+
+bool OccupancyGrid2D::is_blocked(const Cell& s) const {
+  // Occupied OR out of bounds — is_free is already false for both.
+  return !is_free(s.row, s.col);
 }
 
 double OccupancyGrid2D::heuristic(const Cell& a, const Cell& b) const {
@@ -103,6 +96,15 @@ double OccupancyGrid2D::heuristic(const Cell& a, const Cell& b) const {
   return (hi - lo) + std::sqrt(2.0) * lo;
 }
 
+bool OccupancyGrid2D::line_of_sight(const Cell& a, const Cell& b) const {
+  // Any-angle LOS must mean "the straight segment is actually traversable" under
+  // the SAME corner-cut-forbidden rule as neighbors()/is_motion_valid — else a
+  // shortcut could clip an obstacle corner the grid edges forbid. Reuse the
+  // verified supercover (Amanatides & Woo 1987) from cell centres; world
+  // conversion stays inside the map (Nash, Daniel, Koenig & Felner 2007).
+  return is_motion_valid(cell_to_world(a), cell_to_world(b));
+}
+
 Point OccupancyGrid2D::sample() {
   std::uniform_real_distribution<double> dx(origin_x_, origin_x_ + cols_ * resolution_);
   std::uniform_real_distribution<double> dy(origin_y_, origin_y_ + rows_ * resolution_);
@@ -112,6 +114,27 @@ Point OccupancyGrid2D::sample() {
 bool OccupancyGrid2D::is_state_valid(const Point& p) const {
   Cell c = world_to_cell(p.x, p.y);
   return is_free(c.row, c.col);
+}
+
+bool OccupancyGrid2D::is_collision(const Footprint& fp, const Pose& pose) const {
+  // Inscribed-disc footprint is orientation-invariant, so pose.theta is unused (a
+  // polygon footprint would use it) — Dolgov et al. 2008. Collision iff any occupied
+  // or out-of-bounds cell overlaps the disc of radius r at (x, y). Exact disc–cell
+  // overlap via squared distance to the cell rectangle (no sqrt, no trig → bit-
+  // identical across languages). Fixed row-major scan; world<->cell stays here.
+  const double r = fp.inscribed_radius, r2 = r * r, half = resolution_ * 0.5;
+  const Cell lo = world_to_cell(pose.x - r, pose.y + r);  // y+r → smaller row
+  const Cell hi = world_to_cell(pose.x + r, pose.y - r);
+  for (int row = lo.row; row <= hi.row; ++row) {
+    for (int col = lo.col; col <= hi.col; ++col) {
+      if (is_free(row, col)) continue;               // in-bounds & free → skip
+      const Point c = cell_to_world(Cell{row, col});  // occupied OR out-of-bounds
+      const double dx = pose.x - std::clamp(pose.x, c.x - half, c.x + half);
+      const double dy = pose.y - std::clamp(pose.y, c.y - half, c.y + half);
+      if (dx * dx + dy * dy <= r2) return true;
+    }
+  }
+  return false;
 }
 
 bool OccupancyGrid2D::is_free_uv(int iu, int iv) const {

@@ -3,18 +3,44 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>navigation study · navigation study</title>
+<title>robot navigation planning algorithms · navigation study</title>
+<meta name="description" content="로봇 경로 계획(navigation planning) 알고리즘을 C++ 와 Python 으로 이중 구현한 학습용 스터디 — 탐색(BFS·Dijkstra·A*)과 샘플링(RRT·RRT*·PRM·FMT*·BIT*) 계열을 단계별 시각화와 벤치마크로 비교한다.">
+<meta name="robots" content="index,follow">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b1020" media="(prefers-color-scheme: dark)">
+<link rel="canonical" href="https://robotics-study.github.io/navigation/index.html">
+<link rel="alternate" hreflang="ko" href="https://robotics-study.github.io/navigation/ko/index.html">
+<link rel="alternate" hreflang="en" href="https://robotics-study.github.io/navigation/en/index.html">
+<link rel="alternate" hreflang="x-default" href="https://robotics-study.github.io/navigation/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="navigation study">
+<meta property="og:title" content="robot navigation planning algorithms · navigation study">
+<meta property="og:description" content="로봇 경로 계획(navigation planning) 알고리즘을 C++ 와 Python 으로 이중 구현한 학습용 스터디 — 탐색(BFS·Dijkstra·A*)과 샘플링(RRT·RRT*·PRM·FMT*·BIT*) 계열을 단계별 시각화와 벤치마크로 비교한다.">
+<meta property="og:url" content="https://robotics-study.github.io/navigation/index.html">
+<meta property="og:image" content="https://robotics-study.github.io/navigation/assets/astar/maze01_final.png">
+<meta property="og:image:alt" content="robot navigation planning algorithms">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:locale:alternate" content="ko_KR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="robot navigation planning algorithms · navigation study">
+<meta name="twitter:description" content="로봇 경로 계획(navigation planning) 알고리즘을 C++ 와 Python 으로 이중 구현한 학습용 스터디 — 탐색(BFS·Dijkstra·A*)과 샘플링(RRT·RRT*·PRM·FMT*·BIT*) 계열을 단계별 시각화와 벤치마크로 비교한다.">
+<meta name="twitter:image" content="https://robotics-study.github.io/navigation/assets/astar/maze01_final.png">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebSite", "name": "navigation study", "url": "https://robotics-study.github.io/navigation/", "description": "로봇 경로 계획(navigation planning) 알고리즘을 C++ 와 Python 으로 이중 구현한 학습용 스터디 — 탐색(BFS·Dijkstra·A*)과 샘플링(RRT·RRT*·PRM·FMT*·BIT*) 계열을 단계별 시각화와 벤치마크로 비교한다.", "inLanguage": ["ko", "en"]}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/site.css?v=faed3c57">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Crect width='24' height='24' rx='6' fill='%230b1020'/%3E%3Cpath d='M5 18V11h7V6h7' stroke='%23818cf8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='5' cy='18' r='2.4' fill='%23818cf8'/%3E%3Ccircle cx='19' cy='6' r='2.4' fill='%2322d3ee'/%3E%3C/svg%3E">
-<script src="assets/site.js?v=faed3c57"></script>
+<link rel="stylesheet" href="assets/site.css?v=becfdb97">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Crect width='24' height='24' rx='6' fill='%230b1020'/%3E%3Cpath d='M4 19V11h8V5h8' stroke='%23818cf8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='4' cy='19' r='2.4' fill='%23818cf8'/%3E%3Ccircle cx='20' cy='5' r='2.4' fill='%2322d3ee'/%3E%3C/svg%3E">
+<script src="assets/site.js?v=becfdb97"></script>
 </head>
 <body>
 <header class="topbar">
   <button id="menu-btn" class="iconbtn menu-btn" aria-label="menu"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
-  <a class="brand" href="index.html"><svg class="logo" width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true"><defs><linearGradient id="navlg" x1="3" y1="21" x2="21" y2="3" gradientUnits="userSpaceOnUse"><stop stop-color="#6366f1"/><stop offset="1" stop-color="#06b6d4"/></linearGradient></defs><path d="M4 19V11h8V5h8" stroke="url(#navlg)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="4" cy="19" r="2.6" fill="url(#navlg)"/><circle cx="20" cy="5" r="2.6" fill="url(#navlg)"/></svg><span class="wm">navigation<span class="wm-dim"> study</span></span></a>
+  <div class="brandcrumb">
+    <a class="brand hub" href="https://robotics-study.github.io/" aria-label="robotics-study home"><svg class="logo" width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true"><defs><linearGradient id="navlg" x1="0" y1="1" x2="1" y2="0"><stop stop-color="#6366f1"/><stop offset="1" stop-color="#06b6d4"/></linearGradient></defs><path d="M4 19V11h8V5h8" stroke="url(#navlg)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="4" cy="19" r="2.6" fill="url(#navlg)"/><circle cx="20" cy="5" r="2.6" fill="url(#navlg)"/></svg><span class="wm">robotics<span class="wm-dim"> study</span></span></a>
+    <span class="crumb-sep" aria-hidden="true">/</span>
+    <a class="brand" href="index.html"><span class="wm">navigation<span class="wm-dim"> study</span></span></a>
+  </div>
   
   <span class="spacer"></span>
   <div class="search"><svg class="s-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg><input id="search-input" type="search" placeholder="검색 / Search…" data-base="" autocomplete="off"><div id="search-results" class="search-results"></div></div>
@@ -23,7 +49,7 @@
 
 <main class="lander">
   <div class="lander-top">
-    <svg class="logo" width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true"><defs><linearGradient id="navlg" x1="3" y1="21" x2="21" y2="3" gradientUnits="userSpaceOnUse"><stop stop-color="#6366f1"/><stop offset="1" stop-color="#06b6d4"/></linearGradient></defs><path d="M4 19V11h8V5h8" stroke="url(#navlg)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="4" cy="19" r="2.6" fill="url(#navlg)"/><circle cx="20" cy="5" r="2.6" fill="url(#navlg)"/></svg>
+    <svg class="logo" width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true"><defs><linearGradient id="navlg" x1="0" y1="1" x2="1" y2="0"><stop stop-color="#6366f1"/><stop offset="1" stop-color="#06b6d4"/></linearGradient></defs><path d="M4 19V11h8V5h8" stroke="url(#navlg)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="4" cy="19" r="2.6" fill="url(#navlg)"/><circle cx="20" cy="5" r="2.6" fill="url(#navlg)"/></svg>
     <h1>navigation<span class="wm-dim"> study</span></h1>
     <p class="sub">로봇 경로 계획(navigation planning) 알고리즘 — C++ / Python 이중 구현 · 단계별 시각화 · 벤치마크</p>
     <div class="lander-btns">
@@ -32,10 +58,9 @@
     </div>
   </div>
 
-  <div class="gif-trio"><a class="gif-card" href="ko/algorithms/astar.html"><img src="assets/astar/maze01.gif" alt="A* search on maze01" loading="lazy"><div class="cap"><b>A*</b><span>informed search</span></div></a><a class="gif-card" href="ko/algorithms/rrt_star.html"><img src="assets/rrt_star/maze01.gif" alt="RRT* on maze01" loading="lazy"><div class="cap"><b>RRT*</b><span>asymptotically optimal</span></div></a><a class="gif-card" href="ko/algorithms/fast_rrt.html"><img src="assets/fast_rrt/maze01.gif" alt="Fast-RRT on maze01" loading="lazy"><div class="cap"><b>Fast-RRT</b><span>Fast-Sampling + shortcut</span></div></a></div>
+  <div class="gif-grid"><a class="gif-card" href="ko/algorithms/bfs.html"><img src="assets/bfs/maze01.gif" alt="BFS on maze01" loading="lazy"><div class="cap"><b>BFS</b><span>uninformed search</span></div></a><a class="gif-card" href="ko/algorithms/dijkstra.html"><img src="assets/dijkstra/maze01.gif" alt="Dijkstra on maze01" loading="lazy"><div class="cap"><b>Dijkstra</b><span>cost-optimal</span></div></a><a class="gif-card" href="ko/algorithms/astar.html"><img src="assets/astar/maze01.gif" alt="A* on maze01" loading="lazy"><div class="cap"><b>A*</b><span>informed search</span></div></a><a class="gif-card" href="ko/algorithms/dstar_lite.html"><img src="assets/dstar_lite/maze01.gif" alt="D* Lite on maze01" loading="lazy"><div class="cap"><b>D* Lite</b><span>dynamic replanning</span></div></a><a class="gif-card" href="ko/algorithms/theta_star.html"><img src="assets/theta_star/maze01.gif" alt="Theta* on maze01" loading="lazy"><div class="cap"><b>Theta*</b><span>any-angle search</span></div></a><a class="gif-card" href="ko/algorithms/hybrid_astar.html"><img src="assets/hybrid_astar/maze01.gif" alt="Hybrid A* on maze01" loading="lazy"><div class="cap"><b>Hybrid A*</b><span>kinodynamic SE(2)</span></div></a><a class="gif-card" href="ko/algorithms/prm.html"><img src="assets/prm/maze01.gif" alt="PRM on maze01" loading="lazy"><div class="cap"><b>PRM</b><span>roadmap · multi-query</span></div></a><a class="gif-card" href="ko/algorithms/rrt.html"><img src="assets/rrt/maze01.gif" alt="RRT on maze01" loading="lazy"><div class="cap"><b>RRT</b><span>feasible sampling</span></div></a><a class="gif-card" href="ko/algorithms/rrt_star.html"><img src="assets/rrt_star/maze01.gif" alt="RRT* on maze01" loading="lazy"><div class="cap"><b>RRT*</b><span>asymptotically optimal</span></div></a><a class="gif-card" href="ko/algorithms/prm_star.html"><img src="assets/prm_star/maze01.gif" alt="PRM* on maze01" loading="lazy"><div class="cap"><b>PRM*</b><span>optimal roadmap</span></div></a><a class="gif-card" href="ko/algorithms/fmt_star.html"><img src="assets/fmt_star/maze01.gif" alt="FMT* on maze01" loading="lazy"><div class="cap"><b>FMT*</b><span>fast marching tree</span></div></a><a class="gif-card" href="ko/algorithms/bit_star.html"><img src="assets/bit_star/maze01.gif" alt="BIT* on maze01" loading="lazy"><div class="cap"><b>BIT*</b><span>batch informed trees</span></div></a><a class="gif-card" href="ko/algorithms/fast_rrt.html"><img src="assets/fast_rrt/maze01.gif" alt="Fast-RRT on maze01" loading="lazy"><div class="cap"><b>Fast-RRT</b><span>Fast-Sampling + shortcut</span></div></a></div>
 
   <div class="lander-cats">
-    <div class="lander-cat"><h3>Global planning</h3><div class="chips"><a href="ko/algorithms/bfs.html">BFS</a><a href="ko/algorithms/dijkstra.html">Dijkstra</a><a href="ko/algorithms/astar.html">A*</a><a href="ko/algorithms/rrt.html">RRT</a><a href="ko/algorithms/rrt_star.html">RRT*</a><a href="ko/algorithms/fast_rrt.html">Fast-RRT</a></div></div>
     <div class="lander-cat"><h3>Local planning <span class="soon">예정</span></h3><div class="chips"><span class="dim">DWA</span><span class="dim">Pure Pursuit</span><span class="dim">VFH</span><span class="dim">MPC</span></div></div>
     <div class="lander-cat"><h3>Multi-agent <span class="soon">예정</span></h3><div class="chips"><span class="dim">Prioritized A*</span><span class="dim">Joint-space A*</span><span class="dim">CBS</span></div></div>
     <div class="lander-cat"><h3>Map representations</h3><div class="chips"><a href="ko/maps.html">OccupancyGrid2D</a><span class="dim">GraphMap</span><span class="dim">TopologyMap</span><span class="dim">ContinuousMap</span></div></div>

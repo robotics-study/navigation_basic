@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PRM · navigation study</title>
+<meta name="description" content="Kavraki 등 은 고차원 configuration space 에서 여러 질의(multi-query)를 빠르게">
+<meta name="robots" content="index,follow">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b1020" media="(prefers-color-scheme: dark)">
+<link rel="canonical" href="https://robotics-study.github.io/navigation/ko/algorithms/prm.html">
+<link rel="alternate" hreflang="ko" href="https://robotics-study.github.io/navigation/ko/algorithms/prm.html">
+<link rel="alternate" hreflang="en" href="https://robotics-study.github.io/navigation/en/algorithms/prm.html">
+<link rel="alternate" hreflang="x-default" href="https://robotics-study.github.io/navigation/en/algorithms/prm.html">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="navigation study">
+<meta property="og:title" content="PRM · navigation study">
+<meta property="og:description" content="Kavraki 등 은 고차원 configuration space 에서 여러 질의(multi-query)를 빠르게">
+<meta property="og:url" content="https://robotics-study.github.io/navigation/ko/algorithms/prm.html">
+<meta property="og:image" content="https://robotics-study.github.io/navigation/assets/prm/maze01_final.png">
+<meta property="og:image:alt" content="PRM">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:locale:alternate" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="PRM · navigation study">
+<meta name="twitter:description" content="Kavraki 등 은 고차원 configuration space 에서 여러 질의(multi-query)를 빠르게">
+<meta name="twitter:image" content="https://robotics-study.github.io/navigation/assets/prm/maze01_final.png">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "PRM", "description": "Kavraki 등 은 고차원 configuration space 에서 여러 질의(multi-query)를 빠르게", "image": "https://robotics-study.github.io/navigation/assets/prm/maze01_final.png", "inLanguage": "ko", "url": "https://robotics-study.github.io/navigation/ko/algorithms/prm.html", "isPartOf": {"@type": "WebSite", "name": "navigation study", "url": "https://robotics-study.github.io/navigation/"}}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=becfdb97">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Crect width='24' height='24' rx='6' fill='%230b1020'/%3E%3Cpath d='M4 19V11h8V5h8' stroke='%23818cf8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='4' cy='19' r='2.4' fill='%23818cf8'/%3E%3Ccircle cx='20' cy='5' r='2.4' fill='%2322d3ee'/%3E%3C/svg%3E">
+<script src="../../assets/site.js?v=becfdb97"></script>
+</head>
+<body>
+<header class="topbar">
+  <button id="menu-btn" class="iconbtn menu-btn" aria-label="menu"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  <div class="brandcrumb">
+    <a class="brand hub" href="https://robotics-study.github.io/" aria-label="robotics-study home"><svg class="logo" width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true"><defs><linearGradient id="navlg" x1="0" y1="1" x2="1" y2="0"><stop stop-color="#6366f1"/><stop offset="1" stop-color="#06b6d4"/></linearGradient></defs><path d="M4 19V11h8V5h8" stroke="url(#navlg)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="4" cy="19" r="2.6" fill="url(#navlg)"/><circle cx="20" cy="5" r="2.6" fill="url(#navlg)"/></svg><span class="wm">robotics<span class="wm-dim"> study</span></span></a>
+    <span class="crumb-sep" aria-hidden="true">/</span>
+    <a class="brand" href="../../index.html"><span class="wm">navigation<span class="wm-dim"> study</span></span></a>
+  </div>
+  <nav class="topnav"><a href="../../ko/index.html">개요</a><a href="../../ko/algorithms/index.html">알고리즘</a><a href="../../ko/maps.html">맵</a><a href="../../ko/benchmarks.html">벤치마크</a><a href="https://github.com/robotics-study/navigation" target="_blank" rel="noopener">GitHub<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a></nav>
+  <span class="spacer"></span>
+  <div class="search"><svg class="s-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg><input id="search-input" type="search" placeholder="검색 / Search…" data-base="../../" autocomplete="off"><div id="search-results" class="search-results"></div></div>
+  <div class="lang-toggle" role="group" aria-label="language"><svg class="g-ico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.5 2.5 3.8 5.6 3.8 9s-1.3 6.5-3.8 9c-2.5-2.5-3.8-5.6-3.8-9S9.5 5.5 12 3Z"/></svg><a href="../../ko/algorithms/prm.html" class="active">KO</a><span class="l-sep">/</span><a href="../../en/algorithms/prm.html" class="">EN</a></div>
+</header>
+<div class="layout">
+<aside class="sidebar"><h4>개요</h4>
+<a href="../../ko/index.html">개요</a>
+<a href="../../ko/algorithms/index.html">알고리즘 목록</a>
+<h4>Global planning</h4>
+<details class="nav-sub"><summary>Search</summary><div class="nav-sub-body"><a href="../../ko/algorithms/bfs.html">BFS</a><a href="../../ko/algorithms/dijkstra.html">Dijkstra</a><a href="../../ko/algorithms/astar.html">A*</a><a href="../../ko/algorithms/dstar_lite.html">D* Lite</a><a href="../../ko/algorithms/theta_star.html">Theta*</a><a href="../../ko/algorithms/hybrid_astar.html">Hybrid A*</a></div></details>
+<details class="nav-sub" open><summary>Sampling</summary><div class="nav-sub-body"><a href="../../ko/algorithms/prm.html" class="active">PRM</a><a href="../../ko/algorithms/rrt.html">RRT</a><a href="../../ko/algorithms/rrt_star.html">RRT*</a><a href="../../ko/algorithms/prm_star.html">PRM*</a><a href="../../ko/algorithms/fmt_star.html">FMT*</a><a href="../../ko/algorithms/bit_star.html">BIT*</a><a href="../../ko/algorithms/fast_rrt.html">Fast-RRT</a></div></details>
+<a href="../../ko/benchmarks.html">벤치마크</a>
+<h4>Local planning <span class="soon">예정</span></h4>
+<span class="planned">DWA</span>
+<span class="planned">Pure Pursuit</span>
+<span class="planned">VFH</span>
+<span class="planned">MPC</span>
+<span class="planned">벤치마크</span>
+<h4>Multi-agent <span class="soon">예정</span></h4>
+<span class="planned">Prioritized A*</span>
+<span class="planned">Joint-space A*</span>
+<span class="planned">CBS</span>
+<span class="planned">벤치마크</span>
+<h4>Maps</h4>
+<a href="../../ko/maps.html">맵 표현</a>
+<h4>레퍼런스</h4>
+<a href="../../ko/architecture.html">아키텍처</a>
+<a href="../../ko/references.html">참고 문헌</a></aside>
+<main class="content"><article class="content-inner"><h1 id="prm-probabilistic-roadmap">PRM (Probabilistic Roadmap)<a class="anchor" href="#prm-probabilistic-roadmap" title="Permanent link">¶</a></h1>
+<div class="code-links"><span class="cl-label">소스 코드</span><a href="https://github.com/robotics-study/navigation/blob/main/cpp/src/global_planning/sampling/prm.cpp" target="_blank" rel="noopener">C++</a><a href="https://github.com/robotics-study/navigation/blob/main/cpp/include/navigation/global_planning/sampling/prm.hpp" target="_blank" rel="noopener">C++ header</a><a href="https://github.com/robotics-study/navigation/blob/main/python/navigation/global_planning/sampling/prm.py" target="_blank" rel="noopener">Python</a><a href="https://github.com/robotics-study/navigation/blob/main/python/demos/demo_prm.py" target="_blank" rel="noopener">demo</a></div>
+<table class="spec-table">
+<thead>
+<tr>
+<th>항목</th>
+<th>내용</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>분류</td>
+<td>sampling-based, multi-query roadmap (여기서는 single-query 로 사용)</td>
+</tr>
+<tr>
+<td>요구 capability</td>
+<td><code>SamplingSpace</code></td>
+</tr>
+<tr>
+<td>완전성</td>
+<td>probabilistically complete</td>
+</tr>
+<tr>
+<td>최적성</td>
+<td><strong>점근 최적 아님</strong> — 고정 반경이라 해의 품질이 샘플 수·반경에 의존</td>
+</tr>
+<tr>
+<td>복잡도</td>
+<td>소박한 구현 기준 간선 검사 O(n²) + 질의 Dijkstra O(E log V)</td>
+</tr>
+<tr>
+<td>원 논문</td>
+<td>Kavraki, Švestka, Latombe &amp; Overmars (1996) <sup id="fnref3:kavraki"><a class="footnote-ref" href="#fn:kavraki">1</a></sup></td>
+</tr>
+</tbody>
+</table>
+<h2 id="_1">배경<a class="anchor" href="#_1" title="Permanent link">¶</a></h2>
+<p>Kavraki 등<sup id="fnref:kavraki"><a class="footnote-ref" href="#fn:kavraki">1</a></sup> 은 고차원 configuration space 에서 여러 질의(multi-query)를 빠르게
+답하기 위한 <strong>로드맵(roadmap)</strong> 방식을 제안했다. 자유 공간을 미리 무작위로 표본화해 그래프를
+만들어 두면, 이후의 start→goal 질의는 그래프 위 최단 경로 탐색으로 환원된다. 이 프로젝트는
+로드맵을 매 질의마다 새로 짓는 <strong>single-query</strong> 형태로 사용하지만, 알고리즘 골격은 원 논문 그대로다.</p>
+<p>PRM 은 뒤이은 점근 최적 변형(<a href="prm_star.html">PRM*</a>, <a href="fmt_star.html">FMT*</a>, <a href="bit_star.html">BIT*</a>)이
+공통으로 딛고 선 <strong>로드맵의 토대</strong>다. 이들은 "무엇을 어떻게 연결하는가"의 반경 정책만 바꾼다.</p>
+<p>두 단계로 나뉜다:</p>
+<ol>
+<li><strong>학습(learning)</strong> — 충돌 없는 노드를 <code>num_samples</code> 개 표본화하고, 서로 <code>connection_radius</code>
+   이내인 모든 쌍을 국소 계획기(직선 motion 의 충돌 검사)로 연결한다.</li>
+<li><strong>질의(query)</strong> — start·goal 을 노드로 추가해 같은 반경으로 이은 뒤, 로드맵 위에서 Dijkstra 로
+   최단 경로를 찾는다.</li>
+</ol>
+<h2 id="_2">동작 원리<a class="anchor" href="#_2" title="Permanent link">¶</a></h2>
+<pre><code>PRM(start, goal):
+    R ← roadmap()
+    R.add(start); R.add(goal)
+    for i in 1..num_samples:                       # 학습: 자유 노드 표본화
+        q ← sample()
+        if is_state_valid(q): R.add(q)
+    for v in R.nodes:                               # 학습: 고정 반경 연결
+        for u in R.nodes within connection_radius of v (u before v):
+            if is_motion_valid(u, v):
+                R.add_edge(u, v, distance(u, v))
+    return DIJKSTRA(R, start, goal)                 # 질의
+</code></pre>
+<p>이 구현은 노드를 하나씩 추가하며 "자신보다 먼저 추가된 노드"에 대해서만 연결을 시도한다 —
+무향 간선이 정확히 한 번만 생긴다. start·goal 도 로드맵의 일부이므로 별도 연결 단계 없이
+같은 반경 규칙으로 이어진다.</p>
+<h2 id="_3">성질<a class="anchor" href="#_3" title="Permanent link">¶</a></h2>
+<ul>
+<li><strong>완전성</strong>: probabilistically complete — 해가 존재하면 표본 수 → ∞ 에서 확률 1 로 발견한다<sup id="fnref2:kavraki"><a class="footnote-ref" href="#fn:kavraki">1</a></sup>.</li>
+<li><strong>최적성</strong>: <strong>점근 최적이 아니다.</strong> 반경이 상수로 고정되어 있어 그래프의 간선 밀도가 표본 수에
+  비례해 증가한다. 해의 품질은 <code>num_samples</code> 와 <code>connection_radius</code> 에 의존하며, 극한에서도
+  최단 경로로의 수렴이 보장되지 않는다. 이 한계를 반경 정책으로 고친 것이 <a href="prm_star.html">PRM*</a> 다.</li>
+<li><strong>비용</strong>: 소박한 구현은 모든 쌍 거리 검사로 O(n²) 간선 후보를 본다. 다중 질의 상황에서는
+  로드맵을 재사용하므로 질의당 비용이 Dijkstra 로 상각된다.</li>
+</ul>
+<h2 id="_4">파라미터<a class="anchor" href="#_4" title="Permanent link">¶</a></h2>
+<table>
+<thead>
+<tr>
+<th>이름</th>
+<th>타입</th>
+<th>기본값</th>
+<th>범위</th>
+<th>설명</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>num_samples</code></td>
+<td>int</td>
+<td>1500</td>
+<td>[1, 200000]</td>
+<td>로드맵에 배치할 충돌 없는 샘플 수 (start/goal 제외)</td>
+</tr>
+<tr>
+<td><code>connection_radius</code></td>
+<td>float</td>
+<td>2.0</td>
+<td>[0.01, 100.0]</td>
+<td>두 노드를 간선으로 이을 최대 거리 (m)</td>
+</tr>
+<tr>
+<td><code>seed</code></td>
+<td>int</td>
+<td>1</td>
+<td>[0, 2^31−1]</td>
+<td>난수 시드 (재현성)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_5">로드맵 구성과 질의<a class="anchor" href="#_5" title="Permanent link">¶</a></h2>
+<p><strong>로드맵.</strong> 표본 집합 <span class="arithmatex">\(V=\{v_1,\dots,v_n\}\subset X_{\text{free}}\)</span> 에 대해 간선 집합은</p>
+<div class="arithmatex">\[
+E=\bigl\{(u,v)\in V\times V:\lVert u-v\rVert\le r,\ \text{motion}(u,v)\subset X_{\text{free}}\bigr\},
+\]</div>
+<p>즉 <strong>고정 반경</strong> <span class="arithmatex">\(r=\texttt{connection\_radius}\)</span> 이내이면서 직선 motion 이 충돌하지 않는 모든 쌍이다.
+간선 비용은 유클리드 거리 <span class="arithmatex">\(c(u,v)=\lVert u-v\rVert\)</span>.</p>
+<p><strong>질의.</strong> start <span class="arithmatex">\(s\)</span>, goal <span class="arithmatex">\(g\)</span> 를 <span class="arithmatex">\(V\)</span> 에 넣고 로드맵 위에서 Dijkstra 로</p>
+<div class="arithmatex">\[
+Y_n=\min_{\pi:\,s\rightsquigarrow g\ \text{in}\ (V,E)}\ \sum_{k}c(\pi_k,\pi_{k+1})
+\]</div>
+<p>를 푼다. <span class="arithmatex">\(r\)</span> 이 고정이므로 <span class="arithmatex">\(n\to\infty\)</span> 에서 <span class="arithmatex">\(Y_n\)</span> 은 그래프가 조밀해질수록 개선되지만
+최적값 <span class="arithmatex">\(c^*\)</span> 로의 수렴은 보장되지 않는다 — 이 점이 점근 최적 변형과의 결정적 차이다.</p>
+<h2 id="_6">구현 노트<a class="anchor" href="#_6" title="Permanent link">¶</a></h2>
+<ul>
+<li>C++: <code>cpp/src/global_planning/prm.cpp</code>, Python: <code>python/navigation/global_planning/prm.py</code></li>
+<li>로드맵 자료구조·연결·Dijkstra 질의는 <a href="prm_star.html">PRM*</a> 와 공유하는 공통 유틸
+  (<code>roadmap_common</code> / <code>_roadmap</code>)에 있다. PRM 은 그 위에서 <strong>고정 반경</strong> 정책만 얹는다.</li>
+<li>근방 질의(near-neighbour)는 배치형 planner 가 함께 쓰는 <code>sampling_common</code> / <code>_sampling</code> 의
+  <code>near_points</code> 로 처리한다.</li>
+</ul>
+<h2 id="trace">방출 trace 이벤트<a class="anchor" href="#trace" title="Permanent link">¶</a></h2>
+<p><code>planning_started</code> → <code>sample_drawn</code>* → <code>edge_added</code>* → <code>node_expanded</code>* → <code>path_found</code> → <code>planning_finished</code></p>
+<p><code>sample_drawn</code> 은 학습 단계의 표본, <code>edge_added</code> 는 로드맵 간선, <code>node_expanded</code> 는 질의
+단계에서 Dijkstra 가 pop 하는 노드다.</p>
+<h2 id="demo">Demo<a class="anchor" href="#demo" title="Permanent link">¶</a></h2>
+<p><code>maze01</code> — 자유 공간에 표본이 흩뿌려지고, 반경 이내 쌍이 간선으로 이어져 로드맵이 형성된 뒤
+Dijkstra 가 그 위에서 최단 경로를 뽑는다.</p>
+<p><img alt="PRM on maze01" src="../../assets/prm/maze01.gif" /></p>
+<p>탐색 중간 과정 (좌 → 우: 표본/간선 초반 / 로드맵 형성 / 최종 경로):</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;"></th>
+<th style="text-align: center;"></th>
+<th style="text-align: center;"></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;"><img alt="early" src="../../assets/prm/maze01_snap_02.png" /></td>
+<td style="text-align: center;"><img alt="mid" src="../../assets/prm/maze01_snap_05.png" /></td>
+<td style="text-align: center;"><img alt="final" src="../../assets/prm/maze01_final.png" /></td>
+</tr>
+</tbody>
+</table>
+<p><code>open01</code> 최종 결과 — 거의 직선에 가깝다:</p>
+<p><img alt="PRM on open01" src="../../assets/prm/open01_final.png" /></p>
+<p>측정치 (Python, seed = 1, trace on):</p>
+<table>
+<thead>
+<tr>
+<th>map</th>
+<th>path cost</th>
+<th>roadmap 노드</th>
+<th>expanded (Dijkstra pop)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>maze01</td>
+<td>13.595</td>
+<td>1,502</td>
+<td>1,091</td>
+</tr>
+<tr>
+<td>open01</td>
+<td>12.053</td>
+<td>—</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p>C++ 구현도 동일 시나리오를 미러링하며, 언어 간 난수 스트림 차이 범위 안에서 같은 결과를 낸다.</p>
+<p>재현:</p>
+<pre><code class="language-bash">python python/demos/demo_prm.py \
+  --map maps/grid/maze01.yaml --scenario maps/scenarios/maze01_s1.yaml \
+  --params configs/global_planning/prm.yaml --trace out/prm.jsonl
+python tools/viz/replay.py out/prm.jsonl --gif out/prm.gif
+</code></pre>
+<h2 id="references">References<a class="anchor" href="#references" title="Permanent link">¶</a></h2>
+<div class="footnote">
+<hr />
+<ol>
+<li id="fn:kavraki">
+<p>Kavraki, L. E., Švestka, P., Latombe, J.-C., &amp; Overmars, M. H. (1996). "Probabilistic roadmaps for path planning in high-dimensional configuration spaces." <em>IEEE Transactions on Robotics and Automation</em>, 12(4), 566–580. <a href="https://doi.org/10.1109/70.508439">doi:10.1109/70.508439</a>&#160;<a class="footnote-backref" href="#fnref:kavraki" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:kavraki" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:kavraki" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+</li>
+</ol>
+</div><nav class="pager"><a href="../../ko/algorithms/hybrid_astar.html"><div class="dir">← 이전</div><div class="ttl">Hybrid A*</div></a><a class="next" href="../../ko/algorithms/rrt.html"><div class="dir">다음 →</div><div class="ttl">RRT</div></a></nav></article></main>
+<aside class="toc" id="toc"></aside>
+</div>
+<div class="backdrop"></div>
+<footer class="site-footer">
+  <p>navigation study — robot navigation planning algorithms · C++ / Python dual implementation</p>
+  <p>Built as a static site · <a href="../../ko/index.html">한국어</a> · <a href="../../en/index.html">English</a></p>
+</footer>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script" async></script>
+</body></html>

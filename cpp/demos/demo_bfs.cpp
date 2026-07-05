@@ -1,5 +1,5 @@
 #include "demo_common.hpp"
-#include "navigation/global_planning/bfs.hpp"
+#include "navigation/global_planning/search/bfs.hpp"
 
 int main(int argc, char** argv) {
   try {

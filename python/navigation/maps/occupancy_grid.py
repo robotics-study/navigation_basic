@@ -7,11 +7,12 @@ Discrete state is a Cell (row, col); sampling state is a world Point (x, y).
 from __future__ import annotations
 
 import math
+from collections.abc import Callable
 
 import numpy as np
 
 from navigation.core.capabilities import Capability, MapBase
-from navigation.core.types import Cell, Point
+from navigation.core.types import Cell, Footprint, Point, Pose
 
 _SQRT2 = math.sqrt(2.0)
 # 8-connected moves; diagonals cost sqrt(2), orthogonals 1.0.
@@ -91,22 +92,51 @@ class OccupancyGrid2D(MapBase):
 
     # --- capabilities -----------------------------------------------------
     def capabilities(self) -> set[Capability]:
-        return {Capability.DISCRETE_SPACE, Capability.SAMPLING_SPACE}
+        return {
+            Capability.DISCRETE_SPACE,
+            Capability.SAMPLING_SPACE,
+            Capability.LINE_OF_SIGHT_SPACE,
+            Capability.DYNAMIC_GRID_SPACE,
+            Capability.SE2_COLLISION_SPACE,
+        }
 
     # --- DiscreteSpace[Cell] ---------------------------------------------
-    def neighbors(self, s: Cell) -> list[tuple[Cell, float]]:
+    def _neighbors_impl(
+        self, s: Cell, is_free: Callable[[int, int], bool]
+    ) -> list[tuple[Cell, float]]:
+        # Single 8-move + corner-cut worker shared by neighbors() (truth predicate)
+        # and passable_neighbors() (belief predicate). ``is_free`` decides both cell
+        # entry and the diagonal corner rule so both callers forbid corner-cutting
+        # identically.
         row, col = s
         out: list[tuple[Cell, float]] = []
         for dr, dc, cost in self._moves:
             nr, nc = row + dr, col + dc
-            if not self.is_free_cell(nr, nc):
+            if not is_free(nr, nc):
                 continue
             # Forbid corner-cutting: a diagonal needs both shared orthogonals free.
             if dr != 0 and dc != 0:
-                if not (self.is_free_cell(row + dr, col) and self.is_free_cell(row, col + dc)):
+                if not (is_free(row + dr, col) and is_free(row, col + dc)):
                     continue
             out.append(((nr, nc), cost))
         return out
+
+    def neighbors(self, s: Cell) -> list[tuple[Cell, float]]:
+        # Ground-truth successors: enterable iff in bounds and actually free.
+        return self._neighbors_impl(s, self.is_free_cell)
+
+    # --- DynamicGridSpace[Cell] ------------------------------------------
+    def passable_neighbors(self, s: Cell, blocked: set[Cell]) -> list[tuple[Cell, float]]:
+        # Belief successors: enterable iff in bounds and not (yet) known blocked; real
+        # occupancy is invisible here. Same worker + corner rule as neighbors().
+        def believed_free(row: int, col: int) -> bool:
+            return self.in_bounds(row, col) and (row, col) not in blocked
+
+        return self._neighbors_impl(s, believed_free)
+
+    def is_blocked(self, s: Cell) -> bool:
+        # Occupied OR out of bounds — is_free_cell is already false for both.
+        return not self.is_free_cell(*s)
 
     def heuristic(self, a: Cell, b: Cell) -> float:
         dr = abs(a[0] - b[0])
@@ -121,6 +151,13 @@ class OccupancyGrid2D(MapBase):
             return float(hi - lo) + _SQRT2 * float(lo)
         return float(dr + dc)  # Manhattan for 4-connected.
 
+    # --- LineOfSightSpace[Cell] ------------------------------------------
+    def line_of_sight(self, a: Cell, b: Cell) -> bool:
+        # Straight segment between cell centres, tested by the same supercover
+        # (Amanatides & Woo 1987) + corner-cut-forbidden rule as neighbors(), so a
+        # LOS-visible pair is exactly a legal straight move (Nash et al. 2007).
+        return self.is_motion_valid(self.cell_to_world(*a), self.cell_to_world(*b))
+
     # --- SamplingSpace[Point] --------------------------------------------
     def sample(self) -> Point:
         x = self._origin_x + float(self._rng.uniform(0.0, self._width * self._resolution))
@@ -130,6 +167,30 @@ class OccupancyGrid2D(MapBase):
     def is_state_valid(self, s: Point) -> bool:
         row, col = self.world_to_cell(s[0], s[1])
         return self.is_free_cell(row, col)
+
+    # --- SE2CollisionSpace[Pose] -----------------------------------------
+    def is_collision(self, footprint: Footprint, pose: Pose) -> bool:
+        # Inscribed-disc footprint is orientation-invariant, so theta is unused (a
+        # polygon footprint would use it) — Dolgov et al. 2008. Collision iff any
+        # occupied or out-of-bounds cell overlaps the disc; exact disc–cell overlap
+        # via squared distance to the cell rectangle (no sqrt, no trig → bit-identical
+        # with the C++ mirror). world<->cell stays here.
+        x, y, _theta = pose
+        r = footprint.inscribed_radius
+        r2 = r * r
+        half = self._resolution * 0.5
+        lo_row, lo_col = self.world_to_cell(x - r, y + r)  # y+r → smaller row
+        hi_row, hi_col = self.world_to_cell(x + r, y - r)
+        for row in range(lo_row, hi_row + 1):
+            for col in range(lo_col, hi_col + 1):
+                if self.is_free_cell(row, col):  # in-bounds & free → skip
+                    continue
+                cx, cy = self.cell_to_world(row, col)  # occupied OR out-of-bounds
+                dx = x - min(max(x, cx - half), cx + half)
+                dy = y - min(max(y, cy - half), cy + half)
+                if dx * dx + dy * dy <= r2:
+                    return True
+        return False
 
     def _is_free_uv(self, iu: int, iv: int) -> bool:
         # (u, v) grid coords count up from the origin (bottom-left); rows count

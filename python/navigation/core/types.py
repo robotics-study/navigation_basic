@@ -13,8 +13,18 @@ from typing import Generic, TypeVar
 Cell = tuple[int, int]
 # Sampling state: world point (x, y) in meters.
 Point = tuple[float, float]
+# SE(2) planning state: world pose (x,y meters, theta radians). A 3-tuple so it
+# serializes to trace as [x, y, theta] via list(); distinct from the 2-tuple Point.
+Pose = tuple[float, float, float]
 
 StateT = TypeVar("StateT")
+
+
+@dataclass(frozen=True)
+class Footprint:
+    # Robot collision footprint — inscribed disc only (orientation-invariant, so
+    # collision depends only on (x,y)). A polygon variant can extend this later.
+    inscribed_radius: float  # meters
 
 
 @dataclass

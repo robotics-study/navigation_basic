@@ -11,10 +11,7 @@ from conftest import CONFIG_DIR, config, grid_from, open_grid
 
 from navigation.core.params import ParamSet
 from navigation.core.trace import TraceRecorder
-from navigation.global_planning.astar import AStar
-from navigation.global_planning.fast_rrt import FastRRT
-from navigation.global_planning.rrt import RRT
-from navigation.global_planning.rrt_star import RRTStar
+from navigation.global_planning import RRT, AStar, FastRRT, RRTStar
 
 
 def _capped(tmp_path: Path, algo: str, max_iter: int) -> ParamSet:
