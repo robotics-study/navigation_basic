@@ -73,6 +73,7 @@ demo GIF/PNG + 실측 metric + **원 논문 각주**.
 | global_planning | BFS | ✅ | ✅ | Moore (1959) |
 | global_planning | Dijkstra | ✅ | ✅ | Dijkstra (1959) |
 | global_planning | A* | ✅ | ✅ | Hart, Nilsson & Raphael (1968) |
+| global_planning | Theta* | ✅ | ✅ | Nash, Daniel, Koenig & Felner (2007) |
 | global_planning | RRT | ✅ | ✅ | LaValle (1998) |
 | global_planning | RRT-Connect | ⬜ | ⬜ | Kuffner & LaValle (2000) |
 | global_planning | RRT* | ✅ | ✅ | Karaman & Frazzoli (2011) |

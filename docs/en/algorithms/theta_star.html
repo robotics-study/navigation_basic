@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Theta* · navigation study</title>
+<meta name="description" content="A* on a grid lays its path only on grid edges (orthogonal and diagonal), so a stretch that">
+<meta name="robots" content="index,follow">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b1020" media="(prefers-color-scheme: dark)">
+<link rel="canonical" href="https://robotics-study.github.io/navigation/en/algorithms/theta_star.html">
+<link rel="alternate" hreflang="ko" href="https://robotics-study.github.io/navigation/ko/algorithms/theta_star.html">
+<link rel="alternate" hreflang="en" href="https://robotics-study.github.io/navigation/en/algorithms/theta_star.html">
+<link rel="alternate" hreflang="x-default" href="https://robotics-study.github.io/navigation/en/algorithms/theta_star.html">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="navigation study">
+<meta property="og:title" content="Theta* · navigation study">
+<meta property="og:description" content="A* on a grid lays its path only on grid edges (orthogonal and diagonal), so a stretch that">
+<meta property="og:url" content="https://robotics-study.github.io/navigation/en/algorithms/theta_star.html">
+<meta property="og:image" content="https://robotics-study.github.io/navigation/assets/theta_star/maze01_final.png">
+<meta property="og:image:alt" content="Theta*">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="ko_KR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Theta* · navigation study">
+<meta name="twitter:description" content="A* on a grid lays its path only on grid edges (orthogonal and diagonal), so a stretch that">
+<meta name="twitter:image" content="https://robotics-study.github.io/navigation/assets/theta_star/maze01_final.png">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "Theta*", "description": "A* on a grid lays its path only on grid edges (orthogonal and diagonal), so a stretch that", "image": "https://robotics-study.github.io/navigation/assets/theta_star/maze01_final.png", "inLanguage": "en", "url": "https://robotics-study.github.io/navigation/en/algorithms/theta_star.html", "isPartOf": {"@type": "WebSite", "name": "navigation study", "url": "https://robotics-study.github.io/navigation/"}}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=becfdb97">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Crect width='24' height='24' rx='6' fill='%230b1020'/%3E%3Cpath d='M4 19V11h8V5h8' stroke='%23818cf8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='4' cy='19' r='2.4' fill='%23818cf8'/%3E%3Ccircle cx='20' cy='5' r='2.4' fill='%2322d3ee'/%3E%3C/svg%3E">
+<script src="../../assets/site.js?v=becfdb97"></script>
+</head>
+<body>
+<header class="topbar">
+  <button id="menu-btn" class="iconbtn menu-btn" aria-label="menu"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  <div class="brandcrumb">
+    <a class="brand hub" href="https://robotics-study.github.io/" aria-label="robotics-study home"><svg class="logo" width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true"><defs><linearGradient id="navlg" x1="0" y1="1" x2="1" y2="0"><stop stop-color="#6366f1"/><stop offset="1" stop-color="#06b6d4"/></linearGradient></defs><path d="M4 19V11h8V5h8" stroke="url(#navlg)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="4" cy="19" r="2.6" fill="url(#navlg)"/><circle cx="20" cy="5" r="2.6" fill="url(#navlg)"/></svg><span class="wm">robotics<span class="wm-dim"> study</span></span></a>
+    <span class="crumb-sep" aria-hidden="true">/</span>
+    <a class="brand" href="../../index.html"><span class="wm">navigation<span class="wm-dim"> study</span></span></a>
+  </div>
+  <nav class="topnav"><a href="../../en/index.html">Overview</a><a href="../../en/algorithms/index.html">Algorithms</a><a href="../../en/maps.html">Maps</a><a href="../../en/benchmarks.html">Benchmarks</a><a href="https://github.com/robotics-study/navigation" target="_blank" rel="noopener">GitHub<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a></nav>
+  <span class="spacer"></span>
+  <div class="search"><svg class="s-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg><input id="search-input" type="search" placeholder="검색 / Search…" data-base="../../" autocomplete="off"><div id="search-results" class="search-results"></div></div>
+  <div class="lang-toggle" role="group" aria-label="language"><svg class="g-ico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.5 2.5 3.8 5.6 3.8 9s-1.3 6.5-3.8 9c-2.5-2.5-3.8-5.6-3.8-9S9.5 5.5 12 3Z"/></svg><a href="../../ko/algorithms/theta_star.html" class="">KO</a><span class="l-sep">/</span><a href="../../en/algorithms/theta_star.html" class="active">EN</a></div>
+</header>
+<div class="layout">
+<aside class="sidebar"><h4>Overview</h4>
+<a href="../../en/index.html">Overview</a>
+<a href="../../en/algorithms/index.html">All algorithms</a>
+<h4>Global planning</h4>
+<details class="nav-sub" open><summary>Search</summary><div class="nav-sub-body"><a href="../../en/algorithms/bfs.html">BFS</a><a href="../../en/algorithms/dijkstra.html">Dijkstra</a><a href="../../en/algorithms/astar.html">A*</a><a href="../../en/algorithms/theta_star.html" class="active">Theta*</a></div></details>
+<details class="nav-sub"><summary>Sampling</summary><div class="nav-sub-body"><a href="../../en/algorithms/prm.html">PRM</a><a href="../../en/algorithms/rrt.html">RRT</a><a href="../../en/algorithms/rrt_star.html">RRT*</a><a href="../../en/algorithms/prm_star.html">PRM*</a><a href="../../en/algorithms/fmt_star.html">FMT*</a><a href="../../en/algorithms/bit_star.html">BIT*</a><a href="../../en/algorithms/fast_rrt.html">Fast-RRT</a></div></details>
+<a href="../../en/benchmarks.html">Benchmarks</a>
+<h4>Local planning <span class="soon">planned</span></h4>
+<span class="planned">DWA</span>
+<span class="planned">Pure Pursuit</span>
+<span class="planned">VFH</span>
+<span class="planned">MPC</span>
+<span class="planned">Benchmarks</span>
+<h4>Multi-agent <span class="soon">planned</span></h4>
+<span class="planned">Prioritized A*</span>
+<span class="planned">Joint-space A*</span>
+<span class="planned">CBS</span>
+<span class="planned">Benchmarks</span>
+<h4>Maps</h4>
+<a href="../../en/maps.html">Map representations</a>
+<h4>Reference</h4>
+<a href="../../en/architecture.html">Architecture</a>
+<a href="../../en/references.html">References</a></aside>
+<main class="content"><article class="content-inner"><h1 id="theta-any-angle">Theta* (any-angle)<a class="anchor" href="#theta-any-angle" title="Permanent link">¶</a></h1>
+<div class="code-links"><span class="cl-label">Source</span><a href="https://github.com/robotics-study/navigation/blob/main/cpp/src/global_planning/search/theta_star.cpp" target="_blank" rel="noopener">C++</a><a href="https://github.com/robotics-study/navigation/blob/main/cpp/include/navigation/global_planning/search/theta_star.hpp" target="_blank" rel="noopener">C++ header</a><a href="https://github.com/robotics-study/navigation/blob/main/python/navigation/global_planning/search/theta_star.py" target="_blank" rel="noopener">Python</a><a href="https://github.com/robotics-study/navigation/blob/main/python/demos/demo_theta_star.py" target="_blank" rel="noopener">demo</a></div>
+<table class="spec-table">
+<thead>
+<tr>
+<th>Item</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Category</td>
+<td>any-angle graph search</td>
+</tr>
+<tr>
+<td>Required capability</td>
+<td><code>LineOfSightSpace</code> (<code>neighbors</code> + <code>heuristic</code> + <code>line_of_sight</code>)</td>
+</tr>
+<tr>
+<td>Completeness</td>
+<td>complete (finite graphs, non-negative costs)</td>
+</tr>
+<tr>
+<td>Optimality</td>
+<td>any-angle path — <strong>grid-optimality is not guaranteed</strong> (basic Theta*, Nash et al. 2007)</td>
+</tr>
+<tr>
+<td>Complexity</td>
+<td>A* level + one line-of-sight check per relaxation</td>
+</tr>
+<tr>
+<td>Original paper</td>
+<td>Nash, Daniel, Koenig &amp; Felner (2007) <sup id="fnref3:nash"><a class="footnote-ref" href="#fn:nash">1</a></sup> · LOS: Amanatides &amp; Woo (1987) <sup id="fnref2:aw"><a class="footnote-ref" href="#fn:aw">2</a></sup> · weighted: Pohl (1970) <sup id="fnref2:pohl"><a class="footnote-ref" href="#fn:pohl">4</a></sup></td>
+</tr>
+</tbody>
+</table>
+<h2 id="background">Background<a class="anchor" href="#background" title="Permanent link">¶</a></h2>
+<p>A*<sup id="fnref:hart"><a class="footnote-ref" href="#fn:hart">3</a></sup> on a grid lays its path only on grid edges (orthogonal and diagonal), so a stretch that
+could be crossed by a straight line still becomes a staircase that bends in 45°/90° steps.
+<strong>Theta*</strong><sup id="fnref:nash"><a class="footnote-ref" href="#fn:nash">1</a></sup> adds a single rule to A*: when relaxing a node, it checks whether a candidate's
+parent can be <strong>the parent of the current node</strong> rather than the current node itself — that is,
+whether there is an obstacle-free <strong>line of sight</strong> between the two. If there is, the path leaves the
+grid and takes an arbitrary-angle (any-angle) straight-line shortcut.</p>
+<p>The resulting path has far sparser waypoints (it bends only at obstacle corners) and is shorter than
+the grid path. In this repository's demo, <code>maze01</code> shrinks from A* 26 waypoints · cost 28.73 to
+Theta* <strong>4 waypoints · cost 27.75</strong>.</p>
+<h2 id="how-it-works">How It Works<a class="anchor" href="#how-it-works" title="Permanent link">¶</a></h2>
+<pre><code>THETASTAR(start, goal):
+    g[start] ← 0; parent[start] ← start
+    open ← priority queue keyed by f = g + w·h        # h = Euclidean straight-line distance
+    while open is not empty:
+        s ← open.pop_min()
+        if s == goal: return reconstruct(parent, s)
+        if s already settled: continue                # lazy deletion
+        for (s2, edge_cost) in neighbors(s):
+            p ← parent[s]
+            if line_of_sight(p, s2):                   # Path 2 — any-angle shortcut
+                cand ← g[p] + euclid(p, s2);  par ← p
+            else:                                      # Path 1 — standard grid step
+                cand ← g[s] + edge_cost;      par ← s
+            if cand &lt; g[s2]:                           # relaxation
+                g[s2] ← cand; parent[s2] ← par
+                open.push(s2, cand + w·h(s2, goal))
+    return failure
+</code></pre>
+<p>The difference from A* is the single inner <code>if line_of_sight(...)</code> <strong>block</strong>. If the LOS check always
+fails, it degenerates into exactly weighted A*. Because parent links are only ever set on pairs whose
+LOS has been confirmed (Path 2 verifies visibility, Path 1 is between adjacent cells and therefore
+trivial), <strong>every edge of the reconstructed path is an actually traversable straight line</strong>.</p>
+<h3 id="line-of-sight-one-collision-model-with-the-grid">Line of Sight — one collision model with the grid<a class="anchor" href="#line-of-sight-one-collision-model-with-the-grid" title="Permanent link">¶</a></h3>
+<p><code>line_of_sight(a, b)</code> decides whether the segment joining two cell centres is actually traversable,
+using the <strong>same corner-cut-forbidden rule</strong> as <code>neighbors()</code>. The original paper used Bresenham, but
+Bresenham visits only one cell per axis and can wrongly report a corner-grazing segment as "visible."
+This repository reuses the <strong>supercover</strong><sup id="fnref:aw"><a class="footnote-ref" href="#fn:aw">2</a></sup>, which visits every cell the segment touches (delegating
+to the map's <code>is_motion_valid</code>). Therefore "a pair visible by LOS" ⇔ "a legal straight move," and
+Theta* and grid A* share <strong>one collision model</strong>.</p>
+<h3 id="heuristic-euclidean-not-octile">Heuristic — Euclidean (not octile)<a class="anchor" href="#heuristic-euclidean-not-octile" title="Permanent link">¶</a></h3>
+<p>Theta*'s g-values are straight-line (Euclidean) distances, so the heuristic is also <strong>Euclidean</strong>:</p>
+<pre><code>h(a, b) = √((Δrow)² + (Δcol)²)
+</code></pre>
+<p>The octile heuristic the map provides for A* satisfies octile ≥ Euclidean, so it is <strong>inadmissible</strong>
+(overestimating) for any-angle costs and is not used. The Euclidean distance is an admissible lower
+bound for arbitrary-angle motion.</p>
+<h2 id="properties">Properties<a class="anchor" href="#properties" title="Permanent link">¶</a></h2>
+<ul>
+<li><strong>Completeness</strong>: complete on a finite grid with non-negative costs (same as A*).</li>
+<li><strong>Optimality</strong>: basic Theta* guarantees <strong>neither grid-optimality nor true-optimality</strong><sup id="fnref2:nash"><a class="footnote-ref" href="#fn:nash">1</a></sup>.
+  Because the local rule only ever inherits the grandparent as parent, it can miss the truly shortest
+  any-angle path (though it stays very close). When strict optimality is required, use later variants
+  such as Lazy Theta* / AP Theta*.</li>
+<li><strong>Quality</strong>: the returned path cost is always ≤ the A* cost on the same grid — LOS shortcuts replace
+  grid staircases.</li>
+<li><strong>Complexity</strong>: the same search as A* plus one LOS check (linear in segment length) per relaxation.</li>
+<li>w &gt; 1 (weighted Theta*, Pohl 1970<sup id="fnref:pohl"><a class="footnote-ref" href="#fn:pohl">4</a></sup>): inflating the heuristic reduces expanded nodes at the
+  cost of path quality.</li>
+</ul>
+<h2 id="parameters">Parameters<a class="anchor" href="#parameters" title="Permanent link">¶</a></h2>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Default</th>
+<th>Range</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>heuristic_weight</code></td>
+<td>float</td>
+<td>1.0</td>
+<td>[1.0, 5.0]</td>
+<td>The w in f = g + w·h (h is Euclidean). 1.0 = standard Theta*, above = weighted</td>
+</tr>
+</tbody>
+</table>
+<h2 id="implementation-notes">Implementation Notes<a class="anchor" href="#implementation-notes" title="Permanent link">¶</a></h2>
+<ul>
+<li>C++: <code>cpp/src/global_planning/search/theta_star.cpp</code>, Python: <code>python/navigation/global_planning/search/theta_star.py</code></li>
+<li>The Euclidean distance is computed as <strong><code>sqrt(Δrow² + Δcol²)</code>, not <code>hypot</code></strong>. <code>hypot</code> is not
+  IEEE-754 correctly-rounded and can differ by 1 ULP between runtimes, which would make f-values,
+  tie-breaking, and the emitted trace stream diverge between the two languages (the benchmark's
+  C++/Python comparison relies on that stream). <code>sqrt</code> is correctly rounded, and <code>sqrt(2.0)</code> exactly
+  equals the diagonal edge cost from <code>neighbors()</code>, so a Path-2 diagonal shortcut and a Path-1 diagonal
+  step are bit-identical.</li>
+<li>Path cost is reported as <code>g[goal]</code>. Summing adjacent edges would be wrong — it returns 0 for
+  non-adjacent (any-angle) jumps.</li>
+<li>Tie-breaking is the same <code>(f, insertion order)</code> as A*, so the two languages converge to the same
+  path — the maze01 expansion order matches cell-for-cell between C++ and Python.</li>
+</ul>
+<h2 id="emitted-trace-events">Emitted Trace Events<a class="anchor" href="#emitted-trace-events" title="Permanent link">¶</a></h2>
+<p><code>planning_started</code> → (<code>node_expanded</code>, <code>candidate_evaluated</code>, <code>edge_added</code>)* → <code>path_found</code> → <code>planning_finished</code></p>
+<p>In <code>edge_added(state=s2, parent)</code>, <code>parent</code> becomes a <strong>non-adjacent grandparent</strong> on Path 2 (the
+schema and the visualizer impose no adjacency constraint). <code>replay.py</code> draws the parent→state straight
+line as-is to render the any-angle shortcut, so no new trace event is required.</p>
+<h2 id="demo">Demo<a class="anchor" href="#demo" title="Permanent link">¶</a></h2>
+<p>Search on <code>maze01</code>. Like the A* frontier it grows toward the goal, but the final path is not a grid
+staircase — it is a <strong>sparse straight-line polyline</strong> that only grazes obstacle corners.</p>
+<p><img alt="Theta* on maze01" src="../../assets/theta_star/maze01.gif" /></p>
+<p>Intermediate search progress (left → right: early / middle / final path):</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;"></th>
+<th style="text-align: center;"></th>
+<th style="text-align: center;"></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;"><img alt="early" src="../../assets/theta_star/maze01_snap_02.png" /></td>
+<td style="text-align: center;"><img alt="mid" src="../../assets/theta_star/maze01_snap_05.png" /></td>
+<td style="text-align: center;"><img alt="final" src="../../assets/theta_star/maze01_final.png" /></td>
+</tr>
+</tbody>
+</table>
+<p>Final result on <code>open01</code> — with few obstacles, start→goal connects as almost a single straight line:</p>
+<p><img alt="Theta* on open01" src="../../assets/theta_star/open01_final.png" /></p>
+<p>Measurements (Python, w = 1.0, trace on · A* comparison on the same instance):</p>
+<table>
+<thead>
+<tr>
+<th>map</th>
+<th>Theta* cost</th>
+<th>A* cost</th>
+<th>Theta* expanded</th>
+<th>A* expanded</th>
+<th>Theta* waypoints</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>maze01</td>
+<td><strong>27.748</strong></td>
+<td>28.728</td>
+<td>104</td>
+<td>108</td>
+<td>4 (A*: 26)</td>
+</tr>
+<tr>
+<td>open01</td>
+<td><strong>24.241</strong></td>
+<td>25.213</td>
+<td>66</td>
+<td>71</td>
+<td>3 (A*: 20)</td>
+</tr>
+</tbody>
+</table>
+<p>Reproduce:</p>
+<pre><code class="language-bash">python python/demos/demo_theta_star.py \
+  --map maps/grid/maze01.yaml --scenario maps/scenarios/maze01_s1.yaml \
+  --params configs/global_planning/theta_star.yaml --trace out/theta_star.jsonl
+python tools/viz/replay.py out/theta_star.jsonl --gif out/theta_star.gif --snapshots out/theta_snaps/
+</code></pre>
+<h2 id="references">References<a class="anchor" href="#references" title="Permanent link">¶</a></h2>
+<div class="footnote">
+<hr />
+<ol>
+<li id="fn:nash">
+<p>Nash, A., Daniel, K., Koenig, S., &amp; Felner, A. (2007). "Theta*: Any-Angle Path Planning on Grids." <em>Proc. AAAI Conference on Artificial Intelligence</em>, 1177–1183. <a href="https://ojs.aaai.org/index.php/AAAI/article/view/11009">PDF</a>&#160;<a class="footnote-backref" href="#fnref:nash" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:nash" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:nash" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+</li>
+<li id="fn:aw">
+<p>Amanatides, J., &amp; Woo, A. (1987). "A Fast Voxel Traversal Algorithm for Ray Tracing." <em>Proc. Eurographics</em>, 3–10. <a href="https://www.cse.yorku.ca/~amana/research/grid.pdf">PDF</a>&#160;<a class="footnote-backref" href="#fnref:aw" title="Jump back to footnote 2 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:aw" title="Jump back to footnote 2 in the text">&#8617;</a></p>
+</li>
+<li id="fn:hart">
+<p>Hart, P. E., Nilsson, N. J., &amp; Raphael, B. (1968). "A Formal Basis for the Heuristic Determination of Minimum Cost Paths." <em>IEEE Transactions on Systems Science and Cybernetics</em>, 4(2), 100–107. <a href="https://doi.org/10.1109/TSSC.1968.300136">doi:10.1109/TSSC.1968.300136</a>&#160;<a class="footnote-backref" href="#fnref:hart" title="Jump back to footnote 3 in the text">&#8617;</a></p>
+</li>
+<li id="fn:pohl">
+<p>Pohl, I. (1970). "Heuristic search viewed as path finding in a graph." <em>Artificial Intelligence</em>, 1(3–4), 193–204. <a href="https://doi.org/10.1016/0004-3702%2870%2990007-X">doi:10.1016/0004-3702(70)90007-X</a>
+</content>
+</invoke>&#160;<a class="footnote-backref" href="#fnref:pohl" title="Jump back to footnote 4 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:pohl" title="Jump back to footnote 4 in the text">&#8617;</a></p>
+</li>
+</ol>
+</div><nav class="pager"><a href="../../en/algorithms/astar.html"><div class="dir">← Prev</div><div class="ttl">A*</div></a><a class="next" href="../../en/algorithms/prm.html"><div class="dir">Next →</div><div class="ttl">PRM</div></a></nav></article></main>
+<aside class="toc" id="toc"></aside>
+</div>
+<div class="backdrop"></div>
+<footer class="site-footer">
+  <p>navigation study — robot navigation planning algorithms · C++ / Python dual implementation</p>
+  <p>Built as a static site · <a href="../../ko/index.html">한국어</a> · <a href="../../en/index.html">English</a></p>
+</footer>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script" async></script>
+</body></html>

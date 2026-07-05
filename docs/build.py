@@ -47,6 +47,15 @@ SEARCH_SVG = (
     'stroke-width="2" stroke-linecap="round" aria-hidden="true">'
     '<circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>'
 )
+# 외부 링크 표시 화살표 (topnav 의 GitHub 등). robotics-study 형제 사이트와 동일 모티프.
+EXT_SVG = (
+    '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" '
+    'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+    '<path d="M7 17 17 7M8 7h9v9"/></svg>'
+)
+# 상위 학습 아카이브 허브. 이 사이트는 그 하위 프로젝트라 브랜드 breadcrumb 로 되돌아갈 링크를 준다.
+HUB_URL = "https://robotics-study.github.io/"
+GH_REPO = "https://github.com/robotics-study/navigation"
 # 파비콘: 로고와 동일한 route 마크 (data URI).
 FAVICON = (
     "data:image/svg+xml,"
@@ -82,7 +91,7 @@ DEFAULT_OG_IMAGE = "assets/astar/maze01_final.png"
 # global_planning 알고리즘의 계보 카테고리 → 소스가 놓인 하위폴더.
 # C++/Python 모두 이 하위폴더 아래로 이동했으므로 chip 경로를 함께 갱신한다.
 _GLOBAL_LINEAGE = {
-    "bfs": "search", "dijkstra": "search", "astar": "search",
+    "bfs": "search", "dijkstra": "search", "astar": "search", "theta_star": "search",
     "rrt": "sampling", "rrt_star": "sampling", "fast_rrt": "sampling",
     "prm": "sampling", "prm_star": "sampling",
     "bit_star": "sampling", "fmt_star": "sampling",
@@ -105,17 +114,28 @@ def code_chips(key: str, lang: str) -> str:
 
 # 언어별 사이드바 구조 + 순서 (prev/next 는 이 평탄화 순서를 따른다).
 # 각 항목: (source md 경로[lang 상대], 출력 html 경로[lang 상대], 사이드바 라벨)
-_GLOBAL = [
-    ("algorithms/bfs.md", "algorithms/bfs.html", "BFS"),
-    ("algorithms/dijkstra.md", "algorithms/dijkstra.html", "Dijkstra"),
-    ("algorithms/astar.md", "algorithms/astar.html", "A*"),
-    ("algorithms/rrt.md", "algorithms/rrt.html", "RRT"),
-    ("algorithms/rrt_star.md", "algorithms/rrt_star.html", "RRT*"),
-    ("algorithms/prm.md", "algorithms/prm.html", "PRM"),
-    ("algorithms/prm_star.md", "algorithms/prm_star.html", "PRM*"),
-    ("algorithms/fmt_star.md", "algorithms/fmt_star.html", "FMT*"),
-    ("algorithms/bit_star.md", "algorithms/bit_star.html", "BIT*"),
-    ("algorithms/fast_rrt.md", "algorithms/fast_rrt.html", "Fast-RRT"),
+# global_planning 계보 서브그룹 — 사이드바 disclosure 단위 + prev/next 순서.
+# 각 그룹은 원 논문 연도 오름차순으로 정렬한다.
+_GLOBAL_SEARCH = [
+    ("algorithms/bfs.md", "algorithms/bfs.html", "BFS"),              # 1959
+    ("algorithms/dijkstra.md", "algorithms/dijkstra.html", "Dijkstra"),  # 1959
+    ("algorithms/astar.md", "algorithms/astar.html", "A*"),          # 1968
+    ("algorithms/theta_star.md", "algorithms/theta_star.html", "Theta*"),  # 2007
+]
+_GLOBAL_SAMPLING = [
+    ("algorithms/prm.md", "algorithms/prm.html", "PRM"),             # 1996
+    ("algorithms/rrt.md", "algorithms/rrt.html", "RRT"),             # 1998
+    ("algorithms/rrt_star.md", "algorithms/rrt_star.html", "RRT*"),  # 2011
+    ("algorithms/prm_star.md", "algorithms/prm_star.html", "PRM*"),  # 2011
+    ("algorithms/fmt_star.md", "algorithms/fmt_star.html", "FMT*"),  # 2015
+    ("algorithms/bit_star.md", "algorithms/bit_star.html", "BIT*"),  # 2015
+    ("algorithms/fast_rrt.md", "algorithms/fast_rrt.html", "Fast-RRT"),  # 2021
+]
+_GLOBAL = _GLOBAL_SEARCH + _GLOBAL_SAMPLING
+# 사이드바용: 계보별 disclosure 서브그룹 (dict = <details> 로 렌더).
+_GLOBAL_NAV = [
+    {"sub": "Search", "items": _GLOBAL_SEARCH},
+    {"sub": "Sampling", "items": _GLOBAL_SAMPLING},
 ]
 # planned(미구현) 항목: src/out=None → 사이드바에 흐리게 "예정" 표기, 페이지 생성 안 함.
 _LOCAL = [(None, None, n) for n in ("DWA", "Pure Pursuit", "VFH", "MPC")]
@@ -129,7 +149,7 @@ NAV = {
                 ("index.md", "index.html", "개요"),
                 ("algorithms/index.md", "algorithms/index.html", "알고리즘 목록"),
             ]),
-            ("Global planning", _GLOBAL + [("benchmarks.md", "benchmarks.html", "벤치마크")]),
+            ("Global planning", _GLOBAL_NAV + [("benchmarks.md", "benchmarks.html", "벤치마크")]),
             ("Local planning", _LOCAL + [(None, None, "벤치마크")]),
             ("Multi-agent", _MULTI + [(None, None, "벤치마크")]),
             ("Maps", [("maps.md", "maps.html", "맵 표현")]),
@@ -149,7 +169,7 @@ NAV = {
                 ("index.md", "index.html", "Overview"),
                 ("algorithms/index.md", "algorithms/index.html", "All algorithms"),
             ]),
-            ("Global planning", _GLOBAL + [("benchmarks.md", "benchmarks.html", "Benchmarks")]),
+            ("Global planning", _GLOBAL_NAV + [("benchmarks.md", "benchmarks.html", "Benchmarks")]),
             ("Local planning", _LOCAL + [(None, None, "Benchmarks")]),
             ("Multi-agent", _MULTI + [(None, None, "Benchmarks")]),
             ("Maps", [("maps.md", "maps.html", "Map representations")]),
@@ -321,19 +341,36 @@ def search_text(body: str) -> str:
     return t.strip()[:5000]
 
 
+def _nav_leaf(src, out_rel, label, lang, cur, base) -> str:
+    if src is None:  # 미구현(예정) — 링크 없이 흐리게
+        return f'<span class="planned">{html.escape(label)}</span>'
+    cls = " class=\"active\"" if out_rel == cur else ""
+    return f'<a href="{base}{lang}/{out_rel}"{cls}>{html.escape(label)}</a>'
+
+
+def _all_planned(item) -> bool:
+    subs = item["items"] if isinstance(item, dict) else [item]
+    return all(src is None for src, _o, _l in subs)
+
+
 def sidebar_html(lang: str, cur: str, base: str) -> str:
     parts = []
     for gtitle, items in NAV[lang]["groups"]:
-        planned = all(src is None for src, _o, _l in items)
+        planned = all(_all_planned(it) for it in items)
         soon = f' <span class="soon">{NAV[lang]["soon"]}</span>' if planned else ""
         parts.append(f'<h4>{html.escape(gtitle)}{soon}</h4>')
-        for src, out_rel, label in items:
-            if src is None:  # 미구현(예정) — 링크 없이 흐리게
-                parts.append(f'<span class="planned">{html.escape(label)}</span>')
-                continue
-            href = f"{base}{lang}/{out_rel}"
-            cls = " class=\"active\"" if out_rel == cur else ""
-            parts.append(f'<a href="{href}"{cls}>{html.escape(label)}</a>')
+        for it in items:
+            if isinstance(it, dict):  # 계보 disclosure 서브그룹 → <details>
+                links = "".join(_nav_leaf(*x, lang, cur, base) for x in it["items"])
+                # 현재 페이지가 속한 그룹만 펼친 채로 렌더 (나머지는 접힘).
+                open_attr = " open" if any(o == cur for _s, o, _l in it["items"]) else ""
+                parts.append(
+                    f'<details class="nav-sub"{open_attr}>'
+                    f'<summary>{html.escape(it["sub"])}</summary>'
+                    f'<div class="nav-sub-body">{links}</div></details>'
+                )
+            else:
+                parts.append(_nav_leaf(*it, lang, cur, base))
     return "\n".join(parts)
 
 
@@ -341,10 +378,11 @@ def flat_pages(lang):
     """실제 페이지가 있는 항목만 (planned 제외) — prev/next·빌드 대상."""
     pages = []
     for _g, items in NAV[lang]["groups"]:
-        for src, out_rel, label in items:
-            if src is None:
-                continue
-            pages.append((src, out_rel, label))
+        for it in items:
+            subitems = it["items"] if isinstance(it, dict) else [it]
+            for src, out_rel, label in subitems:
+                if src is not None:
+                    pages.append((src, out_rel, label))
     return pages
 
 
@@ -365,9 +403,9 @@ def page_shell(*, title, lang, base, cur_out, content, is_doc,
     )
     topnav = ""
     if lang:
-        topnav = '<nav class="topnav">' + "".join(
+        topnav = ('<nav class="topnav">' + "".join(
             f'<a href="{base}{lang}/{o}">{html.escape(lbl)}</a>' for o, lbl in cfg["topnav"]
-        ) + "</nav>"
+        ) + f'<a href="{GH_REPO}" target="_blank" rel="noopener">GitHub{EXT_SVG}</a></nav>')
 
     search = (
         f'<div class="search">{SEARCH_SVG}<input id="search-input" type="search" '
@@ -394,7 +432,11 @@ def page_shell(*, title, lang, base, cur_out, content, is_doc,
 <body>
 <header class="topbar">
   <button id="menu-btn" class="iconbtn menu-btn" aria-label="menu">{MENU_SVG}</button>
-  <a class="brand" href="{base}index.html">{LOGO_SVG}<span class="wm">navigation<span class="wm-dim"> study</span></span></a>
+  <div class="brandcrumb">
+    <a class="brand hub" href="{HUB_URL}" aria-label="robotics-study home">{LOGO_SVG}<span class="wm">robotics<span class="wm-dim"> study</span></span></a>
+    <span class="crumb-sep" aria-hidden="true">/</span>
+    <a class="brand" href="{base}index.html"><span class="wm">navigation<span class="wm-dim"> study</span></span></a>
+  </div>
   {topnav}
   <span class="spacer"></span>
   {search}
@@ -431,9 +473,10 @@ def build_landing(_=None):
         ("bfs", "BFS", "uninformed search"),
         ("dijkstra", "Dijkstra", "cost-optimal"),
         ("astar", "A*", "informed search"),
+        ("theta_star", "Theta*", "any-angle search"),
+        ("prm", "PRM", "roadmap · multi-query"),
         ("rrt", "RRT", "feasible sampling"),
         ("rrt_star", "RRT*", "asymptotically optimal"),
-        ("prm", "PRM", "roadmap · multi-query"),
         ("prm_star", "PRM*", "optimal roadmap"),
         ("fmt_star", "FMT*", "fast marching tree"),
         ("bit_star", "BIT*", "batch informed trees"),

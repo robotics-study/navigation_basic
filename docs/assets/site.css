@@ -65,14 +65,18 @@ img { max-width: 100%; }
   backdrop-filter: saturate(180%) blur(12px);
   border-bottom: 1px solid var(--border);
 }
+/* 브랜드 breadcrumb: robotics-study 허브 / 현재 사이트 — 형제 org 사이트와 동일 구조. */
+.brandcrumb { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.crumb-sep { color: color-mix(in srgb, var(--muted) 45%, transparent); font-size: 1rem; font-weight: 400; user-select: none; }
 .brand { display: flex; align-items: center; gap: 9px; font-weight: 700; font-size: 1.08rem; color: var(--text); }
 .brand:hover { text-decoration: none; }
 .brand .logo { display: block; flex: none; }
-.brand .wm { letter-spacing: -.01em; }
+.brand .wm { letter-spacing: -.01em; white-space: nowrap; }
 .brand .wm-dim { color: var(--muted); font-weight: 600; }
 .topbar .spacer { flex: 1; }
 .topnav { display: flex; gap: 4px; }
 .topnav a {
+  display: inline-flex; align-items: center; gap: 5px;
   color: var(--muted); font-size: .92rem; font-weight: 500;
   padding: 7px 12px; border-radius: 9px;
 }
@@ -142,6 +146,24 @@ img { max-width: 100%; }
 .sidebar a:hover { background: var(--surface-2); color: var(--text); text-decoration: none; }
 .sidebar a.active { background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); font-weight: 600; }
 .sidebar .num { display: inline-block; width: 1.4em; color: var(--muted); font-variant-numeric: tabular-nums; }
+/* 계보 disclosure 서브그룹 (Search / Sampling) — 네이티브 <details> 로 접기/펼치기. */
+.nav-sub { margin: 1px 0; }
+.nav-sub > summary {
+  list-style: none; cursor: pointer;
+  display: flex; align-items: center; gap: 7px;
+  padding: 6px 10px; margin: 1px 0; border-radius: 8px;
+  color: var(--muted); font-size: .82rem; font-weight: 600;
+}
+.nav-sub > summary::-webkit-details-marker { display: none; }
+.nav-sub > summary::before {
+  content: ""; flex: none; width: 0; height: 0;
+  border-left: 4px solid currentColor;
+  border-top: 3.5px solid transparent; border-bottom: 3.5px solid transparent;
+  transition: transform .15s;
+}
+.nav-sub[open] > summary::before { transform: rotate(90deg); }
+.nav-sub > summary:hover { color: var(--text); background: var(--surface-2); }
+.nav-sub-body { margin: 2px 0 6px 15px; padding-left: 8px; border-left: 1px solid var(--border); }
 
 .content { padding: 40px 48px 90px; min-width: 0; }
 .content-inner { max-width: 780px; }
@@ -316,6 +338,8 @@ mjx-container[display="true"] { overflow-x: auto; overflow-y: hidden; max-width:
   .layout { grid-template-columns: 1fr; }
   .menu-btn { display: grid; }
   .topnav, .search { display: none; }
+  /* 좁은 화면에선 lang 토글과 겹치지 않게 org 허브 텍스트/구분자를 접고 로고+사이트명만 남긴다. */
+  .crumb-sep, .brand.hub .wm { display: none; }
   .sidebar {
     position: fixed; left: 0; top: 60px; width: 280px; z-index: 40;
     background: var(--bg); transform: translateX(-100%); transition: transform .2s;

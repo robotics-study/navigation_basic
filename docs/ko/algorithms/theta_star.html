@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Theta* · navigation study</title>
+<meta name="description" content="격자 위 A* 는 경로를 grid 간선(직교·대각)에만 얹으므로, 실제로는 직선으로 갈 수 있는">
+<meta name="robots" content="index,follow">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b1020" media="(prefers-color-scheme: dark)">
+<link rel="canonical" href="https://robotics-study.github.io/navigation/ko/algorithms/theta_star.html">
+<link rel="alternate" hreflang="ko" href="https://robotics-study.github.io/navigation/ko/algorithms/theta_star.html">
+<link rel="alternate" hreflang="en" href="https://robotics-study.github.io/navigation/en/algorithms/theta_star.html">
+<link rel="alternate" hreflang="x-default" href="https://robotics-study.github.io/navigation/en/algorithms/theta_star.html">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="navigation study">
+<meta property="og:title" content="Theta* · navigation study">
+<meta property="og:description" content="격자 위 A* 는 경로를 grid 간선(직교·대각)에만 얹으므로, 실제로는 직선으로 갈 수 있는">
+<meta property="og:url" content="https://robotics-study.github.io/navigation/ko/algorithms/theta_star.html">
+<meta property="og:image" content="https://robotics-study.github.io/navigation/assets/theta_star/maze01_final.png">
+<meta property="og:image:alt" content="Theta*">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:locale:alternate" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Theta* · navigation study">
+<meta name="twitter:description" content="격자 위 A* 는 경로를 grid 간선(직교·대각)에만 얹으므로, 실제로는 직선으로 갈 수 있는">
+<meta name="twitter:image" content="https://robotics-study.github.io/navigation/assets/theta_star/maze01_final.png">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "Theta*", "description": "격자 위 A* 는 경로를 grid 간선(직교·대각)에만 얹으므로, 실제로는 직선으로 갈 수 있는", "image": "https://robotics-study.github.io/navigation/assets/theta_star/maze01_final.png", "inLanguage": "ko", "url": "https://robotics-study.github.io/navigation/ko/algorithms/theta_star.html", "isPartOf": {"@type": "WebSite", "name": "navigation study", "url": "https://robotics-study.github.io/navigation/"}}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=becfdb97">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Crect width='24' height='24' rx='6' fill='%230b1020'/%3E%3Cpath d='M4 19V11h8V5h8' stroke='%23818cf8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='4' cy='19' r='2.4' fill='%23818cf8'/%3E%3Ccircle cx='20' cy='5' r='2.4' fill='%2322d3ee'/%3E%3C/svg%3E">
+<script src="../../assets/site.js?v=becfdb97"></script>
+</head>
+<body>
+<header class="topbar">
+  <button id="menu-btn" class="iconbtn menu-btn" aria-label="menu"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  <div class="brandcrumb">
+    <a class="brand hub" href="https://robotics-study.github.io/" aria-label="robotics-study home"><svg class="logo" width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true"><defs><linearGradient id="navlg" x1="0" y1="1" x2="1" y2="0"><stop stop-color="#6366f1"/><stop offset="1" stop-color="#06b6d4"/></linearGradient></defs><path d="M4 19V11h8V5h8" stroke="url(#navlg)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="4" cy="19" r="2.6" fill="url(#navlg)"/><circle cx="20" cy="5" r="2.6" fill="url(#navlg)"/></svg><span class="wm">robotics<span class="wm-dim"> study</span></span></a>
+    <span class="crumb-sep" aria-hidden="true">/</span>
+    <a class="brand" href="../../index.html"><span class="wm">navigation<span class="wm-dim"> study</span></span></a>
+  </div>
+  <nav class="topnav"><a href="../../ko/index.html">개요</a><a href="../../ko/algorithms/index.html">알고리즘</a><a href="../../ko/maps.html">맵</a><a href="../../ko/benchmarks.html">벤치마크</a><a href="https://github.com/robotics-study/navigation" target="_blank" rel="noopener">GitHub<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a></nav>
+  <span class="spacer"></span>
+  <div class="search"><svg class="s-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg><input id="search-input" type="search" placeholder="검색 / Search…" data-base="../../" autocomplete="off"><div id="search-results" class="search-results"></div></div>
+  <div class="lang-toggle" role="group" aria-label="language"><svg class="g-ico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.5 2.5 3.8 5.6 3.8 9s-1.3 6.5-3.8 9c-2.5-2.5-3.8-5.6-3.8-9S9.5 5.5 12 3Z"/></svg><a href="../../ko/algorithms/theta_star.html" class="active">KO</a><span class="l-sep">/</span><a href="../../en/algorithms/theta_star.html" class="">EN</a></div>
+</header>
+<div class="layout">
+<aside class="sidebar"><h4>개요</h4>
+<a href="../../ko/index.html">개요</a>
+<a href="../../ko/algorithms/index.html">알고리즘 목록</a>
+<h4>Global planning</h4>
+<details class="nav-sub" open><summary>Search</summary><div class="nav-sub-body"><a href="../../ko/algorithms/bfs.html">BFS</a><a href="../../ko/algorithms/dijkstra.html">Dijkstra</a><a href="../../ko/algorithms/astar.html">A*</a><a href="../../ko/algorithms/theta_star.html" class="active">Theta*</a></div></details>
+<details class="nav-sub"><summary>Sampling</summary><div class="nav-sub-body"><a href="../../ko/algorithms/prm.html">PRM</a><a href="../../ko/algorithms/rrt.html">RRT</a><a href="../../ko/algorithms/rrt_star.html">RRT*</a><a href="../../ko/algorithms/prm_star.html">PRM*</a><a href="../../ko/algorithms/fmt_star.html">FMT*</a><a href="../../ko/algorithms/bit_star.html">BIT*</a><a href="../../ko/algorithms/fast_rrt.html">Fast-RRT</a></div></details>
+<a href="../../ko/benchmarks.html">벤치마크</a>
+<h4>Local planning <span class="soon">예정</span></h4>
+<span class="planned">DWA</span>
+<span class="planned">Pure Pursuit</span>
+<span class="planned">VFH</span>
+<span class="planned">MPC</span>
+<span class="planned">벤치마크</span>
+<h4>Multi-agent <span class="soon">예정</span></h4>
+<span class="planned">Prioritized A*</span>
+<span class="planned">Joint-space A*</span>
+<span class="planned">CBS</span>
+<span class="planned">벤치마크</span>
+<h4>Maps</h4>
+<a href="../../ko/maps.html">맵 표현</a>
+<h4>레퍼런스</h4>
+<a href="../../ko/architecture.html">아키텍처</a>
+<a href="../../ko/references.html">참고 문헌</a></aside>
+<main class="content"><article class="content-inner"><h1 id="theta-any-angle">Theta* (any-angle)<a class="anchor" href="#theta-any-angle" title="Permanent link">¶</a></h1>
+<div class="code-links"><span class="cl-label">소스 코드</span><a href="https://github.com/robotics-study/navigation/blob/main/cpp/src/global_planning/search/theta_star.cpp" target="_blank" rel="noopener">C++</a><a href="https://github.com/robotics-study/navigation/blob/main/cpp/include/navigation/global_planning/search/theta_star.hpp" target="_blank" rel="noopener">C++ header</a><a href="https://github.com/robotics-study/navigation/blob/main/python/navigation/global_planning/search/theta_star.py" target="_blank" rel="noopener">Python</a><a href="https://github.com/robotics-study/navigation/blob/main/python/demos/demo_theta_star.py" target="_blank" rel="noopener">demo</a></div>
+<table class="spec-table">
+<thead>
+<tr>
+<th>항목</th>
+<th>내용</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>분류</td>
+<td>any-angle graph search</td>
+</tr>
+<tr>
+<td>요구 capability</td>
+<td><code>LineOfSightSpace</code> (<code>neighbors</code> + <code>heuristic</code> + <code>line_of_sight</code>)</td>
+</tr>
+<tr>
+<td>완전성</td>
+<td>complete (유한 그래프, 비음수 비용)</td>
+</tr>
+<tr>
+<td>최적성</td>
+<td>any-angle 경로 — <strong>grid-optimal 은 보장하지 않음</strong> (basic Theta*, Nash et al. 2007)</td>
+</tr>
+<tr>
+<td>복잡도</td>
+<td>A* 수준 + relaxation 마다 line-of-sight 검사 1회</td>
+</tr>
+<tr>
+<td>원 논문</td>
+<td>Nash, Daniel, Koenig &amp; Felner (2007) <sup id="fnref3:nash"><a class="footnote-ref" href="#fn:nash">1</a></sup> · LOS: Amanatides &amp; Woo (1987) <sup id="fnref2:aw"><a class="footnote-ref" href="#fn:aw">2</a></sup> · weighted: Pohl (1970) <sup id="fnref2:pohl"><a class="footnote-ref" href="#fn:pohl">4</a></sup></td>
+</tr>
+</tbody>
+</table>
+<h2 id="_1">배경<a class="anchor" href="#_1" title="Permanent link">¶</a></h2>
+<p>격자 위 A<em><sup id="fnref:hart"><a class="footnote-ref" href="#fn:hart">3</a></sup> 는 경로를 grid 간선(직교·대각)에만 얹으므로, 실제로는 직선으로 갈 수 있는
+구간도 45°·90° 단위로 꺾인 계단형 경로를 만든다. </em><em>Theta*</em><em><sup id="fnref:nash"><a class="footnote-ref" href="#fn:nash">1</a></sup> 는 A</em> 에 단 하나의 규칙을
+더한다: 노드를 완화(relax)할 때 후보의 부모를 현재 노드가 아니라 <strong>현재 노드의 부모</strong>로 삼을 수
+있는지 — 즉 그 둘 사이에 장애물 없는 <strong>직선 시야(line of sight)</strong> 가 있는지 — 를 검사한다. 있으면
+경로가 grid 를 벗어나 임의 각도(any-angle)의 직선 지름길을 취한다.</p>
+<p>결과 경로는 waypoint 가 훨씬 성글고(장애물 모서리에서만 꺾임) grid 경로보다 짧다. 이 저장소의
+demo 에서 maze01 은 A<em> 26개 waypoint·cost 28.73 → Theta* </em><em>4개 waypoint·cost 27.75</em>* 로 줄어든다.</p>
+<h2 id="_2">동작 원리<a class="anchor" href="#_2" title="Permanent link">¶</a></h2>
+<pre><code>THETASTAR(start, goal):
+    g[start] ← 0; parent[start] ← start
+    open ← priority queue keyed by f = g + w·h        # h = 유클리드 직선거리
+    while open is not empty:
+        s ← open.pop_min()
+        if s == goal: return reconstruct(parent, s)
+        if s already settled: continue                # lazy deletion
+        for (s2, edge_cost) in neighbors(s):
+            p ← parent[s]
+            if line_of_sight(p, s2):                   # Path 2 — any-angle 지름길
+                cand ← g[p] + euclid(p, s2);  par ← p
+            else:                                      # Path 1 — 표준 grid step
+                cand ← g[s] + edge_cost;      par ← s
+            if cand &lt; g[s2]:                           # relaxation
+                g[s2] ← cand; parent[s2] ← par
+                open.push(s2, cand + w·h(s2, goal))
+    return failure
+</code></pre>
+<p>A<em> 와의 차이는 안쪽 <code>if line_of_sight(...)</code> </em><em>한 블록</em><em>뿐이다. LOS 검사가 항상 실패하면 정확히
+weighted A</em> 로 퇴화한다. 부모 링크는 항상 LOS 가 확인된 쌍에만 설정되므로(Path 2 는 시야 확인,
+Path 1 은 인접 셀이라 자명), 재구성된 경로의 <strong>모든 간선은 실제로 통과 가능한 직선</strong>이다.</p>
+<h3 id="line-of-sight-grid">Line of sight — grid 충돌 모델과 일치<a class="anchor" href="#line-of-sight-grid" title="Permanent link">¶</a></h3>
+<p><code>line_of_sight(a, b)</code> 는 두 셀 중심을 잇는 선분이 실제로 지나갈 수 있는지를, <code>neighbors()</code> 와
+<strong>동일한 corner-cut 금지 규칙</strong>으로 판정한다. 원 논문은 Bresenham 을 썼지만 Bresenham 은 축당
+한 셀만 방문해 모서리를 스치는 선분을 "보인다"고 잘못 판정할 수 있다. 이 저장소는 선분이 닿는 모든
+셀을 방문하는 <strong>supercover</strong><sup id="fnref:aw"><a class="footnote-ref" href="#fn:aw">2</a></sup> 를 재사용한다(맵의 <code>is_motion_valid</code> 위임). 따라서 "LOS 로
+보이는 쌍" ⇔ "합법적인 직선 이동" 이 되어, Theta* 와 grid A<em> 가 </em><em>하나의 충돌 모델</em>*을 공유한다.</p>
+<h3 id="heuristic-octile">Heuristic — 유클리드 (octile 아님)<a class="anchor" href="#heuristic-octile" title="Permanent link">¶</a></h3>
+<p>Theta* 의 g 값은 직선(유클리드) 거리이므로 heuristic 도 <strong>유클리드</strong>를 쓴다:</p>
+<pre><code>h(a, b) = √((Δrow)² + (Δcol)²)
+</code></pre>
+<p>맵이 A<em> 용으로 제공하는 octile heuristic 은 octile ≥ 유클리드 이므로 any-angle 비용에 대해
+</em><em>inadmissible</em>*(과대평가)이라 사용하지 않는다. 유클리드는 임의 각도 이동에 대한 admissible 하한이다.</p>
+<h2 id="_3">성질<a class="anchor" href="#_3" title="Permanent link">¶</a></h2>
+<ul>
+<li><strong>완전성</strong>: 유한 grid + 비음수 비용에서 완전 (A* 와 동일).</li>
+<li><strong>최적성</strong>: basic Theta* 는 <strong>grid-optimal 도 true-optimal 도 보장하지 않는다</strong><sup id="fnref2:nash"><a class="footnote-ref" href="#fn:nash">1</a></sup>. 부모를
+  조부모로만 승계하는 국소 규칙이라, 진짜 최단 any-angle 경로를 놓칠 수 있다(대신 매우 근접). 엄밀
+  최적이 필요하면 Lazy Theta*/AP Theta* 등 후속 변형을 쓴다.</li>
+<li><strong>품질</strong>: 반환 경로 비용은 항상 같은 grid 의 A* 이하다 — LOS 지름길이 grid 계단을 대체하기 때문.</li>
+<li><strong>복잡도</strong>: A* 와 같은 탐색에 relaxation 마다 LOS 검사(선분 길이에 선형) 1회가 더해진다.</li>
+<li>w &gt; 1 (weighted Theta*, Pohl 1970<sup id="fnref:pohl"><a class="footnote-ref" href="#fn:pohl">4</a></sup>): heuristic 을 부풀려 확장 노드를 줄이되 경로 품질을 완화.</li>
+</ul>
+<h2 id="_4">파라미터<a class="anchor" href="#_4" title="Permanent link">¶</a></h2>
+<table>
+<thead>
+<tr>
+<th>이름</th>
+<th>타입</th>
+<th>기본값</th>
+<th>범위</th>
+<th>설명</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>heuristic_weight</code></td>
+<td>float</td>
+<td>1.0</td>
+<td>[1.0, 5.0]</td>
+<td>f = g + w·h 의 w (h 는 유클리드). 1.0 = 표준 Theta*, 초과 = weighted</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_5">구현 노트<a class="anchor" href="#_5" title="Permanent link">¶</a></h2>
+<ul>
+<li>C++: <code>cpp/src/global_planning/search/theta_star.cpp</code>, Python: <code>python/navigation/global_planning/search/theta_star.py</code></li>
+<li>유클리드 거리는 <code>hypot</code> 이 아니라 <strong><code>sqrt(Δrow² + Δcol²)</code></strong> 로 계산한다. <code>hypot</code> 은 IEEE-754
+  정확 반올림이 아니라 런타임 간 1 ULP 차이가 날 수 있어, f 값·tie-break·방출 trace 스트림이 두
+  언어에서 어긋난다(벤치의 C++/Python 비교가 이 스트림에 의존). <code>sqrt</code> 는 정확 반올림이며
+  <code>sqrt(2.0)</code> 가 <code>neighbors()</code> 의 대각 간선 비용과 정확히 일치해, Path 2 대각 지름길과 Path 1
+  대각 스텝이 bit 단위로 같다.</li>
+<li>경로 비용은 <code>g[goal]</code> 로 보고한다. 인접 간선을 합산하는 방식은 any-angle 점프(비인접)에서 0 이
+  되어 틀린다.</li>
+<li>tie-break 은 A* 와 동일한 <code>(f, 삽입순서)</code> 이라 두 언어가 같은 경로로 수렴한다 — demo 의
+  maze01 확장 노드 순서가 C++/Python 에서 셀 단위로 일치한다.</li>
+</ul>
+<h2 id="trace">방출 trace 이벤트<a class="anchor" href="#trace" title="Permanent link">¶</a></h2>
+<p><code>planning_started</code> → (<code>node_expanded</code>, <code>candidate_evaluated</code>, <code>edge_added</code>)* → <code>path_found</code> → <code>planning_finished</code></p>
+<p><code>edge_added(state=s2, parent)</code> 의 <code>parent</code> 는 Path 2 에서 <strong>비인접 조부모</strong>가 된다(스키마·시각화는
+인접 제약을 두지 않는다). <code>replay.py</code> 는 parent→state 직선을 그대로 그려 any-angle 지름길을
+표현하므로 새 trace 이벤트가 필요 없다.</p>
+<h2 id="demo">Demo<a class="anchor" href="#demo" title="Permanent link">¶</a></h2>
+<p><code>maze01</code> 에서의 탐색. A<em> 파면과 비슷하게 goal 쪽으로 자라지만, 최종 경로가 grid 계단이 아니라
+장애물 모서리만 스치는 </em><em>성근 직선 다각선</em>*이다.</p>
+<p><img alt="Theta* on maze01" src="../../assets/theta_star/maze01.gif" /></p>
+<p>탐색 중간 과정 (좌 → 우: 초반 / 중반 / 최종 경로):</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;"></th>
+<th style="text-align: center;"></th>
+<th style="text-align: center;"></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;"><img alt="early" src="../../assets/theta_star/maze01_snap_02.png" /></td>
+<td style="text-align: center;"><img alt="mid" src="../../assets/theta_star/maze01_snap_05.png" /></td>
+<td style="text-align: center;"><img alt="final" src="../../assets/theta_star/maze01_final.png" /></td>
+</tr>
+</tbody>
+</table>
+<p><code>open01</code> 최종 결과 — 장애물이 적으면 start→goal 가 거의 단일 직선으로 연결된다:</p>
+<p><img alt="Theta* on open01" src="../../assets/theta_star/open01_final.png" /></p>
+<p>측정치 (Python, w = 1.0, trace on · 같은 인스턴스의 A* 비교):</p>
+<table>
+<thead>
+<tr>
+<th>map</th>
+<th>Theta* cost</th>
+<th>A* cost</th>
+<th>Theta* expanded</th>
+<th>A* expanded</th>
+<th>Theta* waypoints</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>maze01</td>
+<td><strong>27.748</strong></td>
+<td>28.728</td>
+<td>104</td>
+<td>108</td>
+<td>4 (A*: 26)</td>
+</tr>
+<tr>
+<td>open01</td>
+<td><strong>24.241</strong></td>
+<td>25.213</td>
+<td>66</td>
+<td>71</td>
+<td>3 (A*: 20)</td>
+</tr>
+</tbody>
+</table>
+<p>재현:</p>
+<pre><code class="language-bash">python python/demos/demo_theta_star.py \
+  --map maps/grid/maze01.yaml --scenario maps/scenarios/maze01_s1.yaml \
+  --params configs/global_planning/theta_star.yaml --trace out/theta_star.jsonl
+python tools/viz/replay.py out/theta_star.jsonl --gif out/theta_star.gif --snapshots out/theta_snaps/
+</code></pre>
+<h2 id="references">References<a class="anchor" href="#references" title="Permanent link">¶</a></h2>
+<div class="footnote">
+<hr />
+<ol>
+<li id="fn:nash">
+<p>Nash, A., Daniel, K., Koenig, S., &amp; Felner, A. (2007). "Theta*: Any-Angle Path Planning on Grids." <em>Proc. AAAI Conference on Artificial Intelligence</em>, 1177–1183. <a href="https://ojs.aaai.org/index.php/AAAI/article/view/11009">PDF</a>&#160;<a class="footnote-backref" href="#fnref:nash" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:nash" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:nash" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+</li>
+<li id="fn:aw">
+<p>Amanatides, J., &amp; Woo, A. (1987). "A Fast Voxel Traversal Algorithm for Ray Tracing." <em>Proc. Eurographics</em>, 3–10. <a href="https://www.cse.yorku.ca/~amana/research/grid.pdf">PDF</a>&#160;<a class="footnote-backref" href="#fnref:aw" title="Jump back to footnote 2 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:aw" title="Jump back to footnote 2 in the text">&#8617;</a></p>
+</li>
+<li id="fn:hart">
+<p>Hart, P. E., Nilsson, N. J., &amp; Raphael, B. (1968). "A Formal Basis for the Heuristic Determination of Minimum Cost Paths." <em>IEEE Transactions on Systems Science and Cybernetics</em>, 4(2), 100–107. <a href="https://doi.org/10.1109/TSSC.1968.300136">doi:10.1109/TSSC.1968.300136</a>&#160;<a class="footnote-backref" href="#fnref:hart" title="Jump back to footnote 3 in the text">&#8617;</a></p>
+</li>
+<li id="fn:pohl">
+<p>Pohl, I. (1970). "Heuristic search viewed as path finding in a graph." <em>Artificial Intelligence</em>, 1(3–4), 193–204. <a href="https://doi.org/10.1016/0004-3702%2870%2990007-X">doi:10.1016/0004-3702(70)90007-X</a>&#160;<a class="footnote-backref" href="#fnref:pohl" title="Jump back to footnote 4 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:pohl" title="Jump back to footnote 4 in the text">&#8617;</a></p>
+</li>
+</ol>
+</div><nav class="pager"><a href="../../ko/algorithms/astar.html"><div class="dir">← 이전</div><div class="ttl">A*</div></a><a class="next" href="../../ko/algorithms/prm.html"><div class="dir">다음 →</div><div class="ttl">PRM</div></a></nav></article></main>
+<aside class="toc" id="toc"></aside>
+</div>
+<div class="backdrop"></div>
+<footer class="site-footer">
+  <p>navigation study — robot navigation planning algorithms · C++ / Python dual implementation</p>
+  <p>Built as a static site · <a href="../../ko/index.html">한국어</a> · <a href="../../en/index.html">English</a></p>
+</footer>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script" async></script>
+</body></html>
