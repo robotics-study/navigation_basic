@@ -8,7 +8,7 @@ permalink: /ko/
 
 [🇰🇷 한국어](index.md) | [🇬🇧 English](../en/index.md)
 
-# nav_study 개요
+# navigation study 개요
 {: .fs-8 }
 
 로봇 navigation planning 알고리즘 스터디 — 같은 추상화 설계를 **C++20 / Python 3.10+ 으로 독립 이중 구현**하고,

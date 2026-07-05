@@ -1,6 +1,10 @@
 <div align="center">
 
-# 🤖 nav_study
+# 🤖 navigation study
+
+### 🌐 [robotics-study.github.io/navigation](https://robotics-study.github.io/navigation/)
+
+문서 사이트가 라이브입니다 — 아래 링크는 모두 호스팅된 위키로 연결됩니다.
 
 **로봇 navigation planning 알고리즘 — C++ / Python 독립 이중 구현 스터디**
 
@@ -8,7 +12,7 @@
 (map × algorithm × language) 매트릭스로 벤치마크한다.
 
 *Robot navigation planning algorithms, mirrored in C++20 and Python — with step-by-step
-visualization and a benchmark matrix. Docs available in [Korean](docs/ko/index.md) and [English](docs/en/index.md).*
+visualization and a benchmark matrix. Docs available in [Korean](https://robotics-study.github.io/navigation/ko/index.html) and [English](https://robotics-study.github.io/navigation/en/index.html).*
 
 ![C++20](https://img.shields.io/badge/C%2B%2B-20-blue.svg)
 ![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB.svg)
@@ -34,15 +38,15 @@ visualization and a benchmark matrix. Docs available in [Korean](docs/ko/index.m
 
 ## 📚 문서 (GitHub Pages)
 
-**[📖 한국어 위키](docs/ko/index.md)** · **[📖 English Wiki](docs/en/index.md)**
+**[📖 한국어 위키](https://robotics-study.github.io/navigation/ko/index.html)** · **[📖 English Wiki](https://robotics-study.github.io/navigation/en/index.html)**
 
 알고리즘별 상세 페이지: 이론적 배경 + pseudocode + 성질(완전성·최적성·복잡도) + 파라미터 +
 demo GIF/PNG + 실측 metric + **원 논문 각주**.
 
 | | | |
 |---|---|---|
-| [BFS](docs/ko/algorithms/bfs.md) — Moore 1959 | [Dijkstra](docs/ko/algorithms/dijkstra.md) — Dijkstra 1959 | [A*](docs/ko/algorithms/astar.md) — Hart et al. 1968 |
-| [RRT](docs/ko/algorithms/rrt.md) — LaValle 1998 | [RRT*](docs/ko/algorithms/rrt_star.md) — Karaman & Frazzoli 2011 | [Fast-RRT](docs/ko/algorithms/fast_rrt.md) — Wu et al. 2021 |
+| [BFS](https://robotics-study.github.io/navigation/ko/algorithms/bfs.html) — Moore 1959 | [Dijkstra](https://robotics-study.github.io/navigation/ko/algorithms/dijkstra.html) — Dijkstra 1959 | [A*](https://robotics-study.github.io/navigation/ko/algorithms/astar.html) — Hart et al. 1968 |
+| [RRT](https://robotics-study.github.io/navigation/ko/algorithms/rrt.html) — LaValle 1998 | [RRT*](https://robotics-study.github.io/navigation/ko/algorithms/rrt_star.html) — Karaman & Frazzoli 2011 | [Fast-RRT](https://robotics-study.github.io/navigation/ko/algorithms/fast_rrt.html) — Wu et al. 2021 |
 
 > **문서 사이트는 손수 디자인한 정적 HTML** 이다 (Jekyll 테마 없음, `docs/.nojekyll`).
 > 콘텐츠 소스는 `docs/{ko,en}/**.md`, 공통 크롬·CSS·수식은 한 곳에서 관리하고
@@ -76,7 +80,7 @@ demo GIF/PNG + 실측 metric + **원 논문 각주**.
 | multi_agent | Joint-space A* | ⬜ | ⬜ | — |
 | multi_agent | CBS | ⬜ | ⬜ | Sharon et al. (2015) |
 
-⬜ planned · 🔶 in progress · ✅ done — 전체 서지는 [참고 문헌](docs/ko/references.md) 참고.
+⬜ planned · 🔶 in progress · ✅ done — 전체 서지는 [참고 문헌](https://robotics-study.github.io/navigation/ko/references.html) 참고.
 
 ## 🚀 빠른 시작
 
@@ -121,7 +125,7 @@ python tools/viz/replay.py out/astar.jsonl --gif out/astar.gif --snapshots out/s
 python tools/bench/run_matrix.py --out out/report.md
 ```
 
-실측 요약 (maze01, seed 1 — 자세한 수치·해석은 [벤치마크 문서](docs/ko/benchmarks.md)):
+실측 요약 (maze01, seed 1 — 자세한 수치·해석은 [벤치마크 문서](https://robotics-study.github.io/navigation/ko/benchmarks.html)):
 
 | algorithm | path cost | 탐색량 | 특성 |
 |---|---|---|---|
@@ -144,7 +148,7 @@ python tools/bench/run_matrix.py --out out/report.md
 └── docs/          # GitHub Pages 위키 (한국어/English)
 ```
 
-아키텍처 원칙(의존 방향, capability 모델, trace 계약)은 [아키텍처 문서](docs/ko/architecture.md)
+아키텍처 원칙(의존 방향, capability 모델, trace 계약)은 [아키텍처 문서](https://robotics-study.github.io/navigation/ko/architecture.html)
 와 [CLAUDE.md](CLAUDE.md) 참고.
 
 ## 🧭 새 알고리즘 추가

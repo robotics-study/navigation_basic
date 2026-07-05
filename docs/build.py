@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""nav_study 문서 정적 사이트 빌더.
+"""navigation study 문서 정적 사이트 빌더.
 
 docs/{ko,en}/**.md (콘텐츠 소스) → docs/**.html (커스텀 정적 사이트) 로 렌더링한다.
 GitHub Pages 는 .nojekyll 로 Jekyll 을 끄고 이 HTML 을 그대로 서빙한다.
@@ -258,7 +258,7 @@ def page_shell(*, title, lang, base, cur_out, content, is_doc):
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{html.escape(title)} · nav_study</title>
+<title>{html.escape(title)} · navigation study</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -269,7 +269,7 @@ def page_shell(*, title, lang, base, cur_out, content, is_doc):
 <body>
 <header class="topbar">
   <button id="menu-btn" class="iconbtn menu-btn" aria-label="menu">{MENU_SVG}</button>
-  <a class="brand" href="{base}index.html">{LOGO_SVG}<span class="wm">nav<span class="wm-dim">_study</span></span></a>
+  <a class="brand" href="{base}index.html">{LOGO_SVG}<span class="wm">navigation<span class="wm-dim"> study</span></span></a>
   {topnav}
   <span class="spacer"></span>
   {search}
@@ -291,7 +291,7 @@ def page_shell(*, title, lang, base, cur_out, content, is_doc):
         body = content
 
     foot = f"""<footer class="site-footer">
-  <p>nav_study — robot navigation planning algorithms · C++ / Python dual implementation</p>
+  <p>navigation study — robot navigation planning algorithms · C++ / Python dual implementation</p>
   <p>Built as a static site · <a href="{base}ko/index.html">한국어</a> · <a href="{base}en/index.html">English</a></p>
 </footer>
 <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script" async></script>
@@ -324,7 +324,7 @@ def build_landing(_=None):
 <main class="lander">
   <div class="lander-top">
     {LOGO_SVG}
-    <h1>nav<span class="wm-dim">_study</span></h1>
+    <h1>navigation<span class="wm-dim"> study</span></h1>
     <p class="sub">로봇 경로 계획(navigation planning) 알고리즘 — C++ / Python 이중 구현 · 단계별 시각화 · 벤치마크</p>
     <div class="lander-btns">
       <a class="btn btn-primary" href="ko/index.html">한국어 문서</a>
@@ -342,7 +342,7 @@ def build_landing(_=None):
   </div>
 </main>
 """
-    return page_shell(title="nav_study", lang=None, base="", cur_out="index.html",
+    return page_shell(title="navigation study", lang=None, base="", cur_out="index.html",
                       content=content, is_doc=False)
 
 

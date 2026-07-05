@@ -8,7 +8,7 @@ permalink: /en/
 
 [🇰🇷 한국어](../ko/index.md) | [🇬🇧 English](index.md)
 
-# nav_study Overview
+# navigation study Overview
 {: .fs-8 }
 
 A study of robot navigation planning algorithms — the same abstract design is **independently implemented twice, in C++20 and Python 3.10+**, with **step-by-step visualization** built on a language-neutral trace format and a **(map × algorithm) matrix benchmark**.
