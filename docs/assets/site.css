@@ -268,6 +268,8 @@ mjx-container[display="true"] { overflow-x: auto; overflow-y: hidden; max-width:
 .btn-ghost { background: var(--surface); color: var(--text); }
 
 .gif-trio { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-bottom: 52px; }
+/* 구현된 전 알고리즘 GIF 카드 — 개수에 무관하게 반응형으로 흐른다. */
+.gif-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 16px; margin-bottom: 52px; }
 .gif-card {
   border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden;
   background: var(--surface); box-shadow: var(--shadow); transition: transform .18s;

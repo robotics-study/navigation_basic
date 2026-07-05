@@ -23,7 +23,11 @@ visualization and a benchmark matrix. Docs available in [Korean](https://robotic
 |:---:|:---:|:---:|
 | ![A*](docs/assets/astar/maze01.gif) | ![RRT*](docs/assets/rrt_star/maze01.gif) | ![Fast-RRT](docs/assets/fast_rrt/maze01.gif) |
 
-*같은 미로, 세 가지 탐색. 색 = 시간 순서 (expanded: 노랑→갈색 · tree: 하늘색 · path: 보라→빨강)*
+| PRM (1996) | PRM* (2011) | FMT* (2015) | BIT* (2015) |
+|:---:|:---:|:---:|:---:|
+| ![PRM](docs/assets/prm/maze01.gif) | ![PRM*](docs/assets/prm_star/maze01.gif) | ![FMT*](docs/assets/fmt_star/maze01.gif) | ![BIT*](docs/assets/bit_star/maze01.gif) |
+
+*같은 미로, 여러 탐색. 색 = 시간 순서 (expanded: 노랑→갈색 · tree: 하늘색 · path: 보라→빨강). roadmap/batch-optimal 계열(PRM→PRM\*→FMT\*→BIT\*)이 새로 추가됐다.*
 
 </div>
 

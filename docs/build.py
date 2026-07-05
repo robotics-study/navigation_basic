@@ -25,7 +25,7 @@ DOCS = Path(__file__).resolve().parent
 # 로고: grid 위 start→goal 경로(A* 모티프). 브랜드 그라디언트.
 LOGO_SVG = (
     '<svg class="logo" width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">'
-    '<defs><linearGradient id="navlg" x1="3" y1="21" x2="21" y2="3" gradientUnits="userSpaceOnUse">'
+    '<defs><linearGradient id="navlg" x1="0" y1="1" x2="1" y2="0">'
     '<stop stop-color="#6366f1"/><stop offset="1" stop-color="#06b6d4"/></linearGradient></defs>'
     '<path d="M4 19V11h8V5h8" stroke="url(#navlg)" stroke-width="2.2" '
     'stroke-linecap="round" stroke-linejoin="round"/>'
@@ -52,8 +52,8 @@ FAVICON = (
     "data:image/svg+xml,"
     "%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E"
     "%3Crect width='24' height='24' rx='6' fill='%230b1020'/%3E"
-    "%3Cpath d='M5 18V11h7V6h7' stroke='%23818cf8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E"
-    "%3Ccircle cx='5' cy='18' r='2.4' fill='%23818cf8'/%3E%3Ccircle cx='19' cy='6' r='2.4' fill='%2322d3ee'/%3E%3C/svg%3E"
+    "%3Cpath d='M4 19V11h8V5h8' stroke='%23818cf8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E"
+    "%3Ccircle cx='4' cy='19' r='2.4' fill='%23818cf8'/%3E%3Ccircle cx='20' cy='5' r='2.4' fill='%2322d3ee'/%3E%3C/svg%3E"
 )
 
 
@@ -227,7 +227,8 @@ def seo_meta(*, title: str, description: str, lang: str | None, cur_out: str,
     tags = [
         f'<meta name="description" content="{desc}">',
         '<meta name="robots" content="index,follow">',
-        '<meta name="theme-color" content="#0b1020">',
+        '<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">',
+        '<meta name="theme-color" content="#0b1020" media="(prefers-color-scheme: dark)">',
         f'<link rel="canonical" href="{page_url}">',
     ]
     # bilingual hreflang: 같은 out_rel 이 ko/en 양쪽에 존재. x-default 는 영어로.
@@ -424,22 +425,26 @@ def page_shell(*, title, lang, base, cur_out, content, is_doc,
 
 
 def build_landing(_=None):
-    """미니멀·이미지 중심 랜딩. GIF 3개 + 카테고리별(global/local/multi/maps) 링크."""
-    trio = (
-        '<a class="gif-card" href="ko/algorithms/astar.html">'
-        '<img src="assets/astar/maze01.gif" alt="A* search on maze01" loading="lazy">'
-        '<div class="cap"><b>A*</b><span>informed search</span></div></a>'
-        '<a class="gif-card" href="ko/algorithms/rrt_star.html">'
-        '<img src="assets/rrt_star/maze01.gif" alt="RRT* on maze01" loading="lazy">'
-        '<div class="cap"><b>RRT*</b><span>asymptotically optimal</span></div></a>'
-        '<a class="gif-card" href="ko/algorithms/fast_rrt.html">'
-        '<img src="assets/fast_rrt/maze01.gif" alt="Fast-RRT on maze01" loading="lazy">'
-        '<div class="cap"><b>Fast-RRT</b><span>Fast-Sampling + shortcut</span></div></a>'
+    """미니멀·이미지 중심 랜딩. 구현된 전 global 알고리즘 GIF 그리드 + 카테고리 링크."""
+    # 계보 순서. 모든 구현 알고리즘이 demo GIF 카드를 갖는다 (신규 포함 — 누락 방지).
+    gallery = [
+        ("bfs", "BFS", "uninformed search"),
+        ("dijkstra", "Dijkstra", "cost-optimal"),
+        ("astar", "A*", "informed search"),
+        ("rrt", "RRT", "feasible sampling"),
+        ("rrt_star", "RRT*", "asymptotically optimal"),
+        ("prm", "PRM", "roadmap · multi-query"),
+        ("prm_star", "PRM*", "optimal roadmap"),
+        ("fmt_star", "FMT*", "fast marching tree"),
+        ("bit_star", "BIT*", "batch informed trees"),
+        ("fast_rrt", "Fast-RRT", "Fast-Sampling + shortcut"),
+    ]
+    cards = "".join(
+        f'<a class="gif-card" href="ko/algorithms/{k}.html">'
+        f'<img src="assets/{k}/maze01.gif" alt="{html.escape(n)} on maze01" loading="lazy">'
+        f'<div class="cap"><b>{html.escape(n)}</b><span>{html.escape(d)}</span></div></a>'
+        for k, n, d in gallery
     )
-    glob = [("bfs", "BFS"), ("dijkstra", "Dijkstra"), ("astar", "A*"),
-            ("rrt", "RRT"), ("rrt_star", "RRT*"), ("prm", "PRM"), ("prm_star", "PRM*"),
-            ("fmt_star", "FMT*"), ("bit_star", "BIT*"), ("fast_rrt", "Fast-RRT")]
-    g_chips = "".join(f'<a href="ko/algorithms/{k}.html">{n}</a>' for k, n in glob)
     l_chips = "".join(f'<span class="dim">{n}</span>' for n in ("DWA", "Pure Pursuit", "VFH", "MPC"))
     m_chips = "".join(f'<span class="dim">{n}</span>' for n in ("Prioritized A*", "Joint-space A*", "CBS"))
     map_chips = ('<a href="ko/maps.html">OccupancyGrid2D</a>'
@@ -457,10 +462,9 @@ def build_landing(_=None):
     </div>
   </div>
 
-  <div class="gif-trio">{trio}</div>
+  <div class="gif-grid">{cards}</div>
 
   <div class="lander-cats">
-    <div class="lander-cat"><h3>Global planning</h3><div class="chips">{g_chips}</div></div>
     <div class="lander-cat"><h3>Local planning {soon}</h3><div class="chips">{l_chips}</div></div>
     <div class="lander-cat"><h3>Multi-agent {soon}</h3><div class="chips">{m_chips}</div></div>
     <div class="lander-cat"><h3>Map representations</h3><div class="chips">{map_chips}</div></div>
@@ -470,8 +474,9 @@ def build_landing(_=None):
     desc = ("로봇 경로 계획(navigation planning) 알고리즘을 C++ 와 Python 으로 이중 구현한 "
             "학습용 스터디 — 탐색(BFS·Dijkstra·A*)과 샘플링(RRT·RRT*·PRM·FMT*·BIT*) 계열을 "
             "단계별 시각화와 벤치마크로 비교한다.")
-    return page_shell(title="navigation study", lang=None, base="", cur_out="index.html",
-                      content=content, is_doc=False, description=desc,
+    # 랜딩 title 은 브랜드명을 중복하지 않도록 서술형으로 (template 이 " · navigation study" 를 붙임).
+    return page_shell(title="robot navigation planning algorithms", lang=None, base="",
+                      cur_out="index.html", content=content, is_doc=False, description=desc,
                       image_rel=DEFAULT_OG_IMAGE, is_article=False)
 
 
