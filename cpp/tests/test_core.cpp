@@ -70,12 +70,13 @@ TEST(Params, WrongTypeAccessThrows) {
 
 // --- Capabilities ------------------------------------------------------------
 
-TEST(Capabilities, GridSupportsDiscreteSamplingLineOfSightAndDynamicGrid) {
+TEST(Capabilities, GridSupportsDiscreteSamplingLineOfSightDynamicGridAndSE2Collision) {
   auto g = test::make_grid({"..", ".."});
   EXPECT_TRUE(g.supports(core::Capability::DISCRETE_SPACE));
   EXPECT_TRUE(g.supports(core::Capability::SAMPLING_SPACE));
   EXPECT_TRUE(g.supports(core::Capability::LINE_OF_SIGHT_SPACE));
   EXPECT_TRUE(g.supports(core::Capability::DYNAMIC_GRID_SPACE));
+  EXPECT_TRUE(g.supports(core::Capability::SE2_COLLISION_SPACE));
   EXPECT_FALSE(g.supports(core::Capability::OBSTACLE_QUERY));
 }
 

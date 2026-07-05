@@ -14,6 +14,10 @@ struct Scenario {
   std::string map_path;  // absolute, resolved relative to the scenario file
   core::Point start;
   core::Point goal;
+  // Optional SE(2) start/goal heading (radians, world) for kinodynamic planners.
+  // Defaulted so existing scenarios (no theta) load unchanged; discrete/sampling ignore.
+  double start_theta = 0.0;
+  double goal_theta = 0.0;
 };
 
 // Dispatches on the yaml `type` field. Only occupancy_grid is implemented in

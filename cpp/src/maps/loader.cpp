@@ -56,6 +56,9 @@ Scenario load_scenario(const std::string& path) {
   const YamlNode& goal = root.at("goal");
   sc.start = {start.seq.at(0).as_double(), start.seq.at(1).as_double()};
   sc.goal = {goal.seq.at(0).as_double(), goal.seq.at(1).as_double()};
+  // Optional headings (radians, world) — backward compatible; default 0.
+  if (root.has("start_theta")) sc.start_theta = root.at("start_theta").as_double();
+  if (root.has("goal_theta")) sc.goal_theta = root.at("goal_theta").as_double();
   return sc;
 }
 

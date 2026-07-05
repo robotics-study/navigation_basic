@@ -33,6 +33,7 @@ _REQUIRED: dict[str, Capability] = {
     # it), so a discrete-only map is correctly marked incompatible for Theta*.
     "theta_star": Capability.LINE_OF_SIGHT_SPACE,
     "dstar_lite": Capability.DYNAMIC_GRID_SPACE,
+    "hybrid_astar": Capability.SE2_COLLISION_SPACE,
     "rrt": Capability.SAMPLING_SPACE,
     "rrt_star": Capability.SAMPLING_SPACE,
     "prm": Capability.SAMPLING_SPACE,
@@ -41,8 +42,8 @@ _REQUIRED: dict[str, Capability] = {
     "bit_star": Capability.SAMPLING_SPACE,
     "fast_rrt": Capability.SAMPLING_SPACE,
 }
-_ORDER = ["bfs", "dijkstra", "astar", "theta_star", "dstar_lite", "rrt", "rrt_star", "prm",
-          "prm_star", "fmt_star", "bit_star", "fast_rrt"]
+_ORDER = ["bfs", "dijkstra", "astar", "theta_star", "dstar_lite", "hybrid_astar", "rrt",
+          "rrt_star", "prm", "prm_star", "fmt_star", "bit_star", "fast_rrt"]
 
 
 @dataclass

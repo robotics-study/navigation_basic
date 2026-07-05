@@ -4,6 +4,8 @@
 #include <utility>
 #include <vector>
 
+#include "navigation/core/types.hpp"  // Footprint / Pose for SE2CollisionSpace (same core layer)
+
 namespace navigation::core {
 
 // OBSTACLE_QUERY is declared for future local planners but implemented by no map
@@ -13,7 +15,8 @@ enum class Capability {
   SAMPLING_SPACE,
   OBSTACLE_QUERY,
   LINE_OF_SIGHT_SPACE,
-  DYNAMIC_GRID_SPACE
+  DYNAMIC_GRID_SPACE,
+  SE2_COLLISION_SPACE
 };
 
 // Successor enumeration + admissible heuristic for graph-search planners.
@@ -70,6 +73,21 @@ class DynamicGridSpace {
   // Ground-truth sensor: true iff `s` is occupied OR out of bounds. The only method
   // that reads real occupancy; called only on cells inside the sensor footprint.
   virtual bool is_blocked(const State& s) const = 0;
+};
+
+// Continuous SE(2) collision view for kinodynamic planners (Hybrid A*, Dolgov,
+// Thrun, Montemerlo & Diebel 2008). Standalone — extends nothing: the planner
+// generates its own motion primitives + heuristic and needs ONLY a footprint
+// collision test at a continuous world pose. World<->cell conversion stays in the
+// map. Distinct from the reserved OBSTACLE_QUERY (local planners; adds a clearance
+// query). Only maps with real occupancy geometry can answer it.
+template <class State>
+class SE2CollisionSpace {
+ public:
+  virtual ~SE2CollisionSpace() = default;
+  // True iff the footprint placed at world pose `pose` overlaps any occupied or
+  // out-of-bounds cell. Continuous pose in; grid conversion happens in the map.
+  virtual bool is_collision(const Footprint& footprint, const State& pose) const = 0;
 };
 
 class MapBase {

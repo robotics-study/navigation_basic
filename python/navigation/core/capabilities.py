@@ -11,7 +11,12 @@ import enum
 from abc import ABC, abstractmethod
 from typing import Protocol, TypeVar
 
+from .types import Footprint  # same core layer; types.py does not import capabilities.py
+
 StateT = TypeVar("StateT")
+# SE2CollisionSpace consumes its state only as a method argument (never returns it), so
+# its type var must be contravariant — an invariant one trips mypy's protocol check.
+StateT_contra = TypeVar("StateT_contra", contravariant=True)
 
 
 class Capability(enum.Enum):
@@ -21,6 +26,7 @@ class Capability(enum.Enum):
     OBSTACLE_QUERY = "obstacle_query"
     LINE_OF_SIGHT_SPACE = "line_of_sight_space"
     DYNAMIC_GRID_SPACE = "dynamic_grid_space"
+    SE2_COLLISION_SPACE = "se2_collision_space"
 
 
 class DiscreteSpace(Protocol[StateT]):
@@ -59,6 +65,15 @@ class DynamicGridSpace(Protocol[StateT]):
     def is_blocked(self, s: StateT) -> bool:
         """Ground-truth sensor: True iff ``s`` is occupied or out of bounds."""
         ...
+
+
+class SE2CollisionSpace(Protocol[StateT_contra]):
+    """Continuous SE(2) collision view for kinodynamic planners (Hybrid A*, Dolgov
+    et al. 2008). Standalone: the planner owns its motion model + heuristic and needs
+    ONLY a footprint collision test at a world pose. Structural, so one concrete grid
+    satisfies this and the discrete/sampling views without a class hierarchy."""
+
+    def is_collision(self, footprint: Footprint, pose: StateT_contra) -> bool: ...
 
 
 class SamplingSpace(Protocol[StateT]):

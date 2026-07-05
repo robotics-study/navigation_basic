@@ -13,7 +13,7 @@ private `_discrete` / `_bestfirst` (search) and `_sampling` / `_roadmap`
 """
 
 from .sampling import PRM, RRT, BITStar, FastRRT, FMTStar, PRMStar, RRTStar
-from .search import BFS, AStar, Dijkstra, DStarLite, ThetaStar
+from .search import BFS, AStar, Dijkstra, DStarLite, HybridAStar, ThetaStar
 
 __all__ = [
     "BFS",
@@ -21,6 +21,7 @@ __all__ = [
     "AStar",
     "DStarLite",
     "ThetaStar",
+    "HybridAStar",
     "RRT",
     "RRTStar",
     "FastRRT",

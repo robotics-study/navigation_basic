@@ -14,7 +14,7 @@ from collections.abc import Callable
 from navigation.core.params import ParamSet
 from navigation.core.planner import GlobalPlanner
 from navigation.core.trace import open_trace
-from navigation.core.types import Cell, PlanResult, Point
+from navigation.core.types import Cell, PlanResult, Point, Pose
 from navigation.maps.loader import load_map, load_scenario
 from navigation.maps.occupancy_grid import OccupancyGrid2D
 
@@ -71,6 +71,24 @@ def run_sampling(name: str, factory: PlannerFactory) -> None:
     args = _parse_args(name)
     params, grid, start, goal = _load(args)
     planner = factory(params)
+    with open_trace(args.trace) as recorder:
+        recorder.planning_started(planner.name, args.map, params.values())
+        result = planner.plan(grid, start, goal, recorder)
+    _report(planner.name, result)
+
+
+def run_kinodynamic(name: str, factory: PlannerFactory) -> None:
+    # Kinodynamic (SE(2)) demo: builds Pose start/goal from the scenario (world x, y +
+    # optional start_theta/goal_theta) and binds the grid as an SE2CollisionSpace[Pose].
+    args = _parse_args(name)
+    params = ParamSet.from_yaml(args.params)
+    seed = params.get_int("seed") if params.has("seed") else args.seed
+    grid = load_map(args.map, seed=seed, connectivity=args.connectivity)
+    assert isinstance(grid, OccupancyGrid2D)
+    scenario = load_scenario(args.scenario)
+    planner = factory(params)
+    start: Pose = (scenario.start[0], scenario.start[1], scenario.start_theta)
+    goal: Pose = (scenario.goal[0], scenario.goal[1], scenario.goal_theta)
     with open_trace(args.trace) as recorder:
         recorder.planning_started(planner.name, args.map, params.values())
         result = planner.plan(grid, start, goal, recorder)

@@ -12,7 +12,7 @@ from collections.abc import Callable
 import numpy as np
 
 from navigation.core.capabilities import Capability, MapBase
-from navigation.core.types import Cell, Point
+from navigation.core.types import Cell, Footprint, Point, Pose
 
 _SQRT2 = math.sqrt(2.0)
 # 8-connected moves; diagonals cost sqrt(2), orthogonals 1.0.
@@ -97,6 +97,7 @@ class OccupancyGrid2D(MapBase):
             Capability.SAMPLING_SPACE,
             Capability.LINE_OF_SIGHT_SPACE,
             Capability.DYNAMIC_GRID_SPACE,
+            Capability.SE2_COLLISION_SPACE,
         }
 
     # --- DiscreteSpace[Cell] ---------------------------------------------
@@ -166,6 +167,30 @@ class OccupancyGrid2D(MapBase):
     def is_state_valid(self, s: Point) -> bool:
         row, col = self.world_to_cell(s[0], s[1])
         return self.is_free_cell(row, col)
+
+    # --- SE2CollisionSpace[Pose] -----------------------------------------
+    def is_collision(self, footprint: Footprint, pose: Pose) -> bool:
+        # Inscribed-disc footprint is orientation-invariant, so theta is unused (a
+        # polygon footprint would use it) — Dolgov et al. 2008. Collision iff any
+        # occupied or out-of-bounds cell overlaps the disc; exact disc–cell overlap
+        # via squared distance to the cell rectangle (no sqrt, no trig → bit-identical
+        # with the C++ mirror). world<->cell stays here.
+        x, y, _theta = pose
+        r = footprint.inscribed_radius
+        r2 = r * r
+        half = self._resolution * 0.5
+        lo_row, lo_col = self.world_to_cell(x - r, y + r)  # y+r → smaller row
+        hi_row, hi_col = self.world_to_cell(x + r, y - r)
+        for row in range(lo_row, hi_row + 1):
+            for col in range(lo_col, hi_col + 1):
+                if self.is_free_cell(row, col):  # in-bounds & free → skip
+                    continue
+                cx, cy = self.cell_to_world(row, col)  # occupied OR out-of-bounds
+                dx = x - min(max(x, cx - half), cx + half)
+                dy = y - min(max(y, cy - half), cy + half)
+                if dx * dx + dy * dy <= r2:
+                    return True
+        return False
 
     def _is_free_uv(self, iu: int, iv: int) -> bool:
         # (u, v) grid coords count up from the origin (bottom-left); rows count

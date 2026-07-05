@@ -14,7 +14,9 @@ namespace navigation::maps {
 
 using core::Capability;
 using core::Cell;
+using core::Footprint;
 using core::Point;
+using core::Pose;
 
 // 2D occupancy grid exposing both DiscreteSpace (grid search) and SamplingSpace
 // (RRT) over the same cells. World<->cell conversion lives only here. Geometry
@@ -23,7 +25,10 @@ using core::Point;
 class OccupancyGrid2D final : public core::MapBase,
                               public core::LineOfSightSpace<Cell>,  // was DiscreteSpace<Cell>
                               public core::DynamicGridSpace<Cell>,
-                              public core::SamplingSpace<Point> {
+                              public core::SamplingSpace<Point>,
+                              // Sibling add (State = Pose is a third state type, shares no base
+                              // subobject with the Cell/Point bases) → no diamond, no virtual base.
+                              public core::SE2CollisionSpace<Pose> {
  public:
   OccupancyGrid2D(int rows, int cols, double resolution, double origin_x, double origin_y,
                   std::vector<bool> free_cells, int connectivity = 8, unsigned seed = 0);
@@ -46,6 +51,8 @@ class OccupancyGrid2D final : public core::MapBase,
   std::vector<std::pair<Cell, double>> passable_neighbors(
       const Cell& s, const std::set<Cell>& blocked) const override;
   bool is_blocked(const Cell& s) const override;
+
+  bool is_collision(const Footprint& footprint, const Pose& pose) const override;
 
   Point sample() override;
   bool is_state_valid(const Point& p) const override;

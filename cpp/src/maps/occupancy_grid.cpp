@@ -42,7 +42,7 @@ OccupancyGrid2D OccupancyGrid2D::from_image(const PgmImage& img, double resoluti
 
 std::set<Capability> OccupancyGrid2D::capabilities() const {
   return {Capability::DISCRETE_SPACE, Capability::SAMPLING_SPACE, Capability::LINE_OF_SIGHT_SPACE,
-          Capability::DYNAMIC_GRID_SPACE};
+          Capability::DYNAMIC_GRID_SPACE, Capability::SE2_COLLISION_SPACE};
 }
 
 bool OccupancyGrid2D::in_bounds(int row, int col) const {
@@ -114,6 +114,27 @@ Point OccupancyGrid2D::sample() {
 bool OccupancyGrid2D::is_state_valid(const Point& p) const {
   Cell c = world_to_cell(p.x, p.y);
   return is_free(c.row, c.col);
+}
+
+bool OccupancyGrid2D::is_collision(const Footprint& fp, const Pose& pose) const {
+  // Inscribed-disc footprint is orientation-invariant, so pose.theta is unused (a
+  // polygon footprint would use it) — Dolgov et al. 2008. Collision iff any occupied
+  // or out-of-bounds cell overlaps the disc of radius r at (x, y). Exact disc–cell
+  // overlap via squared distance to the cell rectangle (no sqrt, no trig → bit-
+  // identical across languages). Fixed row-major scan; world<->cell stays here.
+  const double r = fp.inscribed_radius, r2 = r * r, half = resolution_ * 0.5;
+  const Cell lo = world_to_cell(pose.x - r, pose.y + r);  // y+r → smaller row
+  const Cell hi = world_to_cell(pose.x + r, pose.y - r);
+  for (int row = lo.row; row <= hi.row; ++row) {
+    for (int col = lo.col; col <= hi.col; ++col) {
+      if (is_free(row, col)) continue;               // in-bounds & free → skip
+      const Point c = cell_to_world(Cell{row, col});  // occupied OR out-of-bounds
+      const double dx = pose.x - std::clamp(pose.x, c.x - half, c.x + half);
+      const double dy = pose.y - std::clamp(pose.y, c.y - half, c.y + half);
+      if (dx * dx + dy * dy <= r2) return true;
+    }
+  }
+  return false;
 }
 
 bool OccupancyGrid2D::is_free_uv(int iu, int iv) const {

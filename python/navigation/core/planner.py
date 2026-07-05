@@ -16,10 +16,11 @@ from .capabilities import (
     DynamicGridSpace,
     LineOfSightSpace,
     SamplingSpace,
+    SE2CollisionSpace,
 )
 from .params import ParamSet
 from .trace import TraceRecorder
-from .types import Cell, PlanResult, Point, StateT
+from .types import Cell, PlanResult, Point, Pose, StateT
 
 SpaceT = TypeVar("SpaceT")
 
@@ -52,3 +53,4 @@ DiscretePlanner = GlobalPlanner[Cell, DiscreteSpace[Cell]]
 SamplingPlanner = GlobalPlanner[Point, SamplingSpace[Point]]
 LineOfSightPlanner = GlobalPlanner[Cell, LineOfSightSpace[Cell]]
 DynamicGridPlanner = GlobalPlanner[Cell, DynamicGridSpace[Cell]]
+SE2CollisionPlanner = GlobalPlanner[Pose, SE2CollisionSpace[Pose]]

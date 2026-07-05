@@ -112,4 +112,29 @@ inline int run_sampling(const Args& a, const navigation::core::ParamSet& params,
   return 0;
 }
 
+// Kinodynamic (SE(2)) demo: builds Pose start/goal directly from the scenario (world
+// x, y + optional start_theta/goal_theta) and binds the loaded grid as an
+// SE2CollisionSpace<Pose>&. No world_to_cell — the state is a continuous Pose.
+template <class Planner>
+inline int run_kinodynamic(const Args& a, const navigation::core::ParamSet& params,
+                           Planner& planner) {
+  auto map = navigation::maps::load_map(a.map, resolve_seed(a, params), a.connectivity);
+  auto& grid = as_grid(*map);  // binds to SE2CollisionSpace<Pose>&
+  navigation::maps::Scenario sc = navigation::maps::load_scenario(a.scenario);
+  navigation::core::Pose start{sc.start.x, sc.start.y, sc.start_theta};
+  navigation::core::Pose goal{sc.goal.x, sc.goal.y, sc.goal_theta};
+
+  std::ofstream fs(a.trace);
+  if (!fs) throw std::runtime_error("demo: cannot open trace file " + a.trace);
+  navigation::core::TraceRecorder rec(fs);
+  rec.planning_started(planner.name(), a.map, params.values());
+  auto res = planner.plan(grid, start, goal, &rec);
+
+  std::cout << "{\"algorithm\":\"" << planner.name() << "\",\"success\":"
+            << (res.success ? "true" : "false") << ",\"path_cost\":" << res.cost
+            << ",\"path_len\":" << res.path.size() << ",\"expanded_nodes\":"
+            << res.stats.expanded_nodes << "}\n";
+  return 0;
+}
+
 }  // namespace demo

@@ -76,11 +76,13 @@ def test_capabilities_and_supports() -> None:
         Capability.SAMPLING_SPACE,
         Capability.LINE_OF_SIGHT_SPACE,
         Capability.DYNAMIC_GRID_SPACE,
+        Capability.SE2_COLLISION_SPACE,
     }
     assert grid.supports(Capability.DISCRETE_SPACE)
     assert grid.supports(Capability.SAMPLING_SPACE)
     assert grid.supports(Capability.LINE_OF_SIGHT_SPACE)
     assert grid.supports(Capability.DYNAMIC_GRID_SPACE)
+    assert grid.supports(Capability.SE2_COLLISION_SPACE)
     assert not grid.supports(Capability.OBSTACLE_QUERY)
 
 

@@ -1,0 +1,80 @@
+algorithm: hybrid_astar
+category: global_planning
+params:
+  - name: min_turn_radius
+    type: float
+    default: 1.0
+    min: 0.1
+    max: 50.0
+    description: >-
+      차량 최소 회전반경 (단위 meter, world). 최대 곡률 kappa_max = 1/min_turn_radius. (Dolgov et al. 2008)
+  - name: arc_step
+    type: float
+    default: 0.5
+    min: 0.05
+    max: 20.0
+    description: >-
+      확장 1회 모션 프리미티브 호 길이 (단위 meter, world). g 비용 단위 증분.
+  - name: num_steering
+    type: int
+    default: 5
+    min: 2
+    max: 51
+    description: >-
+      이산 조향각(곡률) 개수. [-kappa_max, +kappa_max] 를 (num_steering-1) 균등 분할, 홀수면 0(직진) 포함.
+      min 2 (분모 num_steering-1 이 0 이 되지 않도록).
+  - name: theta_bins
+    type: int
+    default: 72
+    min: 4
+    max: 360
+    description: >-
+      closed-set heading 이산화 버킷 수 (2*pi 균등 분할).
+  - name: xy_resolution
+    type: float
+    default: 0.5
+    min: 0.01
+    max: 10.0
+    description: >-
+      closed-set 위치 이산화 해상도 (단위 meter/bin, world). 맵 cell resolution 과 무관한
+      planner 전용 값 (좌표계 규율 grid 인덱스 미참조).
+  - name: footprint_radius
+    type: float
+    default: 0.2
+    min: 0.01
+    max: 20.0
+    description: >-
+      로봇 inscribed disc footprint 반경 (단위 meter, world). arc 충돌 샘플 밀도도 이 값에서 파생.
+  - name: allow_reverse
+    type: bool
+    default: false
+    description: >-
+      후진 프리미티브 허용 여부.
+  - name: reverse_penalty
+    type: float
+    default: 2.0
+    min: 1.0
+    max: 100.0
+    description: >-
+      후진 호 비용 배수 (>=1, 무차원). 후진 억제. (Dolgov et al. 2008)
+  - name: steer_penalty
+    type: float
+    default: 0.1
+    min: 0.0
+    max: 100.0
+    description: >-
+      곡률 사용 페널티 계수 (cost += steer_penalty*|kappa|*|L|, 무차원). 급조향 억제.
+  - name: goal_pos_tolerance
+    type: float
+    default: 0.5
+    min: 0.01
+    max: 20.0
+    description: >-
+      goal 도달 위치 허용오차 (단위 meter, world).
+  - name: goal_heading_tolerance
+    type: float
+    default: 0.26
+    min: 0.01
+    max: 3.1416
+    description: >-
+      goal 도달 heading 허용오차 (단위 radian).

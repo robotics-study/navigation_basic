@@ -10,6 +10,7 @@ from .astar import AStar
 from .bfs import BFS
 from .dijkstra import Dijkstra
 from .dstar_lite import DStarLite
+from .hybrid_astar import HybridAStar
 from .theta_star import ThetaStar
 
 __all__ = [
@@ -18,4 +19,5 @@ __all__ = [
     "AStar",
     "DStarLite",
     "ThetaStar",
+    "HybridAStar",
 ]

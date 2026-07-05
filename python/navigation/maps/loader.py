@@ -40,6 +40,10 @@ class Scenario:
     map_path: str  # resolved absolute path to the map yaml
     start: Point
     goal: Point
+    # Optional SE(2) start/goal heading (radians, world) for kinodynamic planners.
+    # Defaulted so existing scenarios (no theta) load unchanged; discrete/sampling ignore.
+    start_theta: float = 0.0
+    goal_theta: float = 0.0
 
 
 def load_scenario(path: str | Path) -> Scenario:
@@ -55,4 +59,6 @@ def load_scenario(path: str | Path) -> Scenario:
         map_path=str(map_path),
         start=(float(start[0]), float(start[1])),
         goal=(float(goal[0]), float(goal[1])),
+        start_theta=float(raw.get("start_theta", 0.0)),
+        goal_theta=float(raw.get("goal_theta", 0.0)),
     )

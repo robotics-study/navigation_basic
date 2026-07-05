@@ -79,8 +79,13 @@ obstacles:
 map: ../grid/maze01.yaml     # 시나리오 파일 기준 상대 경로
 start: [0.5, 0.5]            # grid/continuous: world 좌표. graph/topology: 노드 id
 goal: [9.5, 9.5]
+# --- SE(2) heading (선택, kinodynamic planner 용) ---
+start_theta: 0.0            # start 방향 (라디안, world). 생략 시 0.0 (하위호환)
+goal_theta: 0.0            # goal 방향 (라디안, world). 생략 시 0.0
 # --- multi-agent 형식 ---
 # agents:
 #   - { start: [0.5, 0.5], goal: [9.5, 9.5] }
 #   - { start: [9.5, 0.5], goal: [0.5, 9.5] }
 ```
+
+- `start_theta`/`goal_theta` 는 선택. Hybrid A\* 같은 SE(2) kinodynamic planner 만 사용하며, discrete/sampling planner 는 무시한다. 생략 시 heading 0.0 으로 로드된다.
