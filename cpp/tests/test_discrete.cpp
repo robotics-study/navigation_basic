@@ -3,9 +3,9 @@
 
 #include <gtest/gtest.h>
 
-#include "navigation/global_planning/astar.hpp"
-#include "navigation/global_planning/bfs.hpp"
-#include "navigation/global_planning/dijkstra.hpp"
+#include "navigation/global_planning/search/astar.hpp"
+#include "navigation/global_planning/search/bfs.hpp"
+#include "navigation/global_planning/search/dijkstra.hpp"
 #include "test_util.hpp"
 
 using namespace navigation;

@@ -1,11 +1,11 @@
-#include "navigation/global_planning/bfs.hpp"
+#include "navigation/global_planning/search/bfs.hpp"
 
 #include <chrono>
 #include <deque>
 #include <unordered_map>
 #include <unordered_set>
 
-#include "navigation/global_planning/discrete_search.hpp"
+#include "navigation/global_planning/search/discrete_search.hpp"
 
 namespace navigation::global_planning {
 

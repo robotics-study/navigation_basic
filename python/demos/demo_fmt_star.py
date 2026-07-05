@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""RRT* demo."""
+"""fmt_star demo."""
 
 from __future__ import annotations
 
 from demo_common import run_sampling
 
-from navigation.global_planning import RRTStar
+from navigation.global_planning import FMTStar
 
 if __name__ == "__main__":
-    run_sampling("rrt_star", RRTStar)
+    run_sampling("fmt_star", FMTStar)

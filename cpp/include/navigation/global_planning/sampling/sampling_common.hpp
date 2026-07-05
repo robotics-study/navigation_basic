@@ -53,4 +53,27 @@ void rewire_neighbors(Tree& tree, const SamplingSpace<Point>& space, int new_idx
 void emit_finished_sampling(TraceRecorder* recorder, bool success, double cost, int expanded_nodes,
                             int samples, int tree_size, int iterations, double runtime_sec);
 
+// Indices among `candidates` whose point lies within `radius` of `query`. Batch
+// planners (PRM / FMT* / BIT*) query a fixed sample array rather than an
+// incremental tree, so near-neighbour lookup is a free function over an index set.
+std::vector<int> near_points(const SamplingSpace<Point>& space, const std::vector<Point>& points,
+                             const std::vector<int>& candidates, const Point& query, double radius);
+
+// Precompute, once per batch, each point's within-radius neighbour indices.
+// Caching the O(n^2) radius graph up front avoids recomputing distances in the
+// hot loop that revisits near-sets many times over a fixed sample array.
+std::vector<std::vector<int>> radius_neighbors(const SamplingSpace<Point>& space,
+                                               const std::vector<Point>& points, double radius);
+
+// Random-geometric-graph connection radius r_n = gamma*(log n / n)^(1/d), d = 2;
+// the shared shrinking radius of the asymptotically optimal batch planners
+// (PRM* / FMT* / BIT*): Karaman & Frazzoli (2011), Janson et al. (2015). Returns
+// inf for n <= 1.
+double rgg_radius(double gamma, int n);
+
+// Batch-planner finish metrics (PRM / PRM* / FMT* / BIT*): same as the RRT-family
+// finish minus the iterations field, since these planners do not iterate.
+void emit_finished_batch(TraceRecorder* recorder, bool success, double cost, int expanded_nodes,
+                         int samples, int tree_size, double runtime_sec);
+
 }  // namespace navigation::global_planning

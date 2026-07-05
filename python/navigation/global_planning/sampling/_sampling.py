@@ -6,6 +6,8 @@ owns its own extension policy (plain / optimal / fast) in its own module.
 
 from __future__ import annotations
 
+from collections.abc import Iterable
+
 import numpy as np
 
 from navigation.core.capabilities import Capability, SamplingSpace
@@ -82,6 +84,52 @@ class Tree:
 def path_length(space: SamplingSpace[Point], path: list[Point]) -> float:
     """Ground-truth geometric length of a polyline (avoids stale rewired costs)."""
     return sum(space.distance(path[i], path[i + 1]) for i in range(len(path) - 1))
+
+
+def near_points(
+    space: SamplingSpace[Point],
+    points: list[Point],
+    candidates: Iterable[int],
+    query: Point,
+    radius: float,
+) -> list[int]:
+    """Indices among ``candidates`` whose point lies within ``radius`` of ``query``.
+
+    Batch planners (PRM / FMT* / BIT*) query a fixed sample array rather than an
+    incremental tree, so near-neighbour lookup is a free function over an index
+    set instead of a ``Tree`` method.
+    """
+    return [i for i in candidates if space.distance(points[i], query) <= radius]
+
+
+def radius_neighbors(
+    space: SamplingSpace[Point], points: list[Point], radius: float
+) -> list[list[int]]:
+    """Precompute, once per batch, each point's within-radius neighbour indices.
+
+    Batch planners revisit near-sets many times over a fixed sample array; caching
+    the O(n^2) radius graph up front avoids recomputing distances in the hot loop.
+    """
+    out: list[list[int]] = [[] for _ in points]
+    n = len(points)
+    for i in range(n):
+        pi = points[i]
+        for j in range(i + 1, n):
+            if space.distance(pi, points[j]) <= radius:
+                out[i].append(j)
+                out[j].append(i)
+    return out
+
+
+def rgg_radius(gamma: float, n: int) -> float:
+    """Random-geometric-graph connection radius r_n = γ·(log n / n)^(1/d), d = 2.
+
+    Shared shrinking radius of the asymptotically optimal batch planners
+    (PRM* / FMT* / BIT*): Karaman & Frazzoli (2011), Janson et al. (2015).
+    """
+    if n <= 1:
+        return float("inf")
+    return gamma * float(np.sqrt(np.log(n) / n))
 
 
 def insert_best_parent(

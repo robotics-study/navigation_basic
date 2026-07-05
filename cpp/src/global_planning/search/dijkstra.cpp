@@ -1,6 +1,6 @@
-#include "navigation/global_planning/dijkstra.hpp"
+#include "navigation/global_planning/search/dijkstra.hpp"
 
-#include "navigation/global_planning/discrete_search.hpp"
+#include "navigation/global_planning/search/discrete_search.hpp"
 
 namespace navigation::global_planning {
 

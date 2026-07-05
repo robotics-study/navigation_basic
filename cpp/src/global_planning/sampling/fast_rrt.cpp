@@ -1,4 +1,4 @@
-#include "navigation/global_planning/fast_rrt.hpp"
+#include "navigation/global_planning/sampling/fast_rrt.hpp"
 
 #include <chrono>
 #include <cmath>
@@ -6,7 +6,7 @@
 #include <numbers>
 #include <random>
 
-#include "navigation/global_planning/sampling_common.hpp"
+#include "navigation/global_planning/sampling/sampling_common.hpp"
 
 namespace navigation::global_planning {
 namespace {

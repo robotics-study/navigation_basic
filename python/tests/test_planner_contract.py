@@ -6,12 +6,7 @@ import pytest
 from conftest import config
 
 from navigation.core.capabilities import Capability
-from navigation.global_planning.astar import AStar
-from navigation.global_planning.bfs import BFS
-from navigation.global_planning.dijkstra import Dijkstra
-from navigation.global_planning.fast_rrt import FastRRT
-from navigation.global_planning.rrt import RRT
-from navigation.global_planning.rrt_star import RRTStar
+from navigation.global_planning import BFS, RRT, AStar, Dijkstra, FastRRT, RRTStar
 
 _DISCRETE = [("bfs", BFS), ("dijkstra", Dijkstra), ("astar", AStar)]
 _SAMPLING = [("rrt", RRT), ("rrt_star", RRTStar), ("fast_rrt", FastRRT)]

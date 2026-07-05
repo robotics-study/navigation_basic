@@ -1,9 +1,9 @@
-#include "navigation/global_planning/rrt.hpp"
+#include "navigation/global_planning/sampling/rrt.hpp"
 
 #include <chrono>
 #include <random>
 
-#include "navigation/global_planning/sampling_common.hpp"
+#include "navigation/global_planning/sampling/sampling_common.hpp"
 
 namespace navigation::global_planning {
 

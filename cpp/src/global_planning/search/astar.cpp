@@ -1,6 +1,6 @@
-#include "navigation/global_planning/astar.hpp"
+#include "navigation/global_planning/search/astar.hpp"
 
-#include "navigation/global_planning/discrete_search.hpp"
+#include "navigation/global_planning/search/discrete_search.hpp"
 
 namespace navigation::global_planning {
 

@@ -1,6 +1,7 @@
-#include "navigation/global_planning/sampling_common.hpp"
+#include "navigation/global_planning/sampling/sampling_common.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <limits>
 
 namespace navigation::global_planning {
@@ -113,6 +114,48 @@ void emit_finished_sampling(TraceRecorder* recorder, bool success, double cost, 
       {"samples", static_cast<double>(samples)},
       {"tree_size", static_cast<double>(tree_size)},
       {"iterations", static_cast<double>(iterations)}};
+  recorder->planning_finished(success, metrics);
+}
+
+std::vector<int> near_points(const SamplingSpace<Point>& space, const std::vector<Point>& points,
+                             const std::vector<int>& candidates, const Point& query, double radius) {
+  std::vector<int> out;
+  for (int i : candidates) {
+    if (space.distance(points[i], query) <= radius) out.push_back(i);
+  }
+  return out;
+}
+
+std::vector<std::vector<int>> radius_neighbors(const SamplingSpace<Point>& space,
+                                               const std::vector<Point>& points, double radius) {
+  int n = static_cast<int>(points.size());
+  std::vector<std::vector<int>> out(static_cast<size_t>(n));
+  for (int i = 0; i < n; ++i) {
+    for (int j = i + 1; j < n; ++j) {
+      if (space.distance(points[i], points[j]) <= radius) {
+        out[static_cast<size_t>(i)].push_back(j);
+        out[static_cast<size_t>(j)].push_back(i);
+      }
+    }
+  }
+  return out;
+}
+
+double rgg_radius(double gamma, int n) {
+  if (n <= 1) return std::numeric_limits<double>::infinity();
+  double dn = static_cast<double>(n);
+  return gamma * std::sqrt(std::log(dn) / dn);
+}
+
+void emit_finished_batch(TraceRecorder* recorder, bool success, double cost, int expanded_nodes,
+                         int samples, int tree_size, double runtime_sec) {
+  if (!recorder) return;
+  std::map<std::string, double> metrics{
+      {"runtime_sec", runtime_sec},
+      {"path_cost", success ? cost : 0.0},
+      {"expanded_nodes", static_cast<double>(expanded_nodes)},
+      {"samples", static_cast<double>(samples)},
+      {"tree_size", static_cast<double>(tree_size)}};
   recorder->planning_finished(success, metrics);
 }
 

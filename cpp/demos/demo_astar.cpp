@@ -1,5 +1,5 @@
 #include "demo_common.hpp"
-#include "navigation/global_planning/astar.hpp"
+#include "navigation/global_planning/search/astar.hpp"
 
 int main(int argc, char** argv) {
   try {

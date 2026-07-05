@@ -1,0 +1,21 @@
+algorithm: prm
+category: global_planning
+params:
+  - name: num_samples
+    type: int
+    default: 1500
+    min: 1
+    max: 200000
+    description: roadmap 에 배치할 free 샘플 수 (start/goal 제외).
+  - name: connection_radius
+    type: float
+    default: 2.0
+    min: 0.01
+    max: 100.0
+    description: 두 노드를 간선으로 이을 최대 거리 (meters). (Kavraki et al. 1996)
+  - name: seed
+    type: int
+    default: 1
+    min: 0
+    max: 2147483647
+    description: 난수 시드 (재현성).

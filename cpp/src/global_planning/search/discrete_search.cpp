@@ -1,4 +1,4 @@
-#include "navigation/global_planning/discrete_search.hpp"
+#include "navigation/global_planning/search/discrete_search.hpp"
 
 #include <algorithm>
 #include <map>

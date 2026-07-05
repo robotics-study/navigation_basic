@@ -1,0 +1,21 @@
+algorithm: prm_star
+category: global_planning
+params:
+  - name: num_samples
+    type: int
+    default: 1500
+    min: 1
+    max: 200000
+    description: roadmap 에 배치할 free 샘플 수 (start/goal 제외).
+  - name: gamma
+    type: float
+    default: 30.0
+    min: 0.01
+    max: 1000.0
+    description: PRM* 연결 반경 계수 γ. r_n = γ·(log n / n)^(1/2). (Karaman & Frazzoli 2011)
+  - name: seed
+    type: int
+    default: 1
+    min: 0
+    max: 2147483647
+    description: 난수 시드 (재현성).

@@ -1,5 +1,5 @@
 #include "demo_common.hpp"
-#include "navigation/global_planning/fast_rrt.hpp"
+#include "navigation/global_planning/sampling/fast_rrt.hpp"
 
 int main(int argc, char** argv) {
   try {

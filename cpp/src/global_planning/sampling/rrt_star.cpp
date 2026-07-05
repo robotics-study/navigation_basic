@@ -1,10 +1,10 @@
-#include "navigation/global_planning/rrt_star.hpp"
+#include "navigation/global_planning/sampling/rrt_star.hpp"
 
 #include <chrono>
 #include <limits>
 #include <random>
 
-#include "navigation/global_planning/sampling_common.hpp"
+#include "navigation/global_planning/sampling/sampling_common.hpp"
 
 namespace navigation::global_planning {
 

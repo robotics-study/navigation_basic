@@ -31,9 +31,14 @@ _REQUIRED: dict[str, Capability] = {
     "astar": Capability.DISCRETE_SPACE,
     "rrt": Capability.SAMPLING_SPACE,
     "rrt_star": Capability.SAMPLING_SPACE,
+    "prm": Capability.SAMPLING_SPACE,
+    "prm_star": Capability.SAMPLING_SPACE,
+    "fmt_star": Capability.SAMPLING_SPACE,
+    "bit_star": Capability.SAMPLING_SPACE,
     "fast_rrt": Capability.SAMPLING_SPACE,
 }
-_ORDER = ["bfs", "dijkstra", "astar", "rrt", "rrt_star", "fast_rrt"]
+_ORDER = ["bfs", "dijkstra", "astar", "rrt", "rrt_star", "prm", "prm_star", "fmt_star",
+          "bit_star", "fast_rrt"]
 
 
 @dataclass
