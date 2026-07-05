@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>한국어 · nav_study</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css?v=9faafaea">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Crect width='24' height='24' rx='6' fill='%230b1020'/%3E%3Cpath d='M5 18V11h7V6h7' stroke='%23818cf8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='5' cy='18' r='2.4' fill='%23818cf8'/%3E%3Ccircle cx='19' cy='6' r='2.4' fill='%2322d3ee'/%3E%3C/svg%3E">
+<script src="../assets/site.js?v=9faafaea"></script>
+</head>
+<body>
+<header class="topbar">
+  <button id="menu-btn" class="iconbtn menu-btn" aria-label="menu"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  <a class="brand" href="../index.html"><svg class="logo" width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true"><defs><linearGradient id="navlg" x1="3" y1="21" x2="21" y2="3" gradientUnits="userSpaceOnUse"><stop stop-color="#6366f1"/><stop offset="1" stop-color="#06b6d4"/></linearGradient></defs><path d="M4 19V11h8V5h8" stroke="url(#navlg)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="4" cy="19" r="2.6" fill="url(#navlg)"/><circle cx="20" cy="5" r="2.6" fill="url(#navlg)"/></svg><span class="wm">nav<span class="wm-dim">_study</span></span></a>
+  <nav class="topnav"><a href="../ko/index.html">개요</a><a href="../ko/algorithms/index.html">알고리즘</a><a href="../ko/maps.html">맵</a><a href="../ko/benchmarks.html">벤치마크</a></nav>
+  <span class="spacer"></span>
+  <div class="search"><svg class="s-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg><input id="search-input" type="search" placeholder="검색 / Search…" data-base="../" autocomplete="off"><div id="search-results" class="search-results"></div></div>
+  <div class="lang-toggle" role="group" aria-label="language"><svg class="g-ico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.5 2.5 3.8 5.6 3.8 9s-1.3 6.5-3.8 9c-2.5-2.5-3.8-5.6-3.8-9S9.5 5.5 12 3Z"/></svg><a href="../ko/index.html" class="active">KO</a><span class="l-sep">/</span><a href="../en/index.html" class="">EN</a></div>
+</header>
+<div class="layout">
+<aside class="sidebar"><h4>개요</h4>
+<a href="../ko/index.html" class="active">개요</a>
+<a href="../ko/algorithms/index.html">알고리즘 목록</a>
+<h4>Global planning</h4>
+<a href="../ko/algorithms/bfs.html">BFS</a>
+<a href="../ko/algorithms/dijkstra.html">Dijkstra</a>
+<a href="../ko/algorithms/astar.html">A*</a>
+<a href="../ko/algorithms/rrt.html">RRT</a>
+<a href="../ko/algorithms/rrt_star.html">RRT*</a>
+<a href="../ko/algorithms/fast_rrt.html">Fast-RRT</a>
+<a href="../ko/benchmarks.html">벤치마크</a>
+<h4>Local planning <span class="soon">예정</span></h4>
+<span class="planned">DWA</span>
+<span class="planned">Pure Pursuit</span>
+<span class="planned">VFH</span>
+<span class="planned">MPC</span>
+<span class="planned">벤치마크</span>
+<h4>Multi-agent <span class="soon">예정</span></h4>
+<span class="planned">Prioritized A*</span>
+<span class="planned">Joint-space A*</span>
+<span class="planned">CBS</span>
+<span class="planned">벤치마크</span>
+<h4>Maps</h4>
+<a href="../ko/maps.html">맵 표현</a>
+<h4>레퍼런스</h4>
+<a href="../ko/architecture.html">아키텍처</a>
+<a href="../ko/references.html">참고 문헌</a></aside>
+<main class="content"><article class="content-inner"><h1 id="nav_study">nav_study 개요<a class="anchor" href="#nav_study" title="Permanent link">¶</a></h1>
+<p>로봇 navigation planning 알고리즘 스터디 — 같은 추상화 설계를 <strong>C++20 / Python 3.10+ 으로 독립 이중 구현</strong>하고,
+언어 공용 trace 포맷 기반의 <strong>step-by-step 시각화</strong>와 <strong>(map × algorithm) 매트릭스 벤치마크</strong>를 제공한다.</p>
+<h2 id="_1">한눈에 보기<a class="anchor" href="#_1" title="Permanent link">¶</a></h2>
+<p>같은 미로(<code>maze01</code>, 20×20 occupancy grid)를 세 알고리즘이 푸는 과정.
+색은 시간 순서를 인코딩한다 — expanded 노드는 노랑→진갈색, 샘플링 트리는 하늘색 계열, 최종 경로는 보라(start)→빨강(goal).</p>
+<table class="spec-table">
+<thead>
+<tr>
+<th style="text-align: center;">A* (informed search)</th>
+<th style="text-align: center;">RRT* (asymptotically optimal)</th>
+<th style="text-align: center;">Fast-RRT (2021)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;"><img alt="A* demo" src="../assets/astar/maze01.gif" /></td>
+<td style="text-align: center;"><img alt="RRT* demo" src="../assets/rrt_star/maze01.gif" /></td>
+<td style="text-align: center;"><img alt="Fast-RRT demo" src="../assets/fast_rrt/maze01.gif" /></td>
+</tr>
+<tr>
+<td style="text-align: center;">108 nodes expanded</td>
+<td style="text-align: center;">8,000 samples + rewire</td>
+<td style="text-align: center;">Fast-Sampling + shortcut</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_2">핵심 설계<a class="anchor" href="#_2" title="Permanent link">¶</a></h2>
+<ul>
+<li><strong>공통 추상화</strong> — 모든 planner 는 <code>GlobalPlanner</code> / <code>LocalPlanner</code> / <code>MultiAgentPlanner</code> 추상 클래스를 상속하고, 구체 맵이 아닌 <strong>capability 인터페이스</strong>(<code>DiscreteSpace</code>, <code>SamplingSpace</code>, <code>ObstacleQuery</code>)만 요구한다. 새 맵 타입을 추가해도 알고리즘 코드는 바뀌지 않는다 (OCP).</li>
+<li><strong>언어 미러링</strong> — C++ / Python 이 같은 설계·같은 파라미터·같은 trace 이벤트를 각자 idiomatic 하게 구현한다. trace / param / map 포맷은 저장소 <code>spec/</code> 아래 언어 공용 계약이 single source of truth.</li>
+<li><strong>Trace 기반 시각화</strong> — 알고리즘은 탐색 진행을 JSON Lines 이벤트로 방출하고, 시각화 도구(<code>tools/viz/replay.py</code>)는 <strong>언어당 하나가 아니라 하나</strong>다. C++ 데모의 trace 도 같은 도구로 재생한다.</li>
+<li><strong>벤치마크 매트릭스</strong> — <code>tools/bench/run_matrix.py</code> 가 (scenario × algorithm) 조합을 실행해 성공 여부, runtime, path cost, expanded/samples 를 수집한다.</li>
+</ul>
+<h2 id="_3">구현 현황<a class="anchor" href="#_3" title="Permanent link">¶</a></h2>
+<table>
+<thead>
+<tr>
+<th>카테고리</th>
+<th>구현 완료</th>
+<th>계획</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>global_planning</strong></td>
+<td><a href="algorithms/bfs.html">BFS</a> · <a href="algorithms/dijkstra.html">Dijkstra</a> · <a href="algorithms/astar.html">A*</a> · <a href="algorithms/rrt.html">RRT</a> · <a href="algorithms/rrt_star.html">RRT*</a> · <a href="algorithms/fast_rrt.html">Fast-RRT</a></td>
+<td>RRT-Connect, Informed RRT*</td>
+</tr>
+<tr>
+<td><strong>local_planning</strong></td>
+<td>—</td>
+<td>DWA, Pure Pursuit, VFH, MPC</td>
+</tr>
+<tr>
+<td><strong>multi_agent</strong></td>
+<td>—</td>
+<td>Prioritized A<em>, Joint-space A</em>, CBS</td>
+</tr>
+</tbody>
+</table>
+<p>구현된 6종은 전부 <strong>C++ / Python parity</strong> 를 만족한다 — 같은 맵·같은 파라미터에서 discrete 계열은 동일한 결과를,
+sampling 계열은 seed 기반으로 통계적으로 동등한 결과를 낸다. 세부 수치는 <a href="benchmarks.html">벤치마크</a> 참고.</p>
+<h2 id="_4">빠른 시작<a class="anchor" href="#_4" title="Permanent link">¶</a></h2>
+<pre><code class="language-bash"># Python (&gt;= 3.10)
+cd python &amp;&amp; pip install -e &quot;.[dev,viz]&quot; &amp;&amp; cd ..
+pytest python/tests                                  # 62 tests
+
+# C++ (C++20, CMake &gt;= 3.20)
+cmake -S cpp -B cpp/build -DCMAKE_BUILD_TYPE=Release
+cmake --build cpp/build -j
+ctest --test-dir cpp/build                           # 35 tests
+
+# 데모 실행 (두 언어 CLI 인자 동일) + 시각화
+python python/demos/demo_astar.py \
+  --map maps/grid/maze01.yaml --scenario maps/scenarios/maze01_s1.yaml \
+  --params configs/global_planning/astar.yaml --trace out/astar.jsonl
+python tools/viz/replay.py out/astar.jsonl --gif out/astar.gif
+</code></pre>
+<h2 id="_5">문서 구성<a class="anchor" href="#_5" title="Permanent link">¶</a></h2>
+<table>
+<thead>
+<tr>
+<th>페이지</th>
+<th>내용</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="algorithms/index.html">알고리즘</a></td>
+<td>알고리즘별 상세 — 이론, pseudocode, 성질(완전성·최적성·복잡도), 파라미터, demo GIF/PNG, 원 논문 각주</td>
+</tr>
+<tr>
+<td><a href="architecture.html">아키텍처</a></td>
+<td>저장소 구조, 의존 방향, capability 모델, trace 계약, 파라미터 추상화</td>
+</tr>
+<tr>
+<td><a href="benchmarks.html">벤치마크</a></td>
+<td>(map × algorithm) 매트릭스 실측 결과 + C++/Python 비교</td>
+</tr>
+<tr>
+<td><a href="references.html">참고 문헌</a></td>
+<td>전체 참고 문헌</td>
+</tr>
+</tbody>
+</table><nav class="pager"><span></span><a class="next" href="../ko/algorithms/index.html"><div class="dir">다음 →</div><div class="ttl">알고리즘 목록</div></a></nav></article></main>
+<aside class="toc" id="toc"></aside>
+</div>
+<div class="backdrop"></div>
+<footer class="site-footer">
+  <p>nav_study — robot navigation planning algorithms · C++ / Python dual implementation</p>
+  <p>Built as a static site · <a href="../ko/index.html">한국어</a> · <a href="../en/index.html">English</a></p>
+</footer>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script" async></script>
+</body></html>

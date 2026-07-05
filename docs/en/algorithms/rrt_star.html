@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RRT* · nav_study</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=9faafaea">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Crect width='24' height='24' rx='6' fill='%230b1020'/%3E%3Cpath d='M5 18V11h7V6h7' stroke='%23818cf8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='5' cy='18' r='2.4' fill='%23818cf8'/%3E%3Ccircle cx='19' cy='6' r='2.4' fill='%2322d3ee'/%3E%3C/svg%3E">
+<script src="../../assets/site.js?v=9faafaea"></script>
+</head>
+<body>
+<header class="topbar">
+  <button id="menu-btn" class="iconbtn menu-btn" aria-label="menu"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  <a class="brand" href="../../index.html"><svg class="logo" width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true"><defs><linearGradient id="navlg" x1="3" y1="21" x2="21" y2="3" gradientUnits="userSpaceOnUse"><stop stop-color="#6366f1"/><stop offset="1" stop-color="#06b6d4"/></linearGradient></defs><path d="M4 19V11h8V5h8" stroke="url(#navlg)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="4" cy="19" r="2.6" fill="url(#navlg)"/><circle cx="20" cy="5" r="2.6" fill="url(#navlg)"/></svg><span class="wm">nav<span class="wm-dim">_study</span></span></a>
+  <nav class="topnav"><a href="../../en/index.html">Overview</a><a href="../../en/algorithms/index.html">Algorithms</a><a href="../../en/maps.html">Maps</a><a href="../../en/benchmarks.html">Benchmarks</a></nav>
+  <span class="spacer"></span>
+  <div class="search"><svg class="s-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg><input id="search-input" type="search" placeholder="검색 / Search…" data-base="../../" autocomplete="off"><div id="search-results" class="search-results"></div></div>
+  <div class="lang-toggle" role="group" aria-label="language"><svg class="g-ico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.5 2.5 3.8 5.6 3.8 9s-1.3 6.5-3.8 9c-2.5-2.5-3.8-5.6-3.8-9S9.5 5.5 12 3Z"/></svg><a href="../../ko/algorithms/rrt_star.html" class="">KO</a><span class="l-sep">/</span><a href="../../en/algorithms/rrt_star.html" class="active">EN</a></div>
+</header>
+<div class="layout">
+<aside class="sidebar"><h4>Overview</h4>
+<a href="../../en/index.html">Overview</a>
+<a href="../../en/algorithms/index.html">All algorithms</a>
+<h4>Global planning</h4>
+<a href="../../en/algorithms/bfs.html">BFS</a>
+<a href="../../en/algorithms/dijkstra.html">Dijkstra</a>
+<a href="../../en/algorithms/astar.html">A*</a>
+<a href="../../en/algorithms/rrt.html">RRT</a>
+<a href="../../en/algorithms/rrt_star.html" class="active">RRT*</a>
+<a href="../../en/algorithms/fast_rrt.html">Fast-RRT</a>
+<a href="../../en/benchmarks.html">Benchmarks</a>
+<h4>Local planning <span class="soon">planned</span></h4>
+<span class="planned">DWA</span>
+<span class="planned">Pure Pursuit</span>
+<span class="planned">VFH</span>
+<span class="planned">MPC</span>
+<span class="planned">Benchmarks</span>
+<h4>Multi-agent <span class="soon">planned</span></h4>
+<span class="planned">Prioritized A*</span>
+<span class="planned">Joint-space A*</span>
+<span class="planned">CBS</span>
+<span class="planned">Benchmarks</span>
+<h4>Maps</h4>
+<a href="../../en/maps.html">Map representations</a>
+<h4>Reference</h4>
+<a href="../../en/architecture.html">Architecture</a>
+<a href="../../en/references.html">References</a></aside>
+<main class="content"><article class="content-inner"><h1 id="rrt-rrt-star">RRT* (RRT-star)<a class="anchor" href="#rrt-rrt-star" title="Permanent link">¶</a></h1>
+<table class="spec-table">
+<thead>
+<tr>
+<th>Item</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Category</td>
+<td>sampling-based, single-query, anytime</td>
+</tr>
+<tr>
+<td>Required capability</td>
+<td><code>SamplingSpace</code></td>
+</tr>
+<tr>
+<td>Completeness</td>
+<td>probabilistically complete</td>
+</tr>
+<tr>
+<td>Optimality</td>
+<td><strong>asymptotically optimal</strong> — converges to the optimal path with probability 1 as samples → ∞</td>
+</tr>
+<tr>
+<td>Complexity</td>
+<td>dominated by the near-neighbor query per iteration; O(n log n) total when O(log n) neighbors are examined</td>
+</tr>
+<tr>
+<td>Original paper</td>
+<td>Karaman &amp; Frazzoli (2011) <sup id="fnref4:karaman"><a class="footnote-ref" href="#fn:karaman">1</a></sup></td>
+</tr>
+</tbody>
+</table>
+<h2 id="background">Background<a class="anchor" href="#background" title="Permanent link">¶</a></h2>
+<p>Karaman &amp; Frazzoli<sup id="fnref:karaman"><a class="footnote-ref" href="#fn:karaman">1</a></sup> proved that RRT <strong>never converges to an optimal path</strong> (convergence probability 0) and proposed RRT<em>, which attains asymptotic optimality by adding two local repair operations. It is a landmark paper that became the starting point of subsequent sampling-based optimal planning research (Informed RRT</em>, BIT<em>, FMT</em>, and more).</p>
+<p>The difference from RRT lies in two operations applied when attaching a new node to the tree:</p>
+<ol>
+<li><strong>Choose-parent</strong> — instead of the nearest node, the parent is the neighbor within radius r that <strong>minimizes the accumulated cost from the start</strong>.</li>
+<li><strong>Rewire</strong> — for the existing neighbors within radius r, if routing through the new node is cheaper, their parent is switched to the new node. The tree keeps "straightening itself" after the fact.</li>
+</ol>
+<h2 id="how-it-works">How It Works<a class="anchor" href="#how-it-works" title="Permanent link">¶</a></h2>
+<pre><code>RRT_STAR(start, goal):
+    T ← {start}
+    for i in 1..max_iterations:                       # anytime — runs the full budget
+        x_rand ← (goal with prob. goal_bias) else sample()
+        x_near ← nearest(T, x_rand)
+        x_new  ← steer(x_near, x_rand, step_size)
+        if not is_motion_valid(x_near, x_new): continue
+        N ← near(T, x_new, neighbor_radius)
+        parent ← argmin_{x ∈ N ∪ {x_near}} cost(x) + c(x, x_new)   # choose-parent
+        T.add(x_new, parent)
+        for x ∈ N:                                                 # rewire
+            if cost(x_new) + c(x_new, x) &lt; cost(x) and is_motion_valid(x_new, x):
+                x.parent ← x_new
+        if distance(x_new, goal) ≤ goal_tolerance:
+            best ← min(best, path through x_new)       # keep searching, improving the incumbent
+    return best
+</code></pre>
+<p>RRT stops at the first solution, but RRT<em> </em><em>spends its entire iteration budget</em>*, continually improving the current best solution (the incumbent) — it is an anytime algorithm.</p>
+<h2 id="properties">Properties<a class="anchor" href="#properties" title="Permanent link">¶</a></h2>
+<ul>
+<li><strong>Completeness</strong>: probabilistically complete (same as RRT)<sup id="fnref2:karaman"><a class="footnote-ref" href="#fn:karaman">1</a></sup>.</li>
+<li><strong>Optimality</strong>: asymptotically optimal. In theory this holds when the neighbor radius shrinks as r(n) = γ(log n / n)^(1/d)<sup id="fnref3:karaman"><a class="footnote-ref" href="#fn:karaman">1</a></sup>. For simplicity, this implementation uses a <strong>fixed radius</strong> <code>neighbor_radius</code> — asymptotic optimality is preserved with a sufficiently large fixed radius, at a higher per-iteration cost.</li>
+<li><strong>Cost</strong>: slower than RRT by the near query + rewire checks per iteration. A "quality ↔ time" trade-off.</li>
+</ul>
+<h2 id="parameters">Parameters<a class="anchor" href="#parameters" title="Permanent link">¶</a></h2>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Default</th>
+<th>Range</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>max_iterations</code></td>
+<td>int</td>
+<td>8000</td>
+<td>[1, 200000]</td>
+<td>Iteration budget (anytime — current best is returned when exhausted)</td>
+</tr>
+<tr>
+<td><code>step_size</code></td>
+<td>float</td>
+<td>0.5</td>
+<td>[0.01, 100.0]</td>
+<td>Steer extension distance η (m)</td>
+</tr>
+<tr>
+<td><code>goal_bias</code></td>
+<td>float</td>
+<td>0.05</td>
+<td>[0.0, 1.0]</td>
+<td>Probability of sampling the goal directly</td>
+</tr>
+<tr>
+<td><code>goal_tolerance</code></td>
+<td>float</td>
+<td>0.3</td>
+<td>[0.0, 100.0]</td>
+<td>Goal-reached radius (m)</td>
+</tr>
+<tr>
+<td><code>neighbor_radius</code></td>
+<td>float</td>
+<td>1.5</td>
+<td>[0.01, 100.0]</td>
+<td>Choose-parent / rewire neighborhood radius (m)</td>
+</tr>
+<tr>
+<td><code>seed</code></td>
+<td>int</td>
+<td>1</td>
+<td>[0, 2^31−1]</td>
+<td>Random seed (reproducibility)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="asymptotic-optimality-proof">Asymptotic Optimality — Proof<a class="anchor" href="#asymptotic-optimality-proof" title="Permanent link">¶</a></h2>
+<p><strong>The two key operations.</strong> With the near set
+<span class="arithmatex">\(X_{\text{near}}=\{x\in T:\lVert x-x_{\text{new}}\rVert\le r_n\}\)</span>:</p>
+<ul>
+<li><strong>Choose-parent</strong> —</li>
+</ul>
+<div class="arithmatex">\[
+x_{\min}=\arg\min_{x\in X_{\text{near}}\cup\{x_{\text{nearest}}\}}\!\Bigl(\mathrm{cost}(x)+c(x,x_{\text{new}})\Bigr),\qquad
+\mathrm{cost}(x_{\text{new}})=\mathrm{cost}(x_{\min})+c(x_{\min},x_{\text{new}}).
+\]</div>
+<ul>
+<li><strong>Rewire</strong> — for <span class="arithmatex">\(x\in X_{\text{near}}\)</span>, if <span class="arithmatex">\(\mathrm{cost}(x_{\text{new}})+c(x_{\text{new}},x)&lt;\mathrm{cost}(x)\)</span>
+  and the segment is collision-free, set <span class="arithmatex">\(x\)</span>'s parent to <span class="arithmatex">\(x_{\text{new}}\)</span>.</li>
+</ul>
+<p>Here <span class="arithmatex">\(c(\cdot,\cdot)\)</span> is the collision-free segment cost.</p>
+<p><strong>Theorem (asymptotic optimality, Karaman &amp; Frazzoli 2011).</strong> With the near radius</p>
+<div class="arithmatex">\[
+r_n=\min\!\left\{\gamma_{\text{RRT}^*}\left(\frac{\log n}{n}\right)^{1/d},\;\eta\right\},\qquad
+\gamma_{\text{RRT}^*}&gt;\gamma^*=2\left(1+\frac1d\right)^{1/d}\left(\frac{\mu(X_{\text{free}})}{\zeta_d}\right)^{1/d}
+\]</div>
+<p>(<span class="arithmatex">\(\zeta_d\)</span> = volume of the unit <span class="arithmatex">\(d\)</span>-ball),</p>
+<div class="arithmatex">\[
+P\!\left[\lim_{n\to\infty}Y_n^{\text{RRT}^*}=c^*\right]=1.
+\]</div>
+<p><em>Intuition.</em> Shrinking the radius as <span class="arithmatex">\((\log n/n)^{1/d}\)</span> while keeping it large enough leaves each
+node with an expected <span class="arithmatex">\(\Theta(\log n)\)</span> near-neighbors, so rewiring recovers, in the limit, a path in
+the same homotopy class and as short as the optimum. Shrinking too fast (e.g. fixed <span class="arithmatex">\(k=1\)</span>) breaks
+connectivity and destroys optimality.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This implementation uses a <strong>fixed radius</strong> <code>neighbor_radius</code> for simplicity. A sufficiently large
+constant still preserves almost-sure optimality, at a higher per-iteration near-query cost (which
+is why it is slower than RRT at the same 8,000-iteration budget).</p>
+</div>
+<h2 id="implementation-notes">Implementation Notes<a class="anchor" href="#implementation-notes" title="Permanent link">¶</a></h2>
+<ul>
+<li>C++: <code>cpp/src/global_planning/rrt_star.cpp</code>, Python: <code>python/nav_study/global_planning/rrt_star.py</code></li>
+<li>Choose-parent / rewire are factored out into common utilities (<code>sampling_common</code> / <code>_sampling</code>) shared with <a href="fast_rrt.html">Fast-RRT</a>.</li>
+<li>A <code>rewire</code> trace event is emitted whenever a rewire occurs — in the visualization, this is when a tree edge switches over mid-run.</li>
+</ul>
+<h2 id="emitted-trace-events">Emitted Trace Events<a class="anchor" href="#emitted-trace-events" title="Permanent link">¶</a></h2>
+<p><code>planning_started</code> → (<code>sample_drawn</code>, <code>edge_added</code>, <code>rewire</code><em>)</em> → <code>path_found</code>* → <code>planning_finished</code></p>
+<p><code>path_found</code> can be emitted multiple times (each time the incumbent improves).</p>
+<h2 id="demo">Demo<a class="anchor" href="#demo" title="Permanent link">¶</a></h2>
+<p><code>maze01</code> — over 8,000 samples the tree densely covers free space, and rewiring gradually straightens the path. The final path contrasts sharply with the zigzag of <a href="rrt.html">RRT</a>.</p>
+<p><img alt="RRT* on maze01" src="../../assets/rrt_star/maze01.gif" /></p>
+<p>Intermediate search progress (left → right: early / middle / final path):</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;"></th>
+<th style="text-align: center;"></th>
+<th style="text-align: center;"></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;"><img alt="early" src="../../assets/rrt_star/maze01_snap_02.png" /></td>
+<td style="text-align: center;"><img alt="mid" src="../../assets/rrt_star/maze01_snap_05.png" /></td>
+<td style="text-align: center;"><img alt="final" src="../../assets/rrt_star/maze01_final.png" /></td>
+</tr>
+</tbody>
+</table>
+<p>Final result on <code>open01</code> — nearly a straight line:</p>
+<p><img alt="RRT* on open01" src="../../assets/rrt_star/open01_final.png" /></p>
+<p>Measurements (seed = 1, 8000 iterations, trace on):</p>
+<table>
+<thead>
+<tr>
+<th>map</th>
+<th>Language</th>
+<th>path cost</th>
+<th>tree size</th>
+<th>runtime</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>maze01</td>
+<td>Python</td>
+<td>13.458</td>
+<td>5,915</td>
+<td>9.15 s</td>
+</tr>
+<tr>
+<td>maze01</td>
+<td>C++</td>
+<td>13.471</td>
+<td>5,949</td>
+<td>1.09 s</td>
+</tr>
+<tr>
+<td>open01</td>
+<td>Python</td>
+<td>12.047</td>
+<td>5,483</td>
+<td>8.35 s</td>
+</tr>
+<tr>
+<td>open01</td>
+<td>C++</td>
+<td>12.048</td>
+<td>5,481</td>
+<td>0.98 s</td>
+</tr>
+</tbody>
+</table>
+<p>16–27% shorter than <a href="rrt.html">RRT</a>'s first solutions (18.41 / 14.37). The cost difference between languages comes from different random streams and stays within 0.1%. (Runtimes include trace emission — for relative comparison only.)</p>
+<p>Reproduce:</p>
+<pre><code class="language-bash">python python/demos/demo_rrt_star.py \
+  --map maps/grid/maze01.yaml --scenario maps/scenarios/maze01_s1.yaml \
+  --params configs/global_planning/rrt_star.yaml --trace out/rrt_star.jsonl
+python tools/viz/replay.py out/rrt_star.jsonl --gif out/rrt_star.gif
+</code></pre>
+<h2 id="references">References<a class="anchor" href="#references" title="Permanent link">¶</a></h2>
+<div class="footnote">
+<hr />
+<ol>
+<li id="fn:karaman">
+<p>Karaman, S., &amp; Frazzoli, E. (2011). "Sampling-based algorithms for optimal motion planning." <em>The International Journal of Robotics Research</em>, 30(7), 846–894. <a href="https://doi.org/10.1177/0278364911406761">doi:10.1177/0278364911406761</a> · <a href="https://arxiv.org/abs/1105.1186">PDF (arXiv)</a>&#160;<a class="footnote-backref" href="#fnref:karaman" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:karaman" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:karaman" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref4:karaman" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+</li>
+</ol>
+</div><nav class="pager"><a href="../../en/algorithms/rrt.html"><div class="dir">← Prev</div><div class="ttl">RRT</div></a><a class="next" href="../../en/algorithms/fast_rrt.html"><div class="dir">Next →</div><div class="ttl">Fast-RRT</div></a></nav></article></main>
+<aside class="toc" id="toc"></aside>
+</div>
+<div class="backdrop"></div>
+<footer class="site-footer">
+  <p>nav_study — robot navigation planning algorithms · C++ / Python dual implementation</p>
+  <p>Built as a static site · <a href="../../ko/index.html">한국어</a> · <a href="../../en/index.html">English</a></p>
+</footer>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script" async></script>
+</body></html>

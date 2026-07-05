@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Architecture · nav_study</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css?v=9faafaea">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Crect width='24' height='24' rx='6' fill='%230b1020'/%3E%3Cpath d='M5 18V11h7V6h7' stroke='%23818cf8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='5' cy='18' r='2.4' fill='%23818cf8'/%3E%3Ccircle cx='19' cy='6' r='2.4' fill='%2322d3ee'/%3E%3C/svg%3E">
+<script src="../assets/site.js?v=9faafaea"></script>
+</head>
+<body>
+<header class="topbar">
+  <button id="menu-btn" class="iconbtn menu-btn" aria-label="menu"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  <a class="brand" href="../index.html"><svg class="logo" width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true"><defs><linearGradient id="navlg" x1="3" y1="21" x2="21" y2="3" gradientUnits="userSpaceOnUse"><stop stop-color="#6366f1"/><stop offset="1" stop-color="#06b6d4"/></linearGradient></defs><path d="M4 19V11h8V5h8" stroke="url(#navlg)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="4" cy="19" r="2.6" fill="url(#navlg)"/><circle cx="20" cy="5" r="2.6" fill="url(#navlg)"/></svg><span class="wm">nav<span class="wm-dim">_study</span></span></a>
+  <nav class="topnav"><a href="../en/index.html">Overview</a><a href="../en/algorithms/index.html">Algorithms</a><a href="../en/maps.html">Maps</a><a href="../en/benchmarks.html">Benchmarks</a></nav>
+  <span class="spacer"></span>
+  <div class="search"><svg class="s-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg><input id="search-input" type="search" placeholder="검색 / Search…" data-base="../" autocomplete="off"><div id="search-results" class="search-results"></div></div>
+  <div class="lang-toggle" role="group" aria-label="language"><svg class="g-ico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.5 2.5 3.8 5.6 3.8 9s-1.3 6.5-3.8 9c-2.5-2.5-3.8-5.6-3.8-9S9.5 5.5 12 3Z"/></svg><a href="../ko/architecture.html" class="">KO</a><span class="l-sep">/</span><a href="../en/architecture.html" class="active">EN</a></div>
+</header>
+<div class="layout">
+<aside class="sidebar"><h4>Overview</h4>
+<a href="../en/index.html">Overview</a>
+<a href="../en/algorithms/index.html">All algorithms</a>
+<h4>Global planning</h4>
+<a href="../en/algorithms/bfs.html">BFS</a>
+<a href="../en/algorithms/dijkstra.html">Dijkstra</a>
+<a href="../en/algorithms/astar.html">A*</a>
+<a href="../en/algorithms/rrt.html">RRT</a>
+<a href="../en/algorithms/rrt_star.html">RRT*</a>
+<a href="../en/algorithms/fast_rrt.html">Fast-RRT</a>
+<a href="../en/benchmarks.html">Benchmarks</a>
+<h4>Local planning <span class="soon">planned</span></h4>
+<span class="planned">DWA</span>
+<span class="planned">Pure Pursuit</span>
+<span class="planned">VFH</span>
+<span class="planned">MPC</span>
+<span class="planned">Benchmarks</span>
+<h4>Multi-agent <span class="soon">planned</span></h4>
+<span class="planned">Prioritized A*</span>
+<span class="planned">Joint-space A*</span>
+<span class="planned">CBS</span>
+<span class="planned">Benchmarks</span>
+<h4>Maps</h4>
+<a href="../en/maps.html">Map representations</a>
+<h4>Reference</h4>
+<a href="../en/architecture.html" class="active">Architecture</a>
+<a href="../en/references.html">References</a></aside>
+<main class="content"><article class="content-inner"><h1 id="architecture">Architecture<a class="anchor" href="#architecture" title="Permanent link">¶</a></h1>
+<h2 id="repository-layout">Repository Layout<a class="anchor" href="#repository-layout" title="Permanent link">¶</a></h2>
+<pre><code>.
+├── spec/                        # language-neutral contracts (single source of truth, override implementations)
+│   ├── trace_schema.json        #   JSON Schema for step-by-step trace events
+│   ├── param_schema.json        #   schema for algorithm parameter declarations (name/type/range/default)
+│   └── map_formats.md           #   map file format definitions (grid / graph / topology / continuous)
+├── maps/                        # shared benchmark maps + start/goal scenarios
+├── configs/                     # per-algorithm parameter yaml (shared across languages)
+├── cpp/                         # C++20 implementation (include/nav_study + src + demos + GoogleTest)
+├── python/                      # Python implementation (nav_study package + demos + pytest)
+└── tools/                       # viz (trace replayer) + bench (matrix runner) — Python
+</code></pre>
+<p>C++ and Python are independent trees that implement <strong>the same design, each in its own idiomatic style</strong>. Class/method concept names, parameter names, and trace events are identical, so reading one side makes the other readable too. Everything shared across languages (trace schema, param yaml, map data, scenarios) must live under <code>spec/</code>, <code>configs/</code>, and <code>maps/</code> and be loaded from both sides.</p>
+<h2 id="dependency-directions">Dependency Directions<a class="anchor" href="#dependency-directions" title="Permanent link">¶</a></h2>
+<pre><code>demos ──▶ algorithms ──▶ core ◀── maps ◀── tools/viz·bench
+                          ▲                     │
+                          └── spec (format contracts) ─┘
+</code></pre>
+<ul>
+<li><code>core</code> depends only on the stdlib (+ numpy / Eigen). It knows nothing about algorithm or map modules.</li>
+<li><code>maps</code> depends only on <code>core</code>.</li>
+<li>Algorithm modules depend only on the abstract interfaces in <code>core</code>. <strong>Direct references to concrete map classes are forbidden</strong>, as are dependencies between algorithm modules.</li>
+<li><code>tools/viz</code> and <code>tools/bench</code> depend only on the spec formats and the <code>core</code>/<code>maps</code> loaders. Access to algorithm internals is forbidden — every piece of information the visualization needs must be emitted as trace events.</li>
+<li><code>demos</code> is the top-level assembly layer: it only wires together algorithms + maps + configs. No logic allowed.</li>
+</ul>
+<h2 id="capability-model">Capability Model<a class="anchor" href="#capability-model" title="Permanent link">¶</a></h2>
+<p>Algorithms require <strong>capability interfaces</strong>, not concrete map types. Each map type implements the capabilities it can support via adapters, so a single map can be plugged into multiple algorithms for testing.</p>
+<table class="spec-table">
+<thead>
+<tr>
+<th>capability</th>
+<th>Key methods</th>
+<th>Required by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>DiscreteSpace</code></td>
+<td><code>neighbors(state) -&gt; [(state, cost)]</code>, <code>heuristic(a, b)</code></td>
+<td>BFS, Dijkstra, A*, CBS low-level</td>
+</tr>
+<tr>
+<td><code>SamplingSpace</code></td>
+<td><code>sample()</code>, <code>is_state_valid(s)</code>, <code>is_motion_valid(a, b)</code>, <code>distance(a, b)</code>, <code>steer(a, b, eta)</code></td>
+<td>RRT family</td>
+</tr>
+<tr>
+<td><code>ObstacleQuery</code></td>
+<td><code>is_collision(footprint, pose)</code>, <code>distance_to_nearest(p)</code></td>
+<td>Local planners such as DWA, VFH, MPC</td>
+</tr>
+</tbody>
+</table>
+<p>Map type × capability support matrix:</p>
+<table>
+<thead>
+<tr>
+<th>Map type</th>
+<th style="text-align: center;">DiscreteSpace</th>
+<th style="text-align: center;">SamplingSpace</th>
+<th style="text-align: center;">ObstacleQuery</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>OccupancyGrid2D</code> <sup id="fnref:elfes"><a class="footnote-ref" href="#fn:elfes">1</a></sup></td>
+<td style="text-align: center;">O (4/8-connected)</td>
+<td style="text-align: center;">O</td>
+<td style="text-align: center;">O</td>
+</tr>
+<tr>
+<td><code>GraphMap</code></td>
+<td style="text-align: center;">O</td>
+<td style="text-align: center;">X</td>
+<td style="text-align: center;">X</td>
+</tr>
+<tr>
+<td><code>TopologyMap</code></td>
+<td style="text-align: center;">O (semantic edge cost)</td>
+<td style="text-align: center;">X</td>
+<td style="text-align: center;">X</td>
+</tr>
+<tr>
+<td><code>ContinuousMap</code></td>
+<td style="text-align: center;">X (O via a discretization adapter)</td>
+<td style="text-align: center;">O</td>
+<td style="text-align: center;">O</td>
+</tr>
+</tbody>
+</table>
+<p>Each planner declares <code>required_capabilities()</code>, and the bench runner / demos check compatibility with <code>map.supports(capability)</code> before execution. Incompatible combinations are not errors — they are recorded as "incompatible" in the report.</p>
+<p>The <code>DiscreteSpace</code> adapter of <code>OccupancyGrid2D</code> provides 8-connected motion (orthogonal 1.0 / diagonal √2 × resolution), and diagonal moves are allowed only when both adjacent orthogonal cells are free (to prevent corner cutting). The heuristic is the octile distance, which is admissible under this motion model.</p>
+<h2 id="trace-the-contract-for-step-by-step-visualization">Trace — the Contract for Step-by-Step Visualization<a class="anchor" href="#trace-the-contract-for-step-by-step-visualization" title="Permanent link">¶</a></h2>
+<p>Algorithms emit their search progress through a <code>TraceRecorder</code>. The event list and fields are a language-neutral contract defined by <code>spec/trace_schema.json</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Event</th>
+<th>Meaning</th>
+<th>Emitted by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>planning_started</code></td>
+<td>Run started (snapshot of algorithm, map, params)</td>
+<td>All</td>
+</tr>
+<tr>
+<td><code>node_expanded</code></td>
+<td>Node settled into the closed set</td>
+<td>BFS, Dijkstra, A*</td>
+</tr>
+<tr>
+<td><code>edge_added</code></td>
+<td>Edge added to the tree/search graph</td>
+<td>All</td>
+</tr>
+<tr>
+<td><code>sample_drawn</code></td>
+<td>Random sample drawn</td>
+<td>RRT family</td>
+</tr>
+<tr>
+<td><code>rewire</code></td>
+<td>Parent of an existing node replaced (cost improvement)</td>
+<td>RRT*, Fast-RRT</td>
+</tr>
+<tr>
+<td><code>candidate_evaluated</code></td>
+<td>Candidate evaluated (for local planners)</td>
+<td>DWA etc. (planned)</td>
+</tr>
+<tr>
+<td><code>constraint_added</code> / <code>conflict_found</code></td>
+<td>Constraint/conflict (for multi-agent)</td>
+<td>CBS (planned)</td>
+</tr>
+<tr>
+<td><code>path_found</code></td>
+<td>(Improved) path found</td>
+<td>All</td>
+</tr>
+<tr>
+<td><code>planning_finished</code></td>
+<td>Finished + common metrics</td>
+<td>All</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Traces are stored as JSON Lines files and replayed on top of the map by <code>tools/viz/replay.py</code>. The C++ demos emit the same format, so <strong>there is a single visualization codebase</strong>.</li>
+<li>Trace emission is off by default (for performance measurement) and on for demos/visualization. When the recorder is null in the hot loop, it is zero-cost.</li>
+<li>State representation: continuous spaces use <code>[x, y(, theta)]</code> world coordinates (float), grids use <code>[row, col]</code> (int), and graph/topology maps use node id strings. The world ↔ grid conversion is the sole responsibility of the map classes.</li>
+</ul>
+<h2 id="parameter-abstraction">Parameter Abstraction<a class="anchor" href="#parameter-abstraction" title="Permanent link">¶</a></h2>
+<ul>
+<li>Each algorithm declares its own <code>ParamSet</code>: name, type, default value, valid range. The declaration format follows <code>spec/param_schema.json</code>.</li>
+<li>Values are loaded from <code>configs/&lt;category&gt;/&lt;algorithm&gt;.yaml</code> and validated against the declaration at load time (out of range → error). Parameters are never buried in the code as magic numbers.</li>
+<li>The same yaml is read as-is by both C++ and Python.</li>
+</ul>
+<h2 id="references">References<a class="anchor" href="#references" title="Permanent link">¶</a></h2>
+<div class="footnote">
+<hr />
+<ol>
+<li id="fn:elfes">
+<p>Elfes, A. (1989). "Using occupancy grids for mobile robot perception and navigation." <em>Computer</em>, 22(6), 46–57. <a href="https://doi.org/10.1109/2.30720">doi:10.1109/2.30720</a>&#160;<a class="footnote-backref" href="#fnref:elfes" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+</li>
+</ol>
+</div><nav class="pager"><a href="../en/maps.html"><div class="dir">← Prev</div><div class="ttl">Map representations</div></a><a class="next" href="../en/references.html"><div class="dir">Next →</div><div class="ttl">References</div></a></nav></article></main>
+<aside class="toc" id="toc"></aside>
+</div>
+<div class="backdrop"></div>
+<footer class="site-footer">
+  <p>nav_study — robot navigation planning algorithms · C++ / Python dual implementation</p>
+  <p>Built as a static site · <a href="../ko/index.html">한국어</a> · <a href="../en/index.html">English</a></p>
+</footer>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script" async></script>
+</body></html>

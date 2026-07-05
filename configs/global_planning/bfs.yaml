@@ -1,0 +1,4 @@
+algorithm: bfs
+category: global_planning
+# BFS 는 튜닝 파라미터가 없다 (unit-step 최단, 결정적).
+params: []

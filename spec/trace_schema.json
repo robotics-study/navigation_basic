@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "nav_study/trace-event.schema.json",
+  "title": "nav_study trace event",
+  "description": "step-by-step 시각화의 언어 공용 계약. trace 파일은 JSON Lines(.jsonl)이며 한 줄이 이벤트 하나다. C++/Python 구현 모두 이 스키마를 따르는 이벤트만 방출한다.",
+  "type": "object",
+  "required": ["seq", "event"],
+  "properties": {
+    "seq": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "이벤트 순번 (0부터 단조 증가). 재생 순서의 기준."
+    },
+    "t": {
+      "type": "number",
+      "description": "planning 시작 이후 경과 시간(초). 선택."
+    },
+    "event": {
+      "enum": [
+        "planning_started",
+        "node_expanded",
+        "edge_added",
+        "sample_drawn",
+        "rewire",
+        "candidate_evaluated",
+        "constraint_added",
+        "conflict_found",
+        "path_found",
+        "planning_finished"
+      ]
+    },
+    "agent": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "multi-agent 전용: 이벤트가 속한 agent 인덱스."
+    },
+    "state": {
+      "$ref": "#/$defs/state",
+      "description": "이벤트의 주 대상 상태 (expanded node, drawn sample 등)."
+    },
+    "parent": {
+      "$ref": "#/$defs/state",
+      "description": "edge_added / rewire 에서의 부모(또는 이전 부모) 상태."
+    },
+    "cost": {
+      "type": "number",
+      "description": "이벤트 시점의 관련 비용 (g-value, edge cost, candidate score 등)."
+    },
+    "path": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/state" },
+      "description": "path_found / planning_finished 에서의 경로 (agent 필드가 있으면 해당 agent의 경로)."
+    },
+    "algorithm": {
+      "type": "string",
+      "description": "planning_started 전용: 알고리즘 식별자 (configs 파일명과 동일. 예: astar, rrt_star)."
+    },
+    "map": {
+      "type": "string",
+      "description": "planning_started 전용: 맵 파일 경로 (repo 루트 기준 상대 경로)."
+    },
+    "params": {
+      "type": "object",
+      "description": "planning_started 전용: 실행에 사용된 파라미터 값 스냅샷."
+    },
+    "success": {
+      "type": "boolean",
+      "description": "planning_finished 전용."
+    },
+    "metrics": {
+      "type": "object",
+      "description": "planning_finished 전용: runtime_sec, path_cost, expanded_nodes, samples, sum_of_costs, makespan 등 공통 metric.",
+      "additionalProperties": { "type": "number" }
+    },
+    "data": {
+      "type": "object",
+      "description": "알고리즘 고유 부가 정보 (viz 는 알아도 되고 몰라도 되는 값만). 공통 필드로 표현 가능한 정보를 여기에 넣지 않는다."
+    }
+  },
+  "$defs": {
+    "state": {
+      "description": "상태 표현. 연속 공간은 [x, y] 또는 [x, y, theta] (world 좌표, float). grid 는 [row, col] (int). graph/topology 는 노드 id 문자열.",
+      "oneOf": [
+        {
+          "type": "array",
+          "items": { "type": "number" },
+          "minItems": 2,
+          "maxItems": 3
+        },
+        { "type": "string" }
+      ]
+    }
+  }
+}

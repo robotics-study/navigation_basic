@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Map representations · nav_study</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css?v=9faafaea">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Crect width='24' height='24' rx='6' fill='%230b1020'/%3E%3Cpath d='M5 18V11h7V6h7' stroke='%23818cf8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='5' cy='18' r='2.4' fill='%23818cf8'/%3E%3Ccircle cx='19' cy='6' r='2.4' fill='%2322d3ee'/%3E%3C/svg%3E">
+<script src="../assets/site.js?v=9faafaea"></script>
+</head>
+<body>
+<header class="topbar">
+  <button id="menu-btn" class="iconbtn menu-btn" aria-label="menu"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  <a class="brand" href="../index.html"><svg class="logo" width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true"><defs><linearGradient id="navlg" x1="3" y1="21" x2="21" y2="3" gradientUnits="userSpaceOnUse"><stop stop-color="#6366f1"/><stop offset="1" stop-color="#06b6d4"/></linearGradient></defs><path d="M4 19V11h8V5h8" stroke="url(#navlg)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="4" cy="19" r="2.6" fill="url(#navlg)"/><circle cx="20" cy="5" r="2.6" fill="url(#navlg)"/></svg><span class="wm">nav<span class="wm-dim">_study</span></span></a>
+  <nav class="topnav"><a href="../en/index.html">Overview</a><a href="../en/algorithms/index.html">Algorithms</a><a href="../en/maps.html">Maps</a><a href="../en/benchmarks.html">Benchmarks</a></nav>
+  <span class="spacer"></span>
+  <div class="search"><svg class="s-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg><input id="search-input" type="search" placeholder="검색 / Search…" data-base="../" autocomplete="off"><div id="search-results" class="search-results"></div></div>
+  <div class="lang-toggle" role="group" aria-label="language"><svg class="g-ico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.5 2.5 3.8 5.6 3.8 9s-1.3 6.5-3.8 9c-2.5-2.5-3.8-5.6-3.8-9S9.5 5.5 12 3Z"/></svg><a href="../ko/maps.html" class="">KO</a><span class="l-sep">/</span><a href="../en/maps.html" class="active">EN</a></div>
+</header>
+<div class="layout">
+<aside class="sidebar"><h4>Overview</h4>
+<a href="../en/index.html">Overview</a>
+<a href="../en/algorithms/index.html">All algorithms</a>
+<h4>Global planning</h4>
+<a href="../en/algorithms/bfs.html">BFS</a>
+<a href="../en/algorithms/dijkstra.html">Dijkstra</a>
+<a href="../en/algorithms/astar.html">A*</a>
+<a href="../en/algorithms/rrt.html">RRT</a>
+<a href="../en/algorithms/rrt_star.html">RRT*</a>
+<a href="../en/algorithms/fast_rrt.html">Fast-RRT</a>
+<a href="../en/benchmarks.html">Benchmarks</a>
+<h4>Local planning <span class="soon">planned</span></h4>
+<span class="planned">DWA</span>
+<span class="planned">Pure Pursuit</span>
+<span class="planned">VFH</span>
+<span class="planned">MPC</span>
+<span class="planned">Benchmarks</span>
+<h4>Multi-agent <span class="soon">planned</span></h4>
+<span class="planned">Prioritized A*</span>
+<span class="planned">Joint-space A*</span>
+<span class="planned">CBS</span>
+<span class="planned">Benchmarks</span>
+<h4>Maps</h4>
+<a href="../en/maps.html" class="active">Map representations</a>
+<h4>Reference</h4>
+<a href="../en/architecture.html">Architecture</a>
+<a href="../en/references.html">References</a></aside>
+<main class="content"><article class="content-inner"><h1 id="map-representations">Map representations<a class="anchor" href="#map-representations" title="Permanent link">¶</a></h1>
+<p>Algorithms require a <strong>capability interface</strong>, not a concrete map type. Each map type implements the
+capabilities it can support via adapters, so one map can be attached to many algorithms. Adding a new
+map type does not change any algorithm code (OCP). The canonical format definitions live in the
+repository's <code>spec/map_formats.md</code> — the single source of truth that both the C++ and Python loaders
+read directly.</p>
+<p>Common rules: every map file is identified by a top-level <code>type</code> field
+(<code>occupancy_grid | graph | topology | continuous</code>, independent of extension/directory). World
+coordinates are meters as float <code>(x, y)</code>, angles in radians; grid indices are <code>(row, col)</code> ints with
+<code>row 0 = top of the image</code>.</p>
+<h2 id="capability-model">Capability model<a class="anchor" href="#capability-model" title="Permanent link">¶</a></h2>
+<table class="spec-table">
+<thead>
+<tr>
+<th>capability</th>
+<th>key methods</th>
+<th>required by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>DiscreteSpace</code></td>
+<td><code>neighbors(state)</code>, <code>heuristic(a, b)</code></td>
+<td>BFS, Dijkstra, A*, CBS low-level</td>
+</tr>
+<tr>
+<td><code>SamplingSpace</code></td>
+<td><code>sample()</code>, <code>is_state_valid</code>, <code>is_motion_valid</code>, <code>distance</code>, <code>steer</code></td>
+<td>RRT family</td>
+</tr>
+<tr>
+<td><code>ObstacleQuery</code></td>
+<td><code>is_collision(footprint, pose)</code>, <code>distance_to_nearest(p)</code></td>
+<td>DWA, VFH, MPC</td>
+</tr>
+</tbody>
+</table>
+<p>Map type × capability support matrix:</p>
+<table>
+<thead>
+<tr>
+<th>Map type</th>
+<th style="text-align: center;">DiscreteSpace</th>
+<th style="text-align: center;">SamplingSpace</th>
+<th style="text-align: center;">ObstacleQuery</th>
+<th style="text-align: center;">Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>OccupancyGrid2D</td>
+<td style="text-align: center;">O (4/8-connected)</td>
+<td style="text-align: center;">O</td>
+<td style="text-align: center;">O</td>
+<td style="text-align: center;">✅ implemented</td>
+</tr>
+<tr>
+<td>GraphMap</td>
+<td style="text-align: center;">O</td>
+<td style="text-align: center;">X</td>
+<td style="text-align: center;">X</td>
+<td style="text-align: center;">planned</td>
+</tr>
+<tr>
+<td>TopologyMap</td>
+<td style="text-align: center;">O (semantic edge)</td>
+<td style="text-align: center;">X</td>
+<td style="text-align: center;">X</td>
+<td style="text-align: center;">planned</td>
+</tr>
+<tr>
+<td>ContinuousMap</td>
+<td style="text-align: center;">O via grid adapter</td>
+<td style="text-align: center;">O</td>
+<td style="text-align: center;">O</td>
+<td style="text-align: center;">planned</td>
+</tr>
+</tbody>
+</table>
+<p>A planner declares <code>required_capabilities()</code>, and the bench/demo runner checks <code>map.supports(cap)</code>
+before running. An incompatible combination (e.g. <code>GraphMap</code> × RRT) is reported as "incompatible"
+rather than raised as an error. See <a href="architecture.html">Architecture</a> for the design rationale.</p>
+<h2 id="occupancygrid2d-occupancy-grid">OccupancyGrid2D — occupancy grid ✅<a class="anchor" href="#occupancygrid2d-occupancy-grid" title="Permanent link">¶</a></h2>
+<p>ROS <code>map_server</code> style: a yaml file plus a grayscale image (pgm/png). <code>0 (black) = occupied</code>,
+<code>255 (white) = free</code>.</p>
+<pre><code class="language-yaml">type: occupancy_grid
+image: maze01.pgm
+resolution: 0.05           # meters / pixel
+origin: [0.0, 0.0, 0.0]    # world pose of the bottom-left pixel [x, y, theta]
+occupied_thresh: 0.65      # (1 - pixel/255) &gt;= this → occupied
+free_thresh: 0.196         # (1 - pixel/255) &lt;= this → free (in-between = unknown = impassable)
+</code></pre>
+<ul>
+<li><strong>Coordinate frames</strong>: world <code>(x, y)</code> float (meters) ↔ grid <code>(row, col)</code> int. Only the map class
+  performs the conversion.</li>
+<li><strong>DiscreteSpace</strong>: 8-connected moves (orthogonal 1.0, diagonal √2 × resolution). A diagonal is
+  allowed only when both shared orthogonal cells are free, preventing corner cutting. The heuristic
+  is the octile distance, which is admissible for this move model.</li>
+<li><strong>SamplingSpace / ObstacleQuery</strong>: samples continuous world coordinates (not cell centers) and
+  checks collisions by interpolating segments at the resolution step.</li>
+<li>Because it provides all three capabilities, <a href="algorithms/index.html">every implemented algorithm</a> runs
+  on this map — the benchmark maps <code>maze01</code> (narrow-corridor maze) and <code>open01</code> (open field) are of
+  this type.</li>
+</ul>
+<h2 id="graphmap-explicit-weighted-graph-planned">GraphMap — explicit weighted graph (planned)<a class="anchor" href="#graphmap-explicit-weighted-graph-planned" title="Permanent link">¶</a></h2>
+<p>A graph with explicit nodes and edges, like a roadmap or road network. States are node-id strings.</p>
+<pre><code class="language-yaml">type: graph
+directed: false
+nodes:
+  - { id: n1, pos: [1.0, 2.0] }   # pos = world coords for visualization/heuristic
+edges:
+  - { from: n1, to: n2 }          # euclidean over pos if cost is omitted
+  - { from: n2, to: n3, cost: 7.5 }
+</code></pre>
+<ul>
+<li>Provides <strong>DiscreteSpace</strong> only (heuristic = euclidean over <code>pos</code>). No sampling/obstacle support →
+  incompatible with RRT / local planners.</li>
+</ul>
+<h2 id="topologymap-topological-map-planned">TopologyMap — topological map (planned)<a class="anchor" href="#topologymap-topological-map-planned" title="Permanent link">¶</a></h2>
+<p>Centered on places and connectivity. Unlike a graph, nodes are semantic units (rooms, junctions) and
+edges carry semantic labels.</p>
+<pre><code class="language-yaml">type: topology
+places:
+  - { id: kitchen, name: &quot;Kitchen&quot;, pos: [2.0, 3.0] }   # pos optional (visualization)
+  - { id: hallway, name: &quot;Hallway&quot; }
+connections:
+  - { from: kitchen, to: hallway, cost: 1.0, label: door }
+  - { from: hallway, to: lobby, cost: 3.0, label: corridor }
+</code></pre>
+<ul>
+<li>Undirected, <code>cost</code> required (no euclidean fallback since geometry may be absent). Provides
+  <strong>DiscreteSpace</strong>; euclidean heuristic if <code>pos</code> exists on all nodes, otherwise 0 (degenerates to
+  Dijkstra).</li>
+</ul>
+<h2 id="continuousmap-geometric-obstacles-planned">ContinuousMap — geometric obstacles (planned)<a class="anchor" href="#continuousmap-geometric-obstacles-planned" title="Permanent link">¶</a></h2>
+<p>A list of circle/rectangle/polygon obstacles, for sampling-based and local planners.</p>
+<pre><code class="language-yaml">type: continuous
+bounds: { x: [0.0, 10.0], y: [0.0, 10.0] }
+obstacles:
+  - { shape: circle, center: [3.0, 4.0], radius: 0.5 }
+  - { shape: rectangle, center: [7.0, 2.0], size: [2.0, 1.0], theta: 0.0 }
+  - { shape: polygon, vertices: [[1.0, 1.0], [2.0, 1.0], [1.5, 2.0]] }
+</code></pre>
+<ul>
+<li>Provides <strong>SamplingSpace / ObstacleQuery</strong>. <strong>DiscreteSpace</strong> is available only through a
+  gridding adapter (with a resolution parameter).</li>
+</ul>
+<h2 id="scenario-problem-definition">Scenario — problem definition<a class="anchor" href="#scenario-problem-definition" title="Permanent link">¶</a></h2>
+<p>The concrete problem to solve on a map. A single-agent scenario uses <code>start</code>/<code>goal</code>; a multi-agent
+one uses <code>agents</code> (exactly one of the two).</p>
+<pre><code class="language-yaml">map: ../grid/maze01.yaml      # relative to the scenario file
+start: [0.5, 0.5]            # grid/continuous: world coords · graph/topology: node id
+goal: [9.5, 9.5]
+# --- multi-agent ---
+# agents:
+#   - { start: [0.5, 0.5], goal: [9.5, 9.5] }
+#   - { start: [9.5, 0.5], goal: [0.5, 9.5] }
+</code></pre><nav class="pager"><a href="../en/benchmarks.html"><div class="dir">← Prev</div><div class="ttl">Benchmarks</div></a><a class="next" href="../en/architecture.html"><div class="dir">Next →</div><div class="ttl">Architecture</div></a></nav></article></main>
+<aside class="toc" id="toc"></aside>
+</div>
+<div class="backdrop"></div>
+<footer class="site-footer">
+  <p>nav_study — robot navigation planning algorithms · C++ / Python dual implementation</p>
+  <p>Built as a static site · <a href="../ko/index.html">한국어</a> · <a href="../en/index.html">English</a></p>
+</footer>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script" async></script>
+</body></html>
