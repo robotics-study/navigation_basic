@@ -17,7 +17,7 @@ visualization and a benchmark matrix. Docs available in [Korean](https://robotic
 ![C++20](https://img.shields.io/badge/C%2B%2B-20-blue.svg)
 ![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB.svg)
 ![CMake](https://img.shields.io/badge/CMake-%E2%89%A53.20-064F8C.svg)
-![Tests](https://img.shields.io/badge/tests-62%20py%20%2B%2035%20cpp-brightgreen.svg)
+![Tests](https://img.shields.io/badge/tests-73%20py%20%2B%2039%20cpp-brightgreen.svg)
 
 | A* (1968) | RRT* (2011) | Fast-RRT (2021) |
 |:---:|:---:|:---:|
@@ -46,7 +46,9 @@ demo GIF/PNG + 실측 metric + **원 논문 각주**.
 | | | |
 |---|---|---|
 | [BFS](https://robotics-study.github.io/navigation/ko/algorithms/bfs.html) — Moore 1959 | [Dijkstra](https://robotics-study.github.io/navigation/ko/algorithms/dijkstra.html) — Dijkstra 1959 | [A*](https://robotics-study.github.io/navigation/ko/algorithms/astar.html) — Hart et al. 1968 |
-| [RRT](https://robotics-study.github.io/navigation/ko/algorithms/rrt.html) — LaValle 1998 | [RRT*](https://robotics-study.github.io/navigation/ko/algorithms/rrt_star.html) — Karaman & Frazzoli 2011 | [Fast-RRT](https://robotics-study.github.io/navigation/ko/algorithms/fast_rrt.html) — Wu et al. 2021 |
+| [RRT](https://robotics-study.github.io/navigation/ko/algorithms/rrt.html) — LaValle 1998 | [RRT*](https://robotics-study.github.io/navigation/ko/algorithms/rrt_star.html) — Karaman & Frazzoli 2011 | [PRM](https://robotics-study.github.io/navigation/ko/algorithms/prm.html) — Kavraki et al. 1996 |
+| [PRM*](https://robotics-study.github.io/navigation/ko/algorithms/prm_star.html) — Karaman & Frazzoli 2011 | [FMT*](https://robotics-study.github.io/navigation/ko/algorithms/fmt_star.html) — Janson et al. 2015 | [BIT*](https://robotics-study.github.io/navigation/ko/algorithms/bit_star.html) — Gammell et al. 2015 |
+| [Fast-RRT](https://robotics-study.github.io/navigation/ko/algorithms/fast_rrt.html) — Wu et al. 2021 | | |
 
 > **문서 사이트는 손수 디자인한 정적 HTML** 이다 (Jekyll 테마 없음, `docs/.nojekyll`).
 > 콘텐츠 소스는 `docs/{ko,en}/**.md`, 공통 크롬·CSS·수식은 한 곳에서 관리하고
@@ -70,6 +72,10 @@ demo GIF/PNG + 실측 metric + **원 논문 각주**.
 | global_planning | RRT | ✅ | ✅ | LaValle (1998) |
 | global_planning | RRT-Connect | ⬜ | ⬜ | Kuffner & LaValle (2000) |
 | global_planning | RRT* | ✅ | ✅ | Karaman & Frazzoli (2011) |
+| global_planning | PRM | ✅ | ✅ | Kavraki et al. (1996) |
+| global_planning | PRM* | ✅ | ✅ | Karaman & Frazzoli (2011) |
+| global_planning | FMT* | ✅ | ✅ | Janson et al. (2015) |
+| global_planning | BIT* | ✅ | ✅ | Gammell et al. (2015) |
 | global_planning | Informed RRT* | ⬜ | ⬜ | Gammell et al. (2014) |
 | global_planning | Fast-RRT | ✅ | ✅ | Wu et al. (2021) |
 | local_planning | DWA | ⬜ | ⬜ | Fox, Burgard & Thrun (1997) |
@@ -87,12 +93,12 @@ demo GIF/PNG + 실측 metric + **원 논문 각주**.
 ```bash
 # Python (>= 3.10) — navigation 패키지 + viz/dev extras
 cd python && pip install -e ".[dev,viz]" && cd ..
-pytest python/tests            # 62 tests
+pytest python/tests            # 73 tests
 
 # C++ (C++20, CMake >= 3.20, GoogleTest 는 FetchContent 자동)
 cmake -S cpp -B cpp/build -DCMAKE_BUILD_TYPE=Release
 cmake --build cpp/build -j
-ctest --test-dir cpp/build     # 35 tests
+ctest --test-dir cpp/build     # 39 tests
 ```
 
 ### 데모 실행 — 두 언어가 동일한 CLI 인자

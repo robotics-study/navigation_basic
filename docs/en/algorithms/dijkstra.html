@@ -4,6 +4,27 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Dijkstra · navigation study</title>
+<meta name="description" content="Dijkstra&#x27;s algorithm finds single-source shortest paths on graphs with non-negative edge costs. Published in 1959 as a three-page paper, it has been the…">
+<meta name="robots" content="index,follow">
+<meta name="theme-color" content="#0b1020">
+<link rel="canonical" href="https://robotics-study.github.io/navigation/en/algorithms/dijkstra.html">
+<link rel="alternate" hreflang="ko" href="https://robotics-study.github.io/navigation/ko/algorithms/dijkstra.html">
+<link rel="alternate" hreflang="en" href="https://robotics-study.github.io/navigation/en/algorithms/dijkstra.html">
+<link rel="alternate" hreflang="x-default" href="https://robotics-study.github.io/navigation/en/algorithms/dijkstra.html">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="navigation study">
+<meta property="og:title" content="Dijkstra · navigation study">
+<meta property="og:description" content="Dijkstra&#x27;s algorithm finds single-source shortest paths on graphs with non-negative edge costs. Published in 1959 as a three-page paper, it has been the…">
+<meta property="og:url" content="https://robotics-study.github.io/navigation/en/algorithms/dijkstra.html">
+<meta property="og:image" content="https://robotics-study.github.io/navigation/assets/dijkstra/maze01_final.png">
+<meta property="og:image:alt" content="Dijkstra">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="ko_KR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Dijkstra · navigation study">
+<meta name="twitter:description" content="Dijkstra&#x27;s algorithm finds single-source shortest paths on graphs with non-negative edge costs. Published in 1959 as a three-page paper, it has been the…">
+<meta name="twitter:image" content="https://robotics-study.github.io/navigation/assets/dijkstra/maze01_final.png">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "Dijkstra", "description": "Dijkstra's algorithm finds single-source shortest paths on graphs with non-negative edge costs. Published in 1959 as a three-page paper, it has been the…", "image": "https://robotics-study.github.io/navigation/assets/dijkstra/maze01_final.png", "inLanguage": "en", "url": "https://robotics-study.github.io/navigation/en/algorithms/dijkstra.html", "isPartOf": {"@type": "WebSite", "name": "navigation study", "url": "https://robotics-study.github.io/navigation/"}}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -30,6 +51,10 @@
 <a href="../../en/algorithms/astar.html">A*</a>
 <a href="../../en/algorithms/rrt.html">RRT</a>
 <a href="../../en/algorithms/rrt_star.html">RRT*</a>
+<a href="../../en/algorithms/prm.html">PRM</a>
+<a href="../../en/algorithms/prm_star.html">PRM*</a>
+<a href="../../en/algorithms/fmt_star.html">FMT*</a>
+<a href="../../en/algorithms/bit_star.html">BIT*</a>
 <a href="../../en/algorithms/fast_rrt.html">Fast-RRT</a>
 <a href="../../en/benchmarks.html">Benchmarks</a>
 <h4>Local planning <span class="soon">planned</span></h4>
@@ -49,7 +74,7 @@
 <a href="../../en/architecture.html">Architecture</a>
 <a href="../../en/references.html">References</a></aside>
 <main class="content"><article class="content-inner"><h1 id="dijkstra">Dijkstra<a class="anchor" href="#dijkstra" title="Permanent link">¶</a></h1>
-<div class="code-links"><span class="cl-label">Source</span><a href="https://github.com/robotics-study/navigation/blob/main/cpp/src/global_planning/dijkstra.cpp" target="_blank" rel="noopener">C++</a><a href="https://github.com/robotics-study/navigation/blob/main/cpp/include/navigation/global_planning/dijkstra.hpp" target="_blank" rel="noopener">C++ header</a><a href="https://github.com/robotics-study/navigation/blob/main/python/navigation/global_planning/dijkstra.py" target="_blank" rel="noopener">Python</a><a href="https://github.com/robotics-study/navigation/blob/main/python/demos/demo_dijkstra.py" target="_blank" rel="noopener">demo</a></div>
+<div class="code-links"><span class="cl-label">Source</span><a href="https://github.com/robotics-study/navigation/blob/main/cpp/src/global_planning/search/dijkstra.cpp" target="_blank" rel="noopener">C++</a><a href="https://github.com/robotics-study/navigation/blob/main/cpp/include/navigation/global_planning/search/dijkstra.hpp" target="_blank" rel="noopener">C++ header</a><a href="https://github.com/robotics-study/navigation/blob/main/python/navigation/global_planning/search/dijkstra.py" target="_blank" rel="noopener">Python</a><a href="https://github.com/robotics-study/navigation/blob/main/python/demos/demo_dijkstra.py" target="_blank" rel="noopener">demo</a></div>
 <table class="spec-table">
 <thead>
 <tr>

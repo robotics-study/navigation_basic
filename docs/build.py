@@ -72,16 +72,33 @@ ASSET_VER = _asset_ver()
 # 소스 코드 링크 chip (알고리즘 페이지 H1 아래) — GitHub blob 으로 연결.
 GH_BLOB = "https://github.com/robotics-study/navigation/blob/main"
 
+# 배포 사이트 절대 URL — canonical / og:url / hreflang / sitemap 의 기준.
+# GitHub Pages 서빙 경로(README 참조)와 일치해야 한다. 도메인 변경 시 이 한 줄만 고친다.
+SITE_URL = "https://robotics-study.github.io/navigation/"
+# 알고리즘이 아닌 페이지의 기본 공유 이미지 (A* 최종 경로 — 로고 모티프와 동일).
+DEFAULT_OG_IMAGE = "assets/astar/maze01_final.png"
+
+
+# global_planning 알고리즘의 계보 카테고리 → 소스가 놓인 하위폴더.
+# C++/Python 모두 이 하위폴더 아래로 이동했으므로 chip 경로를 함께 갱신한다.
+_GLOBAL_LINEAGE = {
+    "bfs": "search", "dijkstra": "search", "astar": "search",
+    "rrt": "sampling", "rrt_star": "sampling", "fast_rrt": "sampling",
+    "prm": "sampling", "prm_star": "sampling",
+    "bit_star": "sampling", "fmt_star": "sampling",
+}
+
 
 def code_chips(key: str, lang: str) -> str:
     label = "소스 코드" if lang == "ko" else "Source"
+    cat = _GLOBAL_LINEAGE[key]
     def a(href, text):
         return f'<a href="{GH_BLOB}/{href}" target="_blank" rel="noopener">{text}</a>'
     return (
         f'<div class="code-links"><span class="cl-label">{label}</span>'
-        + a(f"cpp/src/global_planning/{key}.cpp", "C++")
-        + a(f"cpp/include/navigation/global_planning/{key}.hpp", "C++ header")
-        + a(f"python/navigation/global_planning/{key}.py", "Python")
+        + a(f"cpp/src/global_planning/{cat}/{key}.cpp", "C++")
+        + a(f"cpp/include/navigation/global_planning/{cat}/{key}.hpp", "C++ header")
+        + a(f"python/navigation/global_planning/{cat}/{key}.py", "Python")
         + a(f"python/demos/demo_{key}.py", "demo")
         + "</div>"
     )
@@ -94,6 +111,10 @@ _GLOBAL = [
     ("algorithms/astar.md", "algorithms/astar.html", "A*"),
     ("algorithms/rrt.md", "algorithms/rrt.html", "RRT"),
     ("algorithms/rrt_star.md", "algorithms/rrt_star.html", "RRT*"),
+    ("algorithms/prm.md", "algorithms/prm.html", "PRM"),
+    ("algorithms/prm_star.md", "algorithms/prm_star.html", "PRM*"),
+    ("algorithms/fmt_star.md", "algorithms/fmt_star.html", "FMT*"),
+    ("algorithms/bit_star.md", "algorithms/bit_star.html", "BIT*"),
     ("algorithms/fast_rrt.md", "algorithms/fast_rrt.html", "Fast-RRT"),
 ]
 # planned(미구현) 항목: src/out=None → 사이드바에 흐리게 "예정" 표기, 페이지 생성 안 함.
@@ -151,14 +172,96 @@ LANG_SWITCH = re.compile(r"^\[🇰🇷")
 MD_LINK = re.compile(r"\]\(([^)]+?)\.md(#[^)]*)?\)")
 FRONT = re.compile(r"^---\n(.*?)\n---\n", re.DOTALL)
 TITLE = re.compile(r"^title:\s*(.+?)\s*$", re.MULTILINE)
+DESC = re.compile(r"^description:\s*(.+?)\s*$", re.MULTILINE)
 
 
 def parse_front(text: str):
     m = FRONT.match(text)
     if not m:
-        return "", text
-    tm = TITLE.search(m.group(1))
-    return (tm.group(1).strip() if tm else ""), text[m.end():]
+        return "", "", text
+    fm = m.group(1)
+    tm = TITLE.search(fm)
+    dm = DESC.search(fm)
+    return (tm.group(1).strip() if tm else ""), (dm.group(1).strip() if dm else ""), text[m.end():]
+
+
+def meta_description(pre: str, limit: int = 155) -> str:
+    """첫 실제 산문 문단에서 SEO description 추출 (front-matter description 없을 때 fallback).
+
+    heading/표/blockquote/admonition/코드블록/각주정의를 건너뛰고 첫 문장을 정리·절단한다.
+    """
+    in_code = False
+    for raw in pre.split("\n"):
+        s = raw.strip()
+        if s.startswith("```"):
+            in_code = not in_code
+            continue
+        if in_code or not s:
+            continue
+        if s[0] in "#|>!" or s.startswith("[^") or s.startswith("{:") or s.startswith("$$"):
+            continue
+        text = re.sub(r"\[\^[^\]]+\]", "", s)              # 각주 참조 [^ref] 제거
+        text = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", text)  # [txt](url) → txt
+        text = re.sub(r"\\(.)", r"\1", text)               # 백슬래시 이스케이프 해제 (\* → *)
+        # bold/code/strike 마커만 제거 — 알고리즘 이름의 별표(BIT*, PRM*)는 보존.
+        text = text.replace("**", "").replace("__", "").replace("~~", "").replace("`", "")
+        text = re.sub(r"\s+", " ", text).strip()
+        if len(text) < 30:
+            continue
+        if len(text) > limit:
+            text = text[:limit].rsplit(" ", 1)[0].rstrip(",.;:") + "…"
+        return text
+    return ""
+
+
+def seo_meta(*, title: str, description: str, lang: str | None, cur_out: str,
+             image_rel: str, is_article: bool) -> str:
+    """페이지별 SEO/social/hreflang 메타 블록 (절대 URL 기준)."""
+    desc = html.escape(description, quote=True)
+    full_title = html.escape(f"{title} · navigation study", quote=True)
+    page_url = SITE_URL + (f"{lang}/{cur_out}" if lang else "index.html")
+    img_url = SITE_URL + image_rel
+    og_locale = {"ko": "ko_KR", "en": "en_US"}.get(lang or "ko", "ko_KR")
+    alt_locale = "en_US" if lang == "ko" else "ko_KR"
+
+    tags = [
+        f'<meta name="description" content="{desc}">',
+        '<meta name="robots" content="index,follow">',
+        '<meta name="theme-color" content="#0b1020">',
+        f'<link rel="canonical" href="{page_url}">',
+    ]
+    # bilingual hreflang: 같은 out_rel 이 ko/en 양쪽에 존재. x-default 는 영어로.
+    if lang:
+        alts = [("ko", f"{SITE_URL}ko/{cur_out}"), ("en", f"{SITE_URL}en/{cur_out}"),
+                ("x-default", f"{SITE_URL}en/{cur_out}")]
+    else:
+        alts = [("ko", f"{SITE_URL}ko/index.html"), ("en", f"{SITE_URL}en/index.html"),
+                ("x-default", SITE_URL)]
+    tags += [f'<link rel="alternate" hreflang="{hl}" href="{href}">' for hl, href in alts]
+    tags += [
+        f'<meta property="og:type" content="{"article" if is_article else "website"}">',
+        '<meta property="og:site_name" content="navigation study">',
+        f'<meta property="og:title" content="{full_title}">',
+        f'<meta property="og:description" content="{desc}">',
+        f'<meta property="og:url" content="{page_url}">',
+        f'<meta property="og:image" content="{img_url}">',
+        f'<meta property="og:image:alt" content="{html.escape(title, quote=True)}">',
+        f'<meta property="og:locale" content="{og_locale}">',
+        f'<meta property="og:locale:alternate" content="{alt_locale}">',
+        '<meta name="twitter:card" content="summary_large_image">',
+        f'<meta name="twitter:title" content="{full_title}">',
+        f'<meta name="twitter:description" content="{desc}">',
+        f'<meta name="twitter:image" content="{img_url}">',
+    ]
+    if is_article:
+        ld = {"@context": "https://schema.org", "@type": "TechArticle", "headline": title,
+              "description": description, "image": img_url, "inLanguage": lang, "url": page_url,
+              "isPartOf": {"@type": "WebSite", "name": "navigation study", "url": SITE_URL}}
+    else:
+        ld = {"@context": "https://schema.org", "@type": "WebSite", "name": "navigation study",
+              "url": SITE_URL, "description": description, "inLanguage": ["ko", "en"]}
+    tags.append('<script type="application/ld+json">' + json.dumps(ld, ensure_ascii=False) + "</script>")
+    return "\n".join(tags)
 
 
 def preprocess(body: str, lang: str) -> str:
@@ -244,7 +347,8 @@ def flat_pages(lang):
     return pages
 
 
-def page_shell(*, title, lang, base, cur_out, content, is_doc):
+def page_shell(*, title, lang, base, cur_out, content, is_doc,
+               description="", image_rel=DEFAULT_OG_IMAGE, is_article=False):
     cfg = NAV[lang] if lang else NAV["ko"]
     # language toggle
     if lang:
@@ -261,7 +365,7 @@ def page_shell(*, title, lang, base, cur_out, content, is_doc):
     topnav = ""
     if lang:
         topnav = '<nav class="topnav">' + "".join(
-            f'<a href="{base}{lang}/{o}">{html.escape(l)}</a>' for o, l in cfg["topnav"]
+            f'<a href="{base}{lang}/{o}">{html.escape(lbl)}</a>' for o, lbl in cfg["topnav"]
         ) + "</nav>"
 
     search = (
@@ -270,12 +374,15 @@ def page_shell(*, title, lang, base, cur_out, content, is_doc):
         f'<div id="search-results" class="search-results"></div></div>'
     )
 
+    seo = seo_meta(title=title, description=description, lang=lang, cur_out=cur_out,
+                   image_rel=image_rel, is_article=is_article)
     head = f"""<!doctype html>
 <html lang="{lang or 'ko'}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{html.escape(title)} · navigation study</title>
+{seo}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -330,7 +437,8 @@ def build_landing(_=None):
         '<div class="cap"><b>Fast-RRT</b><span>Fast-Sampling + shortcut</span></div></a>'
     )
     glob = [("bfs", "BFS"), ("dijkstra", "Dijkstra"), ("astar", "A*"),
-            ("rrt", "RRT"), ("rrt_star", "RRT*"), ("fast_rrt", "Fast-RRT")]
+            ("rrt", "RRT"), ("rrt_star", "RRT*"), ("prm", "PRM"), ("prm_star", "PRM*"),
+            ("fmt_star", "FMT*"), ("bit_star", "BIT*"), ("fast_rrt", "Fast-RRT")]
     g_chips = "".join(f'<a href="ko/algorithms/{k}.html">{n}</a>' for k, n in glob)
     l_chips = "".join(f'<span class="dim">{n}</span>' for n in ("DWA", "Pure Pursuit", "VFH", "MPC"))
     m_chips = "".join(f'<span class="dim">{n}</span>' for n in ("Prioritized A*", "Joint-space A*", "CBS"))
@@ -359,20 +467,25 @@ def build_landing(_=None):
   </div>
 </main>
 """
+    desc = ("로봇 경로 계획(navigation planning) 알고리즘을 C++ 와 Python 으로 이중 구현한 "
+            "학습용 스터디 — 탐색(BFS·Dijkstra·A*)과 샘플링(RRT·RRT*·PRM·FMT*·BIT*) 계열을 "
+            "단계별 시각화와 벤치마크로 비교한다.")
     return page_shell(title="navigation study", lang=None, base="", cur_out="index.html",
-                      content=content, is_doc=False)
+                      content=content, is_doc=False, description=desc,
+                      image_rel=DEFAULT_OG_IMAGE, is_article=False)
 
 
 def main():
     md = make_md()
     search_index = []
+    sitemap_urls = [SITE_URL]  # 랜딩
 
     for lang in ("ko", "en"):
         pages = flat_pages(lang)
         for idx, (src, out_rel, label) in enumerate(pages):
             src_path = DOCS / lang / src
             raw = src_path.read_text(encoding="utf-8")
-            title, body = parse_front(raw)
+            title, fm_desc, body = parse_front(raw)
             title = title or label
             pre = preprocess(body, lang)
             md.reset()
@@ -380,11 +493,16 @@ def main():
             # 첫 표 = spec chip table
             content = content.replace("<table>", '<table class="spec-table">', 1)
             # 알고리즘 페이지: H1 아래에 소스 코드 링크 chip
-            if lang and out_rel.startswith("algorithms/") and out_rel != "algorithms/index.html":
+            is_algo = out_rel.startswith("algorithms/") and out_rel != "algorithms/index.html"
+            if lang and is_algo:
                 content = content.replace("</h1>", "</h1>\n" + code_chips(out_rel[11:-5], lang), 1)
+            # SEO: front-matter description 우선, 없으면 첫 문단에서 유도. og:image 는
+            # 알고리즘이면 해당 알고리즘 최종 경로 PNG, 그 외 기본 이미지.
+            key = out_rel[11:-5] if is_algo else None
+            description = fm_desc or meta_description(pre) or f"{title} — navigation study."
+            image_rel = f"assets/{key}/maze01_final.png" if key else DEFAULT_OG_IMAGE
 
             # prev / next
-            pager = ""
             prev_p = pages[idx - 1] if idx > 0 else None
             next_p = pages[idx + 1] if idx < len(pages) - 1 else None
             depth = out_rel.count("/") + 1  # lang/ + subdirs
@@ -400,10 +518,12 @@ def main():
             content += f'<nav class="pager">{left}{right}</nav>'
 
             page = page_shell(title=title, lang=lang, base=base, cur_out=out_rel,
-                              content=content, is_doc=True)
+                              content=content, is_doc=True, description=description,
+                              image_rel=image_rel, is_article=bool(key))
             out_path = DOCS / lang / out_rel
             out_path.parent.mkdir(parents=True, exist_ok=True)
             out_path.write_text(page, encoding="utf-8")
+            sitemap_urls.append(f"{SITE_URL}{lang}/{out_rel}")
 
             crumb = f'{NAV[lang]["name"]} · {label}'
             search_index.append({
@@ -420,7 +540,18 @@ def main():
         json.dumps(search_index, ensure_ascii=False), encoding="utf-8")
     (DOCS / ".nojekyll").write_text("", encoding="utf-8")
 
-    print(f"built {len(search_index)} doc pages + landing + search index")
+    # sitemap.xml + robots.txt — 크롤러가 전 페이지를 발견하고 색인하도록.
+    body = "".join(f"  <url><loc>{html.escape(u)}</loc></url>\n" for u in sitemap_urls)
+    (DOCS / "sitemap.xml").write_text(
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        f"{body}</urlset>\n",
+        encoding="utf-8")
+    (DOCS / "robots.txt").write_text(
+        f"User-agent: *\nAllow: /\n\nSitemap: {SITE_URL}sitemap.xml\n", encoding="utf-8")
+
+    print(f"built {len(search_index)} doc pages + landing + search index "
+          f"+ sitemap ({len(sitemap_urls)} urls) + robots.txt")
 
 
 if __name__ == "__main__":
