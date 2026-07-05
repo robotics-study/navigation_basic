@@ -20,6 +20,7 @@ class Capability(enum.Enum):
     # Declared for future local planners; no map here implements it (no dead impl).
     OBSTACLE_QUERY = "obstacle_query"
     LINE_OF_SIGHT_SPACE = "line_of_sight_space"
+    DYNAMIC_GRID_SPACE = "dynamic_grid_space"
 
 
 class DiscreteSpace(Protocol[StateT]):
@@ -38,6 +39,26 @@ class LineOfSightSpace(DiscreteSpace[StateT], Protocol[StateT]):
     satisfies DiscreteSpace and this without a class hierarchy."""
 
     def line_of_sight(self, a: StateT, b: StateT) -> bool: ...
+
+
+class DynamicGridSpace(Protocol[StateT]):
+    """Dynamic-replanning search view for D* Lite (Koenig & Likhachev 2002).
+
+    Standalone (NOT a DiscreteSpace): neighbor enumeration takes a *belief* — the
+    planner's own set of known blocked cells — instead of reading ground truth, so
+    it cannot share the truth-baked ``neighbors()``. Structural, so one concrete
+    grid satisfies DiscreteSpace and this without a class hierarchy."""
+
+    def passable_neighbors(
+        self, s: StateT, blocked: set[StateT]
+    ) -> list[tuple[StateT, float]]:
+        """(successor, edge_cost) pairs traversable under the belief ``blocked``:
+        in bounds and not in ``blocked``, same corner-cut rule as ``neighbors``."""
+        ...
+
+    def is_blocked(self, s: StateT) -> bool:
+        """Ground-truth sensor: True iff ``s`` is occupied or out of bounds."""
+        ...
 
 
 class SamplingSpace(Protocol[StateT]):

@@ -68,7 +68,8 @@ inline unsigned resolve_seed(const Args& a, const navigation::core::ParamSet& pa
 
 // Templated on the planner so any discrete-family planner binds: the loaded
 // OccupancyGrid2D& is passed as whichever Space& the planner's plan() wants
-// (DiscreteSpace<Cell>& for A*/Dijkstra/BFS, LineOfSightSpace<Cell>& for Theta*).
+// (DiscreteSpace<Cell>& for A*/Dijkstra/BFS, LineOfSightSpace<Cell>& for Theta*,
+// DynamicGridSpace<Cell>& for D* Lite).
 // Existing callers deduce Planner unchanged.
 template <class Planner>
 inline int run_discrete(const Args& a, const navigation::core::ParamSet& params, Planner& planner) {

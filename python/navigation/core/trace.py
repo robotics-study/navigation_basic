@@ -76,6 +76,14 @@ class TraceRecorder:
     def candidate_evaluated(self, state: State, cost: float) -> None:
         self._emit("candidate_evaluated", {"state": list(state), "cost": cost})
 
+    def robot_moved(self, state: State) -> None:
+        # Dynamic replanning (D* Lite): the robot's new executed cell.
+        self._emit("robot_moved", {"state": list(state)})
+
+    def obstacle_revealed(self, state: State) -> None:
+        # Dynamic replanning (D* Lite): a cell newly sensed as blocked.
+        self._emit("obstacle_revealed", {"state": list(state)})
+
     def path_found(self, path: Sequence[State]) -> None:
         self._emit("path_found", {"path": [list(s) for s in path]})
 

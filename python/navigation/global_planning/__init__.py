@@ -1,7 +1,8 @@
 """Global planning algorithms. Depend on `core` abstractions only.
 
 Organised by lineage into two sub-packages:
-- `search` — graph-search planners (`DiscreteSpace`): BFS, Dijkstra, A*.
+- `search` — graph-search planners: BFS, Dijkstra, A* (`DiscreteSpace`), Theta*
+  (`LineOfSightSpace`), D* Lite (`DynamicGridSpace`).
 - `sampling` — sampling-based planners (`SamplingSpace`): RRT family, PRM
   family, FMT*, BIT*.
 
@@ -12,12 +13,13 @@ private `_discrete` / `_bestfirst` (search) and `_sampling` / `_roadmap`
 """
 
 from .sampling import PRM, RRT, BITStar, FastRRT, FMTStar, PRMStar, RRTStar
-from .search import BFS, AStar, Dijkstra, ThetaStar
+from .search import BFS, AStar, Dijkstra, DStarLite, ThetaStar
 
 __all__ = [
     "BFS",
     "Dijkstra",
     "AStar",
+    "DStarLite",
     "ThetaStar",
     "RRT",
     "RRTStar",

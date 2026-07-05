@@ -45,6 +45,9 @@ _PATH_RAMP = ["#6f2fb5", "#c2179b", "#e5484d"]
 _EXPANDED_RAMP = ("#fef08a", "#ea580c", "#7c2d12")  # yellow -> orange -> dark brown
 _SAMPLE_RAMP = ("#4ade80", "#14532d")  # green
 _EDGE_RAMP = ("#7dd3fc", "#075985")  # sky
+# Dynamic replanning (D* Lite): robot trail teal (clear of every ramp + the path
+# gradient), sensed obstacles fog in as dark squares over the all-free belief. CVD-safe.
+_ROBOT_COLOR = "#0d9488"
 # Snap normalized time to 16 shades per ramp: the gradient still reads smooth, but
 # the total distinct mark colors stay well under Pillow's 256-color GIF palette, so
 # the GIF re-compresses instead of ballooning. Applied in every mode for color
@@ -86,6 +89,12 @@ class Scene:
     expanded_orders: list[int] = field(default_factory=list)
     samples: list[Point] = field(default_factory=list)
     sample_orders: list[int] = field(default_factory=list)
+    # Dynamic replanning (D* Lite): the robot's executed cells and the obstacles it
+    # senses. Empty for every static planner, which keeps their frames unchanged.
+    robot: list[Point] = field(default_factory=list)
+    robot_orders: list[int] = field(default_factory=list)
+    revealed: list[Point] = field(default_factory=list)
+    revealed_orders: list[int] = field(default_factory=list)
     path: list[Point] = field(default_factory=list)
     total_ops: int = 0
     algorithm: str = ""
@@ -160,6 +169,14 @@ def build_scene(events: list[dict[str, Any]], grid: "OccupancyGrid2D") -> Scene:
             scene.edges.append((to_world(ev["parent"]), to_world(ev["state"])))
             scene.edge_orders.append(order)
             order += 1
+        elif name == "robot_moved" and "state" in ev:
+            scene.robot.append(to_world(ev["state"]))
+            scene.robot_orders.append(order)
+            order += 1
+        elif name == "obstacle_revealed" and "state" in ev:
+            scene.revealed.append(to_world(ev["state"]))
+            scene.revealed_orders.append(order)
+            order += 1
         elif name in ("path_found", "planning_finished") and ev.get("path"):
             scene.path = [to_world(s) for s in ev["path"]]
     scene.total_ops = order
@@ -179,13 +196,24 @@ def _draw(
     from matplotlib.collections import LineCollection
 
     ax.clear()
-    ax.imshow(
-        np.where(scene.grid.free_mask(), 1.0, 0.0),
-        cmap="gray",
-        origin="upper",
-        extent=scene.extent,
-        interpolation="nearest",
-    )
+    # D* Lite starts blind (freespace belief) and reveals obstacles as it senses them,
+    # so its background is all-free and the true walls fog in cell by cell; every static
+    # planner (no robot events) keeps the ground-truth free_mask background.
+    dynamic = bool(scene.robot) or bool(scene.revealed)
+    if dynamic:
+        ax.imshow(
+            np.ones(scene.grid.free_mask().shape, dtype=float),
+            cmap="gray", origin="upper", extent=scene.extent, vmin=0.0, vmax=1.0,
+            interpolation="nearest",
+        )
+    else:
+        ax.imshow(
+            np.where(scene.grid.free_mask(), 1.0, 0.0),
+            cmap="gray",
+            origin="upper",
+            extent=scene.extent,
+            interpolation="nearest",
+        )
     n_edges = bisect_right(scene.edge_orders, cutoff)
     n_expanded = bisect_right(scene.expanded_orders, cutoff)
     n_samples = bisect_right(scene.sample_orders, cutoff)
@@ -216,6 +244,31 @@ def _draw(
         # Expanded nodes are the time map's protagonist: larger, near-opaque, on top.
         sc = ax.scatter([p[0] for p in pts], [p[1] for p in pts], s=12, c=colors, alpha=0.9, zorder=4)
         sc.set_antialiased(False)
+    n_revealed = 0
+    n_robot = 0
+    if dynamic:
+        n_revealed = bisect_right(scene.revealed_orders, cutoff)
+        if n_revealed:
+            # Fog obstacles in as exact dark cells the moment the robot senses them.
+            overlay = np.full(scene.grid.free_mask().shape, np.nan)
+            for p in scene.revealed[:n_revealed]:
+                row, col = scene.grid.world_to_cell(p[0], p[1])
+                overlay[row, col] = 0.0
+            ax.imshow(
+                np.ma.masked_invalid(overlay), cmap="gray", origin="upper",
+                extent=scene.extent, vmin=0.0, vmax=1.0, interpolation="nearest", zorder=1.5,
+            )
+        n_robot = bisect_right(scene.robot_orders, cutoff)
+        if n_robot:
+            trail = scene.robot[:n_robot]
+            ax.plot(
+                [p[0] for p in trail], [p[1] for p in trail], color=_ROBOT_COLOR,
+                linewidth=1.6, alpha=0.85, zorder=5, solid_capstyle="round",
+            )
+            ax.scatter(
+                [trail[-1][0]], [trail[-1][1]], marker="D", s=55, color=_ROBOT_COLOR,
+                edgecolors="white", linewidths=1.1, zorder=8,
+            )
     drew_path = show_path and len(scene.path) >= 2
     if drew_path:
         _draw_path_gradient(ax, scene.path, path_segments)
@@ -225,7 +278,8 @@ def _draw(
     frac = 100.0 if scene.total_ops == 0 else 100.0 * shown / scene.total_ops
     ax.set_title(f"{scene.algorithm}  {frac:.0f}%  ({shown}/{scene.total_ops})")
     _draw_legend(
-        ax, expanded_shown=n_expanded > 0, samples_shown=n_samples > 0, path_shown=drew_path
+        ax, expanded_shown=n_expanded > 0, samples_shown=n_samples > 0, path_shown=drew_path,
+        robot_shown=n_robot > 0, revealed_shown=n_revealed > 0,
     )
 
 
@@ -277,7 +331,8 @@ def _mark_proxy(color: tuple[float, float, float, float]) -> "Line2D":
 
 
 def _draw_legend(
-    ax: "Any", *, expanded_shown: bool, samples_shown: bool, path_shown: bool
+    ax: "Any", *, expanded_shown: bool, samples_shown: bool, path_shown: bool,
+    robot_shown: bool = False, revealed_shown: bool = False,
 ) -> None:
     from matplotlib.lines import Line2D
 
@@ -290,6 +345,12 @@ def _draw_legend(
     if samples_shown:
         handles.append(_mark_proxy(_ramp_cmap(_SAMPLE_RAMP)(0.5)))
         labels.append("samples (early→late)")
+    if revealed_shown:
+        handles.append(_mark_proxy((0.1, 0.1, 0.1, 1.0)))
+        labels.append("sensed obstacle")
+    if robot_shown:
+        handles.append(Line2D([0], [0], color=_ROBOT_COLOR, linewidth=1.8))
+        labels.append("robot trail")
     if path_shown:
         handles.append(Line2D([0], [0], color=_PATH_RAMP[1], linewidth=2.5))
         labels.append("path (start→goal)")

@@ -6,6 +6,7 @@
 #include "navigation/global_planning/search/astar.hpp"
 #include "navigation/global_planning/search/bfs.hpp"
 #include "navigation/global_planning/search/dijkstra.hpp"
+#include "navigation/global_planning/search/dstar_lite.hpp"
 #include "navigation/global_planning/search/theta_star.hpp"
 #include "test_util.hpp"
 
@@ -104,6 +105,63 @@ TEST(Discrete, ThetaStarBendsAroundObstacle) {
   EXPECT_LT(rt.cost, astar.plan(g, start, goal, nullptr).cost);
 }
 
+// D* Lite: reaches the goal and — on an all-free grid it never has to replan (nothing
+// is ever sensed as blocked), so the executed trajectory is the freespace optimum.
+TEST(Discrete, DStarLiteReachesGoalWithoutReplanOnOpenGrid) {
+  auto g = test::make_grid(std::vector<std::string>(11, std::string(11, '.')));
+  Cell start{7, 3}, goal{3, 7};  // interior: the sensor disk never leaves the grid
+  global_planning::DStarLitePlanner dstar(cfg("dstar_lite"));
+  auto rd = dstar.plan(g, start, goal, nullptr);
+  ASSERT_TRUE(rd.success);
+  EXPECT_EQ(rd.path.front(), start);
+  EXPECT_EQ(rd.path.back(), goal);
+  EXPECT_EQ(rd.stats.iterations, 0);  // no obstacle ever revealed -> no replan
+  global_planning::AstarPlanner astar(cfg("astar"));
+  EXPECT_NEAR(rd.cost, astar.plan(g, start, goal, nullptr).cost, 1e-9);
+}
+
+// D* Lite's defining behaviour: a wall the sensor cannot see from the start forces the
+// robot to commit to a step, discover the obstacle, and incrementally repair. With a
+// 1-cell sensor the vertical wall (only a bottom gap) is revealed leg by leg.
+TEST(Discrete, DStarLiteReplansAroundHiddenWall) {
+  std::string bad = test::write_temp(
+      "dstar_lite.yaml",
+      "algorithm: dstar_lite\ncategory: global_planning\nparams:\n"
+      "  - name: sensor_radius\n    type: int\n    default: 1\n    min: 1\n    max: 50\n"
+      "    description: one-cell sensor\n");
+  auto params = core::ParamSet::from_yaml(bad);
+  auto g = test::make_grid({"..#..", "..#..", "..#..", "..#..", "..#..", "..#..", "....."});
+  Cell start{3, 0}, goal{3, 4};  // straight line crosses the wall at (3,2)
+  global_planning::DStarLitePlanner dstar(params);
+  auto rd = dstar.plan(g, start, goal, nullptr);
+  ASSERT_TRUE(rd.success);
+  EXPECT_EQ(rd.path.front(), start);
+  EXPECT_EQ(rd.path.back(), goal);
+  EXPECT_GE(rd.stats.iterations, 1);              // the hidden wall triggered a replan
+  EXPECT_TRUE(path_is_connected(g, rd.path));     // every step is a legal true-grid move
+  double dr = start.row - goal.row, dc = start.col - goal.col;
+  EXPECT_GT(rd.cost, std::sqrt(dr * dr + dc * dc));  // genuine detour, not the straight line
+  global_planning::AstarPlanner astar(cfg("astar"));
+  EXPECT_GE(rd.cost, astar.plan(g, start, goal, nullptr).cost);  // A* has full knowledge
+}
+
+TEST(Discrete, DStarLiteDoesNotCutIsolatedDiagonalObstacle) {
+  // Regression: the 1-cell sensor's Euclidean disk (dr^2+dc^2<=1) omits the diagonals,
+  // yet the robot may step diagonally next. The immediate 8-neighbourhood must always be
+  // sensed, or the robot walks onto an isolated diagonal obstacle it never detected.
+  std::string yaml = test::write_temp(
+      "dstar_lite.yaml",
+      "algorithm: dstar_lite\ncategory: global_planning\nparams:\n"
+      "  - name: sensor_radius\n    type: int\n    default: 1\n    min: 1\n    max: 50\n"
+      "    description: one-cell sensor\n");
+  auto g = test::make_grid({"...", ".#.", "..."});  // lone obstacle at (1,1)
+  global_planning::DStarLitePlanner dstar(core::ParamSet::from_yaml(yaml));
+  auto rd = dstar.plan(g, Cell{2, 0}, Cell{0, 2}, nullptr);
+  ASSERT_TRUE(rd.success);
+  for (const auto& c : rd.path) EXPECT_FALSE(c.row == 1 && c.col == 1);  // never through (1,1)
+  EXPECT_TRUE(path_is_connected(g, rd.path));  // every step is a legal true-grid move
+}
+
 // (b) no-path case ------------------------------------------------------------
 
 TEST(Discrete, NoPathWhenWalledOff) {
@@ -125,6 +183,11 @@ TEST(Discrete, NoPathWhenWalledOff) {
   EXPECT_FALSE(rth.success);
   EXPECT_TRUE(rth.path.empty());
   EXPECT_EQ(rth.cost, 0.0);
+  global_planning::DStarLitePlanner dstar(cfg("dstar_lite"));
+  auto rds = dstar.plan(g, start, goal, nullptr);
+  EXPECT_FALSE(rds.success);
+  EXPECT_TRUE(rds.path.empty());
+  EXPECT_EQ(rds.cost, 0.0);
 }
 
 // (c) param validation failure -----------------------------------------------
@@ -143,6 +206,15 @@ TEST(Discrete, BadThetaStarParamThrows) {
       "theta_star.yaml",
       "algorithm: theta_star\ncategory: global_planning\nparams:\n"
       "  - name: heuristic_weight\n    type: float\n    default: 0.5\n    min: 1.0\n    max: 5.0\n"
+      "    description: below min\n");
+  EXPECT_THROW(core::ParamSet::from_yaml(bad), std::runtime_error);
+}
+
+TEST(Discrete, BadDStarLiteParamThrows) {
+  std::string bad = test::write_temp(
+      "dstar_lite.yaml",
+      "algorithm: dstar_lite\ncategory: global_planning\nparams:\n"
+      "  - name: sensor_radius\n    type: int\n    default: 0\n    min: 1\n    max: 50\n"
       "    description: below min\n");
   EXPECT_THROW(core::ParamSet::from_yaml(bad), std::runtime_error);
 }

@@ -11,6 +11,9 @@ struct Cell {
   int row = 0;
   int col = 0;
   bool operator==(const Cell& o) const { return row == o.row && col == o.col; }
+  // Row-major total order so a Cell can key an ordered std::set (the belief's
+  // blocked-cell set in dynamic replanning). Deterministic across runs/languages.
+  bool operator<(const Cell& o) const { return row < o.row || (row == o.row && col < o.col); }
 };
 
 // Sampling state: world point (x, y), meters.

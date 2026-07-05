@@ -32,5 +32,6 @@ class GlobalPlanner {
 using DiscretePlanner = GlobalPlanner<Cell, DiscreteSpace<Cell>>;
 using SamplingPlanner = GlobalPlanner<Point, SamplingSpace<Point>>;
 using LineOfSightPlanner = GlobalPlanner<Cell, LineOfSightSpace<Cell>>;
+using DynamicGridPlanner = GlobalPlanner<Cell, DynamicGridSpace<Cell>>;
 
 }  // namespace navigation::core

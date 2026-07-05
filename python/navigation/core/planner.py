@@ -10,7 +10,13 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Generic, TypeVar
 
-from .capabilities import Capability, DiscreteSpace, LineOfSightSpace, SamplingSpace
+from .capabilities import (
+    Capability,
+    DiscreteSpace,
+    DynamicGridSpace,
+    LineOfSightSpace,
+    SamplingSpace,
+)
 from .params import ParamSet
 from .trace import TraceRecorder
 from .types import Cell, PlanResult, Point, StateT
@@ -45,3 +51,4 @@ class GlobalPlanner(ABC, Generic[StateT, SpaceT]):
 DiscretePlanner = GlobalPlanner[Cell, DiscreteSpace[Cell]]
 SamplingPlanner = GlobalPlanner[Point, SamplingSpace[Point]]
 LineOfSightPlanner = GlobalPlanner[Cell, LineOfSightSpace[Cell]]
+DynamicGridPlanner = GlobalPlanner[Cell, DynamicGridSpace[Cell]]

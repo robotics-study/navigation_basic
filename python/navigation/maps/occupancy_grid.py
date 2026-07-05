@@ -7,6 +7,7 @@ Discrete state is a Cell (row, col); sampling state is a world Point (x, y).
 from __future__ import annotations
 
 import math
+from collections.abc import Callable
 
 import numpy as np
 
@@ -95,22 +96,46 @@ class OccupancyGrid2D(MapBase):
             Capability.DISCRETE_SPACE,
             Capability.SAMPLING_SPACE,
             Capability.LINE_OF_SIGHT_SPACE,
+            Capability.DYNAMIC_GRID_SPACE,
         }
 
     # --- DiscreteSpace[Cell] ---------------------------------------------
-    def neighbors(self, s: Cell) -> list[tuple[Cell, float]]:
+    def _neighbors_impl(
+        self, s: Cell, is_free: Callable[[int, int], bool]
+    ) -> list[tuple[Cell, float]]:
+        # Single 8-move + corner-cut worker shared by neighbors() (truth predicate)
+        # and passable_neighbors() (belief predicate). ``is_free`` decides both cell
+        # entry and the diagonal corner rule so both callers forbid corner-cutting
+        # identically.
         row, col = s
         out: list[tuple[Cell, float]] = []
         for dr, dc, cost in self._moves:
             nr, nc = row + dr, col + dc
-            if not self.is_free_cell(nr, nc):
+            if not is_free(nr, nc):
                 continue
             # Forbid corner-cutting: a diagonal needs both shared orthogonals free.
             if dr != 0 and dc != 0:
-                if not (self.is_free_cell(row + dr, col) and self.is_free_cell(row, col + dc)):
+                if not (is_free(row + dr, col) and is_free(row, col + dc)):
                     continue
             out.append(((nr, nc), cost))
         return out
+
+    def neighbors(self, s: Cell) -> list[tuple[Cell, float]]:
+        # Ground-truth successors: enterable iff in bounds and actually free.
+        return self._neighbors_impl(s, self.is_free_cell)
+
+    # --- DynamicGridSpace[Cell] ------------------------------------------
+    def passable_neighbors(self, s: Cell, blocked: set[Cell]) -> list[tuple[Cell, float]]:
+        # Belief successors: enterable iff in bounds and not (yet) known blocked; real
+        # occupancy is invisible here. Same worker + corner rule as neighbors().
+        def believed_free(row: int, col: int) -> bool:
+            return self.in_bounds(row, col) and (row, col) not in blocked
+
+        return self._neighbors_impl(s, believed_free)
+
+    def is_blocked(self, s: Cell) -> bool:
+        # Occupied OR out of bounds — is_free_cell is already false for both.
+        return not self.is_free_cell(*s)
 
     def heuristic(self, a: Cell, b: Cell) -> float:
         dr = abs(a[0] - b[0])

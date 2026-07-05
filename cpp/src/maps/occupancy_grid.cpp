@@ -41,7 +41,8 @@ OccupancyGrid2D OccupancyGrid2D::from_image(const PgmImage& img, double resoluti
 }
 
 std::set<Capability> OccupancyGrid2D::capabilities() const {
-  return {Capability::DISCRETE_SPACE, Capability::SAMPLING_SPACE, Capability::LINE_OF_SIGHT_SPACE};
+  return {Capability::DISCRETE_SPACE, Capability::SAMPLING_SPACE, Capability::LINE_OF_SIGHT_SPACE,
+          Capability::DYNAMIC_GRID_SPACE};
 }
 
 bool OccupancyGrid2D::in_bounds(int row, int col) const {
@@ -65,31 +66,23 @@ Cell OccupancyGrid2D::world_to_cell(double x, double y) const {
 }
 
 std::vector<std::pair<Cell, double>> OccupancyGrid2D::neighbors(const Cell& s) const {
-  // Orthogonals first, then diagonals — a fixed cross-language emission order so
-  // the deterministic searches (with a stable tie-break) expand nodes and settle
-  // on the same optimal path in both C++ and Python.
-  static const int kOrthoR[] = {-1, 1, 0, 0};
-  static const int kOrthoC[] = {0, 0, -1, 1};
-  static const int kDiagR[] = {-1, -1, 1, 1};
-  static const int kDiagC[] = {-1, 1, -1, 1};
-  const double kSqrt2 = std::sqrt(2.0);
+  // Ground-truth successors: a cell is enterable iff in bounds and actually free.
+  return neighbors_impl(s, [this](int row, int col) { return is_free(row, col); });
+}
 
-  std::vector<std::pair<Cell, double>> out;
-  for (int i = 0; i < 4; ++i) {
-    int nr = s.row + kOrthoR[i], nc = s.col + kOrthoC[i];
-    if (is_free(nr, nc)) out.push_back({Cell{nr, nc}, 1.0});
-  }
-  if (connectivity_ == 4) return out;
-  for (int i = 0; i < 4; ++i) {
-    int dr = kDiagR[i], dc = kDiagC[i];
-    int nr = s.row + dr, nc = s.col + dc;
-    if (!is_free(nr, nc)) continue;
-    // No corner-cutting: a diagonal is blocked if either shared orthogonal cell
-    // is occupied (the robot would clip an obstacle corner).
-    if (!is_free(s.row + dr, s.col) || !is_free(s.row, s.col + dc)) continue;
-    out.push_back({Cell{nr, nc}, kSqrt2});
-  }
-  return out;
+std::vector<std::pair<Cell, double>> OccupancyGrid2D::passable_neighbors(
+    const Cell& s, const std::set<Cell>& blocked) const {
+  // Belief successors: a cell is enterable iff in bounds and not (yet) known blocked;
+  // real occupancy is invisible here (only is_blocked reads it). Same worker + corner
+  // rule as neighbors(), so a discovered-free grid gives identical successors to truth.
+  return neighbors_impl(s, [this, &blocked](int row, int col) {
+    return in_bounds(row, col) && blocked.find(Cell{row, col}) == blocked.end();
+  });
+}
+
+bool OccupancyGrid2D::is_blocked(const Cell& s) const {
+  // Occupied OR out of bounds — is_free is already false for both.
+  return !is_free(s.row, s.col);
 }
 
 double OccupancyGrid2D::heuristic(const Cell& a, const Cell& b) const {

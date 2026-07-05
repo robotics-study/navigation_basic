@@ -39,6 +39,16 @@ class TraceRecorder {
   void candidate_evaluated(const State& s, double cost) {
     ev_state("candidate_evaluated", to_trace(s), &cost);
   }
+  // Dynamic replanning (D* Lite): the robot's new executed cell, and a cell newly
+  // sensed as blocked (revealed obstacle). No cost field.
+  template <class State>
+  void robot_moved(const State& s) {
+    ev_state("robot_moved", to_trace(s), nullptr);
+  }
+  template <class State>
+  void obstacle_revealed(const State& s) {
+    ev_state("obstacle_revealed", to_trace(s), nullptr);
+  }
   template <class State>
   void edge_added(const State& s, const State& parent) {
     ev_edge("edge_added", to_trace(s), to_trace(parent), nullptr);
