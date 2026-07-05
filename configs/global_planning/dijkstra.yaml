@@ -1,0 +1,4 @@
+algorithm: dijkstra
+category: global_planning
+# Dijkstra 는 튜닝 파라미터가 없다 (heuristic 미사용, 결정적 최적).
+params: []

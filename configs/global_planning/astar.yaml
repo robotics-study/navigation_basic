@@ -1,0 +1,11 @@
+algorithm: astar
+category: global_planning
+params:
+  - name: heuristic_weight
+    type: float
+    default: 1.0
+    min: 1.0
+    max: 5.0
+    description: >-
+      f = g + w*h 의 가중치. 1.0 이면 admissible heuristic 으로 최적 보장,
+      1.0 초과면 weighted A* (더 빠르지만 준최적). (Pohl 1970)

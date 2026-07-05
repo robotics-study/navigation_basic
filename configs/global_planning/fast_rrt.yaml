@@ -1,0 +1,55 @@
+algorithm: fast_rrt
+category: global_planning
+params:
+  - name: max_iterations
+    type: int
+    default: 8000
+    min: 1
+    max: 200000
+    description: 최대 확장 반복 수 (anytime; 소진 시 현재 best 반환).
+  - name: step_size
+    type: float
+    default: 0.5
+    min: 0.01
+    max: 100.0
+    description: steer 확장 거리 eta (meters).
+  - name: goal_bias
+    type: float
+    default: 0.05
+    min: 0.0
+    max: 1.0
+    description: 매 반복 goal 을 직접 sample 할 확률 (0~1).
+  - name: goal_tolerance
+    type: float
+    default: 0.3
+    min: 0.0
+    max: 100.0
+    description: goal 도달 판정 반경 (meters).
+  - name: neighbor_radius
+    type: float
+    default: 1.5
+    min: 0.01
+    max: 100.0
+    description: rewire 근방 반경 (meters).
+  - name: reached_radius
+    type: float
+    default: 0.4
+    min: 0.0
+    max: 100.0
+    description: >-
+      Fast-Sampling reject 반경 (meters). 기존 트리 노드에서 이 반경 안의
+      sample 은 explored 로 보고 거부한다. (Wu et al. 2021)
+  - name: steering_attempts
+    type: int
+    default: 10
+    min: 1
+    max: 100
+    description: >-
+      Random Steering 재시도 횟수. 직선 확장이 막히면 무작위 방향으로
+      최대 이만큼 시도한다. (Wu et al. 2021)
+  - name: seed
+    type: int
+    default: 1
+    min: 0
+    max: 2147483647
+    description: 난수 시드 (재현성).
