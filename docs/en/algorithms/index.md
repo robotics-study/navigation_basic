@@ -22,6 +22,7 @@ Detailed pages for each implemented algorithm. Every page covers the theoretical
 | [A*](astar.md) | 1968 | informed search | complete | cost-optimal (admissible h) | Hart, Nilsson & Raphael [^hart] |
 | [D\* Lite](dstar_lite.md) | 2002 | dynamic replanning | complete | optimal for the belief (incremental repair) | Koenig & Likhachev [^koenig] |
 | [Theta\*](theta_star.md) | 2007 | any-angle search | complete | any-angle (not grid-optimal) | Nash, Daniel, Koenig & Felner [^nash] |
+| [Hybrid A\*](hybrid_astar.md) | 2008 | kinodynamic search | resolution-complete | resolution-suboptimal (feasible) | Dolgov, Thrun, Montemerlo & Diebel [^dolgov] |
 | [RRT](rrt.md) | 1998 | sampling | probabilistically complete | non-optimal (feasible) | LaValle [^lavalle98] |
 | [RRT\*](rrt_star.md) | 2011 | sampling | probabilistically complete | asymptotically optimal | Karaman & Frazzoli [^karaman] |
 | [PRM](prm.md) | 1996 | sampling (roadmap) | probabilistically complete | non-optimal (fixed radius) | Kavraki et al. [^kavraki] |
@@ -74,6 +75,7 @@ python tools/viz/replay.py out/<algo>.jsonl --gif out/<algo>.gif --snapshots out
 [^hart]: Hart, P. E., Nilsson, N. J., & Raphael, B. (1968). "A Formal Basis for the Heuristic Determination of Minimum Cost Paths." *IEEE Transactions on Systems Science and Cybernetics*, 4(2), 100–107. [doi:10.1109/TSSC.1968.300136](https://doi.org/10.1109/TSSC.1968.300136)
 [^nash]: Nash, A., Daniel, K., Koenig, S., & Felner, A. (2007). "Theta\*: Any-Angle Path Planning on Grids." *Proc. AAAI Conference on Artificial Intelligence*, 1177–1183. [PDF](https://ojs.aaai.org/index.php/AAAI/article/view/11009)
 [^koenig]: Koenig, S., & Likhachev, M. (2002). "D\* Lite." *Proc. AAAI Conference on Artificial Intelligence*, 476–483. [PDF](https://www.aaai.org/Papers/AAAI/2002/AAAI02-072.pdf)
+[^dolgov]: Dolgov, D., Thrun, S., Montemerlo, M., & Diebel, J. (2008). "Practical Search Techniques in Path Planning for Autonomous Driving." *Proc. STAIR (AAAI Workshop)*. [PDF](https://ai.stanford.edu/~ddolgov/papers/dolgov_gpp_stair08.pdf)
 [^lavalle98]: LaValle, S. M. (1998). "Rapidly-exploring random trees: A new tool for path planning." Technical Report TR 98-11, Computer Science Dept., Iowa State University. [PDF](https://lavalle.pl/papers/Lav98c.pdf)
 [^karaman]: Karaman, S., & Frazzoli, E. (2011). "Sampling-based algorithms for optimal motion planning." *The International Journal of Robotics Research*, 30(7), 846–894. [doi:10.1177/0278364911406761](https://doi.org/10.1177/0278364911406761) · [PDF (arXiv)](https://arxiv.org/abs/1105.1186)
 [^kavraki]: Kavraki, L. E., Švestka, P., Latombe, J.-C., & Overmars, M. H. (1996). "Probabilistic roadmaps for path planning in high-dimensional configuration spaces." *IEEE Transactions on Robotics and Automation*, 12(4), 566–580. [doi:10.1109/70.508439](https://doi.org/10.1109/70.508439)

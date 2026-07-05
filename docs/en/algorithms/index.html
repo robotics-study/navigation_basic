@@ -51,7 +51,7 @@
 <a href="../../en/index.html">Overview</a>
 <a href="../../en/algorithms/index.html" class="active">All algorithms</a>
 <h4>Global planning</h4>
-<details class="nav-sub"><summary>Search</summary><div class="nav-sub-body"><a href="../../en/algorithms/bfs.html">BFS</a><a href="../../en/algorithms/dijkstra.html">Dijkstra</a><a href="../../en/algorithms/astar.html">A*</a><a href="../../en/algorithms/dstar_lite.html">D* Lite</a><a href="../../en/algorithms/theta_star.html">Theta*</a></div></details>
+<details class="nav-sub"><summary>Search</summary><div class="nav-sub-body"><a href="../../en/algorithms/bfs.html">BFS</a><a href="../../en/algorithms/dijkstra.html">Dijkstra</a><a href="../../en/algorithms/astar.html">A*</a><a href="../../en/algorithms/dstar_lite.html">D* Lite</a><a href="../../en/algorithms/theta_star.html">Theta*</a><a href="../../en/algorithms/hybrid_astar.html">Hybrid A*</a></div></details>
 <details class="nav-sub"><summary>Sampling</summary><div class="nav-sub-body"><a href="../../en/algorithms/prm.html">PRM</a><a href="../../en/algorithms/rrt.html">RRT</a><a href="../../en/algorithms/rrt_star.html">RRT*</a><a href="../../en/algorithms/prm_star.html">PRM*</a><a href="../../en/algorithms/fmt_star.html">FMT*</a><a href="../../en/algorithms/bit_star.html">BIT*</a><a href="../../en/algorithms/fast_rrt.html">Fast-RRT</a></div></details>
 <a href="../../en/benchmarks.html">Benchmarks</a>
 <h4>Local planning <span class="soon">planned</span></h4>
@@ -126,12 +126,20 @@
 <td>Nash, Daniel, Koenig &amp; Felner <sup id="fnref:nash"><a class="footnote-ref" href="#fn:nash">4</a></sup></td>
 </tr>
 <tr>
+<td><a href="hybrid_astar.html">Hybrid A*</a></td>
+<td>2008</td>
+<td>kinodynamic search</td>
+<td>resolution-complete</td>
+<td>resolution-suboptimal (feasible)</td>
+<td>Dolgov, Thrun, Montemerlo &amp; Diebel <sup id="fnref:dolgov"><a class="footnote-ref" href="#fn:dolgov">6</a></sup></td>
+</tr>
+<tr>
 <td><a href="rrt.html">RRT</a></td>
 <td>1998</td>
 <td>sampling</td>
 <td>probabilistically complete</td>
 <td>non-optimal (feasible)</td>
-<td>LaValle <sup id="fnref:lavalle98"><a class="footnote-ref" href="#fn:lavalle98">6</a></sup></td>
+<td>LaValle <sup id="fnref:lavalle98"><a class="footnote-ref" href="#fn:lavalle98">7</a></sup></td>
 </tr>
 <tr>
 <td><a href="rrt_star.html">RRT*</a></td>
@@ -139,7 +147,7 @@
 <td>sampling</td>
 <td>probabilistically complete</td>
 <td>asymptotically optimal</td>
-<td>Karaman &amp; Frazzoli <sup id="fnref:karaman"><a class="footnote-ref" href="#fn:karaman">7</a></sup></td>
+<td>Karaman &amp; Frazzoli <sup id="fnref:karaman"><a class="footnote-ref" href="#fn:karaman">8</a></sup></td>
 </tr>
 <tr>
 <td><a href="prm.html">PRM</a></td>
@@ -147,7 +155,7 @@
 <td>sampling (roadmap)</td>
 <td>probabilistically complete</td>
 <td>non-optimal (fixed radius)</td>
-<td>Kavraki et al. <sup id="fnref:kavraki"><a class="footnote-ref" href="#fn:kavraki">8</a></sup></td>
+<td>Kavraki et al. <sup id="fnref:kavraki"><a class="footnote-ref" href="#fn:kavraki">9</a></sup></td>
 </tr>
 <tr>
 <td><a href="prm_star.html">PRM*</a></td>
@@ -155,7 +163,7 @@
 <td>sampling (roadmap)</td>
 <td>probabilistically complete</td>
 <td>asymptotically optimal</td>
-<td>Karaman &amp; Frazzoli <sup id="fnref2:karaman"><a class="footnote-ref" href="#fn:karaman">7</a></sup></td>
+<td>Karaman &amp; Frazzoli <sup id="fnref2:karaman"><a class="footnote-ref" href="#fn:karaman">8</a></sup></td>
 </tr>
 <tr>
 <td><a href="fmt_star.html">FMT*</a></td>
@@ -163,7 +171,7 @@
 <td>sampling (batch marching)</td>
 <td>probabilistically complete</td>
 <td>asymptotically optimal</td>
-<td>Janson et al. <sup id="fnref:janson"><a class="footnote-ref" href="#fn:janson">9</a></sup></td>
+<td>Janson et al. <sup id="fnref:janson"><a class="footnote-ref" href="#fn:janson">10</a></sup></td>
 </tr>
 <tr>
 <td><a href="bit_star.html">BIT*</a></td>
@@ -171,7 +179,7 @@
 <td>sampling (batch + informed)</td>
 <td>probabilistically complete</td>
 <td>almost-surely asymptotically optimal</td>
-<td>Gammell et al. <sup id="fnref:gammell_bit"><a class="footnote-ref" href="#fn:gammell_bit">10</a></sup></td>
+<td>Gammell et al. <sup id="fnref:gammell_bit"><a class="footnote-ref" href="#fn:gammell_bit">11</a></sup></td>
 </tr>
 <tr>
 <td><a href="fast_rrt.html">Fast-RRT</a></td>
@@ -179,7 +187,7 @@
 <td>sampling (RRT* variant)</td>
 <td>probabilistically complete</td>
 <td>near-optimal (faster convergence than RRT*)</td>
-<td>Wu et al. <sup id="fnref:wu"><a class="footnote-ref" href="#fn:wu">11</a></sup></td>
+<td>Wu et al. <sup id="fnref:wu"><a class="footnote-ref" href="#fn:wu">12</a></sup></td>
 </tr>
 </tbody>
 </table>
@@ -203,27 +211,27 @@ descendant of RRT*.</p>
 <tr>
 <td>global_planning</td>
 <td>RRT-Connect</td>
-<td>Kuffner &amp; LaValle (2000) <sup id="fnref:kuffner"><a class="footnote-ref" href="#fn:kuffner">12</a></sup></td>
+<td>Kuffner &amp; LaValle (2000) <sup id="fnref:kuffner"><a class="footnote-ref" href="#fn:kuffner">13</a></sup></td>
 </tr>
 <tr>
 <td>global_planning</td>
 <td>Informed RRT*</td>
-<td>Gammell, Srinivasa &amp; Barfoot (2014) <sup id="fnref:gammell"><a class="footnote-ref" href="#fn:gammell">13</a></sup></td>
+<td>Gammell, Srinivasa &amp; Barfoot (2014) <sup id="fnref:gammell"><a class="footnote-ref" href="#fn:gammell">14</a></sup></td>
 </tr>
 <tr>
 <td>local_planning</td>
 <td>DWA</td>
-<td>Fox, Burgard &amp; Thrun (1997) <sup id="fnref:fox"><a class="footnote-ref" href="#fn:fox">14</a></sup></td>
+<td>Fox, Burgard &amp; Thrun (1997) <sup id="fnref:fox"><a class="footnote-ref" href="#fn:fox">15</a></sup></td>
 </tr>
 <tr>
 <td>local_planning</td>
 <td>Pure Pursuit</td>
-<td>Coulter (1992) <sup id="fnref:coulter"><a class="footnote-ref" href="#fn:coulter">15</a></sup></td>
+<td>Coulter (1992) <sup id="fnref:coulter"><a class="footnote-ref" href="#fn:coulter">16</a></sup></td>
 </tr>
 <tr>
 <td>local_planning</td>
 <td>VFH</td>
-<td>Borenstein &amp; Koren (1991) <sup id="fnref:borenstein"><a class="footnote-ref" href="#fn:borenstein">16</a></sup></td>
+<td>Borenstein &amp; Koren (1991) <sup id="fnref:borenstein"><a class="footnote-ref" href="#fn:borenstein">17</a></sup></td>
 </tr>
 <tr>
 <td>local_planning</td>
@@ -233,12 +241,12 @@ descendant of RRT*.</p>
 <tr>
 <td>multi_agent</td>
 <td>Prioritized planning</td>
-<td>Erdmann &amp; Lozano-Pérez (1987) <sup id="fnref:erdmann"><a class="footnote-ref" href="#fn:erdmann">17</a></sup></td>
+<td>Erdmann &amp; Lozano-Pérez (1987) <sup id="fnref:erdmann"><a class="footnote-ref" href="#fn:erdmann">18</a></sup></td>
 </tr>
 <tr>
 <td>multi_agent</td>
 <td>CBS</td>
-<td>Sharon et al. (2015) <sup id="fnref:sharon"><a class="footnote-ref" href="#fn:sharon">18</a></sup></td>
+<td>Sharon et al. (2015) <sup id="fnref:sharon"><a class="footnote-ref" href="#fn:sharon">19</a></sup></td>
 </tr>
 </tbody>
 </table>
@@ -275,44 +283,47 @@ python tools/viz/replay.py out/&lt;algo&gt;.jsonl --gif out/&lt;algo&gt;.gif --s
 <li id="fn:koenig">
 <p>Koenig, S., &amp; Likhachev, M. (2002). "D* Lite." <em>Proc. AAAI Conference on Artificial Intelligence</em>, 476–483. <a href="https://www.aaai.org/Papers/AAAI/2002/AAAI02-072.pdf">PDF</a>&#160;<a class="footnote-backref" href="#fnref:koenig" title="Jump back to footnote 5 in the text">&#8617;</a></p>
 </li>
+<li id="fn:dolgov">
+<p>Dolgov, D., Thrun, S., Montemerlo, M., &amp; Diebel, J. (2008). "Practical Search Techniques in Path Planning for Autonomous Driving." <em>Proc. STAIR (AAAI Workshop)</em>. <a href="https://ai.stanford.edu/~ddolgov/papers/dolgov_gpp_stair08.pdf">PDF</a>&#160;<a class="footnote-backref" href="#fnref:dolgov" title="Jump back to footnote 6 in the text">&#8617;</a></p>
+</li>
 <li id="fn:lavalle98">
-<p>LaValle, S. M. (1998). "Rapidly-exploring random trees: A new tool for path planning." Technical Report TR 98-11, Computer Science Dept., Iowa State University. <a href="https://lavalle.pl/papers/Lav98c.pdf">PDF</a>&#160;<a class="footnote-backref" href="#fnref:lavalle98" title="Jump back to footnote 6 in the text">&#8617;</a></p>
+<p>LaValle, S. M. (1998). "Rapidly-exploring random trees: A new tool for path planning." Technical Report TR 98-11, Computer Science Dept., Iowa State University. <a href="https://lavalle.pl/papers/Lav98c.pdf">PDF</a>&#160;<a class="footnote-backref" href="#fnref:lavalle98" title="Jump back to footnote 7 in the text">&#8617;</a></p>
 </li>
 <li id="fn:karaman">
-<p>Karaman, S., &amp; Frazzoli, E. (2011). "Sampling-based algorithms for optimal motion planning." <em>The International Journal of Robotics Research</em>, 30(7), 846–894. <a href="https://doi.org/10.1177/0278364911406761">doi:10.1177/0278364911406761</a> · <a href="https://arxiv.org/abs/1105.1186">PDF (arXiv)</a>&#160;<a class="footnote-backref" href="#fnref:karaman" title="Jump back to footnote 7 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:karaman" title="Jump back to footnote 7 in the text">&#8617;</a></p>
+<p>Karaman, S., &amp; Frazzoli, E. (2011). "Sampling-based algorithms for optimal motion planning." <em>The International Journal of Robotics Research</em>, 30(7), 846–894. <a href="https://doi.org/10.1177/0278364911406761">doi:10.1177/0278364911406761</a> · <a href="https://arxiv.org/abs/1105.1186">PDF (arXiv)</a>&#160;<a class="footnote-backref" href="#fnref:karaman" title="Jump back to footnote 8 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:karaman" title="Jump back to footnote 8 in the text">&#8617;</a></p>
 </li>
 <li id="fn:kavraki">
-<p>Kavraki, L. E., Švestka, P., Latombe, J.-C., &amp; Overmars, M. H. (1996). "Probabilistic roadmaps for path planning in high-dimensional configuration spaces." <em>IEEE Transactions on Robotics and Automation</em>, 12(4), 566–580. <a href="https://doi.org/10.1109/70.508439">doi:10.1109/70.508439</a>&#160;<a class="footnote-backref" href="#fnref:kavraki" title="Jump back to footnote 8 in the text">&#8617;</a></p>
+<p>Kavraki, L. E., Švestka, P., Latombe, J.-C., &amp; Overmars, M. H. (1996). "Probabilistic roadmaps for path planning in high-dimensional configuration spaces." <em>IEEE Transactions on Robotics and Automation</em>, 12(4), 566–580. <a href="https://doi.org/10.1109/70.508439">doi:10.1109/70.508439</a>&#160;<a class="footnote-backref" href="#fnref:kavraki" title="Jump back to footnote 9 in the text">&#8617;</a></p>
 </li>
 <li id="fn:janson">
-<p>Janson, L., Schmerling, E., Clark, A., &amp; Pavone, M. (2015). "Fast marching tree: A fast marching sampling-based method for optimal motion planning in many dimensions." <em>The International Journal of Robotics Research</em>, 34(7), 883–921. <a href="https://doi.org/10.1177/0278364915577958">doi:10.1177/0278364915577958</a> · <a href="https://arxiv.org/abs/1306.3532">PDF (arXiv)</a>&#160;<a class="footnote-backref" href="#fnref:janson" title="Jump back to footnote 9 in the text">&#8617;</a></p>
+<p>Janson, L., Schmerling, E., Clark, A., &amp; Pavone, M. (2015). "Fast marching tree: A fast marching sampling-based method for optimal motion planning in many dimensions." <em>The International Journal of Robotics Research</em>, 34(7), 883–921. <a href="https://doi.org/10.1177/0278364915577958">doi:10.1177/0278364915577958</a> · <a href="https://arxiv.org/abs/1306.3532">PDF (arXiv)</a>&#160;<a class="footnote-backref" href="#fnref:janson" title="Jump back to footnote 10 in the text">&#8617;</a></p>
 </li>
 <li id="fn:gammell_bit">
-<p>Gammell, J. D., Srinivasa, S. S., &amp; Barfoot, T. D. (2015). "Batch Informed Trees (BIT*): Sampling-based optimal planning via the heuristically guided search of implicit random geometric graphs." <em>Proc. IEEE ICRA</em>, 3067–3074. <a href="https://doi.org/10.1109/ICRA.2015.7139620">doi:10.1109/ICRA.2015.7139620</a> · <a href="https://arxiv.org/abs/1405.5848">PDF (arXiv)</a>&#160;<a class="footnote-backref" href="#fnref:gammell_bit" title="Jump back to footnote 10 in the text">&#8617;</a></p>
+<p>Gammell, J. D., Srinivasa, S. S., &amp; Barfoot, T. D. (2015). "Batch Informed Trees (BIT*): Sampling-based optimal planning via the heuristically guided search of implicit random geometric graphs." <em>Proc. IEEE ICRA</em>, 3067–3074. <a href="https://doi.org/10.1109/ICRA.2015.7139620">doi:10.1109/ICRA.2015.7139620</a> · <a href="https://arxiv.org/abs/1405.5848">PDF (arXiv)</a>&#160;<a class="footnote-backref" href="#fnref:gammell_bit" title="Jump back to footnote 11 in the text">&#8617;</a></p>
 </li>
 <li id="fn:wu">
-<p>Wu, Z., Meng, Z., Zhao, W., &amp; Wu, Z. (2021). "Fast-RRT: A RRT-Based Optimal Path Finding Method." <em>Applied Sciences</em>, 11(24), 11777. <a href="https://doi.org/10.3390/app112411777">doi:10.3390/app112411777</a> · <a href="https://www.mdpi.com/2076-3417/11/24/11777">PDF (open access)</a>&#160;<a class="footnote-backref" href="#fnref:wu" title="Jump back to footnote 11 in the text">&#8617;</a></p>
+<p>Wu, Z., Meng, Z., Zhao, W., &amp; Wu, Z. (2021). "Fast-RRT: A RRT-Based Optimal Path Finding Method." <em>Applied Sciences</em>, 11(24), 11777. <a href="https://doi.org/10.3390/app112411777">doi:10.3390/app112411777</a> · <a href="https://www.mdpi.com/2076-3417/11/24/11777">PDF (open access)</a>&#160;<a class="footnote-backref" href="#fnref:wu" title="Jump back to footnote 12 in the text">&#8617;</a></p>
 </li>
 <li id="fn:kuffner">
-<p>Kuffner, J. J., &amp; LaValle, S. M. (2000). "RRT-Connect: An efficient approach to single-query path planning." <em>Proc. IEEE ICRA</em>, 995–1001. <a href="https://doi.org/10.1109/ROBOT.2000.844730">doi:10.1109/ROBOT.2000.844730</a>&#160;<a class="footnote-backref" href="#fnref:kuffner" title="Jump back to footnote 12 in the text">&#8617;</a></p>
+<p>Kuffner, J. J., &amp; LaValle, S. M. (2000). "RRT-Connect: An efficient approach to single-query path planning." <em>Proc. IEEE ICRA</em>, 995–1001. <a href="https://doi.org/10.1109/ROBOT.2000.844730">doi:10.1109/ROBOT.2000.844730</a>&#160;<a class="footnote-backref" href="#fnref:kuffner" title="Jump back to footnote 13 in the text">&#8617;</a></p>
 </li>
 <li id="fn:gammell">
-<p>Gammell, J. D., Srinivasa, S. S., &amp; Barfoot, T. D. (2014). "Informed RRT*: Optimal sampling-based path planning focused via direct sampling of an admissible ellipsoidal heuristic." <em>Proc. IEEE/RSJ IROS</em>, 2997–3004. <a href="https://doi.org/10.1109/IROS.2014.6942976">doi:10.1109/IROS.2014.6942976</a> · <a href="https://arxiv.org/abs/1404.2334">PDF (arXiv)</a>&#160;<a class="footnote-backref" href="#fnref:gammell" title="Jump back to footnote 13 in the text">&#8617;</a></p>
+<p>Gammell, J. D., Srinivasa, S. S., &amp; Barfoot, T. D. (2014). "Informed RRT*: Optimal sampling-based path planning focused via direct sampling of an admissible ellipsoidal heuristic." <em>Proc. IEEE/RSJ IROS</em>, 2997–3004. <a href="https://doi.org/10.1109/IROS.2014.6942976">doi:10.1109/IROS.2014.6942976</a> · <a href="https://arxiv.org/abs/1404.2334">PDF (arXiv)</a>&#160;<a class="footnote-backref" href="#fnref:gammell" title="Jump back to footnote 14 in the text">&#8617;</a></p>
 </li>
 <li id="fn:fox">
-<p>Fox, D., Burgard, W., &amp; Thrun, S. (1997). "The dynamic window approach to collision avoidance." <em>IEEE Robotics &amp; Automation Magazine</em>, 4(1), 23–33. <a href="https://doi.org/10.1109/100.580977">doi:10.1109/100.580977</a>&#160;<a class="footnote-backref" href="#fnref:fox" title="Jump back to footnote 14 in the text">&#8617;</a></p>
+<p>Fox, D., Burgard, W., &amp; Thrun, S. (1997). "The dynamic window approach to collision avoidance." <em>IEEE Robotics &amp; Automation Magazine</em>, 4(1), 23–33. <a href="https://doi.org/10.1109/100.580977">doi:10.1109/100.580977</a>&#160;<a class="footnote-backref" href="#fnref:fox" title="Jump back to footnote 15 in the text">&#8617;</a></p>
 </li>
 <li id="fn:coulter">
-<p>Coulter, R. C. (1992). "Implementation of the Pure Pursuit path tracking algorithm." Technical Report CMU-RI-TR-92-01, Robotics Institute, Carnegie Mellon University. <a href="https://publications.ri.cmu.edu/storage/publications/pub_files/pub3/coulter_r_craig_1992_1/coulter_r_craig_1992_1.pdf">PDF</a>&#160;<a class="footnote-backref" href="#fnref:coulter" title="Jump back to footnote 15 in the text">&#8617;</a></p>
+<p>Coulter, R. C. (1992). "Implementation of the Pure Pursuit path tracking algorithm." Technical Report CMU-RI-TR-92-01, Robotics Institute, Carnegie Mellon University. <a href="https://publications.ri.cmu.edu/storage/publications/pub_files/pub3/coulter_r_craig_1992_1/coulter_r_craig_1992_1.pdf">PDF</a>&#160;<a class="footnote-backref" href="#fnref:coulter" title="Jump back to footnote 16 in the text">&#8617;</a></p>
 </li>
 <li id="fn:borenstein">
-<p>Borenstein, J., &amp; Koren, Y. (1991). "The vector field histogram — fast obstacle avoidance for mobile robots." <em>IEEE Transactions on Robotics and Automation</em>, 7(3), 278–288. <a href="https://doi.org/10.1109/70.88137">doi:10.1109/70.88137</a>&#160;<a class="footnote-backref" href="#fnref:borenstein" title="Jump back to footnote 16 in the text">&#8617;</a></p>
+<p>Borenstein, J., &amp; Koren, Y. (1991). "The vector field histogram — fast obstacle avoidance for mobile robots." <em>IEEE Transactions on Robotics and Automation</em>, 7(3), 278–288. <a href="https://doi.org/10.1109/70.88137">doi:10.1109/70.88137</a>&#160;<a class="footnote-backref" href="#fnref:borenstein" title="Jump back to footnote 17 in the text">&#8617;</a></p>
 </li>
 <li id="fn:erdmann">
-<p>Erdmann, M., &amp; Lozano-Pérez, T. (1987). "On multiple moving objects." <em>Algorithmica</em>, 2, 477–521. <a href="https://doi.org/10.1007/BF01840371">doi:10.1007/BF01840371</a>&#160;<a class="footnote-backref" href="#fnref:erdmann" title="Jump back to footnote 17 in the text">&#8617;</a></p>
+<p>Erdmann, M., &amp; Lozano-Pérez, T. (1987). "On multiple moving objects." <em>Algorithmica</em>, 2, 477–521. <a href="https://doi.org/10.1007/BF01840371">doi:10.1007/BF01840371</a>&#160;<a class="footnote-backref" href="#fnref:erdmann" title="Jump back to footnote 18 in the text">&#8617;</a></p>
 </li>
 <li id="fn:sharon">
-<p>Sharon, G., Stern, R., Felner, A., &amp; Sturtevant, N. R. (2015). "Conflict-based search for optimal multi-agent pathfinding." <em>Artificial Intelligence</em>, 219, 40–66. <a href="https://doi.org/10.1016/j.artint.2014.11.006">doi:10.1016/j.artint.2014.11.006</a>&#160;<a class="footnote-backref" href="#fnref:sharon" title="Jump back to footnote 18 in the text">&#8617;</a></p>
+<p>Sharon, G., Stern, R., Felner, A., &amp; Sturtevant, N. R. (2015). "Conflict-based search for optimal multi-agent pathfinding." <em>Artificial Intelligence</em>, 219, 40–66. <a href="https://doi.org/10.1016/j.artint.2014.11.006">doi:10.1016/j.artint.2014.11.006</a>&#160;<a class="footnote-backref" href="#fnref:sharon" title="Jump back to footnote 19 in the text">&#8617;</a></p>
 </li>
 </ol>
 </div><nav class="pager"><a href="../../en/index.html"><div class="dir">← Prev</div><div class="ttl">Overview</div></a><a class="next" href="../../en/algorithms/bfs.html"><div class="dir">Next →</div><div class="ttl">BFS</div></a></nav></article></main>
