@@ -66,8 +66,12 @@ inline unsigned resolve_seed(const Args& a, const navigation::core::ParamSet& pa
   return params.has("seed") ? static_cast<unsigned>(params.get_int("seed")) : a.seed;
 }
 
-inline int run_discrete(const Args& a, const navigation::core::ParamSet& params,
-                        navigation::core::DiscretePlanner& planner) {
+// Templated on the planner so any discrete-family planner binds: the loaded
+// OccupancyGrid2D& is passed as whichever Space& the planner's plan() wants
+// (DiscreteSpace<Cell>& for A*/Dijkstra/BFS, LineOfSightSpace<Cell>& for Theta*).
+// Existing callers deduce Planner unchanged.
+template <class Planner>
+inline int run_discrete(const Args& a, const navigation::core::ParamSet& params, Planner& planner) {
   auto map = navigation::maps::load_map(a.map, resolve_seed(a, params), a.connectivity);
   auto& grid = as_grid(*map);
   navigation::maps::Scenario sc = navigation::maps::load_scenario(a.scenario);

@@ -41,7 +41,7 @@ OccupancyGrid2D OccupancyGrid2D::from_image(const PgmImage& img, double resoluti
 }
 
 std::set<Capability> OccupancyGrid2D::capabilities() const {
-  return {Capability::DISCRETE_SPACE, Capability::SAMPLING_SPACE};
+  return {Capability::DISCRETE_SPACE, Capability::SAMPLING_SPACE, Capability::LINE_OF_SIGHT_SPACE};
 }
 
 bool OccupancyGrid2D::in_bounds(int row, int col) const {
@@ -101,6 +101,15 @@ double OccupancyGrid2D::heuristic(const Cell& a, const Cell& b) const {
   int lo = std::min(dr, dc);
   int hi = std::max(dr, dc);
   return (hi - lo) + std::sqrt(2.0) * lo;
+}
+
+bool OccupancyGrid2D::line_of_sight(const Cell& a, const Cell& b) const {
+  // Any-angle LOS must mean "the straight segment is actually traversable" under
+  // the SAME corner-cut-forbidden rule as neighbors()/is_motion_valid — else a
+  // shortcut could clip an obstacle corner the grid edges forbid. Reuse the
+  // verified supercover (Amanatides & Woo 1987) from cell centres; world
+  // conversion stays inside the map (Nash, Daniel, Koenig & Felner 2007).
+  return is_motion_valid(cell_to_world(a), cell_to_world(b));
 }
 
 Point OccupancyGrid2D::sample() {

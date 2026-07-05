@@ -7,9 +7,11 @@ algorithm module imports another.
 from .astar import AStar
 from .bfs import BFS
 from .dijkstra import Dijkstra
+from .theta_star import ThetaStar
 
 __all__ = [
     "BFS",
     "Dijkstra",
     "AStar",
+    "ThetaStar",
 ]

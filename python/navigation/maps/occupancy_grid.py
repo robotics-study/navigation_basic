@@ -91,7 +91,11 @@ class OccupancyGrid2D(MapBase):
 
     # --- capabilities -----------------------------------------------------
     def capabilities(self) -> set[Capability]:
-        return {Capability.DISCRETE_SPACE, Capability.SAMPLING_SPACE}
+        return {
+            Capability.DISCRETE_SPACE,
+            Capability.SAMPLING_SPACE,
+            Capability.LINE_OF_SIGHT_SPACE,
+        }
 
     # --- DiscreteSpace[Cell] ---------------------------------------------
     def neighbors(self, s: Cell) -> list[tuple[Cell, float]]:
@@ -120,6 +124,13 @@ class OccupancyGrid2D(MapBase):
             hi = max(dr, dc)
             return float(hi - lo) + _SQRT2 * float(lo)
         return float(dr + dc)  # Manhattan for 4-connected.
+
+    # --- LineOfSightSpace[Cell] ------------------------------------------
+    def line_of_sight(self, a: Cell, b: Cell) -> bool:
+        # Straight segment between cell centres, tested by the same supercover
+        # (Amanatides & Woo 1987) + corner-cut-forbidden rule as neighbors(), so a
+        # LOS-visible pair is exactly a legal straight move (Nash et al. 2007).
+        return self.is_motion_valid(self.cell_to_world(*a), self.cell_to_world(*b))
 
     # --- SamplingSpace[Point] --------------------------------------------
     def sample(self) -> Point:

@@ -19,6 +19,7 @@ class Capability(enum.Enum):
     SAMPLING_SPACE = "sampling_space"
     # Declared for future local planners; no map here implements it (no dead impl).
     OBSTACLE_QUERY = "obstacle_query"
+    LINE_OF_SIGHT_SPACE = "line_of_sight_space"
 
 
 class DiscreteSpace(Protocol[StateT]):
@@ -29,6 +30,14 @@ class DiscreteSpace(Protocol[StateT]):
         ...
 
     def heuristic(self, a: StateT, b: StateT) -> float: ...
+
+
+class LineOfSightSpace(DiscreteSpace[StateT], Protocol[StateT]):
+    """DiscreteSpace that also answers collision-free straight-segment queries
+    (any-angle Theta*, Nash et al. 2007). Structural, so one concrete grid
+    satisfies DiscreteSpace and this without a class hierarchy."""
+
+    def line_of_sight(self, a: StateT, b: StateT) -> bool: ...
 
 
 class SamplingSpace(Protocol[StateT]):

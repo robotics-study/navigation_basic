@@ -20,7 +20,7 @@ using core::Point;
 // follows ROS map_server: origin is the world pose of the bottom-left pixel and
 // row 0 is the top image row.
 class OccupancyGrid2D final : public core::MapBase,
-                              public core::DiscreteSpace<Cell>,
+                              public core::LineOfSightSpace<Cell>,  // was DiscreteSpace<Cell>
                               public core::SamplingSpace<Point> {
  public:
   OccupancyGrid2D(int rows, int cols, double resolution, double origin_x, double origin_y,
@@ -39,6 +39,7 @@ class OccupancyGrid2D final : public core::MapBase,
 
   std::vector<std::pair<Cell, double>> neighbors(const Cell& s) const override;
   double heuristic(const Cell& a, const Cell& b) const override;
+  bool line_of_sight(const Cell& a, const Cell& b) const override;
 
   Point sample() override;
   bool is_state_valid(const Point& p) const override;

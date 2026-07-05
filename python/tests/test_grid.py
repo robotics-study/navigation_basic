@@ -71,9 +71,14 @@ def test_dimensions_and_free_mask() -> None:
 
 def test_capabilities_and_supports() -> None:
     grid = open_grid(3, 3)
-    assert grid.capabilities() == {Capability.DISCRETE_SPACE, Capability.SAMPLING_SPACE}
+    assert grid.capabilities() == {
+        Capability.DISCRETE_SPACE,
+        Capability.SAMPLING_SPACE,
+        Capability.LINE_OF_SIGHT_SPACE,
+    }
     assert grid.supports(Capability.DISCRETE_SPACE)
     assert grid.supports(Capability.SAMPLING_SPACE)
+    assert grid.supports(Capability.LINE_OF_SIGHT_SPACE)
     assert not grid.supports(Capability.OBSTACLE_QUERY)
 
 

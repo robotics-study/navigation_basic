@@ -6,6 +6,7 @@
 #include "navigation/global_planning/search/astar.hpp"
 #include "navigation/global_planning/search/bfs.hpp"
 #include "navigation/global_planning/search/dijkstra.hpp"
+#include "navigation/global_planning/search/theta_star.hpp"
 #include "test_util.hpp"
 
 using namespace navigation;
@@ -25,6 +26,15 @@ bool path_is_connected(maps::OccupancyGrid2D& g, const std::vector<Cell>& path) 
       if (v == path[i + 1]) ok = true;
     }
     if (!ok) return false;
+  }
+  return true;
+}
+
+// Every reconstructed Theta* edge must be a legal straight move — validated via
+// line_of_sight (paths are sparse, not neighbor-adjacent).
+bool path_los_clear(maps::OccupancyGrid2D& g, const std::vector<Cell>& path) {
+  for (size_t i = 0; i + 1 < path.size(); ++i) {
+    if (!g.line_of_sight(path[i], path[i + 1])) return false;
   }
   return true;
 }
@@ -60,6 +70,40 @@ TEST(Discrete, BfsMinimisesMoveCount) {
   EXPECT_TRUE(path_is_connected(g, r.path));
 }
 
+// Theta* any-angle path (path 2): open grid, goal directly visible from start, so
+// the straight segment beats A*'s grid-locked octile path on a non-diagonal offset.
+TEST(Discrete, ThetaStarTakesAnyAngleShortcut) {
+  auto g = test::make_grid({"...", "...", "..."});  // open 3x3, 8-connected
+  Cell start{2, 0}, goal{0, 1};
+  global_planning::ThetaStarPlanner theta(cfg("theta_star"));
+  auto rt = theta.plan(g, start, goal, nullptr);
+  ASSERT_TRUE(rt.success);
+  EXPECT_EQ(rt.path.front(), start);
+  EXPECT_EQ(rt.path.back(), goal);
+  EXPECT_NEAR(rt.cost, std::sqrt(5.0), 1e-9);
+  EXPECT_TRUE(path_los_clear(g, rt.path));
+  global_planning::AstarPlanner astar(cfg("astar"));
+  EXPECT_LT(rt.cost, astar.plan(g, start, goal, nullptr).cost);
+}
+
+// Theta* path 1: a blocker hides the goal (no direct LOS), forcing a turn. The
+// any-angle path keeps an interior waypoint, every leg is LOS-clear, and it still
+// beats grid-locked A*.
+TEST(Discrete, ThetaStarBendsAroundObstacle) {
+  auto g = test::make_grid({".....", ".....", "..#..", "..#..", "....."});
+  Cell start{4, 0}, goal{0, 4};
+  global_planning::ThetaStarPlanner theta(cfg("theta_star"));
+  auto rt = theta.plan(g, start, goal, nullptr);
+  ASSERT_TRUE(rt.success);
+  EXPECT_EQ(rt.path.front(), start);
+  EXPECT_EQ(rt.path.back(), goal);
+  EXPECT_GE(rt.path.size(), 3u);  // bends -> at least one interior waypoint
+  EXPECT_FALSE(g.line_of_sight(start, goal));  // goal genuinely hidden
+  EXPECT_TRUE(path_los_clear(g, rt.path));
+  global_planning::AstarPlanner astar(cfg("astar"));
+  EXPECT_LT(rt.cost, astar.plan(g, start, goal, nullptr).cost);
+}
+
 // (b) no-path case ------------------------------------------------------------
 
 TEST(Discrete, NoPathWhenWalledOff) {
@@ -76,6 +120,11 @@ TEST(Discrete, NoPathWhenWalledOff) {
   EXPECT_FALSE(rb.success);
   EXPECT_TRUE(rb.path.empty());
   EXPECT_EQ(rb.cost, 0.0);
+  global_planning::ThetaStarPlanner theta(cfg("theta_star"));
+  auto rth = theta.plan(g, start, goal, nullptr);
+  EXPECT_FALSE(rth.success);
+  EXPECT_TRUE(rth.path.empty());
+  EXPECT_EQ(rth.cost, 0.0);
 }
 
 // (c) param validation failure -----------------------------------------------
@@ -84,6 +133,15 @@ TEST(Discrete, BadAstarParamThrows) {
   std::string bad = test::write_temp(
       "astar.yaml",
       "algorithm: astar\ncategory: global_planning\nparams:\n"
+      "  - name: heuristic_weight\n    type: float\n    default: 0.5\n    min: 1.0\n    max: 5.0\n"
+      "    description: below min\n");
+  EXPECT_THROW(core::ParamSet::from_yaml(bad), std::runtime_error);
+}
+
+TEST(Discrete, BadThetaStarParamThrows) {
+  std::string bad = test::write_temp(
+      "theta_star.yaml",
+      "algorithm: theta_star\ncategory: global_planning\nparams:\n"
       "  - name: heuristic_weight\n    type: float\n    default: 0.5\n    min: 1.0\n    max: 5.0\n"
       "    description: below min\n");
   EXPECT_THROW(core::ParamSet::from_yaml(bad), std::runtime_error);
