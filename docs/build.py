@@ -91,7 +91,8 @@ DEFAULT_OG_IMAGE = "assets/astar/maze01_final.png"
 # global_planning 알고리즘의 계보 카테고리 → 소스가 놓인 하위폴더.
 # C++/Python 모두 이 하위폴더 아래로 이동했으므로 chip 경로를 함께 갱신한다.
 _GLOBAL_LINEAGE = {
-    "bfs": "search", "dijkstra": "search", "astar": "search", "theta_star": "search",
+    "bfs": "search", "dijkstra": "search", "astar": "search", "dstar_lite": "search",
+    "theta_star": "search",
     "rrt": "sampling", "rrt_star": "sampling", "fast_rrt": "sampling",
     "prm": "sampling", "prm_star": "sampling",
     "bit_star": "sampling", "fmt_star": "sampling",
@@ -120,6 +121,7 @@ _GLOBAL_SEARCH = [
     ("algorithms/bfs.md", "algorithms/bfs.html", "BFS"),              # 1959
     ("algorithms/dijkstra.md", "algorithms/dijkstra.html", "Dijkstra"),  # 1959
     ("algorithms/astar.md", "algorithms/astar.html", "A*"),          # 1968
+    ("algorithms/dstar_lite.md", "algorithms/dstar_lite.html", "D* Lite"),  # 2002
     ("algorithms/theta_star.md", "algorithms/theta_star.html", "Theta*"),  # 2007
 ]
 _GLOBAL_SAMPLING = [
@@ -473,6 +475,7 @@ def build_landing(_=None):
         ("bfs", "BFS", "uninformed search"),
         ("dijkstra", "Dijkstra", "cost-optimal"),
         ("astar", "A*", "informed search"),
+        ("dstar_lite", "D* Lite", "dynamic replanning"),
         ("theta_star", "Theta*", "any-angle search"),
         ("prm", "PRM", "roadmap · multi-query"),
         ("rrt", "RRT", "feasible sampling"),

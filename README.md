@@ -17,7 +17,7 @@ visualization and a benchmark matrix. Docs available in [Korean](https://robotic
 ![C++20](https://img.shields.io/badge/C%2B%2B-20-blue.svg)
 ![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB.svg)
 ![CMake](https://img.shields.io/badge/CMake-%E2%89%A53.20-064F8C.svg)
-![Tests](https://img.shields.io/badge/tests-73%20py%20%2B%2039%20cpp-brightgreen.svg)
+![Tests](https://img.shields.io/badge/tests-79%20py%20%2B%2045%20cpp-brightgreen.svg)
 
 | A* (1968) | RRT* (2011) | Fast-RRT (2021) |
 |:---:|:---:|:---:|
@@ -73,6 +73,7 @@ demo GIF/PNG + 실측 metric + **원 논문 각주**.
 | global_planning | BFS | ✅ | ✅ | Moore (1959) |
 | global_planning | Dijkstra | ✅ | ✅ | Dijkstra (1959) |
 | global_planning | A* | ✅ | ✅ | Hart, Nilsson & Raphael (1968) |
+| global_planning | D* Lite | ✅ | ✅ | Koenig & Likhachev (2002) |
 | global_planning | Theta* | ✅ | ✅ | Nash, Daniel, Koenig & Felner (2007) |
 | global_planning | RRT | ✅ | ✅ | LaValle (1998) |
 | global_planning | RRT-Connect | ⬜ | ⬜ | Kuffner & LaValle (2000) |
@@ -98,12 +99,12 @@ demo GIF/PNG + 실측 metric + **원 논문 각주**.
 ```bash
 # Python (>= 3.10) — navigation 패키지 + viz/dev extras
 cd python && pip install -e ".[dev,viz]" && cd ..
-pytest python/tests            # 73 tests
+pytest python/tests            # 79 tests
 
 # C++ (C++20, CMake >= 3.20, GoogleTest 는 FetchContent 자동)
 cmake -S cpp -B cpp/build -DCMAKE_BUILD_TYPE=Release
 cmake --build cpp/build -j
-ctest --test-dir cpp/build     # 39 tests
+ctest --test-dir cpp/build     # 45 tests
 ```
 
 ### 데모 실행 — 두 언어가 동일한 CLI 인자

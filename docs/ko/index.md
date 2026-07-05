@@ -48,12 +48,12 @@ sampling 계열은 seed 기반으로 통계적으로 동등한 결과를 낸다.
 ```bash
 # Python (>= 3.10)
 cd python && pip install -e ".[dev,viz]" && cd ..
-pytest python/tests                                  # 62 tests
+pytest python/tests                                  # 79 tests
 
 # C++ (C++20, CMake >= 3.20)
 cmake -S cpp -B cpp/build -DCMAKE_BUILD_TYPE=Release
 cmake --build cpp/build -j
-ctest --test-dir cpp/build                           # 35 tests
+ctest --test-dir cpp/build                           # 45 tests
 
 # 데모 실행 (두 언어 CLI 인자 동일) + 시각화
 python python/demos/demo_astar.py \
