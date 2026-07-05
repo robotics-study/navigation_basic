@@ -11,18 +11,18 @@ import argparse
 import json
 from collections.abc import Callable
 
-from nav_study.core.params import ParamSet
-from nav_study.core.planner import GlobalPlanner
-from nav_study.core.trace import open_trace
-from nav_study.core.types import Cell, PlanResult, Point
-from nav_study.maps.loader import load_map, load_scenario
-from nav_study.maps.occupancy_grid import OccupancyGrid2D
+from navigation.core.params import ParamSet
+from navigation.core.planner import GlobalPlanner
+from navigation.core.trace import open_trace
+from navigation.core.types import Cell, PlanResult, Point
+from navigation.maps.loader import load_map, load_scenario
+from navigation.maps.occupancy_grid import OccupancyGrid2D
 
 PlannerFactory = Callable[[ParamSet], GlobalPlanner]
 
 
 def _parse_args(name: str) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description=f"nav_study {name} demo")
+    parser = argparse.ArgumentParser(description=f"navigation {name} demo")
     parser.add_argument("--map", required=True, help="map yaml path")
     parser.add_argument("--scenario", required=True, help="scenario yaml path")
     parser.add_argument("--params", required=True, help="algorithm config yaml path")

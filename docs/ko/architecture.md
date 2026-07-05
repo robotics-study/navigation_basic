@@ -23,8 +23,8 @@ nav_order: 2
 │   └── map_formats.md           #   맵 파일 포맷 정의 (grid / graph / topology / continuous)
 ├── maps/                        # 공용 벤치마크 맵 + start/goal 시나리오
 ├── configs/                     # 알고리즘별 파라미터 yaml (언어 공용)
-├── cpp/                         # C++20 구현 (include/nav_study + src + demos + GoogleTest)
-├── python/                      # Python 구현 (nav_study 패키지 + demos + pytest)
+├── cpp/                         # C++20 구현 (include/navigation + src + demos + GoogleTest)
+├── python/                      # Python 구현 (navigation 패키지 + demos + pytest)
 └── tools/                       # viz(trace 재생기) + bench(매트릭스 러너) — Python
 ```
 

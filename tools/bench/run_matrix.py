@@ -19,8 +19,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from nav_study.core.capabilities import Capability
-from nav_study.maps.loader import load_map, load_scenario
+from navigation.core.capabilities import Capability
+from navigation.maps.loader import load_map, load_scenario
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 
@@ -108,11 +108,11 @@ def _render(rows: list[Row]) -> str:
             f"{int(m.get('samples', 0))} | {int(m.get('tree_size', 0))} | "
             f"{m.get('runtime_sec', 0.0):.5f} |\n"
         )
-    return "# nav_study benchmark matrix\n\n" + "".join(lines)
+    return "# navigation benchmark matrix\n\n" + "".join(lines)
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="nav_study benchmark matrix runner")
+    parser = argparse.ArgumentParser(description="navigation benchmark matrix runner")
     parser.add_argument("--scenarios", default=str(_REPO_ROOT / "maps" / "scenarios"))
     parser.add_argument("--configs", default=str(_REPO_ROOT / "configs" / "global_planning"))
     parser.add_argument("--demos", default=str(_REPO_ROOT / "python" / "demos"))

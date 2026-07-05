@@ -85,7 +85,7 @@ demo GIF/PNG + 실측 metric + **원 논문 각주**.
 ## 🚀 빠른 시작
 
 ```bash
-# Python (>= 3.10) — nav_study 패키지 + viz/dev extras
+# Python (>= 3.10) — navigation 패키지 + viz/dev extras
 cd python && pip install -e ".[dev,viz]" && cd ..
 pytest python/tests            # 62 tests
 
@@ -143,7 +143,7 @@ python tools/bench/run_matrix.py --out out/report.md
 ├── maps/          # 벤치마크 맵 (grid/graph/topology/continuous) + start/goal 시나리오
 ├── configs/       # 알고리즘별 파라미터 yaml — C++/Python 이 같은 파일을 읽는다
 ├── cpp/           # C++20 구현 (include + src + demos + GoogleTest)
-├── python/        # Python 구현 (nav_study 패키지 + demos + pytest)
+├── python/        # Python 구현 (navigation 패키지 + demos + pytest)
 ├── tools/         # viz(trace 재생기) · bench(매트릭스 러너)
 └── docs/          # GitHub Pages 위키 (한국어/English)
 ```

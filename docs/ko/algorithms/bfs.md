@@ -84,7 +84,7 @@ $\sum_v\deg(v)=2E$ — 총 $O(V+E)$.
 
 ## 구현 노트
 
-- C++: `cpp/src/global_planning/bfs.cpp`, Python: `python/nav_study/global_planning/bfs.py`
+- C++: `cpp/src/global_planning/bfs.cpp`, Python: `python/navigation/global_planning/bfs.py`
 - 두 구현 모두 `DiscreteSpace` capability(`neighbors`, `heuristic`)에만 의존한다. 구체 맵 타입을 알지 못한다.
 - BFS 는 튜닝 파라미터가 없다 (`configs/global_planning/bfs.yaml` 은 빈 선언). 결정적이므로
   C++/Python 결과가 완전히 일치한다.

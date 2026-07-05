@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from demo_common import run_discrete
 
-from nav_study.global_planning.astar import AStar
+from navigation.global_planning.astar import AStar
 
 if __name__ == "__main__":
     run_discrete("astar", AStar)

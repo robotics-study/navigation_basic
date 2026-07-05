@@ -9,12 +9,12 @@ from pathlib import Path
 import yaml
 from conftest import CONFIG_DIR, config, grid_from, open_grid
 
-from nav_study.core.params import ParamSet
-from nav_study.core.trace import TraceRecorder
-from nav_study.global_planning.astar import AStar
-from nav_study.global_planning.fast_rrt import FastRRT
-from nav_study.global_planning.rrt import RRT
-from nav_study.global_planning.rrt_star import RRTStar
+from navigation.core.params import ParamSet
+from navigation.core.trace import TraceRecorder
+from navigation.global_planning.astar import AStar
+from navigation.global_planning.fast_rrt import FastRRT
+from navigation.global_planning.rrt import RRT
+from navigation.global_planning.rrt_star import RRTStar
 
 
 def _capped(tmp_path: Path, algo: str, max_iter: int) -> ParamSet:

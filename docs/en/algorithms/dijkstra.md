@@ -83,7 +83,7 @@ $O(E\log V)$ → $O((V+E)\log V)$.
 
 ## Implementation Notes
 
-- C++: `cpp/src/global_planning/dijkstra.cpp`, Python: `python/nav_study/global_planning/dijkstra.py`
+- C++: `cpp/src/global_planning/dijkstra.cpp`, Python: `python/navigation/global_planning/dijkstra.py`
 - Dijkstra and A* **differ only in the priority key** (f = g vs f = g + w·h). Both languages share a common best-first skeleton (`discrete_search` / `_bestfirst`) to make this relationship explicit in the code.
 - Instead of a decrease-key data structure, a **lazy queue** is used: the same node may be inserted into the queue multiple times, and nodes already settled at pop time are skipped. The heap grows somewhat larger, but the implementation is simpler and faster.
 - No parameters (`configs/global_planning/dijkstra.yaml` is an empty declaration). It is deterministic, so the C++ and Python results match exactly.

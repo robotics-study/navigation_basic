@@ -69,6 +69,23 @@ def _asset_ver() -> str:
 
 ASSET_VER = _asset_ver()
 
+# 소스 코드 링크 chip (알고리즘 페이지 H1 아래) — GitHub blob 으로 연결.
+GH_BLOB = "https://github.com/robotics-study/navigation/blob/main"
+
+
+def code_chips(key: str, lang: str) -> str:
+    label = "소스 코드" if lang == "ko" else "Source"
+    def a(href, text):
+        return f'<a href="{GH_BLOB}/{href}" target="_blank" rel="noopener">{text}</a>'
+    return (
+        f'<div class="code-links"><span class="cl-label">{label}</span>'
+        + a(f"cpp/src/global_planning/{key}.cpp", "C++")
+        + a(f"cpp/include/navigation/global_planning/{key}.hpp", "C++ header")
+        + a(f"python/navigation/global_planning/{key}.py", "Python")
+        + a(f"python/demos/demo_{key}.py", "demo")
+        + "</div>"
+    )
+
 # 언어별 사이드바 구조 + 순서 (prev/next 는 이 평탄화 순서를 따른다).
 # 각 항목: (source md 경로[lang 상대], 출력 html 경로[lang 상대], 사이드바 라벨)
 _GLOBAL = [
@@ -362,6 +379,9 @@ def main():
             content = md.convert(pre)
             # 첫 표 = spec chip table
             content = content.replace("<table>", '<table class="spec-table">', 1)
+            # 알고리즘 페이지: H1 아래에 소스 코드 링크 chip
+            if lang and out_rel.startswith("algorithms/") and out_rel != "algorithms/index.html":
+                content = content.replace("</h1>", "</h1>\n" + code_chips(out_rel[11:-5], lang), 1)
 
             # prev / next
             pager = ""

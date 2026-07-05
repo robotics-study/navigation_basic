@@ -103,7 +103,7 @@ $$
 
 ## 구현 노트
 
-- C++: `cpp/src/global_planning/rrt.cpp`, Python: `python/nav_study/global_planning/rrt.py`
+- C++: `cpp/src/global_planning/rrt.cpp`, Python: `python/navigation/global_planning/rrt.py`
 - `SamplingSpace` capability (`sample` / `is_state_valid` / `is_motion_valid` / `distance` / `steer`)
   에만 의존한다. occupancy grid 위에서는 셀 중심이 아닌 **연속 world 좌표**를 탐색한다.
 - motion validity 는 선분을 resolution 간격으로 보간해 검사한다 (맵 adapter 책임).

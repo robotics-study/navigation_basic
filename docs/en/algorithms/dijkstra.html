@@ -7,9 +7,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../../assets/site.css?v=9faafaea">
+<link rel="stylesheet" href="../../assets/site.css?v=faed3c57">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Crect width='24' height='24' rx='6' fill='%230b1020'/%3E%3Cpath d='M5 18V11h7V6h7' stroke='%23818cf8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='5' cy='18' r='2.4' fill='%23818cf8'/%3E%3Ccircle cx='19' cy='6' r='2.4' fill='%2322d3ee'/%3E%3C/svg%3E">
-<script src="../../assets/site.js?v=9faafaea"></script>
+<script src="../../assets/site.js?v=faed3c57"></script>
 </head>
 <body>
 <header class="topbar">
@@ -49,6 +49,7 @@
 <a href="../../en/architecture.html">Architecture</a>
 <a href="../../en/references.html">References</a></aside>
 <main class="content"><article class="content-inner"><h1 id="dijkstra">Dijkstra<a class="anchor" href="#dijkstra" title="Permanent link">¶</a></h1>
+<div class="code-links"><span class="cl-label">Source</span><a href="https://github.com/robotics-study/navigation/blob/main/cpp/src/global_planning/dijkstra.cpp" target="_blank" rel="noopener">C++</a><a href="https://github.com/robotics-study/navigation/blob/main/cpp/include/navigation/global_planning/dijkstra.hpp" target="_blank" rel="noopener">C++ header</a><a href="https://github.com/robotics-study/navigation/blob/main/python/navigation/global_planning/dijkstra.py" target="_blank" rel="noopener">Python</a><a href="https://github.com/robotics-study/navigation/blob/main/python/demos/demo_dijkstra.py" target="_blank" rel="noopener">demo</a></div>
 <table class="spec-table">
 <thead>
 <tr>
@@ -128,7 +129,7 @@ Bellman–Ford territory). ∎</p>
 <span class="arithmatex">\(O(E\log V)\)</span> → <span class="arithmatex">\(O((V+E)\log V)\)</span>.</p>
 <h2 id="implementation-notes">Implementation Notes<a class="anchor" href="#implementation-notes" title="Permanent link">¶</a></h2>
 <ul>
-<li>C++: <code>cpp/src/global_planning/dijkstra.cpp</code>, Python: <code>python/nav_study/global_planning/dijkstra.py</code></li>
+<li>C++: <code>cpp/src/global_planning/dijkstra.cpp</code>, Python: <code>python/navigation/global_planning/dijkstra.py</code></li>
 <li>Dijkstra and A<em> </em><em>differ only in the priority key</em>* (f = g vs f = g + w·h). Both languages share a common best-first skeleton (<code>discrete_search</code> / <code>_bestfirst</code>) to make this relationship explicit in the code.</li>
 <li>Instead of a decrease-key data structure, a <strong>lazy queue</strong> is used: the same node may be inserted into the queue multiple times, and nodes already settled at pop time are skipped. The heap grows somewhat larger, but the implementation is simpler and faster.</li>
 <li>No parameters (<code>configs/global_planning/dijkstra.yaml</code> is an empty declaration). It is deterministic, so the C++ and Python results match exactly.</li>

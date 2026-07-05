@@ -5,13 +5,13 @@ from __future__ import annotations
 import pytest
 from conftest import config
 
-from nav_study.core.capabilities import Capability
-from nav_study.global_planning.astar import AStar
-from nav_study.global_planning.bfs import BFS
-from nav_study.global_planning.dijkstra import Dijkstra
-from nav_study.global_planning.fast_rrt import FastRRT
-from nav_study.global_planning.rrt import RRT
-from nav_study.global_planning.rrt_star import RRTStar
+from navigation.core.capabilities import Capability
+from navigation.global_planning.astar import AStar
+from navigation.global_planning.bfs import BFS
+from navigation.global_planning.dijkstra import Dijkstra
+from navigation.global_planning.fast_rrt import FastRRT
+from navigation.global_planning.rrt import RRT
+from navigation.global_planning.rrt_star import RRTStar
 
 _DISCRETE = [("bfs", BFS), ("dijkstra", Dijkstra), ("astar", AStar)]
 _SAMPLING = [("rrt", RRT), ("rrt_star", RRTStar), ("fast_rrt", FastRRT)]

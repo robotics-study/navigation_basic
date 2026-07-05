@@ -8,8 +8,8 @@ import numpy as np
 import pytest
 from conftest import grid_from, open_grid
 
-from nav_study.core.capabilities import Capability
-from nav_study.maps.occupancy_grid import OccupancyGrid2D
+from navigation.core.capabilities import Capability
+from navigation.maps.occupancy_grid import OccupancyGrid2D
 
 
 def test_world_cell_round_trip() -> None:

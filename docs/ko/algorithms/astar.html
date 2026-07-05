@@ -7,9 +7,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../../assets/site.css?v=9faafaea">
+<link rel="stylesheet" href="../../assets/site.css?v=faed3c57">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Crect width='24' height='24' rx='6' fill='%230b1020'/%3E%3Cpath d='M5 18V11h7V6h7' stroke='%23818cf8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='5' cy='18' r='2.4' fill='%23818cf8'/%3E%3Ccircle cx='19' cy='6' r='2.4' fill='%2322d3ee'/%3E%3C/svg%3E">
-<script src="../../assets/site.js?v=9faafaea"></script>
+<script src="../../assets/site.js?v=faed3c57"></script>
 </head>
 <body>
 <header class="topbar">
@@ -49,6 +49,7 @@
 <a href="../../ko/architecture.html">아키텍처</a>
 <a href="../../ko/references.html">참고 문헌</a></aside>
 <main class="content"><article class="content-inner"><h1 id="a-a-star">A* (A-star)<a class="anchor" href="#a-a-star" title="Permanent link">¶</a></h1>
+<div class="code-links"><span class="cl-label">소스 코드</span><a href="https://github.com/robotics-study/navigation/blob/main/cpp/src/global_planning/astar.cpp" target="_blank" rel="noopener">C++</a><a href="https://github.com/robotics-study/navigation/blob/main/cpp/include/navigation/global_planning/astar.hpp" target="_blank" rel="noopener">C++ header</a><a href="https://github.com/robotics-study/navigation/blob/main/python/navigation/global_planning/astar.py" target="_blank" rel="noopener">Python</a><a href="https://github.com/robotics-study/navigation/blob/main/python/demos/demo_astar.py" target="_blank" rel="noopener">demo</a></div>
 <table class="spec-table">
 <thead>
 <tr>
@@ -169,7 +170,7 @@ admissible 이고, (ii) 임의 경로에서 <span class="arithmatex">\(f\)</span
 (마지막에서 두 번째 부등호는 <span class="arithmatex">\(w\ge1\)</span> 과 admissibility). ∎</p>
 <h2 id="_6">구현 노트<a class="anchor" href="#_6" title="Permanent link">¶</a></h2>
 <ul>
-<li>C++: <code>cpp/src/global_planning/astar.cpp</code>, Python: <code>python/nav_study/global_planning/astar.py</code></li>
+<li>C++: <code>cpp/src/global_planning/astar.cpp</code>, Python: <code>python/navigation/global_planning/astar.py</code></li>
 <li>Dijkstra 와 best-first 골격을 공유한다 (우선순위 키만 오버라이드). tie-break 까지 두 언어가
   동일한 연산 순서를 쓰므로 결과가 완전히 일치한다.</li>
 </ul>

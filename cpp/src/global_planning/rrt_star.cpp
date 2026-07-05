@@ -1,12 +1,12 @@
-#include "nav_study/global_planning/rrt_star.hpp"
+#include "navigation/global_planning/rrt_star.hpp"
 
 #include <chrono>
 #include <limits>
 #include <random>
 
-#include "nav_study/global_planning/sampling_common.hpp"
+#include "navigation/global_planning/sampling_common.hpp"
 
-namespace nav_study::global_planning {
+namespace navigation::global_planning {
 
 core::PlanResult<Point> RrtStarPlanner::plan(SamplingSpace<Point>& space, const Point& start,
                                              const Point& goal, TraceRecorder* recorder) {
@@ -75,4 +75,4 @@ core::PlanResult<Point> RrtStarPlanner::plan(SamplingSpace<Point>& space, const 
   return result;
 }
 
-}  // namespace nav_study::global_planning
+}  // namespace navigation::global_planning

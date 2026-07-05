@@ -7,10 +7,10 @@ import math
 import pytest
 from conftest import config, grid_from, open_grid
 
-from nav_study.core.types import Cell
-from nav_study.global_planning.astar import AStar
-from nav_study.global_planning.bfs import BFS
-from nav_study.global_planning.dijkstra import Dijkstra
+from navigation.core.types import Cell
+from navigation.global_planning.astar import AStar
+from navigation.global_planning.bfs import BFS
+from navigation.global_planning.dijkstra import Dijkstra
 
 _OPTIMAL_DIAG = 4 * math.sqrt(2)  # (4,0)->(0,4) on an open 8-connected grid
 

@@ -158,6 +158,25 @@ img { max-width: 100%; }
 
 /* ---------- content typography ---------- */
 .content-inner h1 { font-size: 2.05rem; line-height: 1.2; margin: 0 0 .5em; letter-spacing: -.02em; }
+
+/* 소스 코드 링크 chip */
+.code-links { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: -.1em 0 1.6em; }
+.code-links .cl-label {
+  font-size: .74rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+  color: var(--muted); margin-right: 2px;
+}
+.code-links a {
+  display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px;
+  border: 1px solid var(--border); border-radius: 999px; background: var(--surface);
+  color: var(--text); font-size: .82rem; font-weight: 600; font-family: var(--mono);
+}
+.code-links a::before {
+  content: ""; width: 13px; height: 13px; flex: none;
+  background: currentColor;
+  -webkit-mask: var(--code-ico) center/contain no-repeat; mask: var(--code-ico) center/contain no-repeat;
+}
+.code-links a:hover { border-color: var(--accent); color: var(--accent); text-decoration: none; }
+:root { --code-ico: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m8 6-6 6 6 6M16 6l6 6-6 6'/%3E%3C/svg%3E"); }
 .content-inner h2 {
   font-size: 1.42rem; margin: 2.2em 0 .7em; padding-bottom: .3em;
   border-bottom: 1px solid var(--border); letter-spacing: -.01em;

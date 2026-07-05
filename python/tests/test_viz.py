@@ -16,7 +16,7 @@ import numpy as np
 from conftest import REPO_ROOT
 from PIL import Image
 
-from nav_study.maps.loader import load_map
+from navigation.maps.loader import load_map
 
 
 def _load_replay() -> ModuleType:

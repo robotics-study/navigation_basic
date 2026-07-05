@@ -7,9 +7,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../../assets/site.css?v=9faafaea">
+<link rel="stylesheet" href="../../assets/site.css?v=faed3c57">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Crect width='24' height='24' rx='6' fill='%230b1020'/%3E%3Cpath d='M5 18V11h7V6h7' stroke='%23818cf8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='5' cy='18' r='2.4' fill='%23818cf8'/%3E%3Ccircle cx='19' cy='6' r='2.4' fill='%2322d3ee'/%3E%3C/svg%3E">
-<script src="../../assets/site.js?v=9faafaea"></script>
+<script src="../../assets/site.js?v=faed3c57"></script>
 </head>
 <body>
 <header class="topbar">
@@ -49,6 +49,7 @@
 <a href="../../ko/architecture.html">아키텍처</a>
 <a href="../../ko/references.html">참고 문헌</a></aside>
 <main class="content"><article class="content-inner"><h1 id="dijkstra">Dijkstra<a class="anchor" href="#dijkstra" title="Permanent link">¶</a></h1>
+<div class="code-links"><span class="cl-label">소스 코드</span><a href="https://github.com/robotics-study/navigation/blob/main/cpp/src/global_planning/dijkstra.cpp" target="_blank" rel="noopener">C++</a><a href="https://github.com/robotics-study/navigation/blob/main/cpp/include/navigation/global_planning/dijkstra.hpp" target="_blank" rel="noopener">C++ header</a><a href="https://github.com/robotics-study/navigation/blob/main/python/navigation/global_planning/dijkstra.py" target="_blank" rel="noopener">Python</a><a href="https://github.com/robotics-study/navigation/blob/main/python/demos/demo_dijkstra.py" target="_blank" rel="noopener">demo</a></div>
 <table class="spec-table">
 <thead>
 <tr>
@@ -134,7 +135,7 @@ Bellman–Ford 영역). ∎</p>
 <span class="arithmatex">\(O(E\log V)\)</span> → <span class="arithmatex">\(O((V+E)\log V)\)</span>.</p>
 <h2 id="_4">구현 노트<a class="anchor" href="#_4" title="Permanent link">¶</a></h2>
 <ul>
-<li>C++: <code>cpp/src/global_planning/dijkstra.cpp</code>, Python: <code>python/nav_study/global_planning/dijkstra.py</code></li>
+<li>C++: <code>cpp/src/global_planning/dijkstra.cpp</code>, Python: <code>python/navigation/global_planning/dijkstra.py</code></li>
 <li>Dijkstra 와 A<em> 는 </em><em>우선순위 키만 다르다</em>* (f = g vs f = g + w·h). 두 언어 모두 공통
   best-first 골격(<code>discrete_search</code> / <code>_bestfirst</code>)을 공유해 이 관계를 코드로 드러낸다.</li>
 <li>decrease-key 자료구조 대신 <strong>lazy queue</strong> 를 쓴다: 같은 노드가 큐에 중복 삽입될 수 있고,

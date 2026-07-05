@@ -1,13 +1,13 @@
-#include "nav_study/global_planning/bfs.hpp"
+#include "navigation/global_planning/bfs.hpp"
 
 #include <chrono>
 #include <deque>
 #include <unordered_map>
 #include <unordered_set>
 
-#include "nav_study/global_planning/discrete_search.hpp"
+#include "navigation/global_planning/discrete_search.hpp"
 
-namespace nav_study::global_planning {
+namespace navigation::global_planning {
 
 core::PlanResult<Cell> BfsPlanner::plan(DiscreteSpace<Cell>& space, const Cell& start,
                                         const Cell& goal, TraceRecorder* recorder) {
@@ -51,4 +51,4 @@ core::PlanResult<Cell> BfsPlanner::plan(DiscreteSpace<Cell>& space, const Cell& 
   return result;
 }
 
-}  // namespace nav_study::global_planning
+}  // namespace navigation::global_planning

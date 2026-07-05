@@ -117,7 +117,7 @@ $$
 
 ## 구현 노트
 
-- C++: `cpp/src/global_planning/fast_rrt.cpp`, Python: `python/nav_study/global_planning/fast_rrt.py`
+- C++: `cpp/src/global_planning/fast_rrt.cpp`, Python: `python/navigation/global_planning/fast_rrt.py`
 - choose-parent / rewire 는 [RRT*](rrt_star.md) 와 공통 유틸을 공유한다 — 논문의 기여분
   (Fast-Sampling / Random Steering / shortcut)만 이 클래스에 있다.
 - Fast-Sampling 기각 검사 때문에 트리가 조밀해질수록 반복당 비용이 커진다 — 같은 8,000 반복에서

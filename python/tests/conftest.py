@@ -7,8 +7,8 @@ from pathlib import Path
 import numpy as np
 import yaml
 
-from nav_study.core.params import ParamSet
-from nav_study.maps.occupancy_grid import OccupancyGrid2D
+from navigation.core.params import ParamSet
+from navigation.maps.occupancy_grid import OccupancyGrid2D
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 CONFIG_DIR = REPO_ROOT / "configs" / "global_planning"

@@ -6,13 +6,13 @@
 
 #include <gtest/gtest.h>
 
-#include "nav_study/core/trace.hpp"
-#include "nav_study/global_planning/fast_rrt.hpp"
-#include "nav_study/global_planning/rrt.hpp"
-#include "nav_study/global_planning/rrt_star.hpp"
+#include "navigation/core/trace.hpp"
+#include "navigation/global_planning/fast_rrt.hpp"
+#include "navigation/global_planning/rrt.hpp"
+#include "navigation/global_planning/rrt_star.hpp"
 #include "test_util.hpp"
 
-using namespace nav_study;
+using namespace navigation;
 using core::Point;
 
 namespace {

@@ -107,7 +107,7 @@ to a first solution and its variance without weakening that guarantee (Wu et al.
 
 ## Implementation Notes
 
-- C++: `cpp/src/global_planning/fast_rrt.cpp`, Python: `python/nav_study/global_planning/fast_rrt.py`
+- C++: `cpp/src/global_planning/fast_rrt.cpp`, Python: `python/navigation/global_planning/fast_rrt.py`
 - Choose-parent / rewire share common utilities with [RRT*](rrt_star.md) — only the paper's contributions (Fast-Sampling / Random Steering / shortcut) live in this class.
 - The Fast-Sampling rejection check makes each iteration more expensive as the tree densifies — which is why, for the same 8,000 iterations, the tree is larger than RRT*'s (~7,970 vs ~5,915 nodes) and the run is slower.
 

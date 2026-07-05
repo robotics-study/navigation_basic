@@ -1,10 +1,10 @@
-#include "nav_study/maps/pgm.hpp"
+#include "navigation/maps/pgm.hpp"
 
 #include <cctype>
 #include <fstream>
 #include <stdexcept>
 
-namespace nav_study::maps {
+namespace navigation::maps {
 namespace {
 
 // Reads the next whitespace-separated token, skipping '#' comment lines. PGM
@@ -75,4 +75,4 @@ PgmImage load_pgm(const std::string& path) {
   return img;
 }
 
-}  // namespace nav_study::maps
+}  // namespace navigation::maps

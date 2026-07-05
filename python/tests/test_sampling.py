@@ -8,11 +8,11 @@ import pytest
 import yaml
 from conftest import CONFIG_DIR, config, grid_from, open_grid
 
-from nav_study.core.params import ParamSet
-from nav_study.global_planning.fast_rrt import FastRRT
-from nav_study.global_planning.rrt import RRT
-from nav_study.global_planning.rrt_star import RRTStar
-from nav_study.maps.occupancy_grid import OccupancyGrid2D
+from navigation.core.params import ParamSet
+from navigation.global_planning.fast_rrt import FastRRT
+from navigation.global_planning.rrt import RRT
+from navigation.global_planning.rrt_star import RRTStar
+from navigation.maps.occupancy_grid import OccupancyGrid2D
 
 _PLANNERS = [("rrt", RRT), ("rrt_star", RRTStar), ("fast_rrt", FastRRT)]
 

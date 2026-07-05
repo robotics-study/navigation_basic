@@ -1,4 +1,4 @@
-# nav_study
+# navigation
 
 로봇 navigation 알고리즘 구현체 + demo 모음. C++ / Python 독립 이중 구현.
 
@@ -38,7 +38,7 @@
 │   └── multi_agent/
 ├── cpp/
 │   ├── CMakeLists.txt
-│   ├── include/nav_study/
+│   ├── include/navigation/
 │   │   ├── core/                # planner.hpp, params.hpp, trace.hpp, types.hpp, capabilities.hpp
 │   │   ├── maps/                # occupancy_grid.hpp, graph_map.hpp, topology_map.hpp, continuous_map.hpp, loader.hpp
 │   │   ├── global_planning/
@@ -49,15 +49,15 @@
 │   └── tests/                   # GoogleTest
 ├── python/
 │   ├── pyproject.toml
-│   ├── nav_study/
+│   ├── navigation/
 │   │   ├── core/                # planner.py, params.py, trace.py, types.py, capabilities.py
-│   │   ├── maps/                # cpp include/nav_study/maps/ 와 1:1 미러
+│   │   ├── maps/                # cpp include/navigation/maps/ 와 1:1 미러
 │   │   ├── global_planning/
 │   │   ├── local_planning/
 │   │   └── multi_agent/
 │   ├── demos/
 │   └── tests/                   # pytest
-└── tools/                       # Python. nav_study 패키지에 의존 (설치 후 사용)
+└── tools/                       # Python. navigation 패키지에 의존 (설치 후 사용)
     ├── viz/                     # trace 재생기: replay.py (matplotlib step-by-step / 애니메이션 저장)
     └── bench/                   # matrix runner: (map × algorithm × params) 조합 실행 + 리포트
 ```
@@ -151,7 +151,7 @@ python tools/bench/run_matrix.py --maps maps/ --algos global_planning --out out/
 
 ## 코딩 컨벤션
 
-- **C++**: C++20. 헤더는 `include/nav_study/`, 구현은 `src/` 동일 경로. 네임스페이스 `nav_study::<module>`. 소유권은 `unique_ptr`/값 타입 우선, raw new/delete 금지. 예외는 로드/검증 단계에서만, planning hot path 에서는 사용하지 않는다.
+- **C++**: C++20. 헤더는 `include/navigation/`, 구현은 `src/` 동일 경로. 네임스페이스 `navigation::<module>`. 소유권은 `unique_ptr`/값 타입 우선, raw new/delete 금지. 예외는 로드/검증 단계에서만, planning hot path 에서는 사용하지 않는다.
 - **Python**: 전 함수 type hint 필수. `numpy` 기반 좌표 연산. 추상 클래스는 `abc.ABC`. `any`/무타입 dict 전달 금지 — 파라미터는 `ParamSet`, 상태는 `types.py` 의 dataclass 를 쓴다.
 - 좌표계: world 좌표 (x, y[, theta]) 는 float, grid 인덱스는 (row, col) int — 변환은 맵 클래스만 담당한다. 이 구분을 흐리는 코드 금지.
 - 주석은 WHY 만. 알고리즘 수식/휴리스틱 선택 근거는 논문 인용(저자, 연도)으로 남긴다.

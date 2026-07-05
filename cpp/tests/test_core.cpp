@@ -6,15 +6,15 @@
 
 #include <gtest/gtest.h>
 
-#include "nav_study/core/params.hpp"
-#include "nav_study/core/trace.hpp"
-#include "nav_study/core/yaml.hpp"
-#include "nav_study/maps/loader.hpp"
-#include "nav_study/maps/occupancy_grid.hpp"
-#include "nav_study/maps/pgm.hpp"
+#include "navigation/core/params.hpp"
+#include "navigation/core/trace.hpp"
+#include "navigation/core/yaml.hpp"
+#include "navigation/maps/loader.hpp"
+#include "navigation/maps/occupancy_grid.hpp"
+#include "navigation/maps/pgm.hpp"
 #include "test_util.hpp"
 
-using namespace nav_study;
+using namespace navigation;
 
 // --- YAML parser on the real repo files -------------------------------------
 

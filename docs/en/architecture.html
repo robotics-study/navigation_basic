@@ -7,9 +7,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/site.css?v=9faafaea">
+<link rel="stylesheet" href="../assets/site.css?v=faed3c57">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Crect width='24' height='24' rx='6' fill='%230b1020'/%3E%3Cpath d='M5 18V11h7V6h7' stroke='%23818cf8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='5' cy='18' r='2.4' fill='%23818cf8'/%3E%3Ccircle cx='19' cy='6' r='2.4' fill='%2322d3ee'/%3E%3C/svg%3E">
-<script src="../assets/site.js?v=9faafaea"></script>
+<script src="../assets/site.js?v=faed3c57"></script>
 </head>
 <body>
 <header class="topbar">
@@ -57,8 +57,8 @@
 │   └── map_formats.md           #   map file format definitions (grid / graph / topology / continuous)
 ├── maps/                        # shared benchmark maps + start/goal scenarios
 ├── configs/                     # per-algorithm parameter yaml (shared across languages)
-├── cpp/                         # C++20 implementation (include/nav_study + src + demos + GoogleTest)
-├── python/                      # Python implementation (nav_study package + demos + pytest)
+├── cpp/                         # C++20 implementation (include/navigation + src + demos + GoogleTest)
+├── python/                      # Python implementation (navigation package + demos + pytest)
 └── tools/                       # viz (trace replayer) + bench (matrix runner) — Python
 </code></pre>
 <p>C++ and Python are independent trees that implement <strong>the same design, each in its own idiomatic style</strong>. Class/method concept names, parameter names, and trace events are identical, so reading one side makes the other readable too. Everything shared across languages (trace schema, param yaml, map data, scenarios) must live under <code>spec/</code>, <code>configs/</code>, and <code>maps/</code> and be loaded from both sides.</p>

@@ -7,9 +7,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../../assets/site.css?v=9faafaea">
+<link rel="stylesheet" href="../../assets/site.css?v=faed3c57">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Crect width='24' height='24' rx='6' fill='%230b1020'/%3E%3Cpath d='M5 18V11h7V6h7' stroke='%23818cf8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='5' cy='18' r='2.4' fill='%23818cf8'/%3E%3Ccircle cx='19' cy='6' r='2.4' fill='%2322d3ee'/%3E%3C/svg%3E">
-<script src="../../assets/site.js?v=9faafaea"></script>
+<script src="../../assets/site.js?v=faed3c57"></script>
 </head>
 <body>
 <header class="topbar">
@@ -49,6 +49,7 @@
 <a href="../../ko/architecture.html">아키텍처</a>
 <a href="../../ko/references.html">참고 문헌</a></aside>
 <main class="content"><article class="content-inner"><h1 id="bfs-breadth-first-search">BFS — Breadth-First Search<a class="anchor" href="#bfs-breadth-first-search" title="Permanent link">¶</a></h1>
+<div class="code-links"><span class="cl-label">소스 코드</span><a href="https://github.com/robotics-study/navigation/blob/main/cpp/src/global_planning/bfs.cpp" target="_blank" rel="noopener">C++</a><a href="https://github.com/robotics-study/navigation/blob/main/cpp/include/navigation/global_planning/bfs.hpp" target="_blank" rel="noopener">C++ header</a><a href="https://github.com/robotics-study/navigation/blob/main/python/navigation/global_planning/bfs.py" target="_blank" rel="noopener">Python</a><a href="https://github.com/robotics-study/navigation/blob/main/python/demos/demo_bfs.py" target="_blank" rel="noopener">demo</a></div>
 <table class="spec-table">
 <thead>
 <tr>
@@ -132,7 +133,7 @@ path cost 가 같게 나오는 것은 이 맵 구조에서 우연히 일치한 �
 <span class="arithmatex">\(\sum_v\deg(v)=2E\)</span> — 총 <span class="arithmatex">\(O(V+E)\)</span>.</p>
 <h2 id="_5">구현 노트<a class="anchor" href="#_5" title="Permanent link">¶</a></h2>
 <ul>
-<li>C++: <code>cpp/src/global_planning/bfs.cpp</code>, Python: <code>python/nav_study/global_planning/bfs.py</code></li>
+<li>C++: <code>cpp/src/global_planning/bfs.cpp</code>, Python: <code>python/navigation/global_planning/bfs.py</code></li>
 <li>두 구현 모두 <code>DiscreteSpace</code> capability(<code>neighbors</code>, <code>heuristic</code>)에만 의존한다. 구체 맵 타입을 알지 못한다.</li>
 <li>BFS 는 튜닝 파라미터가 없다 (<code>configs/global_planning/bfs.yaml</code> 은 빈 선언). 결정적이므로
   C++/Python 결과가 완전히 일치한다.</li>

@@ -115,7 +115,7 @@ $f(G_2)=g(G_2)\le g(n)+w\,h(n)\le w\bigl(g(n)+h^*(n)\bigr)=w\,C^*$
 
 ## 구현 노트
 
-- C++: `cpp/src/global_planning/astar.cpp`, Python: `python/nav_study/global_planning/astar.py`
+- C++: `cpp/src/global_planning/astar.cpp`, Python: `python/navigation/global_planning/astar.py`
 - Dijkstra 와 best-first 골격을 공유한다 (우선순위 키만 오버라이드). tie-break 까지 두 언어가
   동일한 연산 순서를 쓰므로 결과가 완전히 일치한다.
 

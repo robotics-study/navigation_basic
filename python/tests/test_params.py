@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 from conftest import config, write_config
 
-from nav_study.core.params import ParamError, ParamSet
+from navigation.core.params import ParamError, ParamSet
 
 
 def test_real_configs_load() -> None:

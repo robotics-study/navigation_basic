@@ -1,11 +1,11 @@
-#include "nav_study/maps/occupancy_grid.hpp"
+#include "navigation/maps/occupancy_grid.hpp"
 
 #include <algorithm>
 #include <cmath>
 #include <limits>
 #include <stdexcept>
 
-namespace nav_study::maps {
+namespace navigation::maps {
 
 OccupancyGrid2D::OccupancyGrid2D(int rows, int cols, double resolution, double origin_x,
                                  double origin_y, std::vector<bool> free_cells, int connectivity,
@@ -176,4 +176,4 @@ Point OccupancyGrid2D::steer(const Point& a, const Point& b, double eta) const {
   return {a.x + s * (b.x - a.x), a.y + s * (b.y - a.y)};
 }
 
-}  // namespace nav_study::maps
+}  // namespace navigation::maps

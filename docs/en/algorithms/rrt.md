@@ -95,7 +95,7 @@ connection is never revised. For optimality, use [RRT*](rrt_star.md).
 
 ## Implementation Notes
 
-- C++: `cpp/src/global_planning/rrt.cpp`, Python: `python/nav_study/global_planning/rrt.py`
+- C++: `cpp/src/global_planning/rrt.cpp`, Python: `python/navigation/global_planning/rrt.py`
 - Depends only on the `SamplingSpace` capability (`sample` / `is_state_valid` / `is_motion_valid` / `distance` / `steer`). On an occupancy grid, it searches **continuous world coordinates**, not cell centers.
 - Motion validity is checked by interpolating the segment at resolution intervals (the map adapter's responsibility).
 - Even with the same seed, C++ and Python have different random streams and may produce different paths — parity is verified as "statistical equivalence + contract identity", not "value identity".

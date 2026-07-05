@@ -7,9 +7,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../../assets/site.css?v=9faafaea">
+<link rel="stylesheet" href="../../assets/site.css?v=faed3c57">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Crect width='24' height='24' rx='6' fill='%230b1020'/%3E%3Cpath d='M5 18V11h7V6h7' stroke='%23818cf8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='5' cy='18' r='2.4' fill='%23818cf8'/%3E%3Ccircle cx='19' cy='6' r='2.4' fill='%2322d3ee'/%3E%3C/svg%3E">
-<script src="../../assets/site.js?v=9faafaea"></script>
+<script src="../../assets/site.js?v=faed3c57"></script>
 </head>
 <body>
 <header class="topbar">
@@ -49,6 +49,7 @@
 <a href="../../ko/architecture.html">아키텍처</a>
 <a href="../../ko/references.html">참고 문헌</a></aside>
 <main class="content"><article class="content-inner"><h1 id="rrt-rrt-star">RRT* (RRT-star)<a class="anchor" href="#rrt-rrt-star" title="Permanent link">¶</a></h1>
+<div class="code-links"><span class="cl-label">소스 코드</span><a href="https://github.com/robotics-study/navigation/blob/main/cpp/src/global_planning/rrt_star.cpp" target="_blank" rel="noopener">C++</a><a href="https://github.com/robotics-study/navigation/blob/main/cpp/include/navigation/global_planning/rrt_star.hpp" target="_blank" rel="noopener">C++ header</a><a href="https://github.com/robotics-study/navigation/blob/main/python/navigation/global_planning/rrt_star.py" target="_blank" rel="noopener">Python</a><a href="https://github.com/robotics-study/navigation/blob/main/python/demos/demo_rrt_star.py" target="_blank" rel="noopener">demo</a></div>
 <table class="spec-table">
 <thead>
 <tr>
@@ -212,7 +213,7 @@ P\!\left[\lim_{n\to\infty}Y_n^{\text{RRT}^*}=c^*\right]=1.
 </div>
 <h2 id="_6">구현 노트<a class="anchor" href="#_6" title="Permanent link">¶</a></h2>
 <ul>
-<li>C++: <code>cpp/src/global_planning/rrt_star.cpp</code>, Python: <code>python/nav_study/global_planning/rrt_star.py</code></li>
+<li>C++: <code>cpp/src/global_planning/rrt_star.cpp</code>, Python: <code>python/navigation/global_planning/rrt_star.py</code></li>
 <li>choose-parent / rewire 는 <a href="fast_rrt.html">Fast-RRT</a> 와 공유하는 공통 유틸
   (<code>sampling_common</code> / <code>_sampling</code>)로 분리되어 있다.</li>
 <li>rewire 발생 시 <code>rewire</code> trace 이벤트를 방출한다 — 시각화에서 트리 간선이 도중에 갈아타는

@@ -1,9 +1,9 @@
-#include "nav_study/global_planning/sampling_common.hpp"
+#include "navigation/global_planning/sampling_common.hpp"
 
 #include <algorithm>
 #include <limits>
 
-namespace nav_study::global_planning {
+namespace navigation::global_planning {
 
 int Tree::add(const Point& p, int parent_idx, double cumulative_cost) {
   int idx = static_cast<int>(nodes.size());
@@ -116,4 +116,4 @@ void emit_finished_sampling(TraceRecorder* recorder, bool success, double cost, 
   recorder->planning_finished(success, metrics);
 }
 
-}  // namespace nav_study::global_planning
+}  // namespace navigation::global_planning

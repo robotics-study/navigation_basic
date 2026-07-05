@@ -1,11 +1,11 @@
-#include "nav_study/core/yaml.hpp"
+#include "navigation/core/yaml.hpp"
 
 #include <cctype>
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
 
-namespace nav_study::core {
+namespace navigation::core {
 namespace {
 
 std::string ltrim(const std::string& s) {
@@ -335,4 +335,4 @@ YamlNode parse_yaml_file(const std::string& path) {
   return parse_yaml_string(buf.str());
 }
 
-}  // namespace nav_study::core
+}  // namespace navigation::core

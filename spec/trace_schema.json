@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "nav_study/trace-event.schema.json",
-  "title": "nav_study trace event",
+  "$id": "navigation/trace-event.schema.json",
+  "title": "navigation trace event",
   "description": "step-by-step 시각화의 언어 공용 계약. trace 파일은 JSON Lines(.jsonl)이며 한 줄이 이벤트 하나다. C++/Python 구현 모두 이 스키마를 따르는 이벤트만 방출한다.",
   "type": "object",
   "required": ["seq", "event"],

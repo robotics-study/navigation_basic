@@ -89,7 +89,7 @@ $O(E\log V)$ → $O((V+E)\log V)$.
 
 ## 구현 노트
 
-- C++: `cpp/src/global_planning/dijkstra.cpp`, Python: `python/nav_study/global_planning/dijkstra.py`
+- C++: `cpp/src/global_planning/dijkstra.cpp`, Python: `python/navigation/global_planning/dijkstra.py`
 - Dijkstra 와 A* 는 **우선순위 키만 다르다** (f = g vs f = g + w·h). 두 언어 모두 공통
   best-first 골격(`discrete_search` / `_bestfirst`)을 공유해 이 관계를 코드로 드러낸다.
 - decrease-key 자료구조 대신 **lazy queue** 를 쓴다: 같은 노드가 큐에 중복 삽입될 수 있고,

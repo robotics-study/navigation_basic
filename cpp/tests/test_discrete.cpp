@@ -3,12 +3,12 @@
 
 #include <gtest/gtest.h>
 
-#include "nav_study/global_planning/astar.hpp"
-#include "nav_study/global_planning/bfs.hpp"
-#include "nav_study/global_planning/dijkstra.hpp"
+#include "navigation/global_planning/astar.hpp"
+#include "navigation/global_planning/bfs.hpp"
+#include "navigation/global_planning/dijkstra.hpp"
 #include "test_util.hpp"
 
-using namespace nav_study;
+using namespace navigation;
 using core::Cell;
 
 namespace {

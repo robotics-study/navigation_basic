@@ -1,8 +1,8 @@
-#include "nav_study/global_planning/astar.hpp"
+#include "navigation/global_planning/astar.hpp"
 
-#include "nav_study/global_planning/discrete_search.hpp"
+#include "navigation/global_planning/discrete_search.hpp"
 
-namespace nav_study::global_planning {
+namespace navigation::global_planning {
 
 core::PlanResult<Cell> AstarPlanner::plan(DiscreteSpace<Cell>& space, const Cell& start,
                                           const Cell& goal, TraceRecorder* recorder) {
@@ -12,4 +12,4 @@ core::PlanResult<Cell> AstarPlanner::plan(DiscreteSpace<Cell>& space, const Cell
                            [&](const Cell& c) { return w * space.heuristic(c, goal); });
 }
 
-}  // namespace nav_study::global_planning
+}  // namespace navigation::global_planning

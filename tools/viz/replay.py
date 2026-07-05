@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Replay a trace jsonl over its map (matplotlib).
 
-Depends only on the trace/map spec + nav_study core/maps — never on algorithm
+Depends only on the trace/map spec + navigation core/maps — never on algorithm
 modules. All planner state needed for visualization arrives via trace events.
 
 Output modes (combinable; all but interactive are headless via the Agg backend):
@@ -27,7 +27,7 @@ if TYPE_CHECKING:
     from matplotlib.colors import LinearSegmentedColormap
     from matplotlib.lines import Line2D
 
-    from nav_study.maps.occupancy_grid import OccupancyGrid2D
+    from navigation.maps.occupancy_grid import OccupancyGrid2D
 
 Point = tuple[float, float]
 
@@ -409,7 +409,7 @@ def _show_interactive(scene: Scene) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="replay a nav_study trace over its map")
+    parser = argparse.ArgumentParser(description="replay a navigation trace over its map")
     parser.add_argument("trace", help="trace jsonl path")
     parser.add_argument("--map", default=None, help="override map yaml path")
     parser.add_argument("--save", default=None, help="render final frame to a PNG (headless)")
@@ -436,9 +436,9 @@ def main() -> None:
     if headless:
         matplotlib.use("Agg")
 
-    # Import nav_study lazily so `--help` works without the package installed.
-    from nav_study.maps.loader import load_map
-    from nav_study.maps.occupancy_grid import OccupancyGrid2D
+    # Import navigation lazily so `--help` works without the package installed.
+    from navigation.maps.loader import load_map
+    from navigation.maps.occupancy_grid import OccupancyGrid2D
 
     events = _read_events(args.trace)
     grid = load_map(_resolve_map(args.trace, events, args.map))

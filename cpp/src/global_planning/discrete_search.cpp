@@ -1,9 +1,9 @@
-#include "nav_study/global_planning/discrete_search.hpp"
+#include "navigation/global_planning/discrete_search.hpp"
 
 #include <algorithm>
 #include <map>
 
-namespace nav_study::global_planning {
+namespace navigation::global_planning {
 
 std::vector<Cell> reconstruct_path(const std::unordered_map<Cell, Cell>& came_from,
                                    const Cell& start, const Cell& goal) {
@@ -42,4 +42,4 @@ void emit_finished_discrete(TraceRecorder* recorder, bool success, double cost,
   recorder->planning_finished(success, metrics);
 }
 
-}  // namespace nav_study::global_planning
+}  // namespace navigation::global_planning

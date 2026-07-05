@@ -119,7 +119,7 @@ $$
 
 ## 구현 노트
 
-- C++: `cpp/src/global_planning/rrt_star.cpp`, Python: `python/nav_study/global_planning/rrt_star.py`
+- C++: `cpp/src/global_planning/rrt_star.cpp`, Python: `python/navigation/global_planning/rrt_star.py`
 - choose-parent / rewire 는 [Fast-RRT](fast_rrt.md) 와 공유하는 공통 유틸
   (`sampling_common` / `_sampling`)로 분리되어 있다.
 - rewire 발생 시 `rewire` trace 이벤트를 방출한다 — 시각화에서 트리 간선이 도중에 갈아타는

@@ -6,9 +6,9 @@
 #include <string>
 #include <vector>
 
-#include "nav_study/maps/occupancy_grid.hpp"
+#include "navigation/maps/occupancy_grid.hpp"
 
-namespace nav_study::test {
+namespace navigation::test {
 
 // Builds a grid from an ASCII layout: '.' = free, '#' = occupied. rows[0] is the
 // top image row. resolution 0.5, origin (0,0) — enough for geometry/search tests.
@@ -27,7 +27,7 @@ inline maps::OccupancyGrid2D make_grid(const std::vector<std::string>& rows, int
 // OS temp dir). Used to exercise loaders/validators against real file contents.
 inline std::string write_temp(const std::string& name, const std::string& content) {
   static std::atomic<int> counter{0};
-  std::filesystem::path dir = std::filesystem::temp_directory_path() / "nav_study_tests";
+  std::filesystem::path dir = std::filesystem::temp_directory_path() / "navigation_tests";
   std::filesystem::create_directories(dir);
   std::filesystem::path p = dir / (std::to_string(counter++) + "_" + name);
   std::ofstream(p) << content;
@@ -35,7 +35,7 @@ inline std::string write_temp(const std::string& name, const std::string& conten
 }
 
 inline std::string repo_path(const std::string& rel) {
-  return std::string(NAV_STUDY_REPO_DIR) + "/" + rel;
+  return std::string(NAVIGATION_REPO_DIR) + "/" + rel;
 }
 
-}  // namespace nav_study::test
+}  // namespace navigation::test

@@ -1,9 +1,9 @@
-#include "nav_study/core/trace.hpp"
+#include "navigation/core/trace.hpp"
 
 #include <cmath>
 #include <cstdio>
 
-namespace nav_study::core {
+namespace navigation::core {
 namespace {
 
 // JSON numbers: emit integral values without a decimal point (so cells read as
@@ -138,4 +138,4 @@ void TraceRecorder::ev_path(const std::vector<std::vector<double>>& path) {
   end_event();
 }
 
-}  // namespace nav_study::core
+}  // namespace navigation::core

@@ -1,13 +1,13 @@
-#include "nav_study/maps/loader.hpp"
+#include "navigation/maps/loader.hpp"
 
 #include <filesystem>
 #include <stdexcept>
 
-#include "nav_study/core/yaml.hpp"
-#include "nav_study/maps/occupancy_grid.hpp"
-#include "nav_study/maps/pgm.hpp"
+#include "navigation/core/yaml.hpp"
+#include "navigation/maps/occupancy_grid.hpp"
+#include "navigation/maps/pgm.hpp"
 
-namespace nav_study::maps {
+namespace navigation::maps {
 namespace fs = std::filesystem;
 using core::YamlNode;
 
@@ -59,4 +59,4 @@ Scenario load_scenario(const std::string& path) {
   return sc;
 }
 
-}  // namespace nav_study::maps
+}  // namespace navigation::maps

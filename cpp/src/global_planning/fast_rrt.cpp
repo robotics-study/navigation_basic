@@ -1,4 +1,4 @@
-#include "nav_study/global_planning/fast_rrt.hpp"
+#include "navigation/global_planning/fast_rrt.hpp"
 
 #include <chrono>
 #include <cmath>
@@ -6,9 +6,9 @@
 #include <numbers>
 #include <random>
 
-#include "nav_study/global_planning/sampling_common.hpp"
+#include "navigation/global_planning/sampling_common.hpp"
 
-namespace nav_study::global_planning {
+namespace navigation::global_planning {
 namespace {
 
 // True if some tree node lies within `radius` of q (Fast-Sampling reject test).
@@ -132,4 +132,4 @@ core::PlanResult<Point> FastRrtPlanner::plan(SamplingSpace<Point>& space, const 
   return result;
 }
 
-}  // namespace nav_study::global_planning
+}  // namespace navigation::global_planning

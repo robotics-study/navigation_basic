@@ -107,7 +107,7 @@ $w\ge1$ and admissibility). ∎
 
 ## Implementation Notes
 
-- C++: `cpp/src/global_planning/astar.cpp`, Python: `python/nav_study/global_planning/astar.py`
+- C++: `cpp/src/global_planning/astar.cpp`, Python: `python/navigation/global_planning/astar.py`
 - Shares the best-first skeleton with Dijkstra (only the priority key is overridden). Both languages use the same operation order down to tie-breaking, so their results match exactly.
 
 ## Emitted Trace Events

@@ -1,10 +1,10 @@
-#include "nav_study/core/params.hpp"
+#include "navigation/core/params.hpp"
 
 #include <stdexcept>
 
-#include "nav_study/core/yaml.hpp"
+#include "navigation/core/yaml.hpp"
 
-namespace nav_study::core {
+namespace navigation::core {
 namespace {
 
 [[noreturn]] void fail(const std::string& msg) { throw std::runtime_error("param error: " + msg); }
@@ -112,4 +112,4 @@ std::string ParamSet::get_string(const std::string& name) const {
 
 bool ParamSet::has(const std::string& name) const { return values_.count(name) > 0; }
 
-}  // namespace nav_study::core
+}  // namespace navigation::core

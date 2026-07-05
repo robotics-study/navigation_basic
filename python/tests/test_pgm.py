@@ -8,7 +8,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from nav_study.maps.pgm import read_pgm
+from navigation.maps.pgm import read_pgm
 
 
 def test_p2_ascii_with_comment(tmp_path: Path) -> None:

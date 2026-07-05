@@ -1,11 +1,11 @@
-#include "nav_study/global_planning/rrt.hpp"
+#include "navigation/global_planning/rrt.hpp"
 
 #include <chrono>
 #include <random>
 
-#include "nav_study/global_planning/sampling_common.hpp"
+#include "navigation/global_planning/sampling_common.hpp"
 
-namespace nav_study::global_planning {
+namespace navigation::global_planning {
 
 core::PlanResult<Point> RrtPlanner::plan(SamplingSpace<Point>& space, const Point& start,
                                          const Point& goal, TraceRecorder* recorder) {
@@ -67,4 +67,4 @@ core::PlanResult<Point> RrtPlanner::plan(SamplingSpace<Point>& space, const Poin
   return result;
 }
 
-}  // namespace nav_study::global_planning
+}  // namespace navigation::global_planning

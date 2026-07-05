@@ -23,8 +23,8 @@ nav_order: 2
 │   └── map_formats.md           #   map file format definitions (grid / graph / topology / continuous)
 ├── maps/                        # shared benchmark maps + start/goal scenarios
 ├── configs/                     # per-algorithm parameter yaml (shared across languages)
-├── cpp/                         # C++20 implementation (include/nav_study + src + demos + GoogleTest)
-├── python/                      # Python implementation (nav_study package + demos + pytest)
+├── cpp/                         # C++20 implementation (include/navigation + src + demos + GoogleTest)
+├── python/                      # Python implementation (navigation package + demos + pytest)
 └── tools/                       # viz (trace replayer) + bench (matrix runner) — Python
 ```
 

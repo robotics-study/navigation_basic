@@ -114,7 +114,7 @@ connectivity and destroys optimality.
 
 ## Implementation Notes
 
-- C++: `cpp/src/global_planning/rrt_star.cpp`, Python: `python/nav_study/global_planning/rrt_star.py`
+- C++: `cpp/src/global_planning/rrt_star.cpp`, Python: `python/navigation/global_planning/rrt_star.py`
 - Choose-parent / rewire are factored out into common utilities (`sampling_common` / `_sampling`) shared with [Fast-RRT](fast_rrt.md).
 - A `rewire` trace event is emitted whenever a rewire occurs — in the visualization, this is when a tree edge switches over mid-run.
 
