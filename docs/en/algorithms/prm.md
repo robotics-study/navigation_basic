@@ -43,6 +43,21 @@ It has two phases:
 
 ## How It Works
 
+`maze01` — samples scatter across free space, within-radius pairs are wired into a roadmap, and
+Dijkstra then extracts the shortest path over it.
+
+![PRM on maze01](../../assets/prm/maze01.gif)
+
+Intermediate search progress (left → right: early samples/edges / roadmap forming / final path):
+
+| | | |
+|:---:|:---:|:---:|
+| ![early](../../assets/prm/maze01_snap_02.png) | ![mid](../../assets/prm/maze01_snap_05.png) | ![final](../../assets/prm/maze01_final.png) |
+
+Final result on `open01` — nearly a straight line:
+
+![PRM on open01](../../assets/prm/open01_final.png)
+
 ```
 PRM(start, goal):
     R ← roadmap()
@@ -61,6 +76,25 @@ The implementation adds nodes one at a time and only attempts to connect each to
 it — so each undirected edge is created exactly once. Start and goal are part of the roadmap, so they
 connect under the same radius rule with no separate connection step.
 
+Measurements (Python, seed = 1, trace on):
+
+| map | path cost | roadmap nodes | expanded (Dijkstra pops) |
+|---|---|---|---|
+| maze01 | 13.595 | 1,502 | 1,091 |
+| open01 | 12.053 | — | — |
+
+The C++ implementation mirrors the same scenario and produces matching results within the variance of
+the two languages' random streams.
+
+Reproduce:
+
+```bash
+python python/demos/demo_prm.py \
+  --map maps/grid/maze01.yaml --scenario maps/scenarios/maze01_s1.yaml \
+  --params configs/global_planning/prm.yaml --trace out/prm.jsonl
+python tools/viz/replay.py out/prm.jsonl --gif out/prm.gif
+```
+
 ## Properties
 
 - **Completeness**: probabilistically complete — if a solution exists it is found with probability 1
@@ -71,14 +105,6 @@ connect under the same radius rule with no separate connection step.
   with its radius policy.
 - **Cost**: the naive implementation examines O(n²) candidate edges by all-pairs distance checks. In a
   multi-query setting the roadmap is reused, so per-query cost amortizes to a Dijkstra run.
-
-## Parameters
-
-| Name | Type | Default | Range | Description |
-|---|---|---|---|---|
-| `num_samples` | int | 1500 | [1, 200000] | Number of collision-free samples placed in the roadmap (start/goal excluded) |
-| `connection_radius` | float | 2.0 | [0.01, 100.0] | Maximum distance to connect two nodes with an edge (m) |
-| `seed` | int | 1 | [0, 2^31−1] | Random seed (reproducibility) |
 
 ## Roadmap Construction and Query
 
@@ -100,14 +126,26 @@ $$
 Because $r$ is fixed, $Y_n$ improves as the graph densifies but is not guaranteed to converge to the
 optimum $c^*$ as $n\to\infty$ — the decisive difference from the asymptotically optimal variants.
 
-## Implementation Notes
+**Probabilistic completeness (derivation).** Cover a clearance-$\delta$ path with balls
+$B_1,\dots,B_m$ of radius $\delta/2$ and take $r=\texttt{connection\_radius}\ge\delta$. The probability
+that a given ball receives at least one of the $n$ samples is $1-(1-p)^n$ with
+$p=\mu(B)/\mu(X_{\text{free}})$. Samples in adjacent balls are $\le\delta\le r$ apart, so they are
+joined by an edge; hence if every one of the $m$ balls is hit, the roadmap contains an
+$s\rightsquigarrow g$ path. That happens with probability
 
-- C++: `cpp/src/global_planning/prm.cpp`, Python: `python/navigation/global_planning/prm.py`
-- The roadmap data structure, connection, and Dijkstra query live in common utilities
-  (`roadmap_common` / `_roadmap`) shared with [PRM\*](prm_star.md). PRM only layers a **fixed-radius**
-  policy on top.
-- Near-neighbour queries use `near_points` from `sampling_common` / `_sampling`, shared with the
-  batch planners.
+$$
+P[\text{connected}]\;\ge\;1-m(1-p)^n\;\xrightarrow{\,n\to\infty\,}\;1,
+$$
+
+so PRM is probabilistically complete (quality is a separate matter — see above). ∎
+
+## Parameters
+
+| Name | Type | Default | Range | Description |
+|---|---|---|---|---|
+| `num_samples` | int | 1500 | [1, 200000] | Number of collision-free samples placed in the roadmap (start/goal excluded) |
+| `connection_radius` | float | 2.0 | [0.01, 100.0] | Maximum distance to connect two nodes with an edge (m) |
+| `seed` | int | 1 | [0, 2^31−1] | Random seed (reproducibility) |
 
 ## Emitted Trace Events
 
@@ -115,42 +153,6 @@ optimum $c^*$ as $n\to\infty$ — the decisive difference from the asymptoticall
 
 `sample_drawn` marks a learning-phase sample, `edge_added` a roadmap edge, and `node_expanded` a node
 popped by Dijkstra during the query.
-
-## Demo
-
-`maze01` — samples scatter across free space, within-radius pairs are wired into a roadmap, and
-Dijkstra then extracts the shortest path over it.
-
-![PRM on maze01](../../assets/prm/maze01.gif)
-
-Intermediate search progress (left → right: early samples/edges / roadmap forming / final path):
-
-| | | |
-|:---:|:---:|:---:|
-| ![early](../../assets/prm/maze01_snap_02.png) | ![mid](../../assets/prm/maze01_snap_05.png) | ![final](../../assets/prm/maze01_final.png) |
-
-Final result on `open01` — nearly a straight line:
-
-![PRM on open01](../../assets/prm/open01_final.png)
-
-Measurements (Python, seed = 1, trace on):
-
-| map | path cost | roadmap nodes | expanded (Dijkstra pops) |
-|---|---|---|---|
-| maze01 | 13.595 | 1,502 | 1,091 |
-| open01 | 12.053 | — | — |
-
-The C++ implementation mirrors the same scenario and produces matching results within the variance of
-the two languages' random streams.
-
-Reproduce:
-
-```bash
-python python/demos/demo_prm.py \
-  --map maps/grid/maze01.yaml --scenario maps/scenarios/maze01_s1.yaml \
-  --params configs/global_planning/prm.yaml --trace out/prm.jsonl
-python tools/viz/replay.py out/prm.jsonl --gif out/prm.gif
-```
 
 ## References
 

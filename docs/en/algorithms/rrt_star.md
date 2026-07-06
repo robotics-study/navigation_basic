@@ -34,6 +34,20 @@ The difference from RRT lies in two operations applied when attaching a new node
 
 ## How It Works
 
+`maze01` — over 8,000 samples the tree densely covers free space, and rewiring gradually straightens the path. The final path contrasts sharply with the zigzag of [RRT](rrt.md).
+
+![RRT* on maze01](../../assets/rrt_star/maze01.gif)
+
+Intermediate search progress (left → right: early / middle / final path):
+
+| | | |
+|:---:|:---:|:---:|
+| ![early](../../assets/rrt_star/maze01_snap_02.png) | ![mid](../../assets/rrt_star/maze01_snap_05.png) | ![final](../../assets/rrt_star/maze01_final.png) |
+
+Final result on `open01` — nearly a straight line:
+
+![RRT* on open01](../../assets/rrt_star/open01_final.png)
+
 ```
 RRT_STAR(start, goal):
     T ← {start}
@@ -55,22 +69,31 @@ RRT_STAR(start, goal):
 
 RRT stops at the first solution, but RRT* **spends its entire iteration budget**, continually improving the current best solution (the incumbent) — it is an anytime algorithm.
 
+Measurements (seed = 1, 8000 iterations, trace on):
+
+| map | Language | path cost | tree size | runtime |
+|---|---|---|---|---|
+| maze01 | Python | 13.458 | 5,915 | 9.15 s |
+| maze01 | C++ | 13.471 | 5,949 | 1.09 s |
+| open01 | Python | 12.047 | 5,483 | 8.35 s |
+| open01 | C++ | 12.048 | 5,481 | 0.98 s |
+
+16–27% shorter than [RRT](rrt.md)'s first solutions (18.41 / 14.37). The cost difference between languages comes from different random streams and stays within 0.1%. (Runtimes include trace emission — for relative comparison only.)
+
+Reproduce:
+
+```bash
+python python/demos/demo_rrt_star.py \
+  --map maps/grid/maze01.yaml --scenario maps/scenarios/maze01_s1.yaml \
+  --params configs/global_planning/rrt_star.yaml --trace out/rrt_star.jsonl
+python tools/viz/replay.py out/rrt_star.jsonl --gif out/rrt_star.gif
+```
+
 ## Properties
 
 - **Completeness**: probabilistically complete (same as RRT)[^karaman].
 - **Optimality**: asymptotically optimal. In theory this holds when the neighbor radius shrinks as r(n) = γ(log n / n)^(1/d)[^karaman]. For simplicity, this implementation uses a **fixed radius** `neighbor_radius` — asymptotic optimality is preserved with a sufficiently large fixed radius, at a higher per-iteration cost.
 - **Cost**: slower than RRT by the near query + rewire checks per iteration. A "quality ↔ time" trade-off.
-
-## Parameters
-
-| Name | Type | Default | Range | Description |
-|---|---|---|---|---|
-| `max_iterations` | int | 8000 | [1, 200000] | Iteration budget (anytime — current best is returned when exhausted) |
-| `step_size` | float | 0.5 | [0.01, 100.0] | Steer extension distance η (m) |
-| `goal_bias` | float | 0.05 | [0.0, 1.0] | Probability of sampling the goal directly |
-| `goal_tolerance` | float | 0.3 | [0.0, 100.0] | Goal-reached radius (m) |
-| `neighbor_radius` | float | 1.5 | [0.01, 100.0] | Choose-parent / rewire neighborhood radius (m) |
-| `seed` | int | 1 | [0, 2^31−1] | Random seed (reproducibility) |
 
 ## Asymptotic Optimality — Proof
 
@@ -88,6 +111,13 @@ $$
   and the segment is collision-free, set $x$'s parent to $x_{\text{new}}$.
 
 Here $c(\cdot,\cdot)$ is the collision-free segment cost.
+
+**Lemma (cost monotonicity).** The $\mathrm{cost}(v)$ of any node $v$ is **non-increasing** as
+iterations proceed. Choose-parent attaches $v$ to the lowest-cost feasible parent, and rewire changes a
+parent only when $\mathrm{cost}(x_{\text{new}})+c(x_{\text{new}},x)<\mathrm{cost}(x)$ — both operations
+only ever lower or hold a cost, never raise it. Hence every vertex's tree-path cost improves
+monotonically, which is exactly why the incumbent (current best solution) never gets worse — the
+anytime property. ∎
 
 **Theorem (asymptotic optimality, Karaman & Frazzoli 2011).** With the near radius
 
@@ -112,53 +142,22 @@ connectivity and destroys optimality.
 > constant still preserves almost-sure optimality, at a higher per-iteration near-query cost (which
 > is why it is slower than RRT at the same 8,000-iteration budget).
 
-## Implementation Notes
+## Parameters
 
-- C++: `cpp/src/global_planning/rrt_star.cpp`, Python: `python/navigation/global_planning/rrt_star.py`
-- Choose-parent / rewire are factored out into common utilities (`sampling_common` / `_sampling`) shared with [Fast-RRT](fast_rrt.md).
-- A `rewire` trace event is emitted whenever a rewire occurs — in the visualization, this is when a tree edge switches over mid-run.
+| Name | Type | Default | Range | Description |
+|---|---|---|---|---|
+| `max_iterations` | int | 8000 | [1, 200000] | Iteration budget (anytime — current best is returned when exhausted) |
+| `step_size` | float | 0.5 | [0.01, 100.0] | Steer extension distance η (m) |
+| `goal_bias` | float | 0.05 | [0.0, 1.0] | Probability of sampling the goal directly |
+| `goal_tolerance` | float | 0.3 | [0.0, 100.0] | Goal-reached radius (m) |
+| `neighbor_radius` | float | 1.5 | [0.01, 100.0] | Choose-parent / rewire neighborhood radius (m) |
+| `seed` | int | 1 | [0, 2^31−1] | Random seed (reproducibility) |
 
 ## Emitted Trace Events
 
 `planning_started` → (`sample_drawn`, `edge_added`, `rewire`*)* → `path_found`* → `planning_finished`
 
 `path_found` can be emitted multiple times (each time the incumbent improves).
-
-## Demo
-
-`maze01` — over 8,000 samples the tree densely covers free space, and rewiring gradually straightens the path. The final path contrasts sharply with the zigzag of [RRT](rrt.md).
-
-![RRT* on maze01](../../assets/rrt_star/maze01.gif)
-
-Intermediate search progress (left → right: early / middle / final path):
-
-| | | |
-|:---:|:---:|:---:|
-| ![early](../../assets/rrt_star/maze01_snap_02.png) | ![mid](../../assets/rrt_star/maze01_snap_05.png) | ![final](../../assets/rrt_star/maze01_final.png) |
-
-Final result on `open01` — nearly a straight line:
-
-![RRT* on open01](../../assets/rrt_star/open01_final.png)
-
-Measurements (seed = 1, 8000 iterations, trace on):
-
-| map | Language | path cost | tree size | runtime |
-|---|---|---|---|---|
-| maze01 | Python | 13.458 | 5,915 | 9.15 s |
-| maze01 | C++ | 13.471 | 5,949 | 1.09 s |
-| open01 | Python | 12.047 | 5,483 | 8.35 s |
-| open01 | C++ | 12.048 | 5,481 | 0.98 s |
-
-16–27% shorter than [RRT](rrt.md)'s first solutions (18.41 / 14.37). The cost difference between languages comes from different random streams and stays within 0.1%. (Runtimes include trace emission — for relative comparison only.)
-
-Reproduce:
-
-```bash
-python python/demos/demo_rrt_star.py \
-  --map maps/grid/maze01.yaml --scenario maps/scenarios/maze01_s1.yaml \
-  --params configs/global_planning/rrt_star.yaml --trace out/rrt_star.jsonl
-python tools/viz/replay.py out/rrt_star.jsonl --gif out/rrt_star.gif
-```
 
 ## References
 

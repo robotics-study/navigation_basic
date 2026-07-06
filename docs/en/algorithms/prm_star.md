@@ -43,6 +43,21 @@ produces $O(n^2)$ edges (if large) or breaks connectivity and loses optimality (
 
 ## How It Works
 
+`maze01` — samples scatter, the shrunken radius wires each node to an expected logarithmic number of
+neighbors into a roadmap, and Dijkstra extracts the shortest path.
+
+![PRM\* on maze01](../../assets/prm_star/maze01.gif)
+
+Intermediate search progress (left → right: early samples/edges / roadmap forming / final path):
+
+| | | |
+|:---:|:---:|:---:|
+| ![early](../../assets/prm_star/maze01_snap_02.png) | ![mid](../../assets/prm_star/maze01_snap_05.png) | ![final](../../assets/prm_star/maze01_final.png) |
+
+Final result on `open01` — nearly a straight line:
+
+![PRM\* on open01](../../assets/prm_star/open01_final.png)
+
 ```
 PRM_STAR(start, goal):
     R ← roadmap()
@@ -61,6 +76,25 @@ PRM_STAR(start, goal):
 The radius is computed **once** from the final node count $n$ and used for every node. That is the
 only code difference from PRM.
 
+Measurements (Python, seed = 1, trace on):
+
+| map | path cost | roadmap nodes | expanded (Dijkstra pops) |
+|---|---|---|---|
+| maze01 | 13.595 | 1,502 | 1,092 |
+| open01 | 12.053 | — | — |
+
+The C++ implementation mirrors the same scenario and produces matching results within the variance of
+the two languages' random streams.
+
+Reproduce:
+
+```bash
+python python/demos/demo_prm_star.py \
+  --map maps/grid/maze01.yaml --scenario maps/scenarios/maze01_s1.yaml \
+  --params configs/global_planning/prm_star.yaml --trace out/prm_star.jsonl
+python tools/viz/replay.py out/prm_star.jsonl --gif out/prm_star.gif
+```
+
 ## Properties
 
 - **Completeness**: probabilistically complete[^karaman].
@@ -69,14 +103,6 @@ only code difference from PRM.
 - **Cost**: because the expected neighbor count is held logarithmic, the edge count is near-linear
   compared with PRM's fixed radius. At the same sample count it produces PRM-like solutions, but now
   with an optimality guarantee.
-
-## Parameters
-
-| Name | Type | Default | Range | Description |
-|---|---|---|---|---|
-| `num_samples` | int | 1500 | [1, 200000] | Number of collision-free samples placed in the roadmap (start/goal excluded) |
-| `gamma` | float | 30.0 | [0.01, 1000.0] | Connection-radius coefficient γ. r_n = γ·(log n / n)^(1/2) |
-| `seed` | int | 1 | [0, 2^31−1] | Random seed (reproducibility) |
 
 ## Asymptotic Optimality
 
@@ -103,13 +129,27 @@ recover, in the limit, a path in the same homotopy class as the optimum. Shrink 
 disconnects, breaking optimality; keep it constant and the edges explode to $O(n^2)$. $r_n$ is the
 minimal density between these two failures.
 
-## Implementation Notes
+**Edge-count derivation.** At sample density $n/\mu(X_{\text{free}})$, the expected number of neighbors
+inside a radius-$r$ ball is $\approx\zeta_d\,r^d\,n/\mu(X_{\text{free}})$. Substituting
+$r=r_n=\gamma(\log n/n)^{1/d}$,
 
-- C++: `cpp/src/global_planning/prm_star.cpp`, Python: `python/navigation/global_planning/prm_star.py`
-- The roadmap, connection, and Dijkstra query live in common utilities (`roadmap_common` / `_roadmap`)
-  shared with [PRM](prm.md). PRM\* differs only in its radius policy.
-- The shrinking radius $r_n=\gamma\sqrt{\log n/n}$ is computed by `rgg_radius` in
-  `sampling_common` / `_sampling`, shared with [FMT\*](fmt_star.md) and [BIT\*](bit_star.md).
+$$
+\mathbb{E}[\deg]\;\approx\;\frac{\gamma^d\zeta_d}{\mu(X_{\text{free}})}\,\log n\;=\;\Theta(\log n),
+\qquad |E|=\Theta(n\log n).
+$$
+
+A constant radius gives $\mathbb{E}[\deg]=\Theta(n)$ and $|E|=\Theta(n^2)$ (that is [PRM](prm.md));
+fixing the neighbor count at $k=O(1)$ instead falls below the random-geometric-graph connectivity
+threshold $\Theta(\log n)$, so the graph fragments and optimality breaks. $r_n$ pins exactly the
+**minimal density** that preserves connectivity.
+
+## Parameters
+
+| Name | Type | Default | Range | Description |
+|---|---|---|---|---|
+| `num_samples` | int | 1500 | [1, 200000] | Number of collision-free samples placed in the roadmap (start/goal excluded) |
+| `gamma` | float | 30.0 | [0.01, 1000.0] | Connection-radius coefficient γ. r_n = γ·(log n / n)^(1/2) |
+| `seed` | int | 1 | [0, 2^31−1] | Random seed (reproducibility) |
 
 ## Emitted Trace Events
 
@@ -117,42 +157,6 @@ minimal density between these two failures.
 
 The event set is identical to [PRM](prm.md) — the difference is only the radius policy driving
 `edge_added`.
-
-## Demo
-
-`maze01` — samples scatter, the shrunken radius wires each node to an expected logarithmic number of
-neighbors into a roadmap, and Dijkstra extracts the shortest path.
-
-![PRM\* on maze01](../../assets/prm_star/maze01.gif)
-
-Intermediate search progress (left → right: early samples/edges / roadmap forming / final path):
-
-| | | |
-|:---:|:---:|:---:|
-| ![early](../../assets/prm_star/maze01_snap_02.png) | ![mid](../../assets/prm_star/maze01_snap_05.png) | ![final](../../assets/prm_star/maze01_final.png) |
-
-Final result on `open01` — nearly a straight line:
-
-![PRM\* on open01](../../assets/prm_star/open01_final.png)
-
-Measurements (Python, seed = 1, trace on):
-
-| map | path cost | roadmap nodes | expanded (Dijkstra pops) |
-|---|---|---|---|
-| maze01 | 13.595 | 1,502 | 1,092 |
-| open01 | 12.053 | — | — |
-
-The C++ implementation mirrors the same scenario and produces matching results within the variance of
-the two languages' random streams.
-
-Reproduce:
-
-```bash
-python python/demos/demo_prm_star.py \
-  --map maps/grid/maze01.yaml --scenario maps/scenarios/maze01_s1.yaml \
-  --params configs/global_planning/prm_star.yaml --trace out/prm_star.jsonl
-python tools/viz/replay.py out/prm_star.jsonl --gif out/prm_star.gif
-```
 
 ## References
 

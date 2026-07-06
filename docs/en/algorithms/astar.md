@@ -31,6 +31,20 @@ Pohl's weighted A*[^pohl] inflates the heuristic as **f = g + w·h (w > 1)**, bi
 
 ## How It Works
 
+Search on `maze01`. Unlike Dijkstra, the frontier visibly **leans toward the goal** as it grows.
+
+![A* on maze01](../../assets/astar/maze01.gif)
+
+Intermediate search progress (left → right: early / middle / final path):
+
+| | | |
+|:---:|:---:|:---:|
+| ![early](../../assets/astar/maze01_snap_02.png) | ![mid](../../assets/astar/maze01_snap_05.png) | ![final](../../assets/astar/maze01_final.png) |
+
+Final result on `open01` — with few obstacles, expansion follows an almost straight diagonal:
+
+![A* on open01](../../assets/astar/open01_final.png)
+
 ```
 ASTAR(start, goal):
     g[start] ← 0; open ← priority queue keyed by f = g + w·h
@@ -57,17 +71,27 @@ h(a, b) = (max(Δrow, Δcol) − min(Δrow, Δcol)) + √2 · min(Δrow, Δcol)
 
 It exactly equals the true movement cost in the complete absence of obstacles, so it is admissible and consistent. (Heuristic computation is part of the `DiscreteSpace` capability and is **provided by the map adapter** — the algorithm knows nothing about the motion model.)
 
+Measurements (Python, w = 1.0, trace on):
+
+| map | path cost | expanded nodes | ref: Dijkstra expanded |
+|---|---|---|---|
+| maze01 | 28.728 (optimal, same as Dijkstra) | **108** | 211 |
+| open01 | 25.213 (optimal) | **71** | 267 |
+
+Reproduce:
+
+```bash
+python python/demos/demo_astar.py \
+  --map maps/grid/maze01.yaml --scenario maps/scenarios/maze01_s1.yaml \
+  --params configs/global_planning/astar.yaml --trace out/astar.jsonl
+python tools/viz/replay.py out/astar.jsonl --gif out/astar.gif --snapshots out/astar_snaps/
+```
+
 ## Properties
 
 - **Completeness**: complete on finite graphs with non-negative costs.
 - **Optimality**: admissible h + w = 1.0 → optimality guaranteed. With a consistent h, each node is expanded at most once. w > 1 → returned path cost ≤ w × optimal (bounded suboptimal)[^pohl].
 - **Complexity**: depends on heuristic quality, ranging from Dijkstra-like (uninformative h) down to straight-line behavior (perfect h).
-
-## Parameters
-
-| Name | Type | Default | Range | Description |
-|---|---|---|---|---|
-| `heuristic_weight` | float | 1.0 | [1.0, 5.0] | The w in f = g + w·h. 1.0 = admissible optimal, above = weighted A* |
 
 ## Optimality & Proofs
 
@@ -102,49 +126,76 @@ $h(n)\le h^*(n)$. (ii) For an edge $(n,n')$, $f(n')=g(n)+c(n,n')+h(n')\ge g(n)+h
 $\le w\cdot C^*$.
 
 *Proof sketch.* When $G_2$ is selected, for an open node $n$ on an optimal path,
-$f(G_2)=g(G_2)\le g(n)+w\,h(n)\le w\bigl(g(n)+h^*(n)\bigr)=w\,C^*$ (the second inequality uses
-$w\ge1$ and admissibility). ∎
 
-## Implementation Notes
+$$
+f(G_2)=g(G_2)\le g(n)+w\,h(n)\le w\bigl(g(n)+h^*(n)\bigr)=w\,C^*
+$$
 
-- C++: `cpp/src/global_planning/astar.cpp`, Python: `python/navigation/global_planning/astar.py`
-- Shares the best-first skeleton with Dijkstra (only the priority key is overridden). Both languages use the same operation order down to tie-breaking, so their results match exactly.
+(the second inequality uses $w\ge1$ and admissibility). ∎
+
+**Why the octile heuristic is consistent.** The octile value is the true minimum move cost in the
+complete absence of obstacles — the free-space distance $d_{\text{free}}$. Since $d_{\text{free}}$ is
+a metric it obeys the triangle inequality, and a single adjacent-cell step costs exactly
+$d_{\text{free}}$ ($c=1$ orthogonal, $\sqrt2$ diagonal). Hence for any edge $(n,n')$,
+
+$$
+h(n)=d_{\text{free}}(n,\text{goal})\;\le\;d_{\text{free}}(n,n')+d_{\text{free}}(n',\text{goal})
+     \;=\;c(n,n')+h(n'),
+$$
+
+so it is consistent. Introducing obstacles can only raise the true cost, so $h\le h^\ast$
+(admissible). ∎
+
+**A\* as Dijkstra on a reweighted graph (the potential view).** Treat a consistent $h$ as a
+**potential** at each node and reweight the edges:
+
+$$
+\tilde c(n,n')=c(n,n')+h(n')-h(n)\;\ge\;0
+$$
+
+(non-negativity is exactly the consistency definition). Accumulating $\tilde c$ along a path
+telescopes the intermediate $h$ terms, leaving
+
+$$
+\tilde g(n)=g(n)+h(n)-h(s)=f(n)-h(s).
+$$
+
+Because $h(s)$ is constant, A\* ordered by $f$ is identical to **Dijkstra on the reweighted graph**
+ordered by $\tilde g$. Dijkstra's non-negative-cost optimality (theorem above) then transfers directly
+to A\*, giving an alternative proof of Theorems 1–2. With $h\equiv0$ the reweighting is the identity
+and it degenerates to plain Dijkstra. ∎
+
+## Counterexample: suboptimality of weighted A\* (w = 3)
+
+With $w>1$ the heuristic is inflated and the search leans aggressively toward the goal. It expands
+fewer nodes (20 → 16 below) but can **round an obstacle near the goal too hastily on one side** and
+miss the optimum. In `wastar_greedy01`:
+
+| | w = 1 (admissible) | w = 3 (weighted) |
+|---|---|---|
+| path cost | **11.414** (optimal $C^\ast$) | **14.243** |
+| expanded | 20 | **16** |
+
+![weighted A* counterexample](../../assets/astar/counter.gif)
+
+| w = 3 route — suboptimal | w = 1 optimum |
+|:---:|:---:|
+| ![w3](../../assets/astar/counter_final.png) | ![w1](../../assets/astar/counter_opt.png) |
+
+The returned cost $14.243\approx1.25\,C^\ast$ stays inside the suboptimality bound $w\,C^\ast=3C^\ast$
+(the theorem's bounded-suboptimal guarantee). The bound $w\,C^\ast$ is loose and the realized ratio is
+usually far smaller, but it is **not optimal** — the price of cutting expansions from 20 to 16. (Set
+`heuristic_weight` to 3.0 in `configs/global_planning/astar.yaml` and rerun the demo above.)
+
+## Parameters
+
+| Name | Type | Default | Range | Description |
+|---|---|---|---|---|
+| `heuristic_weight` | float | 1.0 | [1.0, 5.0] | The w in f = g + w·h. 1.0 = admissible optimal, above = weighted A* |
 
 ## Emitted Trace Events
 
 `planning_started` → (`node_expanded`, `edge_added`)* → `path_found` → `planning_finished`
-
-## Demo
-
-Search on `maze01`. Unlike Dijkstra, the frontier visibly **leans toward the goal** as it grows.
-
-![A* on maze01](../../assets/astar/maze01.gif)
-
-Intermediate search progress (left → right: early / middle / final path):
-
-| | | |
-|:---:|:---:|:---:|
-| ![early](../../assets/astar/maze01_snap_02.png) | ![mid](../../assets/astar/maze01_snap_05.png) | ![final](../../assets/astar/maze01_final.png) |
-
-Final result on `open01` — with few obstacles, expansion follows an almost straight diagonal:
-
-![A* on open01](../../assets/astar/open01_final.png)
-
-Measurements (Python, w = 1.0, trace on):
-
-| map | path cost | expanded nodes | ref: Dijkstra expanded |
-|---|---|---|---|
-| maze01 | 28.728 (optimal, same as Dijkstra) | **108** | 211 |
-| open01 | 25.213 (optimal) | **71** | 267 |
-
-Reproduce:
-
-```bash
-python python/demos/demo_astar.py \
-  --map maps/grid/maze01.yaml --scenario maps/scenarios/maze01_s1.yaml \
-  --params configs/global_planning/astar.yaml --trace out/astar.jsonl
-python tools/viz/replay.py out/astar.jsonl --gif out/astar.gif --snapshots out/astar_snaps/
-```
 
 ## References
 

@@ -41,6 +41,21 @@ $r_n=\gamma\sqrt{\log n/n}$ 을 쓴다.
 
 ## 동작 원리
 
+`maze01` — 표본 배치가 뿌려진 뒤, 파면이 start 에서 바깥으로 cost 오름차순으로 번지며 트리를
+키운다. goal 에 파면이 닿는 순간 최적 경로가 확정된다.
+
+![FMT\* on maze01](../../assets/fmt_star/maze01.gif)
+
+탐색 중간 과정 (좌 → 우: 파면 초반 / 확산 / 최종 경로):
+
+| | | |
+|:---:|:---:|:---:|
+| ![early](../../assets/fmt_star/maze01_snap_02.png) | ![mid](../../assets/fmt_star/maze01_snap_05.png) | ![final](../../assets/fmt_star/maze01_final.png) |
+
+`open01` 최종 결과 — 거의 직선에 가깝다:
+
+![FMT\* on open01](../../assets/fmt_star/open01_final.png)
+
 ```
 FMT_STAR(start, goal):
     V ← {start, goal} ∪ sample_free(num_samples)    # 단일 고정 배치
@@ -63,6 +78,24 @@ FMT_STAR(start, goal):
 frontier 는 cost-to-come 을 키로 하는 **min-heap** 이다. FMT\* 는 open 노드의 cost 를 결코
 낮추지 않으므로 heap 항목은 항상 유효하고, `in_open` 플래그로 지연 멤버십을 판정하면 충분하다.
 
+측정치 (Python, seed = 1, trace on):
+
+| map | path cost | 표본 수 | expanded (행진 frontier 노드) |
+|---|---|---|---|
+| maze01 | 13.595 | 1,502 | 1,090 |
+| open01 | 12.058 | — | — |
+
+C++ 구현도 동일 시나리오를 미러링하며, 언어 간 난수 스트림 차이 범위 안에서 같은 결과를 낸다.
+
+재현:
+
+```bash
+python python/demos/demo_fmt_star.py \
+  --map maps/grid/maze01.yaml --scenario maps/scenarios/maze01_s1.yaml \
+  --params configs/global_planning/fmt_star.yaml --trace out/fmt_star.jsonl
+python tools/viz/replay.py out/fmt_star.jsonl --gif out/fmt_star.gif
+```
+
 ## 성질
 
 - **완전성**: probabilistically complete[^janson].
@@ -70,14 +103,6 @@ frontier 는 cost-to-come 을 키로 하는 **min-heap** 이다. FMT\* 는 open 
   그래프 위 최적 cost-to-come 을 복원한다 — rewire 없이 1-pass[^janson].
 - **비용**: **lazy 충돌 검사** — 표본마다 국소 최적 간선 하나만 검사하므로, 후보 간선을 폭넓게
   검사하는 PRM\*/RRT\* 보다 충돌 검사 횟수가 적다. 충돌 검사가 비싼 문제에서 특히 유리하다.
-
-## 파라미터
-
-| 이름 | 타입 | 기본값 | 범위 | 설명 |
-|---|---|---|---|---|
-| `num_samples` | int | 1500 | [1, 200000] | 단일 배치로 뿌리는 충돌 없는 샘플 수 (start/goal 제외) |
-| `gamma` | float | 30.0 | [0.01, 1000.0] | marching 연결 반경 계수 γ. r_n = γ·(log n / n)^(1/2) |
-| `seed` | int | 1 | [0, 2^31−1] | 난수 시드 (재현성) |
 
 ## 행진 규칙과 점근적 최적성
 
@@ -110,13 +135,20 @@ $$
 표본이 조밀해지면 각 최적 부분 경로가 근방 그래프 안에 $\epsilon$ 오차로 존재하고, 행진 순서가
 이를 정확히 복원한다.
 
-## 구현 노트
+**왜 lazy 검사가 최적을 안 깨나.** 각 미방문 $x$ 에 대해 최소 cost 후보 $y^*$ 로의 간선 **하나만**
+검사한다. $(y^*,x)$ 가 충돌이면 $x$ 는 이번에 붙지 않고 나중에 더 큰 cost 로 다시 후보가 된다.
+이때 검사를 건너뛴 다른 간선 $(y,x)$ 는 $y\in H$ 이면 $\mathrm{cost}(y)\ge\mathrm{cost}(y^*)$ 라 그
+경로가 더 비싸므로, 최적 경로가 실제로 쓰는 간선이었다면 애초에 그것이 $y^*$ 로 뽑혔을 것이다.
+따라서 노드당 충돌 검사 **1회**만으로 점근 최적이 유지된다 — FMT\* 가 같은 표본에서 RRT\*·PRM\*
+보다 충돌 검사(대개 planning 의 최대 비용)를 적게 하는 이유다.
 
-- C++: `cpp/src/global_planning/fmt_star.cpp`, Python: `python/navigation/global_planning/fmt_star.py`
-- 배치 표본 위 근방 그래프(`radius_neighbors`)와 줄어드는 반경(`rgg_radius`)은
-  [PRM\*](prm_star.md)·[BIT\*](bit_star.md) 와 공유하는 `sampling_common` / `_sampling` 에 있다.
-- FMT\* 는 트리를 한 번에 마칭하므로 [PRM](prm.md) 계열의 로드맵(`roadmap_common` / `_roadmap`)이
-  아니라 배치 근방 그래프 위에서 직접 동작한다.
+## 파라미터
+
+| 이름 | 타입 | 기본값 | 범위 | 설명 |
+|---|---|---|---|---|
+| `num_samples` | int | 1500 | [1, 200000] | 단일 배치로 뿌리는 충돌 없는 샘플 수 (start/goal 제외) |
+| `gamma` | float | 30.0 | [0.01, 1000.0] | marching 연결 반경 계수 γ. r_n = γ·(log n / n)^(1/2) |
+| `seed` | int | 1 | [0, 2^31−1] | 난수 시드 (재현성) |
 
 ## 방출 trace 이벤트
 
@@ -124,41 +156,6 @@ $$
 
 `sample_drawn` 은 배치 표본, `edge_added` 는 표본을 붙일 때의 간선, `node_expanded` 는 행진에서
 frontier 최소 노드 $z$ 를 꺼내는 순간이다 — 이 둘이 파면 확장 과정으로 번갈아 방출된다.
-
-## Demo
-
-`maze01` — 표본 배치가 뿌려진 뒤, 파면이 start 에서 바깥으로 cost 오름차순으로 번지며 트리를
-키운다. goal 에 파면이 닿는 순간 최적 경로가 확정된다.
-
-![FMT\* on maze01](../../assets/fmt_star/maze01.gif)
-
-탐색 중간 과정 (좌 → 우: 파면 초반 / 확산 / 최종 경로):
-
-| | | |
-|:---:|:---:|:---:|
-| ![early](../../assets/fmt_star/maze01_snap_02.png) | ![mid](../../assets/fmt_star/maze01_snap_05.png) | ![final](../../assets/fmt_star/maze01_final.png) |
-
-`open01` 최종 결과 — 거의 직선에 가깝다:
-
-![FMT\* on open01](../../assets/fmt_star/open01_final.png)
-
-측정치 (Python, seed = 1, trace on):
-
-| map | path cost | 표본 수 | expanded (행진 frontier 노드) |
-|---|---|---|---|
-| maze01 | 13.595 | 1,502 | 1,090 |
-| open01 | 12.058 | — | — |
-
-C++ 구현도 동일 시나리오를 미러링하며, 언어 간 난수 스트림 차이 범위 안에서 같은 결과를 낸다.
-
-재현:
-
-```bash
-python python/demos/demo_fmt_star.py \
-  --map maps/grid/maze01.yaml --scenario maps/scenarios/maze01_s1.yaml \
-  --params configs/global_planning/fmt_star.yaml --trace out/fmt_star.jsonl
-python tools/viz/replay.py out/fmt_star.jsonl --gif out/fmt_star.gif
-```
 
 ## References
 

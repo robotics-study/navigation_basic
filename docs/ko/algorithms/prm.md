@@ -42,6 +42,21 @@ PRM 은 뒤이은 점근 최적 변형([PRM\*](prm_star.md), [FMT\*](fmt_star.md
 
 ## 동작 원리
 
+`maze01` — 자유 공간에 표본이 흩뿌려지고, 반경 이내 쌍이 간선으로 이어져 로드맵이 형성된 뒤
+Dijkstra 가 그 위에서 최단 경로를 뽑는다.
+
+![PRM on maze01](../../assets/prm/maze01.gif)
+
+탐색 중간 과정 (좌 → 우: 표본/간선 초반 / 로드맵 형성 / 최종 경로):
+
+| | | |
+|:---:|:---:|:---:|
+| ![early](../../assets/prm/maze01_snap_02.png) | ![mid](../../assets/prm/maze01_snap_05.png) | ![final](../../assets/prm/maze01_final.png) |
+
+`open01` 최종 결과 — 거의 직선에 가깝다:
+
+![PRM on open01](../../assets/prm/open01_final.png)
+
 ```
 PRM(start, goal):
     R ← roadmap()
@@ -60,6 +75,24 @@ PRM(start, goal):
 무향 간선이 정확히 한 번만 생긴다. start·goal 도 로드맵의 일부이므로 별도 연결 단계 없이
 같은 반경 규칙으로 이어진다.
 
+측정치 (Python, seed = 1, trace on):
+
+| map | path cost | roadmap 노드 | expanded (Dijkstra pop) |
+|---|---|---|---|
+| maze01 | 13.595 | 1,502 | 1,091 |
+| open01 | 12.053 | — | — |
+
+C++ 구현도 동일 시나리오를 미러링하며, 언어 간 난수 스트림 차이 범위 안에서 같은 결과를 낸다.
+
+재현:
+
+```bash
+python python/demos/demo_prm.py \
+  --map maps/grid/maze01.yaml --scenario maps/scenarios/maze01_s1.yaml \
+  --params configs/global_planning/prm.yaml --trace out/prm.jsonl
+python tools/viz/replay.py out/prm.jsonl --gif out/prm.gif
+```
+
 ## 성질
 
 - **완전성**: probabilistically complete — 해가 존재하면 표본 수 → ∞ 에서 확률 1 로 발견한다[^kavraki].
@@ -68,14 +101,6 @@ PRM(start, goal):
   최단 경로로의 수렴이 보장되지 않는다. 이 한계를 반경 정책으로 고친 것이 [PRM\*](prm_star.md) 다.
 - **비용**: 소박한 구현은 모든 쌍 거리 검사로 O(n²) 간선 후보를 본다. 다중 질의 상황에서는
   로드맵을 재사용하므로 질의당 비용이 Dijkstra 로 상각된다.
-
-## 파라미터
-
-| 이름 | 타입 | 기본값 | 범위 | 설명 |
-|---|---|---|---|---|
-| `num_samples` | int | 1500 | [1, 200000] | 로드맵에 배치할 충돌 없는 샘플 수 (start/goal 제외) |
-| `connection_radius` | float | 2.0 | [0.01, 100.0] | 두 노드를 간선으로 이을 최대 거리 (m) |
-| `seed` | int | 1 | [0, 2^31−1] | 난수 시드 (재현성) |
 
 ## 로드맵 구성과 질의
 
@@ -97,13 +122,25 @@ $$
 를 푼다. $r$ 이 고정이므로 $n\to\infty$ 에서 $Y_n$ 은 그래프가 조밀해질수록 개선되지만
 최적값 $c^*$ 로의 수렴은 보장되지 않는다 — 이 점이 점근 최적 변형과의 결정적 차이다.
 
-## 구현 노트
+**확률적 완전성 (도출).** clearance $\delta>0$ 경로를 반지름 $\delta/2$ 공 $B_1,\dots,B_m$ 으로 덮고
+$r=\texttt{connection\_radius}\ge\delta$ 라 하자. 한 공에 표본이 하나 이상 들어갈 확률은 $n$ 표본에서
+$1-(1-p)^n$ ($p=\mu(B)/\mu(X_{\text{free}})$). 이웃한 두 공의 표본은 중심 거리 $\le\delta\le r$ 라
+간선으로 이어지므로, 모든 $m$ 개 공이 표본을 가지면 로드맵에 $s\rightsquigarrow g$ 경로가 반드시
+존재한다. 그 확률은
 
-- C++: `cpp/src/global_planning/prm.cpp`, Python: `python/navigation/global_planning/prm.py`
-- 로드맵 자료구조·연결·Dijkstra 질의는 [PRM\*](prm_star.md) 와 공유하는 공통 유틸
-  (`roadmap_common` / `_roadmap`)에 있다. PRM 은 그 위에서 **고정 반경** 정책만 얹는다.
-- 근방 질의(near-neighbour)는 배치형 planner 가 함께 쓰는 `sampling_common` / `_sampling` 의
-  `near_points` 로 처리한다.
+$$
+P[\text{연결}]\;\ge\;1-m(1-p)^n\;\xrightarrow{\,n\to\infty\,}\;1.
+$$
+
+즉 PRM 은 probabilistically complete 다(품질은 별개 — 위 참조). ∎
+
+## 파라미터
+
+| 이름 | 타입 | 기본값 | 범위 | 설명 |
+|---|---|---|---|---|
+| `num_samples` | int | 1500 | [1, 200000] | 로드맵에 배치할 충돌 없는 샘플 수 (start/goal 제외) |
+| `connection_radius` | float | 2.0 | [0.01, 100.0] | 두 노드를 간선으로 이을 최대 거리 (m) |
+| `seed` | int | 1 | [0, 2^31−1] | 난수 시드 (재현성) |
 
 ## 방출 trace 이벤트
 
@@ -111,41 +148,6 @@ $$
 
 `sample_drawn` 은 학습 단계의 표본, `edge_added` 는 로드맵 간선, `node_expanded` 는 질의
 단계에서 Dijkstra 가 pop 하는 노드다.
-
-## Demo
-
-`maze01` — 자유 공간에 표본이 흩뿌려지고, 반경 이내 쌍이 간선으로 이어져 로드맵이 형성된 뒤
-Dijkstra 가 그 위에서 최단 경로를 뽑는다.
-
-![PRM on maze01](../../assets/prm/maze01.gif)
-
-탐색 중간 과정 (좌 → 우: 표본/간선 초반 / 로드맵 형성 / 최종 경로):
-
-| | | |
-|:---:|:---:|:---:|
-| ![early](../../assets/prm/maze01_snap_02.png) | ![mid](../../assets/prm/maze01_snap_05.png) | ![final](../../assets/prm/maze01_final.png) |
-
-`open01` 최종 결과 — 거의 직선에 가깝다:
-
-![PRM on open01](../../assets/prm/open01_final.png)
-
-측정치 (Python, seed = 1, trace on):
-
-| map | path cost | roadmap 노드 | expanded (Dijkstra pop) |
-|---|---|---|---|
-| maze01 | 13.595 | 1,502 | 1,091 |
-| open01 | 12.053 | — | — |
-
-C++ 구현도 동일 시나리오를 미러링하며, 언어 간 난수 스트림 차이 범위 안에서 같은 결과를 낸다.
-
-재현:
-
-```bash
-python python/demos/demo_prm.py \
-  --map maps/grid/maze01.yaml --scenario maps/scenarios/maze01_s1.yaml \
-  --params configs/global_planning/prm.yaml --trace out/prm.jsonl
-python tools/viz/replay.py out/prm.jsonl --gif out/prm.gif
-```
 
 ## References
 

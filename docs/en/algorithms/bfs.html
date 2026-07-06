@@ -29,9 +29,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../../assets/site.css?v=becfdb97">
+<link rel="stylesheet" href="../../assets/site.css?v=6d6dae56">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Crect width='24' height='24' rx='6' fill='%230b1020'/%3E%3Cpath d='M4 19V11h8V5h8' stroke='%23818cf8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='4' cy='19' r='2.4' fill='%23818cf8'/%3E%3Ccircle cx='20' cy='5' r='2.4' fill='%2322d3ee'/%3E%3C/svg%3E">
-<script src="../../assets/site.js?v=becfdb97"></script>
+<script src="../../assets/site.js?v=6d6dae56"></script>
 </head>
 <body>
 <header class="topbar">
@@ -51,8 +51,8 @@
 <a href="../../en/index.html">Overview</a>
 <a href="../../en/algorithms/index.html">All algorithms</a>
 <h4>Global planning</h4>
-<details class="nav-sub" open><summary>Search</summary><div class="nav-sub-body"><a href="../../en/algorithms/bfs.html" class="active">BFS</a><a href="../../en/algorithms/dijkstra.html">Dijkstra</a><a href="../../en/algorithms/astar.html">A*</a><a href="../../en/algorithms/dstar_lite.html">D* Lite</a><a href="../../en/algorithms/theta_star.html">Theta*</a><a href="../../en/algorithms/hybrid_astar.html">Hybrid A*</a></div></details>
-<details class="nav-sub"><summary>Sampling</summary><div class="nav-sub-body"><a href="../../en/algorithms/prm.html">PRM</a><a href="../../en/algorithms/rrt.html">RRT</a><a href="../../en/algorithms/rrt_star.html">RRT*</a><a href="../../en/algorithms/prm_star.html">PRM*</a><a href="../../en/algorithms/fmt_star.html">FMT*</a><a href="../../en/algorithms/bit_star.html">BIT*</a><a href="../../en/algorithms/fast_rrt.html">Fast-RRT</a></div></details>
+<details class="nav-sub" open><summary>Search</summary><div class="nav-sub-body"><div class="nav-sub-inner"><a href="../../en/algorithms/bfs.html" class="active">BFS</a><a href="../../en/algorithms/dijkstra.html">Dijkstra</a><a href="../../en/algorithms/astar.html">A*</a><a href="../../en/algorithms/dstar_lite.html">D* Lite</a><a href="../../en/algorithms/theta_star.html">Theta*</a><a href="../../en/algorithms/hybrid_astar.html">Hybrid A*</a></div></div></details>
+<details class="nav-sub"><summary>Sampling</summary><div class="nav-sub-body"><div class="nav-sub-inner"><a href="../../en/algorithms/prm.html">PRM</a><a href="../../en/algorithms/rrt.html">RRT</a><a href="../../en/algorithms/rrt_star.html">RRT*</a><a href="../../en/algorithms/prm_star.html">PRM*</a><a href="../../en/algorithms/fmt_star.html">FMT*</a><a href="../../en/algorithms/bit_star.html">BIT*</a><a href="../../en/algorithms/fast_rrt.html">Fast-RRT</a></div></div></details>
 <a href="../../en/benchmarks.html">Benchmarks</a>
 <h4>Local planning <span class="soon">planned</span></h4>
 <span class="planned">DWA</span>
@@ -109,54 +109,6 @@
 <h2 id="background">Background<a class="anchor" href="#background" title="Permanent link">¶</a></h2>
 <p>BFS is the most fundamental graph search: it grows the frontier outward from the start node in order of proximity (measured in edge count). As a path-finding algorithm it traces back to Moore's maze-search work<sup id="fnref:moore"><a class="footnote-ref" href="#fn:moore">1</a></sup> and to the Lee algorithm<sup id="fnref:lee"><a class="footnote-ref" href="#fn:lee">2</a></sup>, which independently applied the same idea to circuit routing. It is the baseline for understanding Dijkstra and A<em>, and </em><em>on grids with uniform edge cost it remains a valid shortest-path algorithm to this day</em>*.</p>
 <h2 id="how-it-works">How It Works<a class="anchor" href="#how-it-works" title="Permanent link">¶</a></h2>
-<p>It runs on a single FIFO queue. A node popped from the queue is settled (expanded), and every not-yet-visited neighbor is pushed onto the queue. Every node at edge count k is settled before any node at edge count k+1, so the path at the moment the goal is first reached is a minimum-edge-count path.</p>
-<pre><code>BFS(start, goal):
-    queue ← [start]; visited ← {start}; parent ← {}
-    while queue is not empty:
-        v ← queue.pop_front()                # FIFO — this single line defines BFS
-        if v == goal: return reconstruct(parent, goal)
-        for (u, _cost) in neighbors(v):      # cost is ignored
-            if u ∉ visited:
-                visited.add(u); parent[u] = v
-                queue.push_back(u)
-    return failure
-</code></pre>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>The grids in this repository are 8-connected, with diagonal moves costing √2. In other words, <strong>costs are not uniform</strong>, so a BFS path minimizes only the edge count and may not be optimal in world distance. When the demo shows BFS and Dijkstra producing the same path cost, that is a coincidence of these map structures, not a guarantee.</p>
-</div>
-<h2 id="properties">Properties<a class="anchor" href="#properties" title="Permanent link">¶</a></h2>
-<ul>
-<li><strong>Completeness</strong>: on a finite graph, if a solution exists it is always found.</li>
-<li><strong>Optimality</strong>: shortest in edge count (hop count). Cost-optimal only when edge costs are uniform.</li>
-<li><strong>Complexity</strong>: time O(V + E), space O(V) — the entire frontier is kept in memory.</li>
-</ul>
-<h2 id="why-its-shortest-proof">Why It's Shortest — Proof<a class="anchor" href="#why-its-shortest-proof" title="Permanent link">¶</a></h2>
-<p>Notation: let <span class="arithmatex">\(\delta(s,v)\)</span> be the <strong>minimum number of edges</strong> (hops) on any <span class="arithmatex">\(s\to v\)</span> path, and let
-<span class="arithmatex">\(d[v]\)</span> be the depth recorded when BFS dequeues <span class="arithmatex">\(v\)</span>.</p>
-<p><strong>Lemma (queue monotonicity).</strong> Throughout BFS the queue holds depth-<span class="arithmatex">\(k\)</span> nodes ahead of
-depth-<span class="arithmatex">\((k{+}1)\)</span> nodes, and the <span class="arithmatex">\(d\)</span> values dequeued are non-decreasing.</p>
-<p><strong>Theorem.</strong> At the moment <span class="arithmatex">\(v\)</span> is dequeued, <span class="arithmatex">\(d[v]=\delta(s,v)\)</span>.</p>
-<p><em>Proof.</em> Induction on <span class="arithmatex">\(d\)</span>. <span class="arithmatex">\(d[s]=0=\delta(s,s)\)</span>. When some <span class="arithmatex">\(v\)</span> is dequeued and a neighbor <span class="arithmatex">\(u\)</span> is
-unvisited, set <span class="arithmatex">\(d[u]:=d[v]+1\)</span> and enqueue it. By FIFO order and the lemma, depth-<span class="arithmatex">\(k\)</span> nodes are
-processed before depth-<span class="arithmatex">\((k{+}1)\)</span> nodes, so the <strong>first</strong> time <span class="arithmatex">\(u\)</span> is reached is along a minimum-hop
-path: <span class="arithmatex">\(d[u]=d[v]+1=\delta(s,v)+1=\delta(s,u)\)</span>. Hence the path found when the goal is first reached
-is hop-minimal. ∎</p>
-<p><strong>Cost-optimality caveat.</strong> With edge weights <span class="arithmatex">\(w_e\)</span>, a path costs <span class="arithmatex">\(\sum_e w_e\)</span>. Hop-minimal equals
-cost-minimal <strong>only when all <span class="arithmatex">\(w_e\)</span> are equal</strong>. This repo's 8-connected grid has <span class="arithmatex">\(w\in\{1,\sqrt2\}\)</span>,
-so BFS gives no world-distance optimality guarantee (its match with Dijkstra in the demo is a
-coincidence of this map).</p>
-<p><strong>Complexity.</strong> Each vertex is enqueued/dequeued exactly once (<span class="arithmatex">\(O(V)\)</span>); each adjacency list is
-scanned once, so <span class="arithmatex">\(\sum_v\deg(v)=2E\)</span> — total <span class="arithmatex">\(O(V+E)\)</span>.</p>
-<h2 id="implementation-notes">Implementation Notes<a class="anchor" href="#implementation-notes" title="Permanent link">¶</a></h2>
-<ul>
-<li>C++: <code>cpp/src/global_planning/bfs.cpp</code>, Python: <code>python/navigation/global_planning/bfs.py</code></li>
-<li>Both implementations depend only on the <code>DiscreteSpace</code> capability (<code>neighbors</code>, <code>heuristic</code>). They know nothing about concrete map types.</li>
-<li>BFS has no tuning parameters (<code>configs/global_planning/bfs.yaml</code> is an empty declaration). It is deterministic, so the C++ and Python results match exactly.</li>
-</ul>
-<h2 id="emitted-trace-events">Emitted Trace Events<a class="anchor" href="#emitted-trace-events" title="Permanent link">¶</a></h2>
-<p><code>planning_started</code> → (<code>node_expanded</code>, <code>edge_added</code>)* → <code>path_found</code> → <code>planning_finished</code></p>
-<h2 id="demo">Demo<a class="anchor" href="#demo" title="Permanent link">¶</a></h2>
 <p>Search progress on <code>maze01</code> (20×20, narrow-passage maze). The frontier can be seen spreading uniformly, independent of cost.</p>
 <p><img alt="BFS on maze01" src="../../assets/bfs/maze01.gif" /></p>
 <p>Intermediate search progress (left → right: early / middle / final path):</p>
@@ -178,6 +130,22 @@ scanned once, so <span class="arithmatex">\(\sum_v\deg(v)=2E\)</span> — total 
 </table>
 <p>Final result on <code>open01</code> (open field):</p>
 <p><img alt="BFS on open01" src="../../assets/bfs/open01_final.png" /></p>
+<p>It runs on a single FIFO queue. A node popped from the queue is settled (expanded), and every not-yet-visited neighbor is pushed onto the queue. Every node at edge count k is settled before any node at edge count k+1, so the path at the moment the goal is first reached is a minimum-edge-count path.</p>
+<pre><code>BFS(start, goal):
+    queue ← [start]; visited ← {start}; parent ← {}
+    while queue is not empty:
+        v ← queue.pop_front()                # FIFO — this single line defines BFS
+        if v == goal: return reconstruct(parent, goal)
+        for (u, _cost) in neighbors(v):      # cost is ignored
+            if u ∉ visited:
+                visited.add(u); parent[u] = v
+                queue.push_back(u)
+    return failure
+</code></pre>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The grids in this repository are 8-connected, with diagonal moves costing √2. In other words, <strong>costs are not uniform</strong>, so a BFS path minimizes only the edge count and may not be optimal in world distance. When the demo shows BFS and Dijkstra producing the same path cost, that is a coincidence of these map structures, not a guarantee.</p>
+</div>
 <p>Measurements (Python, trace on):</p>
 <table>
 <thead>
@@ -210,6 +178,98 @@ scanned once, so <span class="arithmatex">\(\sum_v\deg(v)=2E\)</span> — total 
   --params configs/global_planning/bfs.yaml --trace out/bfs.jsonl
 python tools/viz/replay.py out/bfs.jsonl --gif out/bfs.gif --snapshots out/bfs_snaps/
 </code></pre>
+<h2 id="properties">Properties<a class="anchor" href="#properties" title="Permanent link">¶</a></h2>
+<ul>
+<li><strong>Completeness</strong>: on a finite graph, if a solution exists it is always found.</li>
+<li><strong>Optimality</strong>: shortest in edge count (hop count). Cost-optimal only when edge costs are uniform.</li>
+<li><strong>Complexity</strong>: time O(V + E), space O(V) — the entire frontier is kept in memory.</li>
+</ul>
+<h2 id="why-its-shortest-proof">Why It's Shortest — Proof<a class="anchor" href="#why-its-shortest-proof" title="Permanent link">¶</a></h2>
+<p>Notation: let <span class="arithmatex">\(\delta(s,v)\)</span> be the <strong>minimum number of edges</strong> (hops) on any <span class="arithmatex">\(s\to v\)</span> path, and let
+<span class="arithmatex">\(d[v]\)</span> be the depth recorded when BFS dequeues <span class="arithmatex">\(v\)</span>.</p>
+<p><strong>Lemma (two-depth queue invariant).</strong> At any moment during BFS the depths of the queued nodes take
+at most <strong>two consecutive values</strong> <span class="arithmatex">\(k,\,k{+}1\)</span>, with the depth-<span class="arithmatex">\(k\)</span> nodes ahead of the depth-<span class="arithmatex">\((k{+}1)\)</span>
+ones. Hence the dequeued <span class="arithmatex">\(d\)</span> values are non-decreasing.</p>
+<p><em>Proof.</em> Induction on the number of queue operations. Initially the queue is <span class="arithmatex">\([s]\)</span> with depth set
+<span class="arithmatex">\(\{0\}\)</span> — holds. In one step we pop a front depth-<span class="arithmatex">\(k\)</span> node <span class="arithmatex">\(v\)</span> and append its unvisited neighbors
+(depth <span class="arithmatex">\(k{+}1\)</span>). If depth-<span class="arithmatex">\(k\)</span> nodes remain at the front the state is still <span class="arithmatex">\(\{k,k{+}1\}\)</span>; once the
+last <span class="arithmatex">\(k\)</span> is popped the state becomes <span class="arithmatex">\(\{k{+}1,k{+}2\}\)</span> with <span class="arithmatex">\(k{+}1\)</span> at the front. FIFO makes insertion
+order = extraction order, so the front/back arrangement is preserved. ∎</p>
+<p><strong>Theorem (hop-optimal).</strong> At the moment <span class="arithmatex">\(v\)</span> is dequeued, <span class="arithmatex">\(d[v]=\delta(s,v)\)</span>.</p>
+<p><em>Proof.</em> Induction on <span class="arithmatex">\(\delta\)</span>. <span class="arithmatex">\(d[s]=0=\delta(s,s)\)</span>. Take <span class="arithmatex">\(u\)</span> with <span class="arithmatex">\(\delta(s,u)=k{+}1\)</span>. The node <span class="arithmatex">\(v\)</span>
+just before <span class="arithmatex">\(u\)</span> on some minimum-hop path has <span class="arithmatex">\(\delta(s,v)=k\)</span>, and by the induction hypothesis <span class="arithmatex">\(v\)</span> is
+dequeued at <span class="arithmatex">\(d[v]=k\)</span>. If <span class="arithmatex">\(u\)</span> is unvisited then, it is fixed to <span class="arithmatex">\(d[u]:=k{+}1\)</span>; if already visited, the
+lemma says that visit happened at depth <span class="arithmatex">\(\le k{+}1\)</span>. Either way <span class="arithmatex">\(d[u]=k{+}1=\delta(s,u)\)</span> (the lemma
+rules out <span class="arithmatex">\(d[u]&lt;\delta(s,u)\)</span> — no shallower path reaches <span class="arithmatex">\(u\)</span>). Hence the path found when the goal is
+first reached is hop-minimal. ∎</p>
+<p><strong>BFS is unit-cost Dijkstra.</strong> The FIFO queue is really a <strong>bucket priority queue</strong> keyed by the
+integer depth. When every edge costs <span class="arithmatex">\(1\)</span>, a node's minimum hop count equals its minimum accumulated
+cost, so BFS's dequeue order coincides exactly with <a href="dijkstra.html">Dijkstra</a>'s extract-min order. The
+hop-optimality above is thus the <strong>unit-cost specialization</strong> of Dijkstra's optimality proof — BFS
+obtains it with an <span class="arithmatex">\(O(1)\)</span> queue instead of a <span class="arithmatex">\(\log V\)</span> heap.</p>
+<p><strong>Cost-optimality caveat.</strong> With edge weights <span class="arithmatex">\(w_e\)</span>, a path costs <span class="arithmatex">\(\sum_e w_e\)</span>. Hop-minimal equals
+cost-minimal <strong>only when all <span class="arithmatex">\(w_e\)</span> are equal</strong>. This repo's 8-connected grid has <span class="arithmatex">\(w\in\{1,\sqrt2\}\)</span>
+and is not uniform: a single diagonal step (cost <span class="arithmatex">\(\sqrt2\approx1.414\)</span>) is counted as the same 1 hop
+as an orthogonal step (cost <span class="arithmatex">\(1\)</span>), so BFS may pick a diagonal-heavy path that has fewer hops yet is
+longer in world distance (its match with Dijkstra in the demo is a coincidence of this map's shape).</p>
+<p><strong>Complexity.</strong> Each vertex is enqueued/dequeued exactly once (<span class="arithmatex">\(O(V)\)</span>); each adjacency list is
+scanned once, so <span class="arithmatex">\(\sum_v\deg(v)=2E\)</span> — total <span class="arithmatex">\(O(V+E)\)</span>. With no heap, Dijkstra's <span class="arithmatex">\(\log V\)</span> factor
+disappears.</p>
+<h2 id="counterexample-fewest-hops-cheapest-cost">Counterexample: fewest hops ≠ cheapest cost<a class="anchor" href="#counterexample-fewest-hops-cheapest-cost" title="Permanent link">¶</a></h2>
+<p>BFS minimizes only the <strong>edge count (hops)</strong>, so on an 8-connected grid where a diagonal costs
+<span class="arithmatex">\(\sqrt2\)</span> it can pick a path that is <strong>more expensive in world distance</strong> even at the same hop count.
+In <code>bfs_hopcost01</code> an obstacle right below the start pushes BFS's search (orthogonal-first → it claims
+the left cell) into a <strong>left-leaning diagonal detour</strong>, so BFS and Dijkstra take <strong>the same 12 hops</strong>
+yet differ in cost:</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>BFS (fewest hops)</th>
+<th>Dijkstra (cheapest)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>path cost</td>
+<td><strong>14.899</strong></td>
+<td><strong>13.243</strong></td>
+</tr>
+<tr>
+<td>hops</td>
+<td>12</td>
+<td>12</td>
+</tr>
+<tr>
+<td>route</td>
+<td>bulges left, then diagonals back</td>
+<td>leans straight toward the goal</td>
+</tr>
+</tbody>
+</table>
+<p><img alt="BFS counterexample" src="../../assets/bfs/counter.gif" /></p>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">BFS route — cost 14.90</th>
+<th style="text-align: center;">Dijkstra optimum — cost 13.24</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;"><img alt="BFS" src="../../assets/bfs/counter_final.png" /></td>
+<td style="text-align: center;"><img alt="Dijkstra" src="../../assets/bfs/counter_opt.png" /></td>
+</tr>
+</tbody>
+</table>
+<p>The two routes round the same obstacles on <strong>opposite sides</strong>. BFS trades cheap orthogonal moves for
+<span class="arithmatex">\(\sqrt2\)</span> diagonals and pays <span class="arithmatex">\(14.899-13.243\approx1.66\)</span> more — the hops are equal, the cost is not.</p>
+<pre><code class="language-bash">python python/demos/demo_bfs.py --map maps/grid/bfs_hopcost01.yaml \
+  --scenario maps/scenarios/bfs_hopcost01_s1.yaml --params configs/global_planning/bfs.yaml \
+  --trace out/bfs_ce.jsonl   # rerun with Dijkstra to get 13.243 (cheaper)
+</code></pre>
+<h2 id="emitted-trace-events">Emitted Trace Events<a class="anchor" href="#emitted-trace-events" title="Permanent link">¶</a></h2>
+<p><code>planning_started</code> → (<code>node_expanded</code>, <code>edge_added</code>)* → <code>path_found</code> → <code>planning_finished</code></p>
 <h2 id="references">References<a class="anchor" href="#references" title="Permanent link">¶</a></h2>
 <div class="footnote">
 <hr />

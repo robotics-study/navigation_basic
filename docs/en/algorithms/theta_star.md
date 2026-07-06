@@ -38,6 +38,21 @@ Theta\* **4 waypoints · cost 27.75**.
 
 ## How It Works
 
+Search on `maze01`. Like the A\* frontier it grows toward the goal, but the final path is not a grid
+staircase — it is a **sparse straight-line polyline** that only grazes obstacle corners.
+
+![Theta* on maze01](../../assets/theta_star/maze01.gif)
+
+Intermediate search progress (left → right: early / middle / final path):
+
+| | | |
+|:---:|:---:|:---:|
+| ![early](../../assets/theta_star/maze01_snap_02.png) | ![mid](../../assets/theta_star/maze01_snap_05.png) | ![final](../../assets/theta_star/maze01_final.png) |
+
+Final result on `open01` — with few obstacles, start→goal connects as almost a single straight line:
+
+![Theta* on open01](../../assets/theta_star/open01_final.png)
+
 ```
 THETASTAR(start, goal):
     g[start] ← 0; parent[start] ← start
@@ -84,64 +99,6 @@ The octile heuristic the map provides for A\* satisfies octile ≥ Euclidean, so
 (overestimating) for any-angle costs and is not used. The Euclidean distance is an admissible lower
 bound for arbitrary-angle motion.
 
-## Properties
-
-- **Completeness**: complete on a finite grid with non-negative costs (same as A\*).
-- **Optimality**: basic Theta\* guarantees **neither grid-optimality nor true-optimality**[^nash].
-  Because the local rule only ever inherits the grandparent as parent, it can miss the truly shortest
-  any-angle path (though it stays very close). When strict optimality is required, use later variants
-  such as Lazy Theta\* / AP Theta\*.
-- **Quality**: the returned path cost is always ≤ the A\* cost on the same grid — LOS shortcuts replace
-  grid staircases.
-- **Complexity**: the same search as A\* plus one LOS check (linear in segment length) per relaxation.
-- w > 1 (weighted Theta\*, Pohl 1970[^pohl]): inflating the heuristic reduces expanded nodes at the
-  cost of path quality.
-
-## Parameters
-
-| Name | Type | Default | Range | Description |
-|---|---|---|---|---|
-| `heuristic_weight` | float | 1.0 | [1.0, 5.0] | The w in f = g + w·h (h is Euclidean). 1.0 = standard Theta\*, above = weighted |
-
-## Implementation Notes
-
-- C++: `cpp/src/global_planning/search/theta_star.cpp`, Python: `python/navigation/global_planning/search/theta_star.py`
-- The Euclidean distance is computed as **`sqrt(Δrow² + Δcol²)`, not `hypot`**. `hypot` is not
-  IEEE-754 correctly-rounded and can differ by 1 ULP between runtimes, which would make f-values,
-  tie-breaking, and the emitted trace stream diverge between the two languages (the benchmark's
-  C++/Python comparison relies on that stream). `sqrt` is correctly rounded, and `sqrt(2.0)` exactly
-  equals the diagonal edge cost from `neighbors()`, so a Path-2 diagonal shortcut and a Path-1 diagonal
-  step are bit-identical.
-- Path cost is reported as `g[goal]`. Summing adjacent edges would be wrong — it returns 0 for
-  non-adjacent (any-angle) jumps.
-- Tie-breaking is the same `(f, insertion order)` as A\*, so the two languages converge to the same
-  path — the maze01 expansion order matches cell-for-cell between C++ and Python.
-
-## Emitted Trace Events
-
-`planning_started` → (`node_expanded`, `candidate_evaluated`, `edge_added`)* → `path_found` → `planning_finished`
-
-In `edge_added(state=s2, parent)`, `parent` becomes a **non-adjacent grandparent** on Path 2 (the
-schema and the visualizer impose no adjacency constraint). `replay.py` draws the parent→state straight
-line as-is to render the any-angle shortcut, so no new trace event is required.
-
-## Demo
-
-Search on `maze01`. Like the A\* frontier it grows toward the goal, but the final path is not a grid
-staircase — it is a **sparse straight-line polyline** that only grazes obstacle corners.
-
-![Theta* on maze01](../../assets/theta_star/maze01.gif)
-
-Intermediate search progress (left → right: early / middle / final path):
-
-| | | |
-|:---:|:---:|:---:|
-| ![early](../../assets/theta_star/maze01_snap_02.png) | ![mid](../../assets/theta_star/maze01_snap_05.png) | ![final](../../assets/theta_star/maze01_final.png) |
-
-Final result on `open01` — with few obstacles, start→goal connects as almost a single straight line:
-
-![Theta* on open01](../../assets/theta_star/open01_final.png)
-
 Measurements (Python, w = 1.0, trace on · A\* comparison on the same instance):
 
 | map | Theta\* cost | A\* cost | Theta\* expanded | A\* expanded | Theta\* waypoints |
@@ -157,6 +114,139 @@ python python/demos/demo_theta_star.py \
   --params configs/global_planning/theta_star.yaml --trace out/theta_star.jsonl
 python tools/viz/replay.py out/theta_star.jsonl --gif out/theta_star.gif --snapshots out/theta_snaps/
 ```
+
+## Properties
+
+- **Completeness**: complete on a finite grid with non-negative costs (same as A\*).
+- **Optimality**: basic Theta\* guarantees **neither grid-optimality nor true-optimality**[^nash].
+  Because the local rule only ever inherits the grandparent as parent, it can miss the truly shortest
+  any-angle path (though it stays very close). When strict optimality is required, use later variants
+  such as Lazy Theta\* / AP Theta\*.
+- **Quality**: the returned path cost is always ≤ the A\* cost on the same grid — LOS shortcuts replace
+  grid staircases.
+- **Complexity**: the same search as A\* plus one LOS check (linear in segment length) per relaxation.
+- w > 1 (weighted Theta\*, Pohl 1970[^pohl]): inflating the heuristic reduces expanded nodes at the
+  cost of path quality.
+
+## Any-angle Cost Model and Optimality
+
+**Notation.** Treat grid cell centres as points in the plane $\mathbb{R}^2$. An any-angle path
+$P=(v_0,v_1,\dots,v_k)$ is a polyline through cell centres in which every segment
+$\overline{v_i v_{i+1}}$ must be obstacle-free (LOS). Its cost is the sum of Euclidean lengths:
+
+$$
+\operatorname{cost}(P)=\sum_{i=0}^{k-1}\lVert v_{i+1}-v_i\rVert_2 .
+$$
+
+Let $C^\ast$ be the minimum cost over feasible polylines, $h(n)=\lVert n-\text{goal}\rVert_2$, and
+$h^\ast(n)$ the true shortest feasible cost from $n$ to the goal.
+
+**Lemma 1 (the Euclidean heuristic is admissible and consistent).**
+Let a feasible path $P=(v_0,\dots,v_k)$ have endpoints $a=v_0,\ b=v_k$. Applying the triangle
+inequality segment by segment and telescoping,
+
+$$
+\lVert b-a\rVert_2=\Bigl\lVert\textstyle\sum_{i}(v_{i+1}-v_i)\Bigr\rVert_2
+   \;\le\;\sum_{i}\lVert v_{i+1}-v_i\rVert_2=\operatorname{cost}(P),
+$$
+
+so no feasible path is shorter than the straight-line distance between its endpoints. Applying this
+lower bound with $a=n,\ b=\text{goal}$,
+
+$$
+h(n)=\lVert n-\text{goal}\rVert_2\;\le\;\operatorname{cost}(P)\ \text{ for all feasible }P
+\;\Longrightarrow\; h(n)\le h^\ast(n)\qquad(\text{admissible}).
+$$
+
+And for any pair $(a,b)$ whose move cost is the Euclidean length $c(a,b)=\lVert a-b\rVert_2$, the
+triangle inequality
+
+$$
+h(a)=\lVert a-\text{goal}\rVert_2\;\le\;\lVert a-b\rVert_2+\lVert b-\text{goal}\rVert_2
+      \;=\;c(a,b)+h(b)
+$$
+
+gives consistency. As with A\*, consistency $\Rightarrow$ $f$ is non-decreasing along any path
+$\Rightarrow$ each node is expanded at most once. ∎
+
+**Why not octile (quantified).** The octile heuristic A\* uses is, for $\Delta r\ge\Delta c$,
+$\text{oct}=\Delta r+(\sqrt2-1)\,\Delta c$. Its ratio to the any-angle true value
+$\lVert\cdot\rVert_2=\sqrt{\Delta r^2+\Delta c^2}$ is $\rho(t)=\dfrac{1+(\sqrt2-1)t}{\sqrt{1+t^2}}$
+with $t=\Delta c/\Delta r\in[0,1]$. Differentiating, the maximum is at $t^\ast=\sqrt2-1$:
+
+$$
+\max_t\ \frac{\text{oct}}{\lVert\cdot\rVert_2}=\sqrt{4-2\sqrt2}\approx 1.0824 .
+$$
+
+So octile overestimates any-angle cost by up to 8.24 % (inadmissible), breaking the optimality
+argument. Euclidean is the admissible lower bound for arbitrary-angle motion guaranteed above. ∎
+
+**Lemma 2 (every $g$-value is the length of a real feasible path).**
+Whenever a node $s$ is settled, its $\text{parent}[s]=p$ is a node with LOS$(p,s)$ and
+
+$$
+g[s]=g[p]+\lVert p-s\rVert_2
+$$
+
+(Path 1 is between adjacent cells, so LOS is trivial; Path 2 checks it explicitly). Unrolling the
+parent chain back to start makes $g[s]$ **exactly the length of the obstacle-free polyline**
+$\text{start}\to\cdots\to p\to s$. In particular the returned $g[\text{goal}]$ is always an
+achievable upper bound — the path Theta\* emits is always feasible. ∎
+
+**Proposition 3 (no longer than grid A\*).** The path $P_\Theta$ returned by Theta\* is no longer than
+the grid path $P_A$ that A\* returns on the same grid:
+$\operatorname{cost}(P_\Theta)\le\operatorname{cost}(P_A)$.[^nash]
+
+*Proof sketch.* If every LOS check fails, Path 2 never fires and the algorithm is identical to
+weighted A\*, so $P_\Theta=P_A$. At each point where LOS succeeds, Path 2 replaces the two grid legs
+$p\to s\to s_2$ with the grandparent–grandchild straight line $p\to s_2$, and the triangle inequality
+
+$$
+\lVert p-s_2\rVert_2\;\le\;\lVert p-s\rVert_2+\lVert s-s_2\rVert_2
+$$
+
+holds while relaxation only adopts the replacement when it lowers $g$. Hence no shortcut ever increases
+length: $P_\Theta$ is the grid path with its line-of-sight stretches straightened, and its cost is
+monotonically non-increasing. ∎
+
+**Proposition 4 (not strictly optimal).** Basic Theta\* guarantees neither $C^\ast$ nor the shortest
+any-angle path on the grid.[^nash]
+
+*Structural reasoning.* With polygonal obstacles the shortest any-angle path is a taut string whose
+turning points lie **only at convex obstacle corners** (straight between them). To recover it, a
+relaxation must be able to name "the corner the string is currently wrapped around" as the parent. But
+Theta\* chooses the parent of a candidate $s_2$ only from the two values
+
+$$
+\text{parent}(s_2)\in\{\,s,\ \text{parent}(s)\,\}.
+$$
+
+If the corner $O$ the optimal string must wrap is absent from this 2-element set at the moment of
+expansion — e.g. $O$ is an ancestor **two or more generations** before $\text{parent}(s)$, or the
+string reaching $O$ came from a different expansion branch — then the straight shortcut $O\to s_2$ is
+never created, and Theta\* approximates it by a slightly longer path that steps around $O$ along the
+grid from $\text{parent}(s)$.
+
+*Why this is not a heuristic issue.* By Lemma 1 $h$ is admissible, so at $w=1$ the A\* skeleton itself
+never misses the optimum; the gap comes solely from the **locality of the parent-candidate set
+$\{s,\text{parent}(s)\}$** — the relaxation that defines path cost is locally myopic and cannot pull
+the string fully taut. Empirically it stays within about 1 % of $C^\ast$ (this repo's maze01:
+Theta\* 27.75 vs A\* grid 28.73). For strict optimality, use later variants that consider **every**
+visible ancestor as a candidate (Lazy Theta\*, AP Theta\*). ∎
+
+## Parameters
+
+| Name | Type | Default | Range | Description |
+|---|---|---|---|---|
+| `heuristic_weight` | float | 1.0 | [1.0, 5.0] | The w in f = g + w·h (h is Euclidean). 1.0 = standard Theta\*, above = weighted |
+
+## Emitted Trace Events
+
+`planning_started` → (`node_expanded`, `candidate_evaluated`, `edge_added`)* → `path_found` → `planning_finished`
+
+In `edge_added(state=s2, parent)`, `parent` becomes a **non-adjacent grandparent** on Path 2 (the
+schema and the visualizer impose no adjacency constraint). `replay.py` draws the parent→state straight
+line as-is to render the any-angle shortcut, so no new trace event is required.
 
 ## References
 

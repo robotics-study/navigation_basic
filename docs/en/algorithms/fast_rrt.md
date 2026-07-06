@@ -34,6 +34,20 @@ The implementation in this repository layers the paper's key ideas on top of an 
 
 ## How It Works
 
+`maze01` — thanks to Fast-Sampling, the tree fills empty space evenly, and the final path (red) is a set of long straight segments with only a few vertices left by the shortcut.
+
+![Fast-RRT on maze01](../../assets/fast_rrt/maze01.gif)
+
+Intermediate search progress (left → right: early / middle / final path):
+
+| | | |
+|:---:|:---:|:---:|
+| ![early](../../assets/fast_rrt/maze01_snap_02.png) | ![mid](../../assets/fast_rrt/maze01_snap_05.png) | ![final](../../assets/fast_rrt/maze01_final.png) |
+
+Final result on `open01` — the path shrinks to a 4-point polyline:
+
+![Fast-RRT on open01](../../assets/fast_rrt/open01_final.png)
+
 ```
 FAST_RRT(start, goal):
     T ← {start}
@@ -59,78 +73,6 @@ SHORTCUT(path):                                         # triangle-inequality pr
     return path
 ```
 
-## Properties
-
-- **Completeness**: probabilistically complete. Fast-Sampling rejection is confined to already-reached space, so coverage of unexplored space is preserved.
-- **Optimality**: there is no formal proof of asymptotic optimality (with the RRT* skeleton + shortcut, measured convergence is on par with or faster than RRT*). Following the paper's characterization, it is classified as near-optimal[^wu].
-- **Path shape**: because of the shortcut, the final path has an extremely small number of waypoints — in the demo below, the final path out of an 8,000-sample tree has just **5 points**.
-
-## Parameters
-
-| Name | Type | Default | Range | Description |
-|---|---|---|---|---|
-| `max_iterations` | int | 8000 | [1, 200000] | Iteration budget (anytime) |
-| `step_size` | float | 0.5 | [0.01, 100.0] | Steer extension distance η (m) |
-| `goal_bias` | float | 0.05 | [0.0, 1.0] | Probability of sampling the goal directly |
-| `goal_tolerance` | float | 0.3 | [0.0, 100.0] | Goal-reached radius (m) |
-| `neighbor_radius` | float | 1.5 | [0.01, 100.0] | Rewire neighborhood radius (m) |
-| `reached_radius` | float | 0.4 | [0.0, 100.0] | Fast-Sampling rejection radius (m) [^wu] |
-| `steering_attempts` | int | 10 | [1, 100] | Number of Random Steering retries [^wu] |
-| `seed` | int | 1 | [0, 2^31−1] | Random seed (reproducibility) |
-
-## Rationale: Fast-Sampling & Shortcut Monotonicity
-
-**Fast-Sampling acceptance rule.** A sample $x_{rand}$ is accepted only when
-
-$$
-\min_{x\in T}\lVert x_{rand}-x\rVert>r_{\text{reached}},
-$$
-
-restricting the sampling domain to $X_{\text{free}}\setminus\bigcup_{x\in T}B(x,r_{\text{reached}})$
-and concentrating probability mass on **unreached** space — which lowers the variance of the time to
-a first solution.
-
-**Cost monotonicity of the shortcut (triangle inequality).** For consecutive waypoints
-$p_{i-1},p_i,p_{i+1}$ with $\overline{p_{i-1}p_{i+1}}\subset X_{\text{free}}$, removing $p_i$ changes
-the cost by
-
-$$
-\Delta=\lVert p_{i-1}-p_{i+1}\rVert-\Bigl(\lVert p_{i-1}-p_i\rVert+\lVert p_i-p_{i+1}\rVert\Bigr)\le 0,
-$$
-
-non-positive by the triangle inequality. So every accepted shortcut **never increases** path cost;
-iterating to a fixed point yields a locally taut path.
-
-**Optimality.** The underlying tree is RRT\*-style (choose-parent + rewire), so it retains the
-asymptotic optimality of [RRT*](rrt_star.md); Fast-Sampling and Random-Steering only reduce the time
-to a first solution and its variance without weakening that guarantee (Wu et al. 2021).
-
-## Implementation Notes
-
-- C++: `cpp/src/global_planning/fast_rrt.cpp`, Python: `python/navigation/global_planning/fast_rrt.py`
-- Choose-parent / rewire share common utilities with [RRT*](rrt_star.md) — only the paper's contributions (Fast-Sampling / Random Steering / shortcut) live in this class.
-- The Fast-Sampling rejection check makes each iteration more expensive as the tree densifies — which is why, for the same 8,000 iterations, the tree is larger than RRT*'s (~7,970 vs ~5,915 nodes) and the run is slower.
-
-## Emitted Trace Events
-
-`planning_started` → (`sample_drawn`, `edge_added`, `rewire`*)* → `path_found`* → `planning_finished`
-
-## Demo
-
-`maze01` — thanks to Fast-Sampling, the tree fills empty space evenly, and the final path (red) is a set of long straight segments with only a few vertices left by the shortcut.
-
-![Fast-RRT on maze01](../../assets/fast_rrt/maze01.gif)
-
-Intermediate search progress (left → right: early / middle / final path):
-
-| | | |
-|:---:|:---:|:---:|
-| ![early](../../assets/fast_rrt/maze01_snap_02.png) | ![mid](../../assets/fast_rrt/maze01_snap_05.png) | ![final](../../assets/fast_rrt/maze01_final.png) |
-
-Final result on `open01` — the path shrinks to a 4-point polyline:
-
-![Fast-RRT on open01](../../assets/fast_rrt/open01_final.png)
-
 Measurements (seed = 1, 8000 iterations, trace on):
 
 | map | Language | path cost | path waypoints | ref: RRT* cost |
@@ -150,6 +92,64 @@ python python/demos/demo_fast_rrt.py \
   --params configs/global_planning/fast_rrt.yaml --trace out/fast_rrt.jsonl
 python tools/viz/replay.py out/fast_rrt.jsonl --gif out/fast_rrt.gif
 ```
+
+## Properties
+
+- **Completeness**: probabilistically complete. Fast-Sampling rejection is confined to already-reached space, so coverage of unexplored space is preserved.
+- **Optimality**: there is no formal proof of asymptotic optimality (with the RRT* skeleton + shortcut, measured convergence is on par with or faster than RRT*). Following the paper's characterization, it is classified as near-optimal[^wu].
+- **Path shape**: because of the shortcut, the final path has an extremely small number of waypoints — in the demo below, the final path out of an 8,000-sample tree has just **5 points**.
+
+## Rationale: Fast-Sampling & Shortcut Monotonicity
+
+**Fast-Sampling acceptance rule.** A sample $x_{rand}$ is accepted only when
+
+$$
+\min_{x\in T}\lVert x_{rand}-x\rVert>r_{\text{reached}},
+$$
+
+restricting the sampling domain to $X_{\text{free}}\setminus\bigcup_{x\in T}B(x,r_{\text{reached}})$
+and concentrating probability mass on **unreached** space — which lowers the variance of the time to
+a first solution. The acceptance probability is
+
+$$
+P[\text{accept}]=1-\frac{\mu\!\bigl(\bigcup_{x\in T}B(x,r_{\text{reached}})\bigr)}{\mu(X_{\text{free}})},
+$$
+
+which approaches $0$ as the tree covers space — early on almost every sample is accepted and the tree
+races outward, but later rejections grow frequent and the per-iteration cost rises (why the tree is
+larger and slower than [RRT*](rrt_star.md) at the same 8,000 iterations).
+
+**Cost monotonicity of the shortcut (triangle inequality).** For consecutive waypoints
+$p_{i-1},p_i,p_{i+1}$ with $\overline{p_{i-1}p_{i+1}}\subset X_{\text{free}}$, removing $p_i$ changes
+the cost by
+
+$$
+\Delta=\lVert p_{i-1}-p_{i+1}\rVert-\Bigl(\lVert p_{i-1}-p_i\rVert+\lVert p_i-p_{i+1}\rVert\Bigr)\le 0,
+$$
+
+non-positive by the triangle inequality. So every accepted shortcut **never increases** path cost;
+iterating to a fixed point yields a locally taut path.
+
+**Optimality.** The underlying tree is RRT\*-style (choose-parent + rewire), so it retains the
+asymptotic optimality of [RRT*](rrt_star.md); Fast-Sampling and Random-Steering only reduce the time
+to a first solution and its variance without weakening that guarantee (Wu et al. 2021).
+
+## Parameters
+
+| Name | Type | Default | Range | Description |
+|---|---|---|---|---|
+| `max_iterations` | int | 8000 | [1, 200000] | Iteration budget (anytime) |
+| `step_size` | float | 0.5 | [0.01, 100.0] | Steer extension distance η (m) |
+| `goal_bias` | float | 0.05 | [0.0, 1.0] | Probability of sampling the goal directly |
+| `goal_tolerance` | float | 0.3 | [0.0, 100.0] | Goal-reached radius (m) |
+| `neighbor_radius` | float | 1.5 | [0.01, 100.0] | Rewire neighborhood radius (m) |
+| `reached_radius` | float | 0.4 | [0.0, 100.0] | Fast-Sampling rejection radius (m) [^wu] |
+| `steering_attempts` | int | 10 | [1, 100] | Number of Random Steering retries [^wu] |
+| `seed` | int | 1 | [0, 2^31−1] | Random seed (reproducibility) |
+
+## Emitted Trace Events
+
+`planning_started` → (`sample_drawn`, `edge_added`, `rewire`*)* → `path_found`* → `planning_finished`
 
 ## References
 

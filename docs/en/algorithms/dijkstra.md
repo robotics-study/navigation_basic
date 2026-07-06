@@ -29,71 +29,6 @@ Dijkstra's algorithm[^dijkstra] finds single-source shortest paths on graphs wit
 
 ## How It Works
 
-The node with the smallest g value is popped from a priority queue and settled. With non-negative costs, the g value at the moment of settling is guaranteed to be the shortest cost to that node (the justification of the greedy choice — the paper's central argument). Relaxation toward each neighbor updates g whenever a shorter path is discovered.
-
-```
-DIJKSTRA(start, goal):
-    g[start] ← 0; open ← priority queue keyed by g
-    while open is not empty:
-        v ← open.pop_min()                    # minimum g — v's shortest cost is settled here
-        if v == goal: return reconstruct(v)
-        if v already settled: continue        # lazy deletion (see implementation notes)
-        for (u, c) in neighbors(v):
-            if g[v] + c < g[u]:               # relaxation
-                g[u] ← g[v] + c; parent[u] ← v
-                open.push(u, g[u])
-    return failure
-```
-
-## Properties
-
-- **Completeness**: on a finite graph with non-negative costs, a solution is found if one exists.
-- **Optimality**: the returned path is cost-optimal. (This does not hold with negative edges — that is Bellman-Ford territory.)
-- **Complexity**: O((V+E) log V) with a binary heap. The Fibonacci-heap theoretical bound is O(E + V log V), but in practice a binary heap with lazy deletion is the norm.
-
-## Optimality Proof (correctness at settle time)
-
-Assume non-negative weights $w(u,v)\ge 0$. Let $\delta(s,u)$ be the shortest **cost** from $s$ to $u$.
-
-**Theorem.** When the priority queue extracts $u$ (as the minimum $g$) and settles it,
-$g[u]=\delta(s,u)$.
-
-*Proof (contradiction).* Let $u$ be the **first** node settled with $g[u]>\delta(s,u)$ ($u\ne s$
-since $g[s]=0=\delta(s,s)$). Take a shortest path $P:s\rightsquigarrow u$; let $y$ be the first
-not-yet-settled node on $P$ and $x$ its predecessor (settled, $g[x]=\delta(s,x)$). Relaxing edge
-$(x,y)$ when $x$ was settled gives
-
-$$
-g[y]\;\le\;g[x]+w(x,y)\;=\;\delta(s,x)+w(x,y)\;=\;\delta(s,y).
-$$
-
-Since $y$ precedes $u$ on $P$ and the remaining sub-path has non-negative cost,
-$\delta(s,y)\le\delta(s,u)$. Combining,
-
-$$
-g[y]\;\le\;\delta(s,y)\;\le\;\delta(s,u)\;<\;g[u].
-$$
-
-Then the queue would extract $y$ before $u$ — contradiction. Hence $g[u]=\delta(s,u)$.
-Non-negativity is essential at the step $\delta(s,y)\le\delta(s,u)$ (with negative edges it fails —
-Bellman–Ford territory). ∎
-
-**Complexity.** Binary heap: $V$ extract-mins $O(V\log V)$ plus $E$ pushes on relaxation
-$O(E\log V)$ → $O((V+E)\log V)$.
-
-## Implementation Notes
-
-- C++: `cpp/src/global_planning/dijkstra.cpp`, Python: `python/navigation/global_planning/dijkstra.py`
-- Dijkstra and A* **differ only in the priority key** (f = g vs f = g + w·h). Both languages share a common best-first skeleton (`discrete_search` / `_bestfirst`) to make this relationship explicit in the code.
-- Instead of a decrease-key data structure, a **lazy queue** is used: the same node may be inserted into the queue multiple times, and nodes already settled at pop time are skipped. The heap grows somewhat larger, but the implementation is simpler and faster.
-- No parameters (`configs/global_planning/dijkstra.yaml` is an empty declaration). It is deterministic, so the C++ and Python results match exactly.
-
-## Emitted Trace Events
-
-`planning_started` → (`node_expanded`, `edge_added`)* → `path_found` → `planning_finished`
-
-## Demo
-
 Search on `maze01`. Unlike BFS, the frontier spreads along **accumulated-cost contours** (reflecting the √2 diagonal cost).
 
 ![Dijkstra on maze01](../../assets/dijkstra/maze01.gif)
@@ -107,6 +42,22 @@ Intermediate search progress (left → right: early / middle / final path):
 Final result on `open01`:
 
 ![Dijkstra on open01](../../assets/dijkstra/open01_final.png)
+
+The node with the smallest g value is popped from a priority queue and settled. With non-negative costs, the g value at the moment of settling is guaranteed to be the shortest cost to that node (the justification of the greedy choice — the paper's central argument). Relaxation toward each neighbor updates g whenever a shorter path is discovered.
+
+```
+DIJKSTRA(start, goal):
+    g[start] ← 0; open ← priority queue keyed by g
+    while open is not empty:
+        v ← open.pop_min()                    # minimum g — v's shortest cost is settled here
+        if v == goal: return reconstruct(v)
+        if v already settled: continue        # lazy deletion (see the corollary below)
+        for (u, c) in neighbors(v):
+            if g[v] + c < g[u]:               # relaxation
+                g[u] ← g[v] + c; parent[u] ← v
+                open.push(u, g[u])
+    return failure
+```
 
 Measurements (Python, trace on):
 
@@ -125,6 +76,60 @@ python python/demos/demo_dijkstra.py \
   --params configs/global_planning/dijkstra.yaml --trace out/dijkstra.jsonl
 python tools/viz/replay.py out/dijkstra.jsonl --gif out/dijkstra.gif
 ```
+
+## Properties
+
+- **Completeness**: on a finite graph with non-negative costs, a solution is found if one exists.
+- **Optimality**: the returned path is cost-optimal. (This does not hold with negative edges — that is Bellman-Ford territory.)
+- **Complexity**: O((V+E) log V) with a binary heap. The Fibonacci-heap theoretical bound is O(E + V log V), but in practice a binary heap with lazy deletion is the norm.
+
+## Optimality Proof (correctness at settle time)
+
+Assume non-negative weights $w(u,v)\ge 0$. Let $\delta(s,u)$ be the shortest **cost** from $s$ to $u$.
+
+**Lemma 0 (upper-bound invariant).** Throughout the run, $g[v]\ge\delta(s,v)$ for every node $v$, and
+whenever $g[v]<\infty$ it is the cost of an **actual** $s\to v$ path.
+
+*Proof.* Relaxation only lowers a value via $g[u]\leftarrow g[v]+c(v,u)$, which is the cost of the
+real path "$s\to v$ path $+$ edge $(v,u)$" and so is the cost of some real path, hence
+$\ge\delta(s,u)$. The initial $g[s]=0=\delta(s,s)$ and the remaining $\infty$'s satisfy the claim. ∎
+
+**Theorem (correct at settle time).** When the priority queue extracts $u$ (as the minimum $g$) and
+settles it, $g[u]=\delta(s,u)$.
+
+*Proof (contradiction).* Let $u$ be the **first** node settled with $g[u]>\delta(s,u)$ ($u\ne s$
+since $g[s]=0=\delta(s,s)$). Take a shortest path $P:s\rightsquigarrow u$; let $y$ be the first
+not-yet-settled node on $P$ and $x$ its predecessor (settled, $g[x]=\delta(s,x)$). Relaxing edge
+$(x,y)$ when $x$ was settled gives
+
+$$
+g[y]\;\le\;g[x]+w(x,y)\;=\;\delta(s,x)+w(x,y)\;=\;\delta(s,y).
+$$
+
+Since $y$ precedes $u$ on $P$ and the remaining sub-path has non-negative cost,
+$\delta(s,y)\le\delta(s,u)$. Combining,
+
+$$
+g[y]\;\le\;\delta(s,y)\;\le\;\delta(s,u)\;<\;g[u].
+$$
+
+Then the queue would extract $y$ before $u$ — contradiction. Hence $g[u]=\delta(s,u)$ (the first
+inequality also uses $g[y]\ge\delta(s,y)$ from Lemma 0, pinning $g[y]=\delta(s,y)$). Non-negativity is
+essential at the step $\delta(s,y)\le\delta(s,u)$ (with negative edges it fails — Bellman–Ford
+territory). ∎
+
+**Corollary (invariant after settling → lazy deletion is valid).** Once a node is settled its $g$ is
+already $\delta(s,\cdot)$ and, by Lemma 0, can never drop lower. So skipping the **stale duplicate**
+entries of that node when they are later popped (i.e. lazy deletion) cannot break optimality —
+correctness holds with duplicate insertions alone, no decrease-key structure needed.
+
+**Complexity.** Binary heap: $V$ extract-mins $O(V\log V)$ plus $E$ pushes on relaxation
+$O(E\log V)$ → $O((V+E)\log V)$. Lazy duplicates can grow the heap to $O(E)$, but each entry is
+$O(\log E)=O(\log V)$, so the asymptotic order is unchanged.
+
+## Emitted Trace Events
+
+`planning_started` → (`node_expanded`, `edge_added`)* → `path_found` → `planning_finished`
 
 ## References
 
