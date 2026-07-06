@@ -370,7 +370,9 @@ def sidebar_html(lang: str, cur: str, base: str) -> str:
                 parts.append(
                     f'<details class="nav-sub"{open_attr}>'
                     f'<summary>{html.escape(it["sub"])}</summary>'
-                    f'<div class="nav-sub-body">{links}</div></details>'
+                    # 링크를 nav-sub-inner 로 감싸 grid-rows(0fr↔1fr) 열림/닫힘 애니메이션이
+                    # 단일 클리핑 자식을 갖도록 한다 (site.css 참조).
+                    f'<div class="nav-sub-body"><div class="nav-sub-inner">{links}</div></div></details>'
                 )
             else:
                 parts.append(_nav_leaf(*it, lang, cur, base))
