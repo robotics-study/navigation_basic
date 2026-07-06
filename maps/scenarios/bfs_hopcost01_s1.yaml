@@ -1,0 +1,3 @@
+map: ../grid/bfs_hopcost01.yaml
+start: [2.25, 6.25]
+goal: [4.25, 0.75]

@@ -29,9 +29,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../../assets/site.css?v=becfdb97">
+<link rel="stylesheet" href="../../assets/site.css?v=6d6dae56">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Crect width='24' height='24' rx='6' fill='%230b1020'/%3E%3Cpath d='M4 19V11h8V5h8' stroke='%23818cf8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='4' cy='19' r='2.4' fill='%23818cf8'/%3E%3Ccircle cx='20' cy='5' r='2.4' fill='%2322d3ee'/%3E%3C/svg%3E">
-<script src="../../assets/site.js?v=becfdb97"></script>
+<script src="../../assets/site.js?v=6d6dae56"></script>
 </head>
 <body>
 <header class="topbar">
@@ -51,8 +51,8 @@
 <a href="../../ko/index.html">개요</a>
 <a href="../../ko/algorithms/index.html">알고리즘 목록</a>
 <h4>Global planning</h4>
-<details class="nav-sub"><summary>Search</summary><div class="nav-sub-body"><a href="../../ko/algorithms/bfs.html">BFS</a><a href="../../ko/algorithms/dijkstra.html">Dijkstra</a><a href="../../ko/algorithms/astar.html">A*</a><a href="../../ko/algorithms/dstar_lite.html">D* Lite</a><a href="../../ko/algorithms/theta_star.html">Theta*</a><a href="../../ko/algorithms/hybrid_astar.html">Hybrid A*</a></div></details>
-<details class="nav-sub" open><summary>Sampling</summary><div class="nav-sub-body"><a href="../../ko/algorithms/prm.html">PRM</a><a href="../../ko/algorithms/rrt.html">RRT</a><a href="../../ko/algorithms/rrt_star.html">RRT*</a><a href="../../ko/algorithms/prm_star.html" class="active">PRM*</a><a href="../../ko/algorithms/fmt_star.html">FMT*</a><a href="../../ko/algorithms/bit_star.html">BIT*</a><a href="../../ko/algorithms/fast_rrt.html">Fast-RRT</a></div></details>
+<details class="nav-sub"><summary>Search</summary><div class="nav-sub-body"><div class="nav-sub-inner"><a href="../../ko/algorithms/bfs.html">BFS</a><a href="../../ko/algorithms/dijkstra.html">Dijkstra</a><a href="../../ko/algorithms/astar.html">A*</a><a href="../../ko/algorithms/dstar_lite.html">D* Lite</a><a href="../../ko/algorithms/theta_star.html">Theta*</a><a href="../../ko/algorithms/hybrid_astar.html">Hybrid A*</a></div></div></details>
+<details class="nav-sub" open><summary>Sampling</summary><div class="nav-sub-body"><div class="nav-sub-inner"><a href="../../ko/algorithms/prm.html">PRM</a><a href="../../ko/algorithms/rrt.html">RRT</a><a href="../../ko/algorithms/rrt_star.html">RRT*</a><a href="../../ko/algorithms/prm_star.html" class="active">PRM*</a><a href="../../ko/algorithms/fmt_star.html">FMT*</a><a href="../../ko/algorithms/bit_star.html">BIT*</a><a href="../../ko/algorithms/fast_rrt.html">Fast-RRT</a></div></div></details>
 <a href="../../ko/benchmarks.html">벤치마크</a>
 <h4>Local planning <span class="soon">예정</span></h4>
 <span class="planned">DWA</span>
@@ -119,6 +119,28 @@ r_n=\gamma\left(\frac{\log n}{n}\right)^{1/d},\qquad d=2
 복원하기에 딱 충분하면서도 간선 수를 near-linear 로 억제한다. 고정 반경은 (너무 크면) <span class="arithmatex">\(O(n^2)\)</span>
 간선을 만들거나 (너무 작으면) 연결성이 끊겨 최적성을 잃는다.</p>
 <h2 id="_2">동작 원리<a class="anchor" href="#_2" title="Permanent link">¶</a></h2>
+<p><code>maze01</code> — 표본이 흩뿌려지고, 줄어든 반경으로 각 노드가 기대상 로그 개의 이웃과 이어져 로드맵이
+형성된 뒤 Dijkstra 가 최단 경로를 뽑는다.</p>
+<p><img alt="PRM* on maze01" src="../../assets/prm_star/maze01.gif" /></p>
+<p>탐색 중간 과정 (좌 → 우: 표본/간선 초반 / 로드맵 형성 / 최종 경로):</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;"></th>
+<th style="text-align: center;"></th>
+<th style="text-align: center;"></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;"><img alt="early" src="../../assets/prm_star/maze01_snap_02.png" /></td>
+<td style="text-align: center;"><img alt="mid" src="../../assets/prm_star/maze01_snap_05.png" /></td>
+<td style="text-align: center;"><img alt="final" src="../../assets/prm_star/maze01_final.png" /></td>
+</tr>
+</tbody>
+</table>
+<p><code>open01</code> 최종 결과 — 거의 직선에 가깝다:</p>
+<p><img alt="PRM* on open01" src="../../assets/prm_star/open01_final.png" /></p>
 <pre><code>PRM_STAR(start, goal):
     R ← roadmap()
     R.add(start); R.add(goal)
@@ -134,6 +156,38 @@ r_n=\gamma\left(\frac{\log n}{n}\right)^{1/d},\qquad d=2
 </code></pre>
 <p>반경은 최종 노드 수 <span class="arithmatex">\(n\)</span> 이 정해진 뒤 <strong>한 번</strong> 계산해 모든 노드에 같은 값을 쓴다. 이것이
 PRM 과의 유일한 코드 차이다.</p>
+<p>측정치 (Python, seed = 1, trace on):</p>
+<table>
+<thead>
+<tr>
+<th>map</th>
+<th>path cost</th>
+<th>roadmap 노드</th>
+<th>expanded (Dijkstra pop)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>maze01</td>
+<td>13.595</td>
+<td>1,502</td>
+<td>1,092</td>
+</tr>
+<tr>
+<td>open01</td>
+<td>12.053</td>
+<td>—</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p>C++ 구현도 동일 시나리오를 미러링하며, 언어 간 난수 스트림 차이 범위 안에서 같은 결과를 낸다.</p>
+<p>재현:</p>
+<pre><code class="language-bash">python python/demos/demo_prm_star.py \
+  --map maps/grid/maze01.yaml --scenario maps/scenarios/maze01_s1.yaml \
+  --params configs/global_planning/prm_star.yaml --trace out/prm_star.jsonl
+python tools/viz/replay.py out/prm_star.jsonl --gif out/prm_star.gif
+</code></pre>
 <h2 id="_3">성질<a class="anchor" href="#_3" title="Permanent link">¶</a></h2>
 <ul>
 <li><strong>완전성</strong>: probabilistically complete<sup id="fnref2:karaman"><a class="footnote-ref" href="#fn:karaman">2</a></sup>.</li>
@@ -142,7 +196,31 @@ PRM 과의 유일한 코드 차이다.</p>
 <li><strong>비용</strong>: 기대 이웃 수가 로그로 억제되므로 간선 수가 PRM 의 고정 반경 대비 near-linear 다.
   같은 표본 수에서 PRM 과 유사한 해를 내되, 최적성 보장이 붙는다.</li>
 </ul>
-<h2 id="_4">파라미터<a class="anchor" href="#_4" title="Permanent link">¶</a></h2>
+<h2 id="_4">점근적 최적성 근거<a class="anchor" href="#_4" title="Permanent link">¶</a></h2>
+<p><strong>연결 반경.</strong> <span class="arithmatex">\(n\)</span> 개 표본에 대해</p>
+<div class="arithmatex">\[
+r_n=\gamma_{\mathrm{PRM}^*}\left(\frac{\log n}{n}\right)^{1/d},\qquad
+\gamma_{\mathrm{PRM}^*}&gt;2\left(1+\frac1d\right)^{1/d}\left(\frac{\mu(X_{\text{free}})}{\zeta_d}\right)^{1/d}
+\]</div>
+<p>(<span class="arithmatex">\(d\)</span>: 공간 차원, 여기서 <span class="arithmatex">\(d=2\)</span>; <span class="arithmatex">\(\mu(X_{\text{free}})\)</span>: 자유 공간 부피; <span class="arithmatex">\(\zeta_d\)</span>: 단위 <span class="arithmatex">\(d\)</span>-볼 부피).</p>
+<p><strong>정리 (점근적 최적성, Karaman &amp; Frazzoli 2011).</strong> 위 반경 하에서 로드맵의 최단 경로 비용 <span class="arithmatex">\(Y_n\)</span> 은</p>
+<div class="arithmatex">\[
+P\!\left[\lim_{n\to\infty}Y_n=c^*\right]=1.
+\]</div>
+<p><em>직관.</em> 반경을 <span class="arithmatex">\((\log n/n)^{1/d}\)</span> 로 줄이되 계수 <span class="arithmatex">\(\gamma\)</span> 를 임계값 위로 두면 각 노드가 기대상
+<span class="arithmatex">\(\Theta(\log n)\)</span> 개 이웃을 가진다 — 최적 경로와 같은 homotopy 류의 경로를 극한에서 복원하기에
+충분한 연결성이다. 반경이 이보다 빨리 줄면 그래프가 끊겨 최적성이 깨지고, 상수로 두면 간선이
+<span class="arithmatex">\(O(n^2)\)</span> 로 폭증한다. <span class="arithmatex">\(r_n\)</span> 은 이 둘 사이의 최소 밀도다.</p>
+<p><strong>간선 수 도출.</strong> 표본 밀도 <span class="arithmatex">\(n/\mu(X_{\text{free}})\)</span> 에서 반경 <span class="arithmatex">\(r\)</span> 공 안의 기대 이웃 수는
+<span class="arithmatex">\(\approx\zeta_d\,r^d\,n/\mu(X_{\text{free}})\)</span>. <span class="arithmatex">\(r=r_n=\gamma(\log n/n)^{1/d}\)</span> 를 대입하면</p>
+<div class="arithmatex">\[
+\mathbb{E}[\deg]\;\approx\;\frac{\gamma^d\zeta_d}{\mu(X_{\text{free}})}\,\log n\;=\;\Theta(\log n),
+\qquad |E|=\Theta(n\log n).
+\]</div>
+<p>상수 반경이면 <span class="arithmatex">\(\mathbb{E}[\deg]=\Theta(n)\)</span>·<span class="arithmatex">\(|E|=\Theta(n^2)\)</span> 로 폭증하고(그게 <a href="prm.html">PRM</a>), 반대로
+이웃 수를 <span class="arithmatex">\(k=O(1)\)</span> 로 고정하면 random geometric graph 연결 임계 <span class="arithmatex">\(\Theta(\log n)\)</span> 미만이라 그래프가
+조각나 최적성이 깨진다. <span class="arithmatex">\(r_n\)</span> 은 연결성을 지키는 <strong>최소 밀도</strong>를 정확히 집는다.</p>
+<h2 id="_5">파라미터<a class="anchor" href="#_5" title="Permanent link">¶</a></h2>
 <table>
 <thead>
 <tr>
@@ -177,87 +255,9 @@ PRM 과의 유일한 코드 차이다.</p>
 </tr>
 </tbody>
 </table>
-<h2 id="_5">점근적 최적성 근거<a class="anchor" href="#_5" title="Permanent link">¶</a></h2>
-<p><strong>연결 반경.</strong> <span class="arithmatex">\(n\)</span> 개 표본에 대해</p>
-<div class="arithmatex">\[
-r_n=\gamma_{\mathrm{PRM}^*}\left(\frac{\log n}{n}\right)^{1/d},\qquad
-\gamma_{\mathrm{PRM}^*}&gt;2\left(1+\frac1d\right)^{1/d}\left(\frac{\mu(X_{\text{free}})}{\zeta_d}\right)^{1/d}
-\]</div>
-<p>(<span class="arithmatex">\(d\)</span>: 공간 차원, 여기서 <span class="arithmatex">\(d=2\)</span>; <span class="arithmatex">\(\mu(X_{\text{free}})\)</span>: 자유 공간 부피; <span class="arithmatex">\(\zeta_d\)</span>: 단위 <span class="arithmatex">\(d\)</span>-볼 부피).</p>
-<p><strong>정리 (점근적 최적성, Karaman &amp; Frazzoli 2011).</strong> 위 반경 하에서 로드맵의 최단 경로 비용 <span class="arithmatex">\(Y_n\)</span> 은</p>
-<div class="arithmatex">\[
-P\!\left[\lim_{n\to\infty}Y_n=c^*\right]=1.
-\]</div>
-<p><em>직관.</em> 반경을 <span class="arithmatex">\((\log n/n)^{1/d}\)</span> 로 줄이되 계수 <span class="arithmatex">\(\gamma\)</span> 를 임계값 위로 두면 각 노드가 기대상
-<span class="arithmatex">\(\Theta(\log n)\)</span> 개 이웃을 가진다 — 최적 경로와 같은 homotopy 류의 경로를 극한에서 복원하기에
-충분한 연결성이다. 반경이 이보다 빨리 줄면 그래프가 끊겨 최적성이 깨지고, 상수로 두면 간선이
-<span class="arithmatex">\(O(n^2)\)</span> 로 폭증한다. <span class="arithmatex">\(r_n\)</span> 은 이 둘 사이의 최소 밀도다.</p>
-<h2 id="_6">구현 노트<a class="anchor" href="#_6" title="Permanent link">¶</a></h2>
-<ul>
-<li>C++: <code>cpp/src/global_planning/prm_star.cpp</code>, Python: <code>python/navigation/global_planning/prm_star.py</code></li>
-<li>로드맵·연결·Dijkstra 질의는 <a href="prm.html">PRM</a> 와 공유하는 공통 유틸(<code>roadmap_common</code> / <code>_roadmap</code>)에
-  있다. PRM* 은 반경 정책만 다르다.</li>
-<li>줄어드는 반경 <span class="arithmatex">\(r_n=\gamma\sqrt{\log n/n}\)</span> 은 <a href="fmt_star.html">FMT*</a>·<a href="bit_star.html">BIT*</a> 와 공유하는
-  <code>sampling_common</code> / <code>_sampling</code> 의 <code>rgg_radius</code> 로 계산한다.</li>
-</ul>
 <h2 id="trace">방출 trace 이벤트<a class="anchor" href="#trace" title="Permanent link">¶</a></h2>
 <p><code>planning_started</code> → <code>sample_drawn</code>* → <code>edge_added</code>* → <code>node_expanded</code>* → <code>path_found</code> → <code>planning_finished</code></p>
 <p>이벤트 목록은 <a href="prm.html">PRM</a> 과 동일하다 — 차이는 <code>edge_added</code> 를 부르는 반경 정책뿐이다.</p>
-<h2 id="demo">Demo<a class="anchor" href="#demo" title="Permanent link">¶</a></h2>
-<p><code>maze01</code> — 표본이 흩뿌려지고, 줄어든 반경으로 각 노드가 기대상 로그 개의 이웃과 이어져 로드맵이
-형성된 뒤 Dijkstra 가 최단 경로를 뽑는다.</p>
-<p><img alt="PRM* on maze01" src="../../assets/prm_star/maze01.gif" /></p>
-<p>탐색 중간 과정 (좌 → 우: 표본/간선 초반 / 로드맵 형성 / 최종 경로):</p>
-<table>
-<thead>
-<tr>
-<th style="text-align: center;"></th>
-<th style="text-align: center;"></th>
-<th style="text-align: center;"></th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align: center;"><img alt="early" src="../../assets/prm_star/maze01_snap_02.png" /></td>
-<td style="text-align: center;"><img alt="mid" src="../../assets/prm_star/maze01_snap_05.png" /></td>
-<td style="text-align: center;"><img alt="final" src="../../assets/prm_star/maze01_final.png" /></td>
-</tr>
-</tbody>
-</table>
-<p><code>open01</code> 최종 결과 — 거의 직선에 가깝다:</p>
-<p><img alt="PRM* on open01" src="../../assets/prm_star/open01_final.png" /></p>
-<p>측정치 (Python, seed = 1, trace on):</p>
-<table>
-<thead>
-<tr>
-<th>map</th>
-<th>path cost</th>
-<th>roadmap 노드</th>
-<th>expanded (Dijkstra pop)</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>maze01</td>
-<td>13.595</td>
-<td>1,502</td>
-<td>1,092</td>
-</tr>
-<tr>
-<td>open01</td>
-<td>12.053</td>
-<td>—</td>
-<td>—</td>
-</tr>
-</tbody>
-</table>
-<p>C++ 구현도 동일 시나리오를 미러링하며, 언어 간 난수 스트림 차이 범위 안에서 같은 결과를 낸다.</p>
-<p>재현:</p>
-<pre><code class="language-bash">python python/demos/demo_prm_star.py \
-  --map maps/grid/maze01.yaml --scenario maps/scenarios/maze01_s1.yaml \
-  --params configs/global_planning/prm_star.yaml --trace out/prm_star.jsonl
-python tools/viz/replay.py out/prm_star.jsonl --gif out/prm_star.gif
-</code></pre>
 <h2 id="references">References<a class="anchor" href="#references" title="Permanent link">¶</a></h2>
 <div class="footnote">
 <hr />

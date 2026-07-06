@@ -43,6 +43,21 @@ Fast-RRT[^wu] 는 RRT/RRT* 의 두 가지 실용적 약점 — (1) 이미 탐색
 
 ## 동작 원리
 
+`maze01` — Fast-Sampling 덕에 트리가 빈 공간을 고르게 채우고, 최종 경로(빨강)는 shortcut 으로
+꼭짓점 몇 개만 남은 긴 직선 선분들이다.
+
+![Fast-RRT on maze01](../../assets/fast_rrt/maze01.gif)
+
+탐색 중간 과정 (좌 → 우: 초반 / 중반 / 최종 경로):
+
+| | | |
+|:---:|:---:|:---:|
+| ![early](../../assets/fast_rrt/maze01_snap_02.png) | ![mid](../../assets/fast_rrt/maze01_snap_05.png) | ![final](../../assets/fast_rrt/maze01_final.png) |
+
+`open01` 최종 결과 — 경로가 4 점 폴리라인으로 준다:
+
+![Fast-RRT on open01](../../assets/fast_rrt/open01_final.png)
+
 ```
 FAST_RRT(start, goal):
     T ← {start}
@@ -68,82 +83,6 @@ SHORTCUT(path):                                         # 삼각 부등식 pruni
     return path
 ```
 
-## 성질
-
-- **완전성**: probabilistically complete. Fast-Sampling 의 기각은 도달 공간에 한정되므로
-  미탐색 공간의 커버리지는 유지된다.
-- **최적성**: 형식적 asymptotic optimality 증명은 없다 (RRT* 골격 + shortcut 이므로 실측
-  수렴은 RRT* 와 동급이거나 빠르다). 논문 성격상 near-optimal 로 분류한다[^wu].
-- **경로 형태**: shortcut 때문에 최종 경로의 waypoint 수가 극단적으로 적다 — 아래 demo 에서
-  8,000 샘플 트리에서 최종 경로는 **5 개 점**이다.
-
-## 파라미터
-
-| 이름 | 타입 | 기본값 | 범위 | 설명 |
-|---|---|---|---|---|
-| `max_iterations` | int | 8000 | [1, 200000] | 반복 예산 (anytime) |
-| `step_size` | float | 0.5 | [0.01, 100.0] | steer 확장 거리 η (m) |
-| `goal_bias` | float | 0.05 | [0.0, 1.0] | goal 을 직접 sample 할 확률 |
-| `goal_tolerance` | float | 0.3 | [0.0, 100.0] | goal 도달 판정 반경 (m) |
-| `neighbor_radius` | float | 1.5 | [0.01, 100.0] | rewire 근방 반경 (m) |
-| `reached_radius` | float | 0.4 | [0.0, 100.0] | Fast-Sampling 기각 반경 (m) [^wu] |
-| `steering_attempts` | int | 10 | [1, 100] | Random Steering 재시도 횟수 [^wu] |
-| `seed` | int | 1 | [0, 2^31−1] | 난수 시드 (재현성) |
-
-## 근거: Fast-Sampling · Shortcut 단조성
-
-**Fast-Sampling 수용 규칙.** 샘플 $x_{rand}$ 는
-
-$$
-\min_{x\in T}\lVert x_{rand}-x\rVert>r_{\text{reached}}
-$$
-
-일 때만 수용된다. 즉 샘플링 공간을 $X_{\text{free}}\setminus\bigcup_{x\in T}B(x,r_{\text{reached}})$
-로 제한해 확률측도를 **미도달 영역**에 집중시킨다 — 초기 해 탐색 시간의 분산이 준다.
-
-**Shortcut 의 비용 단조성 (삼각 부등식).** 연속 경유점 $p_{i-1},p_i,p_{i+1}$ 에서 선분
-$\overline{p_{i-1}p_{i+1}}\subset X_{\text{free}}$ 이면 $p_i$ 제거에 따른 비용 변화는
-
-$$
-\Delta=\lVert p_{i-1}-p_{i+1}\rVert-\Bigl(\lVert p_{i-1}-p_i\rVert+\lVert p_i-p_{i+1}\rVert\Bigr)\le 0
-$$
-
-로 삼각 부등식에 의해 항상 비증가다. 따라서 수용되는 모든 shortcut 은 경로 비용을 **절대 늘리지
-않으며**, 고정점까지 반복하면 국소적으로 팽팽한(taut) 경로가 된다.
-
-**최적성.** 바탕 트리는 RRT\*-스타일(choose-parent + rewire)이므로 [RRT*](rrt_star.md) 의 점근적
-최적성이 유지되고, Fast-Sampling·Random-Steering 은 그 보장을 해치지 않으면서 초기 해 도달 시간과
-분산만 줄인다 (Wu et al. 2021).
-
-## 구현 노트
-
-- C++: `cpp/src/global_planning/fast_rrt.cpp`, Python: `python/navigation/global_planning/fast_rrt.py`
-- choose-parent / rewire 는 [RRT*](rrt_star.md) 와 공통 유틸을 공유한다 — 논문의 기여분
-  (Fast-Sampling / Random Steering / shortcut)만 이 클래스에 있다.
-- Fast-Sampling 기각 검사 때문에 트리가 조밀해질수록 반복당 비용이 커진다 — 같은 8,000 반복에서
-  RRT* 보다 트리가 크고( ~7,970 vs ~5,915 노드) 느린 이유다.
-
-## 방출 trace 이벤트
-
-`planning_started` → (`sample_drawn`, `edge_added`, `rewire`*)* → `path_found`* → `planning_finished`
-
-## Demo
-
-`maze01` — Fast-Sampling 덕에 트리가 빈 공간을 고르게 채우고, 최종 경로(빨강)는 shortcut 으로
-꼭짓점 몇 개만 남은 긴 직선 선분들이다.
-
-![Fast-RRT on maze01](../../assets/fast_rrt/maze01.gif)
-
-탐색 중간 과정 (좌 → 우: 초반 / 중반 / 최종 경로):
-
-| | | |
-|:---:|:---:|:---:|
-| ![early](../../assets/fast_rrt/maze01_snap_02.png) | ![mid](../../assets/fast_rrt/maze01_snap_05.png) | ![final](../../assets/fast_rrt/maze01_final.png) |
-
-`open01` 최종 결과 — 경로가 4 점 폴리라인으로 준다:
-
-![Fast-RRT on open01](../../assets/fast_rrt/open01_final.png)
-
 측정치 (seed = 1, 8000 iterations, trace on):
 
 | map | 언어 | path cost | path waypoints | 참고: RRT* cost |
@@ -164,6 +103,64 @@ python python/demos/demo_fast_rrt.py \
   --params configs/global_planning/fast_rrt.yaml --trace out/fast_rrt.jsonl
 python tools/viz/replay.py out/fast_rrt.jsonl --gif out/fast_rrt.gif
 ```
+
+## 성질
+
+- **완전성**: probabilistically complete. Fast-Sampling 의 기각은 도달 공간에 한정되므로
+  미탐색 공간의 커버리지는 유지된다.
+- **최적성**: 형식적 asymptotic optimality 증명은 없다 (RRT* 골격 + shortcut 이므로 실측
+  수렴은 RRT* 와 동급이거나 빠르다). 논문 성격상 near-optimal 로 분류한다[^wu].
+- **경로 형태**: shortcut 때문에 최종 경로의 waypoint 수가 극단적으로 적다 — 아래 demo 에서
+  8,000 샘플 트리에서 최종 경로는 **5 개 점**이다.
+
+## 근거: Fast-Sampling · Shortcut 단조성
+
+**Fast-Sampling 수용 규칙.** 샘플 $x_{rand}$ 는
+
+$$
+\min_{x\in T}\lVert x_{rand}-x\rVert>r_{\text{reached}}
+$$
+
+일 때만 수용된다. 즉 샘플링 공간을 $X_{\text{free}}\setminus\bigcup_{x\in T}B(x,r_{\text{reached}})$
+로 제한해 확률측도를 **미도달 영역**에 집중시킨다 — 초기 해 탐색 시간의 분산이 준다. 수용 확률은
+
+$$
+P[\text{수용}]=1-\frac{\mu\!\bigl(\bigcup_{x\in T}B(x,r_{\text{reached}})\bigr)}{\mu(X_{\text{free}})}
+$$
+
+로, 트리가 공간을 덮을수록 0 에 접근한다 — 초반엔 거의 모든 샘플을 수용해 빠르게 뻗지만 후반엔 기각이
+잦아 반복당 비용이 커진다(같은 8,000 반복에서 [RRT*](rrt_star.md) 보다 트리가 크고 느린 이유).
+
+**Shortcut 의 비용 단조성 (삼각 부등식).** 연속 경유점 $p_{i-1},p_i,p_{i+1}$ 에서 선분
+$\overline{p_{i-1}p_{i+1}}\subset X_{\text{free}}$ 이면 $p_i$ 제거에 따른 비용 변화는
+
+$$
+\Delta=\lVert p_{i-1}-p_{i+1}\rVert-\Bigl(\lVert p_{i-1}-p_i\rVert+\lVert p_i-p_{i+1}\rVert\Bigr)\le 0
+$$
+
+로 삼각 부등식에 의해 항상 비증가다. 따라서 수용되는 모든 shortcut 은 경로 비용을 **절대 늘리지
+않으며**, 고정점까지 반복하면 국소적으로 팽팽한(taut) 경로가 된다.
+
+**최적성.** 바탕 트리는 RRT\*-스타일(choose-parent + rewire)이므로 [RRT*](rrt_star.md) 의 점근적
+최적성이 유지되고, Fast-Sampling·Random-Steering 은 그 보장을 해치지 않으면서 초기 해 도달 시간과
+분산만 줄인다 (Wu et al. 2021).
+
+## 파라미터
+
+| 이름 | 타입 | 기본값 | 범위 | 설명 |
+|---|---|---|---|---|
+| `max_iterations` | int | 8000 | [1, 200000] | 반복 예산 (anytime) |
+| `step_size` | float | 0.5 | [0.01, 100.0] | steer 확장 거리 η (m) |
+| `goal_bias` | float | 0.05 | [0.0, 1.0] | goal 을 직접 sample 할 확률 |
+| `goal_tolerance` | float | 0.3 | [0.0, 100.0] | goal 도달 판정 반경 (m) |
+| `neighbor_radius` | float | 1.5 | [0.01, 100.0] | rewire 근방 반경 (m) |
+| `reached_radius` | float | 0.4 | [0.0, 100.0] | Fast-Sampling 기각 반경 (m) [^wu] |
+| `steering_attempts` | int | 10 | [1, 100] | Random Steering 재시도 횟수 [^wu] |
+| `seed` | int | 1 | [0, 2^31−1] | 난수 시드 (재현성) |
+
+## 방출 trace 이벤트
+
+`planning_started` → (`sample_drawn`, `edge_added`, `rewire`*)* → `path_found`* → `planning_finished`
 
 ## References
 

@@ -36,6 +36,21 @@ The name is "hybrid" because the *state* is continuous while the *visited set* i
 
 ## How It Works
 
+Search on `maze01`. The frontier grows through the bins, but the final path is a **smooth curve** whose
+heading arrows show the vehicle turning within its radius as it threads the gap.
+
+![Hybrid A* on maze01](../../assets/hybrid_astar/maze01.gif)
+
+Intermediate search progress (left → right: early / middle / final path):
+
+| | | |
+|:---:|:---:|:---:|
+| ![early](../../assets/hybrid_astar/maze01_snap_02.png) | ![mid](../../assets/hybrid_astar/maze01_snap_05.png) | ![final](../../assets/hybrid_astar/maze01_final.png) |
+
+Final result on `open01`:
+
+![Hybrid A* on open01](../../assets/hybrid_astar/open01_final.png)
+
 ```
 HYBRID-A*(start, goal):
     g[bin(start)] ← 0 ; pose_of[bin(start)] ← start
@@ -100,6 +115,15 @@ map's `neighbors()`, which the standalone `SE2CollisionSpace` deliberately does 
 as deferred options. There is also **no analytic (Reeds-Shepp) expansion** to the goal; the goal is
 reached within a position + heading tolerance.
 
+Reproduce:
+
+```bash
+python python/demos/demo_hybrid_astar.py \
+  --map maps/grid/maze01.yaml --scenario maps/scenarios/maze01_s1.yaml \
+  --params configs/global_planning/hybrid_astar.yaml --trace out/hybrid_astar.jsonl
+python tools/viz/replay.py out/hybrid_astar.jsonl --gif out/hybrid_astar.gif --snapshots out/hy_snaps/
+```
+
 ## Properties
 
 - **Completeness**: resolution-complete — a solution is found if one exists at the chosen bin resolution.
@@ -109,6 +133,57 @@ reached within a position + heading tolerance.
 - **Feasibility**: every edge is a constant-curvature arc within `min_turn_radius`, so the whole path is
   drivable — each step stays within one primitive and each heading change respects the curvature bound.
 - **Complexity**: A\* over the (x, y, θ) bins, branching by `num_steering` (×2 with reverse) per node.
+
+## Motion Model Derivation and Properties
+
+**Integrating the constant-curvature arc.** Each primitive is the unit-speed unicycle model integrated
+over arc length $s$:
+
+$$
+\dot x=\cos\theta,\qquad \dot y=\sin\theta,\qquad \dot\theta=\kappa\ (\text{constant}).
+$$
+
+Since $\theta(s)=\theta+\kappa s$, integrating over $s\in[0,L]$ gives (with $\theta'=\theta+\kappa L$)
+
+$$
+x(L)=x+\int_0^L\!\cos(\theta+\kappa s)\,ds=x+\frac{\sin\theta'-\sin\theta}{\kappa},\qquad
+y(L)=y+\int_0^L\!\sin(\theta+\kappa s)\,ds=y-\frac{\cos\theta'-\cos\theta}{\kappa}.
+$$
+
+The $\kappa\to0$ limit is $\dfrac{\sin(\theta+\kappa L)-\sin\theta}{\kappa}\to L\cos\theta$ (and the
+$y$ term $\to L\sin\theta$), matching the code's straight branch $x'=x+L\cos\theta,\ y'=y+L\sin\theta$
+exactly — special-casing $\kappa\approx0$ only avoids division by zero, it is not a separate model.
+
+**Feasibility (curvature bound).** An arc of radius $R$ has curvature $\kappa=1/R$. The planner limits
+curvature to $[-\kappa_\max,\kappa_\max]$ with $\kappa_\max=1/R_\min$, so every edge has turning radius
+$\ge R_\min=$ `min_turn_radius`. Because the path is a concatenation of such arcs, the whole of it is
+drivable within the vehicle's turning capability — this is the essential difference from grid A\*
+(edges are **drivable arcs**, not cell neighbors).
+
+**Heuristic admissibility.** $h=\lVert(\Delta x,\Delta y)\rVert_2$ is the straight-line position
+distance. The true remaining cost is at least $h$ because (i) an arc is no shorter than the chord
+between its endpoints, and (ii) the edge cost
+$|L|\cdot(\text{reverse}?\,p_r:1)+p_s|\kappa||L|\ge|L|$ only ever inflates it — so $h\le h^\ast$,
+admissible. But $h$ ignores heading and the nonholonomic constraint, making it a **weak** lower bound;
+it expands more nodes than the original paper's Reeds–Shepp bound (a trade for implementation
+simplicity).
+
+**Anti-tunneling sub-sampling.** Each arc is split into $n_\text{sub}=\max(2,\lceil L/r\rceil)$ so the
+sub-pose spacing is $\le r=$ `footprint_radius`. Two footprint discs of radius $r$ whose centres are
+$d\le r<2r$ apart necessarily overlap, so the union of the checked discs forms a **gap-free tube**.
+Hence no wall thin enough to slip between two checks can exist. The check itself is an exact disc–cell
+**squared-distance** test (squared distance from the centre to the cell's nearest point $\le r^2$), so
+it needs no `sqrt` or trig.
+
+**Resolution completeness and suboptimality.** The two discretizations that make the continuous state
+finite are exactly the two sources of suboptimality: (1) the $(x,y,\theta)$ **bin closed set** collapses
+distinct poses in one bin into a single node, so a better continuous pose can be discarded because its
+bin is already settled; (2) the **finite primitive set**
+$\kappa\in\{-\kappa_\max,\dots,\kappa_\max\}$ (`num_steering` values) can only approximate an optimal
+curvature lying between samples. So the returned path is feasible and low-cost but not strictly optimal
+(Dolgov et al. 2008), approaching optimal as the bins are refined and more primitives are added
+(resolution-complete). With no analytic (Reeds–Shepp) goal expansion, the final heading is matched only
+to within `goal_heading_tolerance`.
 
 ## Parameters
 
@@ -126,19 +201,6 @@ reached within a position + heading tolerance.
 | `goal_pos_tolerance` | float | 0.5 | [0.01, 20.0] | Goal position tolerance (m) |
 | `goal_heading_tolerance` | float | 0.26 | [0.01, 3.1416] | Goal heading tolerance (rad) |
 
-## Implementation Notes
-
-- C++: `cpp/src/global_planning/search/hybrid_astar.cpp`, Python: `python/navigation/global_planning/search/hybrid_astar.py`
-- **Determinism (same-libm, not IEEE cross-platform)**: unlike the pure-arithmetic grid searches, Hybrid A*'s
-  `x, y` come from `sin`/`cos`, which IEEE-754 does **not** require to be correctly-rounded. CPython's `math`
-  and C++ `std` wrap the **same C libm**, so on one machine the two traces — and `path_cost` /
-  `expanded_nodes` — are bit-identical, but this rests on a shared-libm assumption, not an IEEE guarantee.
-  `sqrt` (correctly-rounded) is used instead of `hypot`, `math` scalars instead of `numpy`, and a fixed
-  primitive emission order with an `(f, insertion order)` tie-break — the maze01 expansion order and cost
-  match cell-for-cell between C++ and Python.
-- The path returned is the **dense sub-pose polyline** (every arc's sub-poses concatenated), so it is a
-  smooth drivable curve rather than a sparse node list.
-
 ## Emitted Trace Events
 
 `planning_started` → (`node_expanded`, `candidate_evaluated`, `edge_added`)* → `path_found` → `planning_finished`
@@ -148,32 +210,6 @@ Hybrid A* adds **no new trace event and no schema change**. Each accepted arc is
 with no arc-specific logic. States are 3-element `[x, y, θ]` (the schema already allowed a heading), and
 `replay.py` overlays a **heading arrow** wherever a state carries a third element — gated so every existing
 2-element planner renders byte-identically.
-
-## Demo
-
-Search on `maze01`. The frontier grows through the bins, but the final path is a **smooth curve** whose
-heading arrows show the vehicle turning within its radius as it threads the gap.
-
-![Hybrid A* on maze01](../../assets/hybrid_astar/maze01.gif)
-
-Intermediate search progress (left → right: early / middle / final path):
-
-| | | |
-|:---:|:---:|:---:|
-| ![early](../../assets/hybrid_astar/maze01_snap_02.png) | ![mid](../../assets/hybrid_astar/maze01_snap_05.png) | ![final](../../assets/hybrid_astar/maze01_final.png) |
-
-Final result on `open01`:
-
-![Hybrid A* on open01](../../assets/hybrid_astar/open01_final.png)
-
-Reproduce:
-
-```bash
-python python/demos/demo_hybrid_astar.py \
-  --map maps/grid/maze01.yaml --scenario maps/scenarios/maze01_s1.yaml \
-  --params configs/global_planning/hybrid_astar.yaml --trace out/hybrid_astar.jsonl
-python tools/viz/replay.py out/hybrid_astar.jsonl --gif out/hybrid_astar.gif --snapshots out/hy_snaps/
-```
 
 ## References
 

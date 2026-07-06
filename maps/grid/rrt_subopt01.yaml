@@ -1,0 +1,6 @@
+type: occupancy_grid
+image: rrt_subopt01.pgm
+resolution: 0.5
+origin: [0.0, 0.0, 0.0]
+occupied_thresh: 0.65
+free_thresh: 0.196

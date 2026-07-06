@@ -1,0 +1,3 @@
+map: ../grid/dstar_trap01.yaml
+start: [0.75, 0.75]
+goal: [7.75, 7.75]

@@ -36,6 +36,21 @@ A\*[^hart] 는 격자 위에서 셀 단위로만 움직이므로 차량의 **방
 
 ## 동작 방식
 
+`maze01` 탐색. frontier 는 bin 을 따라 자라지만 최종 경로는 **매끄러운 곡선**이고, heading 화살표가 차량이
+회전반경 이내로 돌며 gap 을 통과하는 모습을 보여준다.
+
+![Hybrid A* on maze01](../../assets/hybrid_astar/maze01.gif)
+
+탐색 중간 과정 (좌 → 우: 초반 / 중반 / 최종 경로):
+
+| | | |
+|:---:|:---:|:---:|
+| ![early](../../assets/hybrid_astar/maze01_snap_02.png) | ![mid](../../assets/hybrid_astar/maze01_snap_05.png) | ![final](../../assets/hybrid_astar/maze01_final.png) |
+
+`open01` 최종 결과:
+
+![Hybrid A* on open01](../../assets/hybrid_astar/open01_final.png)
+
 ```
 HYBRID-A*(start, goal):
     g[bin(start)] ← 0 ; pose_of[bin(start)] ← start
@@ -96,6 +111,15 @@ holonomic grid-Dijkstra 거리). 본 스터디는 의도적으로 **admissible E
 는 이를 의도적으로 노출하지 않는다. 둘 다 향후 확장 옵션으로만 남긴다. goal 로의 **analytic (Reeds-Shepp)
 expansion 도 없으며**, 목표는 위치 + heading 허용오차 이내로 도달한다.
 
+재현:
+
+```bash
+python python/demos/demo_hybrid_astar.py \
+  --map maps/grid/maze01.yaml --scenario maps/scenarios/maze01_s1.yaml \
+  --params configs/global_planning/hybrid_astar.yaml --trace out/hybrid_astar.jsonl
+python tools/viz/replay.py out/hybrid_astar.jsonl --gif out/hybrid_astar.gif --snapshots out/hy_snaps/
+```
+
 ## 성질
 
 - **완전성**: resolution-complete — 선택한 bin 해상도에서 해가 존재하면 찾는다.
@@ -105,6 +129,50 @@ expansion 도 없으며**, 목표는 위치 + heading 허용오차 이내로 도
 - **feasibility**: 모든 간선이 `min_turn_radius` 이내 상수곡률 호이므로 전체 경로가 주행 가능하다 — 각
   스텝은 프리미티브 하나 이내이고 각 heading 변화는 곡률 한계를 지킨다.
 - **복잡도**: (x, y, θ) bin 위 A\*, 노드당 `num_steering`(후진 시 ×2) 분기.
+
+## 모션 모델 유도와 성질
+
+**상수곡률 호의 적분.** 각 프리미티브는 단위 속도 unicycle 모델을 호 길이 $s$ 로 적분한 것이다:
+
+$$
+\dot x=\cos\theta,\qquad \dot y=\sin\theta,\qquad \dot\theta=\kappa\ (\text{상수}).
+$$
+
+$\theta(s)=\theta+\kappa s$ 이므로 $s\in[0,L]$ 에서 적분하면 ($\theta'=\theta+\kappa L$)
+
+$$
+x(L)=x+\int_0^L\!\cos(\theta+\kappa s)\,ds=x+\frac{\sin\theta'-\sin\theta}{\kappa},\qquad
+y(L)=y+\int_0^L\!\sin(\theta+\kappa s)\,ds=y-\frac{\cos\theta'-\cos\theta}{\kappa}.
+$$
+
+$\kappa\to0$ 극한은 $\dfrac{\sin(\theta+\kappa L)-\sin\theta}{\kappa}\to L\cos\theta$ (그리고 $y$ 항은
+$L\sin\theta$) 로, 코드의 직진 분기 $x'=x+L\cos\theta,\ y'=y+L\sin\theta$ 와 정확히 일치한다 —
+$\kappa\approx0$ 을 따로 두는 것은 0 나눗셈 회피일 뿐 별개 모델이 아니다.
+
+**feasibility (곡률 한계).** 반경 $R$ 원호의 곡률은 $\kappa=1/R$ 이다. planner 가 곡률을
+$[-\kappa_\max,\kappa_\max],\ \kappa_\max=1/R_\min$ 로 제한하므로 모든 간선의 회전반경은
+$\ge R_\min=$ `min_turn_radius`. 경로가 이런 호들의 연결이라 전체가 차량 회전 능력 안에서 주행
+가능하다 — 격자 A\* 와의 본질적 차이(간선이 셀 이웃이 아니라 **주행 가능한 호**)가 여기서 나온다.
+
+**heuristic admissibility.** $h=\lVert(\Delta x,\Delta y)\rVert_2$ 는 위치 직선거리다. 실제 남은
+비용은 (i) 호 길이가 두 끝점의 현(직선)보다 짧을 수 없고, (ii) 간선 비용
+$|L|\cdot(\text{reverse}?\,p_r:1)+p_s|\kappa||L|\ge|L|$ 로 페널티가 비용을 늘리기만 하므로
+$h\le h^\ast$ — admissible. 다만 이 $h$ 는 heading·비홀로노믹 제약을 무시한 **약한** 하한이라,
+Reeds–Shepp 하한을 쓰는 원 논문보다 확장 노드가 많다(구현 단순성과의 맞바꿈).
+
+**터널링 방지 sub-sampling.** 각 호는 sub-pose 간격이 $\le r=$ `footprint_radius` 가 되도록
+$n_\text{sub}=\max(2,\lceil L/r\rceil)$ 로 분할한다. 반경 $r$ 인 두 footprint 원의 중심 거리
+$d\le r<2r$ 이면 두 원은 반드시 겹치므로, 검사한 원들의 합집합은 **틈 없는 관(tube)** 을 이룬다.
+따라서 두 검사 사이로 빠져나갈 두께의 벽이 존재할 수 없다. 충돌 자체는 원–셀 **제곱거리** 판정(중심에서
+셀의 최근접점까지 거리$^2\le r^2$)이라 `sqrt`·trig 없이 정확하다.
+
+**resolution-completeness 와 준최적성.** 연속 상태를 유한하게 만드는 두 이산화가 곧 두 준최적 원인이다:
+(1) $(x,y,\theta)$ **bin closed set** — 같은 bin 의 서로 다른 pose 를 한 노드로 합쳐, 이미 settle 된
+bin 때문에 더 나은 연속 pose 가 버려질 수 있다. (2) **유한 프리미티브 집합**
+$\kappa\in\{-\kappa_\max,\dots,\kappa_\max\}$ (`num_steering` 개) — 최적 곡률이 그 사이 값이면 근사만
+된다. 그래서 반환 경로는 feasible·저비용이되 엄밀 최적은 아니며(Dolgov et al. 2008), bin 을 촘촘히·
+프리미티브를 많이 둘수록 최적에 근접한다(resolution-complete). analytic(Reeds–Shepp) goal expansion 이
+없어 최종 heading 은 `goal_heading_tolerance` 이내로만 맞춘다.
 
 ## 파라미터
 
@@ -122,18 +190,6 @@ expansion 도 없으며**, 목표는 위치 + heading 허용오차 이내로 도
 | `goal_pos_tolerance` | float | 0.5 | [0.01, 20.0] | goal 위치 허용오차 (m) |
 | `goal_heading_tolerance` | float | 0.26 | [0.01, 3.1416] | goal heading 허용오차 (rad) |
 
-## 구현 노트
-
-- C++: `cpp/src/global_planning/search/hybrid_astar.cpp`, Python: `python/navigation/global_planning/search/hybrid_astar.py`
-- **결정성 (same-libm, IEEE cross-platform 아님)**: 순수 산술인 격자 탐색과 달리 Hybrid A\* 의 `x, y` 는
-  `sin`/`cos` 에서 나오는데, IEEE-754 는 이들의 correctly-rounded 를 **요구하지 않는다**. CPython `math`
-  와 C++ `std` 는 **같은 C libm** 을 감싸므로 한 머신에서 두 trace 와 `path_cost`/`expanded_nodes` 는
-  bit-identical 이지만, 이는 shared-libm 가정이지 IEEE 보장이 아니다. `hypot` 대신 correctly-rounded
-  `sqrt`, `numpy` 대신 `math` 스칼라, 고정된 프리미티브 방출 순서 + `(f, 삽입순서)` tie-break 를 쓴다 —
-  maze01 확장 순서와 비용이 C++/Python 간 셀 단위로 일치한다.
-- 반환 경로는 **dense sub-pose polyline**(모든 호의 sub-pose 연결)이라 sparse 노드 목록이 아니라 매끄러운
-  주행 곡선이다.
-
 ## 방출 Trace 이벤트
 
 `planning_started` → (`node_expanded`, `candidate_evaluated`, `edge_added`)* → `path_found` → `planning_finished`
@@ -142,32 +198,6 @@ Hybrid A\* 는 **새 trace 이벤트도, 스키마 변경도 없다**. 채택된
 chord chain** 으로 방출하므로, `replay.py` 는 호 전용 로직 없이 직선 조각들로 매끄러운 곡선을 그린다. 상태는
 3-요소 `[x, y, θ]`(스키마가 이미 heading 을 허용)이고, `replay.py` 는 상태에 세 번째 요소가 있으면
 **heading 화살표**를 오버레이한다 — 기존 2-요소 planner 는 byte-identical 로 렌더되도록 gate 된다.
-
-## 데모
-
-`maze01` 탐색. frontier 는 bin 을 따라 자라지만 최종 경로는 **매끄러운 곡선**이고, heading 화살표가 차량이
-회전반경 이내로 돌며 gap 을 통과하는 모습을 보여준다.
-
-![Hybrid A* on maze01](../../assets/hybrid_astar/maze01.gif)
-
-탐색 중간 과정 (좌 → 우: 초반 / 중반 / 최종 경로):
-
-| | | |
-|:---:|:---:|:---:|
-| ![early](../../assets/hybrid_astar/maze01_snap_02.png) | ![mid](../../assets/hybrid_astar/maze01_snap_05.png) | ![final](../../assets/hybrid_astar/maze01_final.png) |
-
-`open01` 최종 결과:
-
-![Hybrid A* on open01](../../assets/hybrid_astar/open01_final.png)
-
-재현:
-
-```bash
-python python/demos/demo_hybrid_astar.py \
-  --map maps/grid/maze01.yaml --scenario maps/scenarios/maze01_s1.yaml \
-  --params configs/global_planning/hybrid_astar.yaml --trace out/hybrid_astar.jsonl
-python tools/viz/replay.py out/hybrid_astar.jsonl --gif out/hybrid_astar.gif --snapshots out/hy_snaps/
-```
 
 ## 참고 문헌
 

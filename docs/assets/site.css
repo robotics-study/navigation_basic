@@ -163,7 +163,20 @@ img { max-width: 100%; }
 }
 .nav-sub[open] > summary::before { transform: rotate(90deg); }
 .nav-sub > summary:hover { color: var(--text); background: var(--surface-2); }
-.nav-sub-body { margin: 2px 0 6px 15px; padding-left: 8px; border-left: 1px solid var(--border); }
+/* 열림/닫힘 애니메이션: grid-template-rows 0fr↔1fr 를 transition.
+   닫힘 시에도 내용을 렌더한 채(display:grid) 로 두어(UA display:none 을 덮어씀) 접힘도 애니메이션된다. */
+.nav-sub-body {
+  display: grid; grid-template-rows: 0fr;
+  transition: grid-template-rows .24s ease;
+}
+.nav-sub[open] > .nav-sub-body { grid-template-rows: 1fr; }
+.nav-sub-inner {
+  overflow: hidden; min-height: 0;
+  margin-left: 15px; padding-left: 8px; border-left: 1px solid var(--border);
+}
+/* 열렸을 때만 위/아래 숨쉴 공간 — 닫히면 0 으로 깔끔히 접히도록 (링크 자체 여백은 유지). */
+.nav-sub[open] > .nav-sub-body > .nav-sub-inner { padding-block: 2px; }
+@media (prefers-reduced-motion: reduce) { .nav-sub-body { transition: none; } }
 
 .content { padding: 40px 48px 90px; min-width: 0; }
 .content-inner { max-width: 780px; }
@@ -212,6 +225,7 @@ h2:hover .anchor, h3:hover .anchor { opacity: 1; }
 .content-inner code {
   font-family: var(--mono); font-size: .86em;
   background: var(--surface-2); padding: .15em .4em; border-radius: 6px;
+  overflow-wrap: anywhere;   /* 공백 없는 긴 인라인 코드(파일 경로 등)가 좁은 화면을 밀지 않게 줄바꿈 */
 }
 .content-inner pre {
   background: var(--code-bg); border: 1px solid var(--border); border-radius: var(--radius);
@@ -251,6 +265,9 @@ h2:hover .anchor, h3:hover .anchor { opacity: 1; }
 
 /* MathJax display overflow */
 mjx-container[display="true"] { overflow-x: auto; overflow-y: hidden; max-width: 100%; padding: 4px 0; }
+/* 긴 인라인 수식이 좁은 화면에서 페이지를 가로로 밀지 않도록: 줄폭에 맞춰 내부 스크롤.
+   inline 요소는 max-width/overflow 를 무시하므로 inline-block 으로 승격해 제약이 먹게 한다. */
+mjx-container:not([display="true"]) { display: inline-block; max-width: 100%; overflow-x: auto; overflow-y: hidden; vertical-align: middle; }
 
 /* footnotes */
 .footnote { border-top: 1px solid var(--border); margin-top: 3em; font-size: .85rem; color: var(--muted); }

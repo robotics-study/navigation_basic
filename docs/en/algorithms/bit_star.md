@@ -44,6 +44,21 @@ anytime algorithm: it keeps tightening the path across batches.
 
 ## How It Works
 
+`maze01` — the first batch explores free space to find a solution, then later batches concentrate
+samples inside the informed ellipse and tighten the path batch by batch.
+
+![BIT\* on maze01](../../assets/bit_star/maze01.gif)
+
+Intermediate search progress (left → right: first batch / informed batch / final path):
+
+| | | |
+|:---:|:---:|:---:|
+| ![early](../../assets/bit_star/maze01_snap_02.png) | ![mid](../../assets/bit_star/maze01_snap_05.png) | ![final](../../assets/bit_star/maze01_final.png) |
+
+Final result on `open01` — nearly a straight line:
+
+![BIT\* on open01](../../assets/bit_star/open01_final.png)
+
 ```
 BIT_STAR(start, goal):
     tree ← {start};  samples ← {goal};  c_best ← ∞
@@ -71,88 +86,6 @@ heuristic, and $\hat g(x)=\lVert \text{start}-x\rVert$. The vertex queue $Q_V$ a
 drained alternately: vertices are expanded only while the best edge a vertex expansion could produce
 still beats the best edge already queued.
 
-## Properties
-
-- **Completeness**: probabilistically complete[^gammell_bit].
-- **Optimality**: **almost-surely asymptotically optimal.** As batches accumulate the RGG densifies
-  and informed samples concentrate in the solution region, so it typically converges to the optimum
-  faster than RRT\* and FMT\*[^gammell_bit].
-- **Anytime**: once the first batch yields a solution, later batches keep tightening the path. On
-  exhausting `max_batches` it returns the current best.
-- **Lazy collision checking**: an edge is checked only at the moment it is dequeued — edges with no
-  chance of improving the incumbent are never checked, saving collision tests.
-
-## Parameters
-
-| Name | Type | Default | Range | Description |
-|---|---|---|---|---|
-| `batch_size` | int | 200 | [1, 100000] | Number of new (informed) samples drawn per batch |
-| `max_batches` | int | 15 | [1, 10000] | Maximum number of batches (anytime — current best returned when exhausted) |
-| `gamma` | float | 30.0 | [0.01, 1000.0] | RGG connection-radius coefficient γ. r_n = γ·(log n / n)^(1/2) |
-| `seed` | int | 1 | [0, 2^31−1] | Random seed (reproducibility) |
-
-## Informed Sampling and the Edge Queue
-
-**Informed ellipse (Gammell et al. 2014).** When a solution cost $c_{\text{best}}$ exists, samples are
-drawn only within the ellipse with foci at start and goal. With
-$c_{\min}=\lVert\text{start}-\text{goal}\rVert$,
-
-$$
-r_1=\frac{c_{\text{best}}}{2},\qquad
-r_2=\frac{\sqrt{c_{\text{best}}^{\,2}-c_{\min}^{\,2}}}{2},
-$$
-
-centered at the midpoint of the two points and rotated to the start→goal axis. Any point outside
-$x^2/r_1^2+y^2/r_2^2\le1$ cannot lie on a path that improves $c_{\text{best}}$, so it is excluded from
-sampling.
-
-**Edge-queue priority.** The key of an edge $(v,x)$ is
-
-$$
-\underbrace{g_T(v)}_{\text{reach in tree}}+\underbrace{\hat c(v,x)}_{\lVert v-x\rVert}+\underbrace{\hat h(x)}_{\lVert x-\text{goal}\rVert},
-$$
-
-i.e. the estimated solution cost if the edge is accepted. An edge whose key is $\ge c_{\text{best}}$
-ends the batch the moment it is dequeued — no remaining edge can reduce the incumbent.
-
-*Intuition.* It is like re-running A\* over the RGG each batch. The heuristic steers the search toward
-the solution region, informed samples fill only that region densely, and lazy checking defers
-unnecessary collision tests. The three effects combine to converge faster than RRT\*/FMT\* at the same
-sample budget.
-
-## Implementation Notes
-
-- C++: `cpp/src/global_planning/bit_star.cpp`, Python: `python/navigation/global_planning/bit_star.py`
-- The batch near-neighbor graph (`radius_neighbors`), shrinking radius (`rgg_radius`), and informed
-  path-length computation live in `sampling_common` / `_sampling`, shared with [PRM\*](prm_star.md) and
-  [FMT\*](fmt_star.md).
-- On a rewire, the subtree cost is propagated (`propagate`) to keep the queue keys and the reported
-  cost consistent.
-
-## Emitted Trace Events
-
-`planning_started` → `sample_drawn`\* → `edge_added`\* → `candidate_evaluated`\* → `path_found` → `planning_finished`
-
-`sample_drawn` marks a per-batch sample, `edge_added` an accepted edge, and `candidate_evaluated` is
-emitted each time the incumbent cost $c_{\text{best}}$ improves (a new best solution).
-
-## Demo
-
-`maze01` — the first batch explores free space to find a solution, then later batches concentrate
-samples inside the informed ellipse and tighten the path batch by batch.
-
-![BIT\* on maze01](../../assets/bit_star/maze01.gif)
-
-Intermediate search progress (left → right: first batch / informed batch / final path):
-
-| | | |
-|:---:|:---:|:---:|
-| ![early](../../assets/bit_star/maze01_snap_02.png) | ![mid](../../assets/bit_star/maze01_snap_05.png) | ![final](../../assets/bit_star/maze01_final.png) |
-
-Final result on `open01` — nearly a straight line:
-
-![BIT\* on open01](../../assets/bit_star/open01_final.png)
-
 Measurements (Python, seed = 1, trace on):
 
 | map | path cost | samples | expanded (accepted edges) |
@@ -171,6 +104,71 @@ python python/demos/demo_bit_star.py \
   --params configs/global_planning/bit_star.yaml --trace out/bit_star.jsonl
 python tools/viz/replay.py out/bit_star.jsonl --gif out/bit_star.gif
 ```
+
+## Properties
+
+- **Completeness**: probabilistically complete[^gammell_bit].
+- **Optimality**: **almost-surely asymptotically optimal.** As batches accumulate the RGG densifies
+  and informed samples concentrate in the solution region, so it typically converges to the optimum
+  faster than RRT\* and FMT\*[^gammell_bit].
+- **Anytime**: once the first batch yields a solution, later batches keep tightening the path. On
+  exhausting `max_batches` it returns the current best.
+- **Lazy collision checking**: an edge is checked only at the moment it is dequeued — edges with no
+  chance of improving the incumbent are never checked, saving collision tests.
+
+## Informed Sampling and the Edge Queue
+
+**Informed ellipse (Gammell et al. 2014).** When a solution cost $c_{\text{best}}$ exists, samples are
+drawn only within the ellipse with foci at start and goal. With
+$c_{\min}=\lVert\text{start}-\text{goal}\rVert$,
+
+$$
+r_1=\frac{c_{\text{best}}}{2},\qquad
+r_2=\frac{\sqrt{c_{\text{best}}^{\,2}-c_{\min}^{\,2}}}{2},
+$$
+
+centered at the midpoint of the two points and rotated to the start→goal axis. Any point outside
+$x^2/r_1^2+y^2/r_2^2\le1$ cannot lie on a path that improves $c_{\text{best}}$, so it is excluded from
+sampling.
+
+*Derivation.* Any path through a point $x$ has length
+$\ge f(x)=\lVert\text{start}-x\rVert+\lVert x-\text{goal}\rVert$ (triangle inequality). If
+$f(x)>c_{\text{best}}$, routing through $x$ cannot reduce the incumbent, so it is safe to drop; the
+remaining set $\{x:f(x)\le c_{\text{best}}\}$ is exactly the definition of an ellipse — **sum of
+distances to the two foci bounded** (major axis $=c_{\text{best}}$). With inter-focus distance
+$c_{\min}$, the semi-axes follow immediately: $r_1=c_{\text{best}}/2$ and
+$r_2=\tfrac12\sqrt{c_{\text{best}}^{\,2}-c_{\min}^{\,2}}$. As the incumbent shrinks, the ellipse
+tightens and concentrates samples on just the region where a better solution could lie. ∎
+
+**Edge-queue priority.** The key of an edge $(v,x)$ is
+
+$$
+\underbrace{g_T(v)}_{\text{reach in tree}}+\underbrace{\hat c(v,x)}_{\lVert v-x\rVert}+\underbrace{\hat h(x)}_{\lVert x-\text{goal}\rVert},
+$$
+
+i.e. the estimated solution cost if the edge is accepted. An edge whose key is $\ge c_{\text{best}}$
+ends the batch the moment it is dequeued — no remaining edge can reduce the incumbent.
+
+*Intuition.* It is like re-running A\* over the RGG each batch. The heuristic steers the search toward
+the solution region, informed samples fill only that region densely, and lazy checking defers
+unnecessary collision tests. The three effects combine to converge faster than RRT\*/FMT\* at the same
+sample budget.
+
+## Parameters
+
+| Name | Type | Default | Range | Description |
+|---|---|---|---|---|
+| `batch_size` | int | 200 | [1, 100000] | Number of new (informed) samples drawn per batch |
+| `max_batches` | int | 15 | [1, 10000] | Maximum number of batches (anytime — current best returned when exhausted) |
+| `gamma` | float | 30.0 | [0.01, 1000.0] | RGG connection-radius coefficient γ. r_n = γ·(log n / n)^(1/2) |
+| `seed` | int | 1 | [0, 2^31−1] | Random seed (reproducibility) |
+
+## Emitted Trace Events
+
+`planning_started` → `sample_drawn`\* → `edge_added`\* → `candidate_evaluated`\* → `path_found` → `planning_finished`
+
+`sample_drawn` marks a per-batch sample, `edge_added` an accepted edge, and `candidate_evaluated` is
+emitted each time the incumbent cost $c_{\text{best}}$ improves (a new best solution).
 
 ## References
 

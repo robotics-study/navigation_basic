@@ -42,6 +42,22 @@ free 로 가정**(freespace assumption)한다. `plan()` 은 move → sense → r
 
 ## 동작 원리
 
+`maze01`. 로봇(청록 다이아몬드)이 빈 지도를 가정하고 출발해 벽을 하나씩 발견(검은 셀로 fog-in)하면서
+매번 국소 수리로 경로를 다시 세운다. 이 인스턴스에서는 발견한 벽이 최적 경로를 벗어나게 만들지 않아,
+실측 궤적이 (전지적) A\* 최적과 정확히 같아진다.
+
+![D* Lite on maze01](../../assets/dstar_lite/maze01.gif)
+
+탐색·이동 중간 과정 (좌 → 우: 초반 / 중반 / 최종 궤적):
+
+| | | |
+|:---:|:---:|:---:|
+| ![early](../../assets/dstar_lite/maze01_snap_02.png) | ![mid](../../assets/dstar_lite/maze01_snap_05.png) | ![final](../../assets/dstar_lite/maze01_final.png) |
+
+`open01` 최종 결과:
+
+![D* Lite on open01](../../assets/dstar_lite/open01_final.png)
+
 역방향 탐색이므로 heuristic 은 `h(s_start, s)` (탐색 정점 `s` 에서 **현재 로봇 위치** `s_start` 까지)를
 쓴다. 로봇이 움직이면 이 기준점이 바뀌므로, 이미 큐에 든 key 가 단조성을 잃지 않도록 오프셋 `k_m` 을
 누적한다(그래야 큐를 통째로 다시 계산하지 않아도 된다).
@@ -105,64 +121,6 @@ h(a, b) = (hi − lo) + √2 · lo,   hi = max(|Δrow|, |Δcol|),  lo = min(|Δr
 
 맵의 A\* heuristic 과 **정확히 같은 연산 순서**로 계산해 C++/Python key 가 bit 단위로 같다.
 
-## 성질
-
-- **완전성**: 유한 grid + 비음수 비용에서 완전. 참 지도에 경로가 있으면 로봇은 반드시 goal 에 도달하고,
-  없으면 `g(s_start) = ∞` 로 도달 불가를 판정한다.
-- **최적성**: 매 스텝의 이동은 **그 순간 belief 에 대해 최적**이다. 처음 보는 장애물을 우회하느라
-  실제 이동 궤적은 (전지적) A\* 최적보다 길어질 수 있다 — 그래서 **실측 cost ≥ 같은 인스턴스의 A\* cost**.
-  belief 가 참 지도와 충분히 일치하면 두 값은 같아진다(아래 demo 의 maze01·open01 이 그 경우).
-- **증분성**: LPA\*[^lpastar] 의 g/rhs·불일치 큐를 그대로 쓰고, `k_m` 오프셋으로 로봇 이동 후에도
-  이전 탐색을 재사용한다. replan 마다 변화 주변만 수리하므로 naïve full replan 보다 저렴하다.
-
-## 파라미터
-
-| 이름 | 타입 | 기본값 | 범위 | 설명 |
-|---|---|---|---|---|
-| `sensor_radius` | int | 3 | [1, 50] | 센서 반경(cell). 매 스텝 `dr² + dc² ≤ r²` 안 셀을 감지한다. 클수록 장애물을 멀리서 미리 보고 replan 이 줄어든다 |
-
-## 구현 노트
-
-- C++: `cpp/src/global_planning/search/dstar_lite.cpp`, Python: `python/navigation/global_planning/search/dstar_lite.py`
-- **새 capability `DynamicGridSpace`** 위에 올라간다. `OccupancyGrid2D` 는 `neighbors()`(참 지도 기준)와
-  `passable_neighbors(s, blocked)`(belief 기준)를 **하나의 8-이동 + corner-cut 워커**로 공유한다 —
-  predicate 만 다르다. `is_blocked` 은 점유이거나 격자 밖이면 참인 **유일한 참-지도 센서**다.
-- `PlanResult.path` 는 완성된 계획이 아니라 **실제로 이동한 궤적**이다(`cost` 는 그 궤적의 실측 길이).
-  `stats.expanded_nodes` 는 전 replan 누적 확장 수, `stats.iterations` 는 replan 횟수다.
-- octile 은 `hypot` 이 아니라 `(hi − lo) + √2·lo`(sqrt) 로 계산해 C++/Python key 가 bit 단위로 일치한다.
-  로봇 이동·센싱·수리 순서가 두 언어에서 같아 방출 trace 가 셀 단위로 동일하다.
-
-## 방출 trace 이벤트
-
-`planning_started` → ( `node_expanded`, `candidate_evaluated`, `edge_added`, `robot_moved`, `obstacle_revealed` )\* → `path_found` → `planning_finished`
-
-- `robot_moved` (state = 로봇의 새 실행 셀) — 궤적을 한 스텝씩 방출.
-- `obstacle_revealed` (state = 새로 발견된 blocked 셀) — 센서가 belief 에 없던 장애물을 찾은 순간.
-
-`replay.py` 는 이 두 이벤트가 있으면 배경을 **전부 free(belief)** 로 깔고, 발견된 장애물을 진행에 따라
-검은 셀로 **fog-in** 하며, 로봇의 이동 자취를 그린다. 두 이벤트가 없는 기존 알고리즘의 렌더는 그대로다.
-
-`planning_finished.metrics`: `path_cost`(실측 궤적 비용) · `expanded_nodes`(누적) · `replan_count` ·
-`sensed_cells`(발견한 장애물 셀 수) · `runtime_sec`. 공용 metric 스키마는 그대로 쓴다.
-
-## Demo
-
-`maze01`. 로봇(청록 다이아몬드)이 빈 지도를 가정하고 출발해 벽을 하나씩 발견(검은 셀로 fog-in)하면서
-매번 국소 수리로 경로를 다시 세운다. 이 인스턴스에서는 발견한 벽이 최적 경로를 벗어나게 만들지 않아,
-실측 궤적이 (전지적) A\* 최적과 정확히 같아진다.
-
-![D* Lite on maze01](../../assets/dstar_lite/maze01.gif)
-
-탐색·이동 중간 과정 (좌 → 우: 초반 / 중반 / 최종 궤적):
-
-| | | |
-|:---:|:---:|:---:|
-| ![early](../../assets/dstar_lite/maze01_snap_02.png) | ![mid](../../assets/dstar_lite/maze01_snap_05.png) | ![final](../../assets/dstar_lite/maze01_final.png) |
-
-`open01` 최종 결과:
-
-![D* Lite on open01](../../assets/dstar_lite/open01_final.png)
-
 측정치 (Python, `sensor_radius = 3`, trace on · 같은 인스턴스의 A\* 비교):
 
 | map | D\* Lite 실측 cost | A\* cost | D\* Lite 누적 expanded | A\* expanded | replan | 발견 장애물 |
@@ -182,6 +140,114 @@ python python/demos/demo_dstar_lite.py \
   --params configs/global_planning/dstar_lite.yaml --trace out/dstar_lite.jsonl
 python tools/viz/replay.py out/dstar_lite.jsonl --gif out/dstar_lite.gif --snapshots out/dstar_snaps/
 ```
+
+## 성질
+
+- **완전성**: 유한 grid + 비음수 비용에서 완전. 참 지도에 경로가 있으면 로봇은 반드시 goal 에 도달하고,
+  없으면 `g(s_start) = ∞` 로 도달 불가를 판정한다.
+- **최적성**: 매 스텝의 이동은 **그 순간 belief 에 대해 최적**이다. 처음 보는 장애물을 우회하느라
+  실제 이동 궤적은 (전지적) A\* 최적보다 길어질 수 있다 — 그래서 **실측 cost ≥ 같은 인스턴스의 A\* cost**.
+  belief 가 참 지도와 충분히 일치하면 두 값은 같아진다(아래 demo 의 maze01·open01 이 그 경우).
+- **증분성**: LPA\*[^lpastar] 의 g/rhs·불일치 큐를 그대로 쓰고, `k_m` 오프셋으로 로봇 이동 후에도
+  이전 탐색을 재사용한다. replan 마다 변화 주변만 수리하므로 naïve full replan 보다 저렴하다.
+
+## 정확성: 국소 일관성과 $k_m$ 오프셋
+
+**국소 일관성.** 각 정점에 계산값 $g(s)$ 와 한 스텝 look-ahead 값
+
+$$
+rhs(s)=
+\begin{cases}
+0 & s=s_\text{goal}\\[2pt]
+\displaystyle\min_{s'\in\text{Succ}(s)}\bigl(c(s,s')+g(s')\bigr) & \text{그 외}
+\end{cases}
+$$
+
+를 둔다. $g(s)=rhs(s)$ 인 정점을 **국소 일관(locally consistent)** 이라 한다.
+
+**정리 (전역 일관 $\Rightarrow$ 최단거리).** 모든 정점이 국소 일관이면 $g(s)=g^\ast(s)$ 이다 —
+$g$ 는 belief 그래프에서 $s\to s_\text{goal}$ 의 참 최단 비용.
+
+*증명 스케치.* 전 정점에서 $g(s)=\min_{s'}(c(s,s')+g(s'))$ 이고 $g(s_\text{goal})=0$ 이면, 이는
+정확히 최단경로의 **Bellman 최적 방정식**과 그 경계조건이다. 비음수 비용에서 이 방정식의 고정점은
+유일하므로 $g\equiv g^\ast$. ∎
+
+전 정점을 일관으로 만드는 것은 Dijkstra 한 번과 같다. D\* Lite 의 절약은 **그럴 필요가 없다**는 데
+있다: 로봇 이동에 쓰이는 건 $s_\text{start}$ 로 가는 최단경로 위 정점의 $g$ 뿐이므로, 그 경로가
+확정될 때까지만 처리하면 된다. `ComputeShortestPath` 의 종료 조건
+$U.\text{top\_key}\ge\text{CalcKey}(s_\text{start})$ 이면서 $rhs(s_\text{start})=g(s_\text{start})$
+이 바로 그 최소 처리 지점이다 — A\* 가 goal 을 꺼낸 뒤 멈추는 것과 같은 pruning 이다.
+
+**over/under-consistent 처리.** 큐에서 꺼낸 정점 $u$ 의 불일치는 두 종류뿐이다.
+
+- **over-consistent** $g(u)>rhs(u)$: look-ahead 가 더 낫다 → $g(u)\leftarrow rhs(u)$ 로 낮추면 $u$ 가
+  일관이 되고, 개선을 선행 정점 $\text{Pred}(u)$ 로 전파한다(비용이 줄어드는 정상 완화).
+- **under-consistent** $g(u)<rhs(u)$: 간선이 막히는 등으로 이전 $g$ 가 이제 과소평가 → $g(u)\leftarrow\infty$
+  로 무효화하고 $u\cup\text{Pred}(u)$ 를 재평가한다. 필요하면 다음 pop 에서 over-consistent 로 다시 내려간다.
+
+장애물 출현으로 비용이 **오르는** 동적 변화를 이 under-consistent 경로가 정확히 흡수한다 — 정적
+Dijkstra/LPA\* 에는 없는 절반이다.
+
+**$k_m$ 오프셋 — 왜 필요한가.** 역방향 탐색이라 heuristic 은 정점 $s$ 에서 **로봇 위치**
+$s_\text{start}$ 까지의 $h(s_\text{start},s)$ 다. 로봇이 움직이면 이 기준점이 바뀌어, 큐에 이미 든
+key 들이 무효가 될 위험이 있다. octile heuristic 은 metric 이라 삼각부등식으로
+
+$$
+h(s_\text{new},s)\;\ge\;h(s_\text{old},s)-h(s_\text{old},s_\text{new})
+$$
+
+즉 로봇이 $s_\text{old}\to s_\text{new}$ 로 한 스텝 가면 **어떤 정점의 key 도 최대**
+$h(s_\text{old},s_\text{new})$ **만큼만** 작아 보일 수 있다. 그래서 이후 계산하는 key 에 딱 그만큼을
+누적해 더하면($k_m\mathrel{+}=h(s_\text{old},s_\text{new})$) 옛 key 와 새 key 의 비교가 보정되어,
+큐를 통째로 재계산·재정렬하지 않고도 우선순위의 단조 하한 성질이 보존된다. 이 $k_m$ 한 장치가
+LPA\*[^lpastar] 를 이동 로봇용 증분 탐색으로 바꾸는 D\* Lite 의 핵심이다.
+
+## 반례: freespace 가정의 함정
+
+D\* Lite 는 매 스텝 **현재 belief 에 최적**이지만, 처음 보는 장애물을 우회하느라 **실측 궤적은
+전지적 A\* 보다 길 수 있다**(성질의 "실측 cost ≥ A\* cost"). `dstar_trap01` 은 입구가 로봇을 향한
+**C 자 함정**이다: 빈 지도를 가정한 로봇은 그 안이 최단이라 여겨 함정 입으로 직진했다가, 안쪽에서
+뒷벽을 센싱하고 되돌아 나와 우회한다.
+
+| | D\* Lite (실측 궤적) | 전지적 A\* |
+|---|---|---|
+| cost | **34.971** | **25.071** |
+| 확장(누적) | 284 (replan 9회) | 160 |
+
+![D* Lite 반례](../../assets/dstar_lite/counter.gif)
+
+| D\* Lite 실측 — 함정 진입·후퇴 포함 | 전지적 A\* 최적 |
+|:---:|:---:|
+| ![dstar](../../assets/dstar_lite/counter_final.png) | ![astar](../../assets/dstar_lite/counter_opt.png) |
+
+전지적 A\* 는 함정을 아예 피해 위로 돌지만, D\* Lite 는 지식을 **이동하며 벌어야** 하므로 함정에 한 번
+발을 들인 뒤에야 뒷벽을 알게 된다 — 실측 cost 가 약 40 % 크다($34.971/25.071\approx1.39$). 이는
+결함이 아니라 **미지 환경 replanning 의 본질**이다: 매 순간의 결정은 belief 최적이었다.
+
+```bash
+python python/demos/demo_dstar_lite.py --map maps/grid/dstar_trap01.yaml \
+  --scenario maps/scenarios/dstar_trap01_s1.yaml \
+  --params configs/global_planning/dstar_lite.yaml --trace out/dstar_ce.jsonl
+```
+
+## 파라미터
+
+| 이름 | 타입 | 기본값 | 범위 | 설명 |
+|---|---|---|---|---|
+| `sensor_radius` | int | 3 | [1, 50] | 센서 반경(cell). 매 스텝 `dr² + dc² ≤ r²` 안 셀을 감지한다. 클수록 장애물을 멀리서 미리 보고 replan 이 줄어든다 |
+
+## 방출 trace 이벤트
+
+`planning_started` → ( `node_expanded`, `candidate_evaluated`, `edge_added`, `robot_moved`, `obstacle_revealed` )\* → `path_found` → `planning_finished`
+
+- `robot_moved` (state = 로봇의 새 실행 셀) — 궤적을 한 스텝씩 방출.
+- `obstacle_revealed` (state = 새로 발견된 blocked 셀) — 센서가 belief 에 없던 장애물을 찾은 순간.
+
+`replay.py` 는 이 두 이벤트가 있으면 배경을 **전부 free(belief)** 로 깔고, 발견된 장애물을 진행에 따라
+검은 셀로 **fog-in** 하며, 로봇의 이동 자취를 그린다. 두 이벤트가 없는 기존 알고리즘의 렌더는 그대로다.
+
+`planning_finished.metrics`: `path_cost`(실측 궤적 비용) · `expanded_nodes`(누적) · `replan_count` ·
+`sensed_cells`(발견한 장애물 셀 수) · `runtime_sec`. 공용 metric 스키마는 그대로 쓴다.
 
 ## References
 

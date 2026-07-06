@@ -17,6 +17,30 @@
       if (backdrop) backdrop.addEventListener("click", toggle);
     }
 
+    // ---- sidebar disclosure open/close animation ----
+    // 순수 CSS 로는 <details> 닫힘 시 grid-rows 가 전이되지 않아, [open] 제거 시점을 JS 로
+    // 제어한다: 열 때는 먼저 [open] 후 0fr→1fr, 닫을 때는 1fr→0fr 를 재생하고 끝난 뒤 [open] 제거.
+    document.querySelectorAll(".sidebar .nav-sub").forEach(function (d) {
+      var summary = d.querySelector("summary");
+      var body = d.querySelector(".nav-sub-body");
+      if (!summary || !body) return;
+      summary.addEventListener("click", function (e) {
+        e.preventDefault();
+        if (d.dataset.animating) return;
+        var opening = !d.hasAttribute("open");
+        d.dataset.animating = "1";
+        if (opening) d.setAttribute("open", "");
+        body.style.gridTemplateRows = opening ? "0fr" : "1fr";
+        void body.offsetHeight; // reflow so the start value commits before the change
+        body.style.gridTemplateRows = opening ? "1fr" : "0fr";
+        setTimeout(function () {
+          body.style.gridTemplateRows = ""; // hand resting state back to CSS
+          if (!opening) d.removeAttribute("open");
+          delete d.dataset.animating;
+        }, 260);
+      });
+    });
+
     // ---- on-page TOC + scrollspy ----
     var tocEl = document.getElementById("toc");
     var inner = document.querySelector(".content-inner");

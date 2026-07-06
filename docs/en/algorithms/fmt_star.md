@@ -41,6 +41,22 @@ The connection radius is the same shrinking radius $r_n=\gamma\sqrt{\log n/n}$ u
 
 ## How It Works
 
+`maze01` — the batch of samples is drawn, then the wavefront spreads outward from the start in
+ascending cost order, growing the tree. The moment the wavefront reaches the goal, the optimal path is
+fixed.
+
+![FMT\* on maze01](../../assets/fmt_star/maze01.gif)
+
+Intermediate search progress (left → right: early wavefront / spread / final path):
+
+| | | |
+|:---:|:---:|:---:|
+| ![early](../../assets/fmt_star/maze01_snap_02.png) | ![mid](../../assets/fmt_star/maze01_snap_05.png) | ![final](../../assets/fmt_star/maze01_final.png) |
+
+Final result on `open01` — nearly a straight line:
+
+![FMT\* on open01](../../assets/fmt_star/open01_final.png)
+
 ```
 FMT_STAR(start, goal):
     V ← {start, goal} ∪ sample_free(num_samples)    # single fixed batch
@@ -63,6 +79,25 @@ FMT_STAR(start, goal):
 The frontier is a **min-heap** keyed by cost-to-come. FMT\* never lowers an open node's cost, so heap
 entries stay valid and lazy membership via an `in_open` flag is enough.
 
+Measurements (Python, seed = 1, trace on):
+
+| map | path cost | samples | expanded (marched frontier nodes) |
+|---|---|---|---|
+| maze01 | 13.595 | 1,502 | 1,090 |
+| open01 | 12.058 | — | — |
+
+The C++ implementation mirrors the same scenario and produces matching results within the variance of
+the two languages' random streams.
+
+Reproduce:
+
+```bash
+python python/demos/demo_fmt_star.py \
+  --map maps/grid/maze01.yaml --scenario maps/scenarios/maze01_s1.yaml \
+  --params configs/global_planning/fmt_star.yaml --trace out/fmt_star.jsonl
+python tools/viz/replay.py out/fmt_star.jsonl --gif out/fmt_star.gif
+```
+
 ## Properties
 
 - **Completeness**: probabilistically complete[^janson].
@@ -71,14 +106,6 @@ entries stay valid and lazy membership via an `in_open` flag is enough.
 - **Cost**: **lazy collision checking** — only one locally optimal edge is tested per sample, so it
   performs fewer collision checks than PRM\*/RRT\*, which test candidate edges more broadly. This is
   especially valuable when collision checking is expensive.
-
-## Parameters
-
-| Name | Type | Default | Range | Description |
-|---|---|---|---|---|
-| `num_samples` | int | 1500 | [1, 200000] | Number of collision-free samples drawn in the single batch (start/goal excluded) |
-| `gamma` | float | 30.0 | [0.01, 1000.0] | Marching connection-radius coefficient γ. r_n = γ·(log n / n)^(1/2) |
-| `seed` | int | 1 | [0, 2^31−1] | Random seed (reproducibility) |
 
 ## Marching Rule and Asymptotic Optimality
 
@@ -112,13 +139,21 @@ $$
 optimal path cost. As samples densify, each optimal sub-path exists within the near-neighbor graph to
 $\epsilon$ accuracy, and the marching order recovers it exactly.
 
-## Implementation Notes
+**Why lazy checking does not break optimality.** For each unvisited $x$, only the single edge to its
+lowest-cost candidate $y^*$ is checked. If $(y^*,x)$ is in collision, $x$ is simply not connected now
+and reappears later at a higher cost. The other, unchecked edges $(y,x)$ have $y\in H$ with
+$\mathrm{cost}(y)\ge\mathrm{cost}(y^*)$, so their paths are more expensive — had the optimal path
+actually used one of them, that $y$ would have been picked as $y^*$ in the first place. Thus a single
+collision check per node still preserves asymptotic optimality — why FMT\* performs fewer collision
+checks (usually the dominant cost of planning) than RRT\*/PRM\* at the same samples.
 
-- C++: `cpp/src/global_planning/fmt_star.cpp`, Python: `python/navigation/global_planning/fmt_star.py`
-- The batch near-neighbor graph (`radius_neighbors`) and the shrinking radius (`rgg_radius`) live in
-  `sampling_common` / `_sampling`, shared with [PRM\*](prm_star.md) and [BIT\*](bit_star.md).
-- Because FMT\* marches a tree in one shot, it operates directly on the batch near-neighbor graph,
-  not on the [PRM](prm.md)-family roadmap (`roadmap_common` / `_roadmap`).
+## Parameters
+
+| Name | Type | Default | Range | Description |
+|---|---|---|---|---|
+| `num_samples` | int | 1500 | [1, 200000] | Number of collision-free samples drawn in the single batch (start/goal excluded) |
+| `gamma` | float | 30.0 | [0.01, 1000.0] | Marching connection-radius coefficient γ. r_n = γ·(log n / n)^(1/2) |
+| `seed` | int | 1 | [0, 2^31−1] | Random seed (reproducibility) |
 
 ## Emitted Trace Events
 
@@ -127,43 +162,6 @@ $\epsilon$ accuracy, and the marching order recovers it exactly.
 `sample_drawn` marks a batch sample, `edge_added` the edge used to attach a sample, and
 `node_expanded` the moment the min-cost frontier node $z$ is popped during marching — the latter two
 interleave as the wavefront expands.
-
-## Demo
-
-`maze01` — the batch of samples is drawn, then the wavefront spreads outward from the start in
-ascending cost order, growing the tree. The moment the wavefront reaches the goal, the optimal path is
-fixed.
-
-![FMT\* on maze01](../../assets/fmt_star/maze01.gif)
-
-Intermediate search progress (left → right: early wavefront / spread / final path):
-
-| | | |
-|:---:|:---:|:---:|
-| ![early](../../assets/fmt_star/maze01_snap_02.png) | ![mid](../../assets/fmt_star/maze01_snap_05.png) | ![final](../../assets/fmt_star/maze01_final.png) |
-
-Final result on `open01` — nearly a straight line:
-
-![FMT\* on open01](../../assets/fmt_star/open01_final.png)
-
-Measurements (Python, seed = 1, trace on):
-
-| map | path cost | samples | expanded (marched frontier nodes) |
-|---|---|---|---|
-| maze01 | 13.595 | 1,502 | 1,090 |
-| open01 | 12.058 | — | — |
-
-The C++ implementation mirrors the same scenario and produces matching results within the variance of
-the two languages' random streams.
-
-Reproduce:
-
-```bash
-python python/demos/demo_fmt_star.py \
-  --map maps/grid/maze01.yaml --scenario maps/scenarios/maze01_s1.yaml \
-  --params configs/global_planning/fmt_star.yaml --trace out/fmt_star.jsonl
-python tools/viz/replay.py out/fmt_star.jsonl --gif out/fmt_star.gif
-```
 
 ## References
 
