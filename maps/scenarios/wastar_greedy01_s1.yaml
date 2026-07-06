@@ -1,0 +1,3 @@
+map: ../grid/wastar_greedy01.yaml
+start: [6.25, 1.25]
+goal: [5.75, 6.75]

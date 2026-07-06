@@ -1,0 +1,3 @@
+map: ../grid/rrt_subopt01.yaml
+start: [0.75, 0.75]
+goal: [9.25, 9.25]
