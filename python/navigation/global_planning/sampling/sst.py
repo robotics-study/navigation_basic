@@ -77,7 +77,6 @@ class SST(_SamplingPlanner):
         children: list[list[int]] = [[]]
         # Incoming dense arc per node (parent-exclusive .. node-inclusive); [] for root.
         arc: list[list[Point]] = [[]]
-        pruned: list[bool] = [False]
         active_ids: set[int] = {0}
 
         # --- witness set: witness point + its active representative index ----------
@@ -154,7 +153,6 @@ class SST(_SamplingPlanner):
             cost.append(c)
             children.append([])
             arc.append(wps)
-            pruned.append(False)
             children[par].append(idx)
             active_ids.add(idx)
             return idx
@@ -168,7 +166,6 @@ class SST(_SamplingPlanner):
                 par = parent[cur]
                 if par != -1:
                     children[par].remove(cur)
-                pruned[cur] = True
                 cur = par
 
         def reconstruct(idx: int) -> list[Point]:
