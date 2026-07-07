@@ -4,6 +4,7 @@ Shared skeletons live in the private `_sampling` / `_roadmap` helpers; no
 algorithm module imports another.
 """
 
+from .abit_star import ABITStar
 from .ait_star import AITStar
 from .bit_star import BITStar
 from .eit_star import EITStar
@@ -29,6 +30,7 @@ __all__ = [
     "PRMStar",
     "FMTStar",
     "BITStar",
+    "ABITStar",
     "AITStar",
     "EITStar",
     "FCITStar",
