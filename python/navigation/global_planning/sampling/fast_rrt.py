@@ -138,7 +138,10 @@ class FastRRT(_SamplingPlanner):
         return None
 
     def _shortcut(self, space: SamplingSpace[Point], path: list[Point]) -> list[Point]:
-        # Fast-Optimal: greedily bypass waypoints reachable by a valid straight segment.
+        # Fast-Optimal: single greedy pass that jumps from each kept waypoint to
+        # the farthest later waypoint reachable by a valid straight segment. Kept
+        # byte-for-byte equivalent to the C++ FastRrtPlanner::shortcut_prune so the
+        # cross-language benchmark compares the same shortcut on occluded paths.
         if len(path) <= 2:
             return path
         out = [path[0]]

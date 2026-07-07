@@ -20,21 +20,26 @@ bool within_reached(const Tree& tree, const SamplingSpace<Point>& space, const P
   return false;
 }
 
-// Fast-Optimal shortcut pruning: drop any waypoint whose bypass segment is
-// collision-free (triangle inequality shortens the path).
+// Fast-Optimal shortcut pruning: single greedy pass that, from each kept
+// waypoint, jumps to the farthest later waypoint reachable by a collision-free
+// straight segment. This must stay byte-for-byte equivalent to the Python
+// FastRRT._shortcut so the cross-language benchmark compares the same shortcut
+// result on partially occluded paths; the identical i/j scan order and
+// is_motion_valid call sequence keep both languages on the same output.
 std::vector<Point> shortcut_prune(const SamplingSpace<Point>& space, std::vector<Point> path) {
-  bool changed = true;
-  while (changed && path.size() > 2) {
-    changed = false;
-    for (size_t i = 1; i + 1 < path.size(); ++i) {
-      if (space.is_motion_valid(path[i - 1], path[i + 1])) {
-        path.erase(path.begin() + static_cast<long>(i));
-        changed = true;
-        break;
-      }
+  if (path.size() <= 2) return path;
+  std::vector<Point> out;
+  out.push_back(path[0]);
+  size_t i = 0;
+  while (i < path.size() - 1) {
+    size_t j = path.size() - 1;
+    while (j > i + 1 && !space.is_motion_valid(path[i], path[j])) {
+      --j;
     }
+    out.push_back(path[j]);
+    i = j;
   }
-  return path;
+  return out;
 }
 
 }  // namespace
