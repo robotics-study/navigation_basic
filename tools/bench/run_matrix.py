@@ -35,15 +35,21 @@ _REQUIRED: dict[str, Capability] = {
     "dstar_lite": Capability.DYNAMIC_GRID_SPACE,
     "hybrid_astar": Capability.SE2_COLLISION_SPACE,
     "rrt": Capability.SAMPLING_SPACE,
+    "rrt_connect": Capability.SAMPLING_SPACE,
     "rrt_star": Capability.SAMPLING_SPACE,
+    "informed_rrt_star": Capability.SAMPLING_SPACE,
     "prm": Capability.SAMPLING_SPACE,
     "prm_star": Capability.SAMPLING_SPACE,
     "fmt_star": Capability.SAMPLING_SPACE,
     "bit_star": Capability.SAMPLING_SPACE,
+    "ait_star": Capability.SAMPLING_SPACE,
+    "eit_star": Capability.SAMPLING_SPACE,
+    "fcit_star": Capability.SAMPLING_SPACE,
     "fast_rrt": Capability.SAMPLING_SPACE,
 }
 _ORDER = ["bfs", "dijkstra", "astar", "theta_star", "dstar_lite", "hybrid_astar", "rrt",
-          "rrt_star", "prm", "prm_star", "fmt_star", "bit_star", "fast_rrt"]
+          "rrt_connect", "rrt_star", "informed_rrt_star", "prm", "prm_star", "fmt_star",
+          "bit_star", "ait_star", "eit_star", "fcit_star", "fast_rrt"]
 
 
 @dataclass

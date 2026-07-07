@@ -59,6 +59,20 @@ def test_optional_fields_omitted_when_absent() -> None:
     assert events[3]["event"] == "rewire" and events[3]["parent"] == [1, 1]
 
 
+def test_data_field_carries_algorithm_info_and_is_omitted_when_empty() -> None:
+    buf = io.StringIO()
+    rec = TraceRecorder(buf)
+    rec.node_expanded((0, 0), 0.0, data={"row": 3, "col_lo": 1, "col_hi": 4})
+    rec.edge_added((0, 1), (0, 0), 1.0, data={"row": 3})
+    rec.candidate_evaluated((0, 1), 1.0)  # no data
+    rec.node_expanded((0, 2), 2.0, data={})  # empty data must be elided
+    events = [json.loads(line) for line in buf.getvalue().splitlines()]
+    assert events[0]["data"] == {"row": 3, "col_lo": 1, "col_hi": 4}
+    assert events[1]["data"] == {"row": 3}
+    assert "data" not in events[2]
+    assert "data" not in events[3]
+
+
 def test_open_trace_writes_and_closes(tmp_path: Path) -> None:
     path = str(tmp_path / "t.jsonl")
     with open_trace(path) as rec:

@@ -9,13 +9,23 @@
   <url><loc>https://robotics-study.github.io/navigation/ko/algorithms/dstar_lite.html</loc></url>
   <url><loc>https://robotics-study.github.io/navigation/ko/algorithms/theta_star.html</loc></url>
   <url><loc>https://robotics-study.github.io/navigation/ko/algorithms/hybrid_astar.html</loc></url>
+  <url><loc>https://robotics-study.github.io/navigation/ko/algorithms/lazy_theta_star.html</loc></url>
+  <url><loc>https://robotics-study.github.io/navigation/ko/algorithms/jps.html</loc></url>
+  <url><loc>https://robotics-study.github.io/navigation/ko/algorithms/anya.html</loc></url>
   <url><loc>https://robotics-study.github.io/navigation/ko/algorithms/prm.html</loc></url>
   <url><loc>https://robotics-study.github.io/navigation/ko/algorithms/rrt.html</loc></url>
+  <url><loc>https://robotics-study.github.io/navigation/ko/algorithms/rrt_connect.html</loc></url>
   <url><loc>https://robotics-study.github.io/navigation/ko/algorithms/rrt_star.html</loc></url>
   <url><loc>https://robotics-study.github.io/navigation/ko/algorithms/prm_star.html</loc></url>
+  <url><loc>https://robotics-study.github.io/navigation/ko/algorithms/kinodynamic_rrt_star.html</loc></url>
+  <url><loc>https://robotics-study.github.io/navigation/ko/algorithms/informed_rrt_star.html</loc></url>
   <url><loc>https://robotics-study.github.io/navigation/ko/algorithms/fmt_star.html</loc></url>
   <url><loc>https://robotics-study.github.io/navigation/ko/algorithms/bit_star.html</loc></url>
+  <url><loc>https://robotics-study.github.io/navigation/ko/algorithms/sst.html</loc></url>
+  <url><loc>https://robotics-study.github.io/navigation/ko/algorithms/ait_star.html</loc></url>
   <url><loc>https://robotics-study.github.io/navigation/ko/algorithms/fast_rrt.html</loc></url>
+  <url><loc>https://robotics-study.github.io/navigation/ko/algorithms/eit_star.html</loc></url>
+  <url><loc>https://robotics-study.github.io/navigation/ko/algorithms/fcit_star.html</loc></url>
   <url><loc>https://robotics-study.github.io/navigation/ko/benchmarks.html</loc></url>
   <url><loc>https://robotics-study.github.io/navigation/ko/maps.html</loc></url>
   <url><loc>https://robotics-study.github.io/navigation/ko/architecture.html</loc></url>
@@ -28,13 +38,23 @@
   <url><loc>https://robotics-study.github.io/navigation/en/algorithms/dstar_lite.html</loc></url>
   <url><loc>https://robotics-study.github.io/navigation/en/algorithms/theta_star.html</loc></url>
   <url><loc>https://robotics-study.github.io/navigation/en/algorithms/hybrid_astar.html</loc></url>
+  <url><loc>https://robotics-study.github.io/navigation/en/algorithms/lazy_theta_star.html</loc></url>
+  <url><loc>https://robotics-study.github.io/navigation/en/algorithms/jps.html</loc></url>
+  <url><loc>https://robotics-study.github.io/navigation/en/algorithms/anya.html</loc></url>
   <url><loc>https://robotics-study.github.io/navigation/en/algorithms/prm.html</loc></url>
   <url><loc>https://robotics-study.github.io/navigation/en/algorithms/rrt.html</loc></url>
+  <url><loc>https://robotics-study.github.io/navigation/en/algorithms/rrt_connect.html</loc></url>
   <url><loc>https://robotics-study.github.io/navigation/en/algorithms/rrt_star.html</loc></url>
   <url><loc>https://robotics-study.github.io/navigation/en/algorithms/prm_star.html</loc></url>
+  <url><loc>https://robotics-study.github.io/navigation/en/algorithms/kinodynamic_rrt_star.html</loc></url>
+  <url><loc>https://robotics-study.github.io/navigation/en/algorithms/informed_rrt_star.html</loc></url>
   <url><loc>https://robotics-study.github.io/navigation/en/algorithms/fmt_star.html</loc></url>
   <url><loc>https://robotics-study.github.io/navigation/en/algorithms/bit_star.html</loc></url>
+  <url><loc>https://robotics-study.github.io/navigation/en/algorithms/sst.html</loc></url>
+  <url><loc>https://robotics-study.github.io/navigation/en/algorithms/ait_star.html</loc></url>
   <url><loc>https://robotics-study.github.io/navigation/en/algorithms/fast_rrt.html</loc></url>
+  <url><loc>https://robotics-study.github.io/navigation/en/algorithms/eit_star.html</loc></url>
+  <url><loc>https://robotics-study.github.io/navigation/en/algorithms/fcit_star.html</loc></url>
   <url><loc>https://robotics-study.github.io/navigation/en/benchmarks.html</loc></url>
   <url><loc>https://robotics-study.github.io/navigation/en/maps.html</loc></url>
   <url><loc>https://robotics-study.github.io/navigation/en/architecture.html</loc></url>

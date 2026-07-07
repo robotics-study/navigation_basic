@@ -42,6 +42,20 @@ void write_array(std::ostream& os, const std::vector<double>& a) {
   os << ']';
 }
 
+void write_data(std::ostream& os, const std::map<std::string, double>* data) {
+  if (!data) return;  // absent (or empty) data omits the field entirely
+  os << ",\"data\":{";
+  bool first = true;
+  for (const auto& [k, v] : *data) {
+    if (!first) os << ',';
+    first = false;
+    write_str(os, k);
+    os << ':';
+    write_num(os, v);
+  }
+  os << '}';
+}
+
 }  // namespace
 
 TraceRecorder::TraceRecorder(std::ostream& os) : os_(os), t0_(std::chrono::steady_clock::now()) {}
@@ -102,7 +116,8 @@ void TraceRecorder::planning_finished(bool success, const std::map<std::string, 
   end_event();
 }
 
-void TraceRecorder::ev_state(const char* event, const std::vector<double>& s, const double* cost) {
+void TraceRecorder::ev_state(const char* event, const std::vector<double>& s, const double* cost,
+                             const EventData* data) {
   begin_event(event);
   os_ << ",\"state\":";
   write_array(os_, s);
@@ -110,11 +125,13 @@ void TraceRecorder::ev_state(const char* event, const std::vector<double>& s, co
     os_ << ",\"cost\":";
     write_num(os_, *cost);
   }
+  write_data(os_, data);
   end_event();
 }
 
 void TraceRecorder::ev_edge(const char* event, const std::vector<double>& s,
-                            const std::vector<double>& parent, const double* cost) {
+                            const std::vector<double>& parent, const double* cost,
+                            const EventData* data) {
   begin_event(event);
   os_ << ",\"state\":";
   write_array(os_, s);
@@ -124,6 +141,7 @@ void TraceRecorder::ev_edge(const char* event, const std::vector<double>& s,
     os_ << ",\"cost\":";
     write_num(os_, *cost);
   }
+  write_data(os_, data);
   end_event();
 }
 

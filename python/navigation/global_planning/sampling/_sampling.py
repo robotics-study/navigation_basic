@@ -6,6 +6,7 @@ owns its own extension policy (plain / optimal / fast) in its own module.
 
 from __future__ import annotations
 
+import math
 from collections.abc import Iterable
 
 import numpy as np
@@ -130,6 +131,37 @@ def rgg_radius(gamma: float, n: int) -> float:
     if n <= 1:
         return float("inf")
     return gamma * float(np.sqrt(np.log(n) / n))
+
+
+def informed_sample(
+    space: SamplingSpace[Point],
+    start: Point,
+    goal: Point,
+    c_best: float,
+    rng: np.random.Generator,
+) -> Point:
+    """Draw a state biased toward improving the incumbent solution.
+
+    Before a solution exists, sample the whole space; after, sample the informed
+    ellipse with foci start/goal and transverse diameter c_best (Gammell, Srinivasa
+    & Barfoot 2014), so draws land only where the incumbent can still improve.
+    Shared by every asymptotically-optimal batch/anytime planner (BIT*, Informed
+    RRT*, and the AIT*/EIT*/FCIT* lineage) so the ellipse math and RNG draw order
+    live in exactly one place.
+    """
+    c_min = space.distance(start, goal)
+    if c_best >= float("inf") or c_best <= c_min:
+        return space.sample()
+    cx, cy = (start[0] + goal[0]) / 2.0, (start[1] + goal[1]) / 2.0
+    r1 = c_best / 2.0
+    r2 = math.sqrt(max(c_best * c_best - c_min * c_min, 0.0)) / 2.0
+    theta = math.atan2(goal[1] - start[1], goal[0] - start[0])
+    ang = float(rng.uniform(0.0, 2.0 * math.pi))
+    rad = math.sqrt(float(rng.random()))
+    ux, uy = rad * math.cos(ang) * r1, rad * math.sin(ang) * r2
+    x = cx + math.cos(theta) * ux - math.sin(theta) * uy
+    y = cy + math.sin(theta) * ux + math.cos(theta) * uy
+    return (x, y)
 
 
 def insert_best_parent(

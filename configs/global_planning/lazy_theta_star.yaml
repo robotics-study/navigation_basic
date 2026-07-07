@@ -1,0 +1,11 @@
+algorithm: lazy_theta_star
+category: global_planning
+params:
+  - name: heuristic_weight
+    type: float
+    default: 1.0
+    min: 1.0
+    max: 5.0
+    description: >-
+      f = g + w*h 의 가중치 (h 는 유클리드 직선거리). 1.0 이면 표준 Lazy Theta*,
+      1.0 초과면 weighted Lazy Theta* (더 빠르지만 준최적). (Nash & Koenig 2010; Pohl 1970)

@@ -12,21 +12,56 @@ private `_discrete` / `_bestfirst` (search) and `_sampling` / `_roadmap`
 `from navigation.global_planning import AStar, RRTStar, ...` access.
 """
 
-from .sampling import PRM, RRT, BITStar, FastRRT, FMTStar, PRMStar, RRTStar
-from .search import BFS, AStar, Dijkstra, DStarLite, HybridAStar, ThetaStar
+from .sampling import (
+    PRM,
+    RRT,
+    SST,
+    AITStar,
+    BITStar,
+    EITStar,
+    FastRRT,
+    FCITStar,
+    FMTStar,
+    InformedRRTStar,
+    KinodynamicRRTStar,
+    PRMStar,
+    RRTConnect,
+    RRTStar,
+)
+from .search import (
+    BFS,
+    JPS,
+    Anya,
+    AStar,
+    Dijkstra,
+    DStarLite,
+    HybridAStar,
+    LazyThetaStar,
+    ThetaStar,
+)
 
 __all__ = [
     "BFS",
     "Dijkstra",
     "AStar",
+    "JPS",
     "DStarLite",
     "ThetaStar",
+    "LazyThetaStar",
+    "Anya",
     "HybridAStar",
     "RRT",
+    "RRTConnect",
     "RRTStar",
+    "InformedRRTStar",
     "FastRRT",
     "PRM",
     "PRMStar",
     "FMTStar",
     "BITStar",
+    "AITStar",
+    "EITStar",
+    "FCITStar",
+    "KinodynamicRRTStar",
+    "SST",
 ]

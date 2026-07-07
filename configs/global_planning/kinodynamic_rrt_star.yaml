@@ -1,0 +1,45 @@
+algorithm: kinodynamic_rrt_star
+category: global_planning
+params:
+  - name: max_iterations
+    type: int
+    default: 4000
+    min: 1
+    max: 200000
+    description: 최대 확장 반복 수 (anytime; 소진 시 현재 best 반환).
+  - name: goal_bias
+    type: float
+    default: 0.1
+    min: 0.0
+    max: 1.0
+    description: 매 반복 goal 상태(정지)를 직접 sample 할 확률 (0~1).
+  - name: goal_tolerance
+    type: float
+    default: 1.0
+    min: 0.0
+    max: 100.0
+    description: goal 연결을 시도하는 위치 근접 반경 (meters). 연결 자체는 optimal steering 이 goal 에 정확히 도달한다.
+  - name: neighbor_radius
+    type: float
+    default: 2.0
+    min: 0.01
+    max: 100.0
+    description: choose-parent / rewire 근방 위치 반경 (meters). 이 안의 노드에 대해서만 optimal-cost 연결을 평가한다.
+  - name: control_weight
+    type: float
+    default: 1.0
+    min: 0.001
+    max: 1000.0
+    description: 제어 비용 가중 r (J = ∫ 1 + r·uᵀu dt). 클수록 제어 노력에 페널티 (Webb & van den Berg 2013).
+  - name: max_velocity
+    type: float
+    default: 1.5
+    min: 0.01
+    max: 100.0
+    description: 샘플 상태의 축별 속도 범위 [-v_max, v_max] (m/s). double integrator 상태 (x, y, vx, vy).
+  - name: seed
+    type: int
+    default: 1
+    min: 0
+    max: 2147483647
+    description: 난수 시드 (재현성).

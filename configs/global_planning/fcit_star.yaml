@@ -1,0 +1,21 @@
+algorithm: fcit_star
+category: global_planning
+params:
+  - name: batch_size
+    type: int
+    default: 80
+    min: 1
+    max: 100000
+    description: 배치당 새로 뿌리는 (informed) 샘플 수. 완전 연결 그래프라 edge 수가 O(n^2) 이므로 작게 유지. (Wilson, Strub & Gammell 2025)
+  - name: max_batches
+    type: int
+    default: 10
+    min: 1
+    max: 10000
+    description: 최대 배치 수 (anytime; 소진 시 현재 best 반환).
+  - name: seed
+    type: int
+    default: 1
+    min: 0
+    max: 2147483647
+    description: 난수 시드 (재현성).

@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FCIT* · navigation study</title>
+<meta name="description" content="Batch planners like BIT*, AIT*, and EIT* connect only within-radius neighbours of an RGG">
+<meta name="robots" content="index,follow">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b1020" media="(prefers-color-scheme: dark)">
+<link rel="canonical" href="https://robotics-study.github.io/navigation/en/algorithms/fcit_star.html">
+<link rel="alternate" hreflang="ko" href="https://robotics-study.github.io/navigation/ko/algorithms/fcit_star.html">
+<link rel="alternate" hreflang="en" href="https://robotics-study.github.io/navigation/en/algorithms/fcit_star.html">
+<link rel="alternate" hreflang="x-default" href="https://robotics-study.github.io/navigation/en/algorithms/fcit_star.html">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="navigation study">
+<meta property="og:title" content="FCIT* · navigation study">
+<meta property="og:description" content="Batch planners like BIT*, AIT*, and EIT* connect only within-radius neighbours of an RGG">
+<meta property="og:url" content="https://robotics-study.github.io/navigation/en/algorithms/fcit_star.html">
+<meta property="og:image" content="https://robotics-study.github.io/navigation/assets/fcit_star/maze01_final.png">
+<meta property="og:image:alt" content="FCIT*">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="ko_KR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="FCIT* · navigation study">
+<meta name="twitter:description" content="Batch planners like BIT*, AIT*, and EIT* connect only within-radius neighbours of an RGG">
+<meta name="twitter:image" content="https://robotics-study.github.io/navigation/assets/fcit_star/maze01_final.png">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "FCIT*", "description": "Batch planners like BIT*, AIT*, and EIT* connect only within-radius neighbours of an RGG", "image": "https://robotics-study.github.io/navigation/assets/fcit_star/maze01_final.png", "inLanguage": "en", "url": "https://robotics-study.github.io/navigation/en/algorithms/fcit_star.html", "isPartOf": {"@type": "WebSite", "name": "navigation study", "url": "https://robotics-study.github.io/navigation/"}}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=6d6dae56">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Crect width='24' height='24' rx='6' fill='%230b1020'/%3E%3Cpath d='M4 19V11h8V5h8' stroke='%23818cf8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='4' cy='19' r='2.4' fill='%23818cf8'/%3E%3Ccircle cx='20' cy='5' r='2.4' fill='%2322d3ee'/%3E%3C/svg%3E">
+<script src="../../assets/site.js?v=6d6dae56"></script>
+</head>
+<body>
+<header class="topbar">
+  <button id="menu-btn" class="iconbtn menu-btn" aria-label="menu"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  <div class="brandcrumb">
+    <a class="brand hub" href="https://robotics-study.github.io/" aria-label="robotics-study home"><svg class="logo" width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true"><defs><linearGradient id="navlg" x1="0" y1="1" x2="1" y2="0"><stop stop-color="#6366f1"/><stop offset="1" stop-color="#06b6d4"/></linearGradient></defs><path d="M4 19V11h8V5h8" stroke="url(#navlg)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="4" cy="19" r="2.6" fill="url(#navlg)"/><circle cx="20" cy="5" r="2.6" fill="url(#navlg)"/></svg><span class="wm">robotics<span class="wm-dim"> study</span></span></a>
+    <span class="crumb-sep" aria-hidden="true">/</span>
+    <a class="brand" href="../../index.html"><span class="wm">navigation<span class="wm-dim"> study</span></span></a>
+  </div>
+  <nav class="topnav"><a href="../../en/index.html">Overview</a><a href="../../en/algorithms/index.html">Algorithms</a><a href="../../en/maps.html">Maps</a><a href="../../en/benchmarks.html">Benchmarks</a><a href="https://github.com/robotics-study/navigation" target="_blank" rel="noopener">GitHub<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a></nav>
+  <span class="spacer"></span>
+  <div class="search"><svg class="s-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg><input id="search-input" type="search" placeholder="검색 / Search…" data-base="../../" autocomplete="off"><div id="search-results" class="search-results"></div></div>
+  <div class="lang-toggle" role="group" aria-label="language"><svg class="g-ico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.5 2.5 3.8 5.6 3.8 9s-1.3 6.5-3.8 9c-2.5-2.5-3.8-5.6-3.8-9S9.5 5.5 12 3Z"/></svg><a href="../../ko/algorithms/fcit_star.html" class="">KO</a><span class="l-sep">/</span><a href="../../en/algorithms/fcit_star.html" class="active">EN</a></div>
+</header>
+<div class="layout">
+<aside class="sidebar"><h4>Overview</h4>
+<a href="../../en/index.html">Overview</a>
+<a href="../../en/algorithms/index.html">All algorithms</a>
+<h4>Global planning</h4>
+<details class="nav-sub"><summary>Search</summary><div class="nav-sub-body"><div class="nav-sub-inner"><a href="../../en/algorithms/bfs.html">BFS</a><a href="../../en/algorithms/dijkstra.html">Dijkstra</a><a href="../../en/algorithms/astar.html">A*</a><a href="../../en/algorithms/dstar_lite.html">D* Lite</a><a href="../../en/algorithms/theta_star.html">Theta*</a><a href="../../en/algorithms/hybrid_astar.html">Hybrid A*</a><a href="../../en/algorithms/lazy_theta_star.html">Lazy Theta*</a><a href="../../en/algorithms/jps.html">JPS</a><a href="../../en/algorithms/anya.html">Anya</a></div></div></details>
+<details class="nav-sub" open><summary>Sampling</summary><div class="nav-sub-body"><div class="nav-sub-inner"><a href="../../en/algorithms/prm.html">PRM</a><a href="../../en/algorithms/rrt.html">RRT</a><a href="../../en/algorithms/rrt_connect.html">RRT-Connect</a><a href="../../en/algorithms/rrt_star.html">RRT*</a><a href="../../en/algorithms/prm_star.html">PRM*</a><a href="../../en/algorithms/kinodynamic_rrt_star.html">Kinodynamic RRT*</a><a href="../../en/algorithms/informed_rrt_star.html">Informed RRT*</a><a href="../../en/algorithms/fmt_star.html">FMT*</a><a href="../../en/algorithms/bit_star.html">BIT*</a><a href="../../en/algorithms/sst.html">SST</a><a href="../../en/algorithms/ait_star.html">AIT*</a><a href="../../en/algorithms/fast_rrt.html">Fast-RRT</a><a href="../../en/algorithms/eit_star.html">EIT*</a><a href="../../en/algorithms/fcit_star.html" class="active">FCIT*</a></div></div></details>
+<a href="../../en/benchmarks.html">Benchmarks</a>
+<h4>Local planning <span class="soon">planned</span></h4>
+<span class="planned">DWA</span>
+<span class="planned">Pure Pursuit</span>
+<span class="planned">VFH</span>
+<span class="planned">MPC</span>
+<span class="planned">Benchmarks</span>
+<h4>Multi-agent <span class="soon">planned</span></h4>
+<span class="planned">Prioritized A*</span>
+<span class="planned">Joint-space A*</span>
+<span class="planned">CBS</span>
+<span class="planned">Benchmarks</span>
+<h4>Maps</h4>
+<a href="../../en/maps.html">Map representations</a>
+<h4>Reference</h4>
+<a href="../../en/architecture.html">Architecture</a>
+<a href="../../en/references.html">References</a></aside>
+<main class="content"><article class="content-inner"><h1 id="fcit-fully-connected-informed-trees">FCIT* (Fully Connected Informed Trees)<a class="anchor" href="#fcit-fully-connected-informed-trees" title="Permanent link">¶</a></h1>
+<div class="code-links"><span class="cl-label">Source</span><a href="https://github.com/robotics-study/navigation/blob/main/cpp/src/global_planning/sampling/fcit_star.cpp" target="_blank" rel="noopener">C++</a><a href="https://github.com/robotics-study/navigation/blob/main/cpp/include/navigation/global_planning/sampling/fcit_star.hpp" target="_blank" rel="noopener">C++ header</a><a href="https://github.com/robotics-study/navigation/blob/main/python/navigation/global_planning/sampling/fcit_star.py" target="_blank" rel="noopener">Python</a><a href="https://github.com/robotics-study/navigation/blob/main/python/demos/demo_fcit_star.py" target="_blank" rel="noopener">demo</a></div>
+<table class="spec-table">
+<thead>
+<tr>
+<th>Item</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Category</td>
+<td>sampling-based, batch, anytime, asymptotically optimal</td>
+</tr>
+<tr>
+<td>Required capability</td>
+<td><code>SamplingSpace</code></td>
+</tr>
+<tr>
+<td>Completeness</td>
+<td>probabilistically complete</td>
+</tr>
+<tr>
+<td>Optimality</td>
+<td>asymptotically optimal — searches a fully connected graph, no radius limit</td>
+</tr>
+<tr>
+<td>Complexity</td>
+<td>O(n²) candidate edges per batch + reverse Dijkstra + lazy collision checks</td>
+</tr>
+<tr>
+<td>Original paper</td>
+<td>Wilson, Strub &amp; Gammell (2025), ICRA <sup id="fnref3:wilson_fcit"><a class="footnote-ref" href="#fn:wilson_fcit">1</a></sup></td>
+</tr>
+</tbody>
+</table>
+<h2 id="background">Background<a class="anchor" href="#background" title="Permanent link">¶</a></h2>
+<p>Batch planners like BIT*, AIT*, and EIT* connect only within-radius neighbours of an RGG
+(<span class="arithmatex">\(r_n=\gamma\sqrt{\log n / n}\)</span>) to bound the edge count. FCIT*<sup id="fnref:wilson_fcit"><a class="footnote-ref" href="#fn:wilson_fcit">1</a></sup> inverts the premise:
+<strong>modern collision checking is cheap enough</strong> that there is no need to prune candidates with a
+radius. Instead it builds the <strong>fully connected</strong> graph over the current informed batch (every sample
+paired with every other) and runs an informed best-first search over it directly, with the same lazy
+edge validation as the radius-limited variants. Dropping the radius trades <strong>more (cheap,
+un-collision-checked) candidate edges</strong> for a search that can take shortcuts a radius graph would
+miss.</p>
+<p>The heuristic reuses AIT*'s <strong>reverse-search heuristic</strong> idea (Strub &amp; Gammell 2020<sup id="fnref:strub_ait"><a class="footnote-ref" href="#fn:strub_ait">2</a></sup>): a
+Dijkstra from the goal (over the complete graph) gives each vertex an estimated cost-to-go <span class="arithmatex">\(\hat h\)</span>.
+Once a solution exists, later batches draw from the <strong>informed ellipse</strong> (Gammell et al.
+2014<sup id="fnref:gammell"><a class="footnote-ref" href="#fn:gammell">3</a></sup>) to concentrate on the region that can still improve. It is an anytime algorithm,
+tightening the path across batches.</p>
+<h2 id="how-it-works">How It Works<a class="anchor" href="#how-it-works" title="Permanent link">¶</a></h2>
+<p>Search on <code>maze01</code>. Because every accumulated sample connects to every other, the graph fills in
+densely batch by batch instead of growing a single incremental tree, and the path tightens as new
+batches arrive.</p>
+<p><img alt="FCIT* on maze01" src="../../assets/fcit_star/maze01.gif" /></p>
+<p>Intermediate search progress (left → right: early / middle / final path):</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;"></th>
+<th style="text-align: center;"></th>
+<th style="text-align: center;"></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;"><img alt="early" src="../../assets/fcit_star/maze01_snap_02.png" /></td>
+<td style="text-align: center;"><img alt="mid" src="../../assets/fcit_star/maze01_snap_05.png" /></td>
+<td style="text-align: center;"><img alt="final" src="../../assets/fcit_star/maze01_final.png" /></td>
+</tr>
+</tbody>
+</table>
+<p>Final result on <code>open01</code> — the complete graph contains the direct start-goal edge, so the very
+first batch already connects an almost-straight-line path:</p>
+<p><img alt="FCIT* on open01" src="../../assets/fcit_star/open01_final.png" /></p>
+<p><code>points[0]=start</code>, <code>points[1]=goal</code>. Per batch:</p>
+<ol>
+<li><strong>Grow the batch.</strong> Draw <code>batch_size</code> informed-ellipse samples, keep the valid ones, append to a
+   persistent point array.</li>
+<li><strong>Fully connected adjacency.</strong> For every accumulated sample, <code>nbr[i] = { j ≠ i }</code> — no radius
+   restriction. Only a persistent <code>invalid_edges</code> set (normalised undirected pairs), which
+   accumulates motions found in collision, is filtered out.</li>
+<li><strong>Reverse search.</strong> Run Dijkstra from the goal over that filtered complete graph to obtain <span class="arithmatex">\(\hat h\)</span>
+   for every vertex.</li>
+<li><strong>Forward search.</strong> A lazy-deletion best-first (A*) ordered by <span class="arithmatex">\(g+\hat h\)</span>. Each considered edge is
+   validated late with <code>is_motion_valid</code> (on collision, add to <code>invalid_edges</code> and skip); accept it
+   when it improves <span class="arithmatex">\(g[x]\)</span> (<code>edge_added</code> on first connection, <code>rewire</code> on improvement). When the goal
+   improves, update <span class="arithmatex">\(c_{\text{best}}\)</span> and emit <code>path_found</code>.</li>
+</ol>
+<pre><code>FCIT_STAR(start, goal):
+    points ← [start, goal];  invalid ← ∅;  c_best ← ∞
+    for batch in 1..max_batches:
+        points ← points ∪ draw(batch_size, c_best)     # informed batch (once a solution exists)
+        nbr[i] ← { j ≠ i : (i,j) ∉ invalid }            # fully connected (no radius)
+        h_hat  ← DIJKSTRA_from_goal(nbr, distance)       # reverse search: adaptive heuristic
+        g[start] ← 0;  open ← {start}                    # forward A* (rebuilt each batch)
+        while open ≠ ∅:
+            v ← pop_min(open, key = g[v] + h_hat[v])
+            if closed[v]: continue
+            close v
+            if v = goal: break                            # goal settled → end this batch
+            for x in nbr[v]:
+                if closed[x]: continue
+                t ← g[v] + ‖v−x‖
+                if t ≥ g[x]: continue                     # cannot improve x through v
+                if (v,x) ∈ invalid: continue
+                if not is_motion_valid(v, x):             # lazy validation (only here)
+                    invalid ← invalid ∪ {(v,x)};  continue
+                g[x] ← t;  parent[x] ← v;  push(open, x)
+                if x = goal and g[goal] &lt; c_best:
+                    c_best ← g[goal]                      # incumbent improved
+    return path(goal)
+</code></pre>
+<p><span class="arithmatex">\(\hat h(v)\)</span> is the shortest <span class="arithmatex">\(v{\to}\)</span>goal distance in the complete graph. This lower-bounds the true
+collision-free cost-to-go (it is over a superset of the validated edges), so it is admissible; being a
+shortest-path metric it is also <strong>consistent</strong> for the forward search — <span class="arithmatex">\(\hat h(v)\le\lVert
+v-x\rVert+\hat h(x)\)</span> holds for any edge <span class="arithmatex">\((v,x)\)</span> by the triangle inequality. Hence A* without
+re-expansion returns the optimal path over this batch's graph.</p>
+<p>On open space the complete graph contains the direct start–goal edge, so the forward search connects
+the straight-line path in the first batch — the cost is essentially the straight-line lower bound.</p>
+<h2 id="properties">Properties<a class="anchor" href="#properties" title="Permanent link">¶</a></h2>
+<ul>
+<li><strong>Completeness</strong>: probabilistically complete<sup id="fnref2:wilson_fcit"><a class="footnote-ref" href="#fn:wilson_fcit">1</a></sup>.</li>
+<li><strong>Optimality</strong>: asymptotically optimal. As batches accumulate the samples densify and informed
+  samples concentrate in the solution region, converging to the optimum.</li>
+<li><strong>Anytime</strong>: after the first solution, later batches keep tightening the path. On exhausting
+  <code>max_batches</code> it returns the current best.</li>
+<li><strong>Exploits cheap collision checking</strong>: by dropping the radius restriction it searches a denser graph
+  than the radius-limited BIT*/AIT* lineage, at the cost of more (deferred/lazy) candidate edges per
+  batch.</li>
+</ul>
+<h2 id="implementation-simplification">Implementation Simplification<a class="anchor" href="#implementation-simplification" title="Permanent link">¶</a></h2>
+<p>The scope is deliberately reduced versus the full paper:</p>
+<ul>
+<li>The <strong>reverse search is recomputed from scratch each batch</strong> rather than repaired incrementally, and
+  likewise the forward tree (<span class="arithmatex">\(g\)</span>, <code>parent</code>, open-heap) is rebuilt fresh every batch. <strong>Only
+  <span class="arithmatex">\(c_{\text{best}}\)</span> and <code>invalid_edges</code> persist</strong> across batches, and both only improve/grow
+  monotonically.</li>
+<li>The <strong>sample budget is kept modest</strong>: the complete graph has O(n²) edges, so this implementation
+  caps the accumulated sample count to a few hundred. The paper develops a more sophisticated scheme
+  for keeping eager all-pairs evaluation cheap at scale, which this implementation does not reproduce.</li>
+</ul>
+<p>These reductions leave the <strong>core mechanism</strong> — a fully-connected informed-batch graph plus adaptive
+lazy-validated best-first search — intact, omitting only the scale-up machinery.</p>
+<h2 id="parameters">Parameters<a class="anchor" href="#parameters" title="Permanent link">¶</a></h2>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Default</th>
+<th>Range</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>batch_size</code></td>
+<td>int</td>
+<td>80</td>
+<td>[1, 100000]</td>
+<td>Number of new (informed) samples drawn per batch; kept small since the graph is fully connected (O(n²) edges)</td>
+</tr>
+<tr>
+<td><code>max_batches</code></td>
+<td>int</td>
+<td>10</td>
+<td>[1, 10000]</td>
+<td>Maximum number of batches (anytime — current best returned when exhausted)</td>
+</tr>
+<tr>
+<td><code>seed</code></td>
+<td>int</td>
+<td>1</td>
+<td>[0, 2^31−1]</td>
+<td>Random seed (reproducibility)</td>
+</tr>
+</tbody>
+</table>
+<p>There is no <code>gamma</code> parameter (BIT*/PRM*) because a fully connected graph has no radius policy.</p>
+<h2 id="emitted-trace-events">Emitted Trace Events<a class="anchor" href="#emitted-trace-events" title="Permanent link">¶</a></h2>
+<p><code>planning_started</code> → <code>sample_drawn</code>* → <code>candidate_evaluated</code>* → <code>edge_added</code>* → <code>rewire</code>* → <code>path_found</code>* → <code>planning_finished</code></p>
+<p><code>sample_drawn</code> marks a per-batch sample, <code>candidate_evaluated</code> an edge the forward search considered
+(one that could still improve a vertex), <code>edge_added</code> a first connection, <code>rewire</code> a re-connection via
+a cheaper route, and <code>path_found</code> is emitted each time <span class="arithmatex">\(c_{\text{best}}\)</span> improves (a new best
+solution).</p>
+<h2 id="references">References<a class="anchor" href="#references" title="Permanent link">¶</a></h2>
+<div class="footnote">
+<hr />
+<ol>
+<li id="fn:wilson_fcit">
+<p>Wilson, T., Strub, M. P., &amp; Gammell, J. D. (2025). "Fully Connected Informed Trees (FCIT*): Fast, informed, asymptotically optimal sampling-based planning by exploiting cheap collision checking." <em>Proc. IEEE International Conference on Robotics and Automation (ICRA)</em>. DOI placeholder (2025 ICRA proceedings; not independently verified here): <code>10.1109/ICRA.2025.XXXXXXX</code>.&#160;<a class="footnote-backref" href="#fnref:wilson_fcit" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:wilson_fcit" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:wilson_fcit" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+</li>
+<li id="fn:strub_ait">
+<p>Strub, M. P., &amp; Gammell, J. D. (2020). "Adaptively Informed Trees (AIT*): Fast asymptotically optimal path planning through adaptive heuristics." <em>Proc. IEEE ICRA</em>, 3191–3198. <a href="https://doi.org/10.1109/ICRA40945.2020.9197338">doi:10.1109/ICRA40945.2020.9197338</a> · <a href="https://arxiv.org/abs/2002.06599">PDF (arXiv)</a>&#160;<a class="footnote-backref" href="#fnref:strub_ait" title="Jump back to footnote 2 in the text">&#8617;</a></p>
+</li>
+<li id="fn:gammell">
+<p>Gammell, J. D., Srinivasa, S. S., &amp; Barfoot, T. D. (2014). "Informed RRT*: Optimal sampling-based path planning focused via direct sampling of an admissible ellipsoidal heuristic." <em>Proc. IEEE/RSJ IROS</em>, 2997–3004. <a href="https://doi.org/10.1109/IROS.2014.6942976">doi:10.1109/IROS.2014.6942976</a> · <a href="https://arxiv.org/abs/1404.2334">PDF (arXiv)</a>&#160;<a class="footnote-backref" href="#fnref:gammell" title="Jump back to footnote 3 in the text">&#8617;</a></p>
+</li>
+</ol>
+</div><nav class="pager"><a href="../../en/algorithms/eit_star.html"><div class="dir">← Prev</div><div class="ttl">EIT*</div></a><a class="next" href="../../en/benchmarks.html"><div class="dir">Next →</div><div class="ttl">Benchmarks</div></a></nav></article></main>
+<aside class="toc" id="toc"></aside>
+</div>
+<div class="backdrop"></div>
+<footer class="site-footer">
+  <p>navigation study — robot navigation planning algorithms · C++ / Python dual implementation</p>
+  <p>Built as a static site · <a href="../../ko/index.html">한국어</a> · <a href="../../en/index.html">English</a></p>
+</footer>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script" async></script>
+</body></html>

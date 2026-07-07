@@ -11,7 +11,6 @@ improve the incumbent. Anytime: keeps tightening the path across batches.
 from __future__ import annotations
 
 import heapq
-import math
 import time
 from dataclasses import dataclass
 
@@ -22,7 +21,7 @@ from navigation.core.planner import GlobalPlanner
 from navigation.core.trace import TraceRecorder
 from navigation.core.types import PlanResult, PlanStats, Point
 
-from ._sampling import path_length, radius_neighbors, rgg_radius
+from ._sampling import informed_sample, path_length, radius_neighbors, rgg_radius
 
 _INF = float("inf")
 
@@ -162,7 +161,7 @@ class BITStar(GlobalPlanner[Point, "SamplingSpace[Point]"]):
         for _ in range(batch_size * 40):
             if drawn >= batch_size:
                 break
-            q = self._sample(space, start, goal, tree.c_best, rng)
+            q = informed_sample(space, start, goal, tree.c_best, rng)
             if not space.is_state_valid(q):
                 continue
             tree.add_sample(q)
@@ -249,28 +248,3 @@ class BITStar(GlobalPlanner[Point, "SamplingSpace[Point]"]):
                 tree.c_best = g_t[1]
                 if recorder is not None:
                     recorder.candidate_evaluated(goal, tree.c_best)
-
-    def _sample(
-        self,
-        space: SamplingSpace[Point],
-        start: Point,
-        goal: Point,
-        c_best: float,
-        rng: np.random.Generator,
-    ) -> Point:
-        # Before a solution, sample the whole space; after, sample the informed
-        # ellipse with foci start/goal and transverse diameter c_best (Gammell
-        # et al. 2014), so draws land only where the incumbent can still improve.
-        c_min = space.distance(start, goal)
-        if c_best >= _INF or c_best <= c_min:
-            return space.sample()
-        cx, cy = (start[0] + goal[0]) / 2.0, (start[1] + goal[1]) / 2.0
-        r1 = c_best / 2.0
-        r2 = math.sqrt(max(c_best * c_best - c_min * c_min, 0.0)) / 2.0
-        theta = math.atan2(goal[1] - start[1], goal[0] - start[0])
-        ang = float(rng.uniform(0.0, 2.0 * math.pi))
-        rad = math.sqrt(float(rng.random()))
-        ux, uy = rad * math.cos(ang) * r1, rad * math.sin(ang) * r2
-        x = cx + math.cos(theta) * ux - math.sin(theta) * uy
-        y = cy + math.sin(theta) * ux + math.cos(theta) * uy
-        return (x, y)

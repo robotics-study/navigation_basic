@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include <random>
 #include <vector>
 
 #include "navigation/core/capabilities.hpp"
@@ -75,5 +76,14 @@ double rgg_radius(double gamma, int n);
 // finish minus the iterations field, since these planners do not iterate.
 void emit_finished_batch(TraceRecorder* recorder, bool success, double cost, int expanded_nodes,
                          int samples, int tree_size, double runtime_sec);
+
+// Draw a state biased toward improving the incumbent solution. Before a solution
+// exists, sample the whole space; after, sample the informed ellipse with foci
+// start/goal and transverse diameter c_best (Gammell, Srinivasa & Barfoot 2014),
+// so draws land only where the incumbent can still improve. Shared by every
+// asymptotically-optimal batch/anytime planner (BIT*, Informed RRT*, and the
+// AIT*/EIT*/FCIT* lineage) so the ellipse math and RNG draw order live in one place.
+Point informed_sample(SamplingSpace<Point>& space, const Point& start, const Point& goal,
+                      double c_best, std::mt19937& rng);
 
 }  // namespace navigation::global_planning

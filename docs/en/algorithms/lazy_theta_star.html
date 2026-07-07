@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lazy Theta* · navigation study</title>
+<meta name="description" content="Theta* straightens the grid path by asking, on every relaxation, whether the current">
+<meta name="robots" content="index,follow">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b1020" media="(prefers-color-scheme: dark)">
+<link rel="canonical" href="https://robotics-study.github.io/navigation/en/algorithms/lazy_theta_star.html">
+<link rel="alternate" hreflang="ko" href="https://robotics-study.github.io/navigation/ko/algorithms/lazy_theta_star.html">
+<link rel="alternate" hreflang="en" href="https://robotics-study.github.io/navigation/en/algorithms/lazy_theta_star.html">
+<link rel="alternate" hreflang="x-default" href="https://robotics-study.github.io/navigation/en/algorithms/lazy_theta_star.html">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="navigation study">
+<meta property="og:title" content="Lazy Theta* · navigation study">
+<meta property="og:description" content="Theta* straightens the grid path by asking, on every relaxation, whether the current">
+<meta property="og:url" content="https://robotics-study.github.io/navigation/en/algorithms/lazy_theta_star.html">
+<meta property="og:image" content="https://robotics-study.github.io/navigation/assets/lazy_theta_star/maze01_final.png">
+<meta property="og:image:alt" content="Lazy Theta*">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="ko_KR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Lazy Theta* · navigation study">
+<meta name="twitter:description" content="Theta* straightens the grid path by asking, on every relaxation, whether the current">
+<meta name="twitter:image" content="https://robotics-study.github.io/navigation/assets/lazy_theta_star/maze01_final.png">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "Lazy Theta*", "description": "Theta* straightens the grid path by asking, on every relaxation, whether the current", "image": "https://robotics-study.github.io/navigation/assets/lazy_theta_star/maze01_final.png", "inLanguage": "en", "url": "https://robotics-study.github.io/navigation/en/algorithms/lazy_theta_star.html", "isPartOf": {"@type": "WebSite", "name": "navigation study", "url": "https://robotics-study.github.io/navigation/"}}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=6d6dae56">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Crect width='24' height='24' rx='6' fill='%230b1020'/%3E%3Cpath d='M4 19V11h8V5h8' stroke='%23818cf8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='4' cy='19' r='2.4' fill='%23818cf8'/%3E%3Ccircle cx='20' cy='5' r='2.4' fill='%2322d3ee'/%3E%3C/svg%3E">
+<script src="../../assets/site.js?v=6d6dae56"></script>
+</head>
+<body>
+<header class="topbar">
+  <button id="menu-btn" class="iconbtn menu-btn" aria-label="menu"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  <div class="brandcrumb">
+    <a class="brand hub" href="https://robotics-study.github.io/" aria-label="robotics-study home"><svg class="logo" width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true"><defs><linearGradient id="navlg" x1="0" y1="1" x2="1" y2="0"><stop stop-color="#6366f1"/><stop offset="1" stop-color="#06b6d4"/></linearGradient></defs><path d="M4 19V11h8V5h8" stroke="url(#navlg)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="4" cy="19" r="2.6" fill="url(#navlg)"/><circle cx="20" cy="5" r="2.6" fill="url(#navlg)"/></svg><span class="wm">robotics<span class="wm-dim"> study</span></span></a>
+    <span class="crumb-sep" aria-hidden="true">/</span>
+    <a class="brand" href="../../index.html"><span class="wm">navigation<span class="wm-dim"> study</span></span></a>
+  </div>
+  <nav class="topnav"><a href="../../en/index.html">Overview</a><a href="../../en/algorithms/index.html">Algorithms</a><a href="../../en/maps.html">Maps</a><a href="../../en/benchmarks.html">Benchmarks</a><a href="https://github.com/robotics-study/navigation" target="_blank" rel="noopener">GitHub<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a></nav>
+  <span class="spacer"></span>
+  <div class="search"><svg class="s-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg><input id="search-input" type="search" placeholder="검색 / Search…" data-base="../../" autocomplete="off"><div id="search-results" class="search-results"></div></div>
+  <div class="lang-toggle" role="group" aria-label="language"><svg class="g-ico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.5 2.5 3.8 5.6 3.8 9s-1.3 6.5-3.8 9c-2.5-2.5-3.8-5.6-3.8-9S9.5 5.5 12 3Z"/></svg><a href="../../ko/algorithms/lazy_theta_star.html" class="">KO</a><span class="l-sep">/</span><a href="../../en/algorithms/lazy_theta_star.html" class="active">EN</a></div>
+</header>
+<div class="layout">
+<aside class="sidebar"><h4>Overview</h4>
+<a href="../../en/index.html">Overview</a>
+<a href="../../en/algorithms/index.html">All algorithms</a>
+<h4>Global planning</h4>
+<details class="nav-sub" open><summary>Search</summary><div class="nav-sub-body"><div class="nav-sub-inner"><a href="../../en/algorithms/bfs.html">BFS</a><a href="../../en/algorithms/dijkstra.html">Dijkstra</a><a href="../../en/algorithms/astar.html">A*</a><a href="../../en/algorithms/dstar_lite.html">D* Lite</a><a href="../../en/algorithms/theta_star.html">Theta*</a><a href="../../en/algorithms/hybrid_astar.html">Hybrid A*</a><a href="../../en/algorithms/lazy_theta_star.html" class="active">Lazy Theta*</a><a href="../../en/algorithms/jps.html">JPS</a><a href="../../en/algorithms/anya.html">Anya</a></div></div></details>
+<details class="nav-sub"><summary>Sampling</summary><div class="nav-sub-body"><div class="nav-sub-inner"><a href="../../en/algorithms/prm.html">PRM</a><a href="../../en/algorithms/rrt.html">RRT</a><a href="../../en/algorithms/rrt_connect.html">RRT-Connect</a><a href="../../en/algorithms/rrt_star.html">RRT*</a><a href="../../en/algorithms/prm_star.html">PRM*</a><a href="../../en/algorithms/kinodynamic_rrt_star.html">Kinodynamic RRT*</a><a href="../../en/algorithms/informed_rrt_star.html">Informed RRT*</a><a href="../../en/algorithms/fmt_star.html">FMT*</a><a href="../../en/algorithms/bit_star.html">BIT*</a><a href="../../en/algorithms/sst.html">SST</a><a href="../../en/algorithms/ait_star.html">AIT*</a><a href="../../en/algorithms/fast_rrt.html">Fast-RRT</a><a href="../../en/algorithms/eit_star.html">EIT*</a><a href="../../en/algorithms/fcit_star.html">FCIT*</a></div></div></details>
+<a href="../../en/benchmarks.html">Benchmarks</a>
+<h4>Local planning <span class="soon">planned</span></h4>
+<span class="planned">DWA</span>
+<span class="planned">Pure Pursuit</span>
+<span class="planned">VFH</span>
+<span class="planned">MPC</span>
+<span class="planned">Benchmarks</span>
+<h4>Multi-agent <span class="soon">planned</span></h4>
+<span class="planned">Prioritized A*</span>
+<span class="planned">Joint-space A*</span>
+<span class="planned">CBS</span>
+<span class="planned">Benchmarks</span>
+<h4>Maps</h4>
+<a href="../../en/maps.html">Map representations</a>
+<h4>Reference</h4>
+<a href="../../en/architecture.html">Architecture</a>
+<a href="../../en/references.html">References</a></aside>
+<main class="content"><article class="content-inner"><h1 id="lazy-theta-deferred-line-of-sight">Lazy Theta* (deferred line-of-sight)<a class="anchor" href="#lazy-theta-deferred-line-of-sight" title="Permanent link">¶</a></h1>
+<div class="code-links"><span class="cl-label">Source</span><a href="https://github.com/robotics-study/navigation/blob/main/cpp/src/global_planning/search/lazy_theta_star.cpp" target="_blank" rel="noopener">C++</a><a href="https://github.com/robotics-study/navigation/blob/main/cpp/include/navigation/global_planning/search/lazy_theta_star.hpp" target="_blank" rel="noopener">C++ header</a><a href="https://github.com/robotics-study/navigation/blob/main/python/navigation/global_planning/search/lazy_theta_star.py" target="_blank" rel="noopener">Python</a><a href="https://github.com/robotics-study/navigation/blob/main/python/demos/demo_lazy_theta_star.py" target="_blank" rel="noopener">demo</a></div>
+<table class="spec-table">
+<thead>
+<tr>
+<th>Item</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Category</td>
+<td>any-angle graph search</td>
+</tr>
+<tr>
+<td>Required capability</td>
+<td><code>LineOfSightSpace</code> (<code>neighbors</code> + <code>heuristic</code> + <code>line_of_sight</code>)</td>
+</tr>
+<tr>
+<td>Completeness</td>
+<td>complete (finite graphs, non-negative costs)</td>
+</tr>
+<tr>
+<td>Optimality</td>
+<td>any-angle path — <strong>grid-optimality is not guaranteed</strong> (Nash &amp; Koenig 2010)</td>
+</tr>
+<tr>
+<td>Complexity</td>
+<td>A* level + <strong>one</strong> line-of-sight check per <em>expanded vertex</em> (not per relaxation)</td>
+</tr>
+<tr>
+<td>Original paper</td>
+<td>Nash &amp; Koenig (2010) <sup id="fnref4:nk10"><a class="footnote-ref" href="#fn:nk10">1</a></sup> · base Theta*: Nash et al. (2007) <sup id="fnref2:nash"><a class="footnote-ref" href="#fn:nash">2</a></sup> · LOS: Amanatides &amp; Woo (1987) <sup id="fnref2:aw"><a class="footnote-ref" href="#fn:aw">3</a></sup> · weighted: Pohl (1970) <sup id="fnref2:pohl"><a class="footnote-ref" href="#fn:pohl">4</a></sup></td>
+</tr>
+</tbody>
+</table>
+<h2 id="background">Background<a class="anchor" href="#background" title="Permanent link">¶</a></h2>
+<p><strong>Theta*</strong><sup id="fnref:nash"><a class="footnote-ref" href="#fn:nash">2</a></sup> straightens the grid path by asking, on <strong>every relaxation</strong>, whether the current
+node's parent can see a candidate successor (<code>line_of_sight</code>). That LOS query is the expensive part of
+the algorithm, and Theta* pays it once per edge — most of which are later discarded.</p>
+<p><strong>Lazy Theta*</strong><sup id="fnref:nk10"><a class="footnote-ref" href="#fn:nk10">1</a></sup> keeps the exact same any-angle rule but changes <strong>when</strong> the check happens.
+When it generates a successor it <strong>optimistically assumes</strong> the grandparent is visible (Path 2) and
+records <code>parent(s2) = parent(s)</code> with <code>g(s2) = g(parent(s)) + euclid</code> <strong>without checking</strong>. The single
+LOS query is deferred to the moment <code>s2</code> is popped for expansion (<code>SetVertex</code>): only then does it
+verify <code>line_of_sight(parent(s2), s2)</code>, and if the optimistic assumption was wrong it <strong>repairs</strong> the
+parent to the cheapest already-settled grid neighbour. The result is <strong>one LOS check per expanded
+vertex</strong> instead of one per edge — the same any-angle paths, far fewer checks.</p>
+<p>In this repository's demo, <code>maze01</code> settles to Lazy Theta* <strong>cost 27.76 · 5 waypoints</strong> — essentially
+the same path as eager Theta* (27.75), produced with a leaner check budget.</p>
+<h2 id="how-it-works">How It Works<a class="anchor" href="#how-it-works" title="Permanent link">¶</a></h2>
+<p>Search on <code>maze01</code>. The frontier grows toward the goal exactly as in Theta*, but the final path is a
+<strong>sparse straight-line polyline</strong> grazing only obstacle corners. Where a deferred check rejects the
+optimistic parent, the vertex is re-parented to a visible grid neighbour before it expands.</p>
+<p><img alt="Lazy Theta* on maze01" src="../../assets/lazy_theta_star/maze01.gif" /></p>
+<p>Intermediate search progress (left → right: early / middle / final path):</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;"></th>
+<th style="text-align: center;"></th>
+<th style="text-align: center;"></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;"><img alt="early" src="../../assets/lazy_theta_star/maze01_snap_02.png" /></td>
+<td style="text-align: center;"><img alt="mid" src="../../assets/lazy_theta_star/maze01_snap_05.png" /></td>
+<td style="text-align: center;"><img alt="final" src="../../assets/lazy_theta_star/maze01_final.png" /></td>
+</tr>
+</tbody>
+</table>
+<p>Final result on <code>open01</code> — with few obstacles, start→goal connects as almost a single straight line:</p>
+<p><img alt="Lazy Theta* on open01" src="../../assets/lazy_theta_star/open01_final.png" /></p>
+<pre><code>LAZY-THETASTAR(start, goal):
+    g[start] ← 0; parent[start] ← start
+    open ← priority queue keyed by f = g + w·h        # h = Euclidean straight-line distance
+    while open is not empty:
+        s ← open.pop_min()
+        if s already settled: continue                # lazy deletion
+        SET-VERTEX(s)                                 # deferred LOS check + repair
+        settle(s)
+        if s == goal: return reconstruct(parent, s)
+        for (s2, _) in neighbors(s):
+            if s2 not settled:
+                UPDATE-VERTEX(s, s2)
+    return failure
+
+UPDATE-VERTEX(s, s2):                                 # OPTIMISTIC — no LOS check here
+    p ← parent[s]
+    cand ← g[p] + euclid(p, s2)                       # assume line_of_sight(p, s2) holds
+    if cand &lt; g[s2]:
+        g[s2] ← cand; parent[s2] ← p
+        open.push(s2, cand + w·h(s2, goal))
+
+SET-VERTEX(s):                                        # run once, when s is popped
+    p ← parent[s]
+    if p ≠ s and NOT line_of_sight(p, s):             # optimism was wrong → repair
+        parent[s] ← argmin_{s' ∈ neighbors(s) ∩ settled} ( g[s'] + euclid(s', s) )
+        g[s]      ← min   _{s' ∈ neighbors(s) ∩ settled} ( g[s'] + euclid(s', s) )
+</code></pre>
+<p>The only difference from Theta* is the <strong>placement</strong> of the <code>line_of_sight</code> call: <code>UPDATE-VERTEX</code>
+drops it (optimism), and <code>SET-VERTEX</code> adds exactly one at pop time. If the optimistic assumption always
+holds, no repair ever fires and the returned paths are identical to Theta*; when it fails, the repair
+falls back to a <strong>guaranteed-visible</strong> grid neighbour (Path 1 between adjacent cells is always a legal
+move, and the vertex's generator is such a settled neighbour), so the emitted path is always feasible.</p>
+<h3 id="why-the-optimism-is-safe-the-settled-neighbour-repair">Why the optimism is safe — the settled-neighbour repair<a class="anchor" href="#why-the-optimism-is-safe-the-settled-neighbour-repair" title="Permanent link">¶</a></h3>
+<p>The repair set is restricted to <strong>already-settled</strong> grid neighbours on purpose: their <code>g</code>-values are
+final, so <code>min(g[s'] + euclid(s', s))</code> is a real, achievable cost. Because the vertex was generated by
+some expanded (hence settled) neighbour, that set is never empty — there is always at least one visible
+fallback, and <code>SET-VERTEX</code> cannot leave a vertex with an invisible parent.</p>
+<h3 id="line-of-sight-one-collision-model-with-the-grid">Line of Sight — one collision model with the grid<a class="anchor" href="#line-of-sight-one-collision-model-with-the-grid" title="Permanent link">¶</a></h3>
+<p><code>line_of_sight(a, b)</code> decides whether the segment joining two cell centres is traversable using the
+<strong>same corner-cut-forbidden rule</strong> as <code>neighbors()</code>. This repository uses the <strong>supercover</strong><sup id="fnref:aw"><a class="footnote-ref" href="#fn:aw">3</a></sup>,
+which visits every cell the segment touches (delegating to the map's <code>is_motion_valid</code>), so "a pair
+visible by LOS" ⇔ "a legal straight move," and Lazy Theta* shares <strong>one collision model</strong> with grid
+A*. This is inherited unchanged from Theta*; Lazy Theta* only calls it less often.</p>
+<h3 id="heuristic-euclidean-not-octile">Heuristic — Euclidean (not octile)<a class="anchor" href="#heuristic-euclidean-not-octile" title="Permanent link">¶</a></h3>
+<p>Lazy Theta*'s g-values are straight-line (Euclidean) distances, so the heuristic is also <strong>Euclidean</strong>:</p>
+<pre><code>h(a, b) = √((Δrow)² + (Δcol)²)
+</code></pre>
+<p>The octile heuristic the map provides for A* satisfies octile ≥ Euclidean, so it is <strong>inadmissible</strong>
+(overestimating) for any-angle costs and is not used. The Euclidean distance is the admissible lower
+bound for arbitrary-angle motion.</p>
+<p>Measurements (Python, w = 1.0, trace on · eager Theta* comparison on the same instance):</p>
+<table>
+<thead>
+<tr>
+<th>map</th>
+<th>Lazy Theta* cost</th>
+<th>Theta* cost</th>
+<th>Lazy expanded</th>
+<th>Theta* expanded</th>
+<th>Lazy waypoints</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>maze01</td>
+<td>27.757</td>
+<td>27.748</td>
+<td>105</td>
+<td>104</td>
+<td>5</td>
+</tr>
+<tr>
+<td>open01</td>
+<td><strong>24.241</strong></td>
+<td>24.241</td>
+<td><strong>57</strong></td>
+<td>66</td>
+<td>3</td>
+</tr>
+</tbody>
+</table>
+<p>Cost tracks eager Theta* to within a fraction of a percent, while the LOS-check budget drops from one
+per relaxation to one per expanded vertex (on <code>open01</code> the deferred scheme even settles fewer nodes).</p>
+<p>Reproduce:</p>
+<pre><code class="language-bash">python python/demos/demo_lazy_theta_star.py \
+  --map maps/grid/maze01.yaml --scenario maps/scenarios/maze01_s1.yaml \
+  --params configs/global_planning/lazy_theta_star.yaml --trace out/lazy_theta_star.jsonl
+python tools/viz/replay.py out/lazy_theta_star.jsonl --gif out/lazy_theta_star.gif --snapshots out/lts_snaps/
+</code></pre>
+<h2 id="properties">Properties<a class="anchor" href="#properties" title="Permanent link">¶</a></h2>
+<ul>
+<li><strong>Completeness</strong>: complete on a finite grid with non-negative costs (same as A* / Theta*).</li>
+<li><strong>Optimality</strong>: like basic Theta*, Lazy Theta* guarantees <strong>neither grid-optimality nor
+  true-optimality</strong><sup id="fnref3:nk10"><a class="footnote-ref" href="#fn:nk10">1</a></sup> — its parent candidates are still only the (assumed) grandparent or a local
+  grid neighbour, so it can miss the truly shortest any-angle path (though it stays very close).</li>
+<li><strong>Quality</strong>: the returned path is an any-angle straightening of the grid path and its cost tracks
+  eager Theta* closely; the deferred check does not change <em>which</em> shortcuts are taken, only when their
+  visibility is confirmed.</li>
+<li><strong>Complexity</strong>: the same search as A* plus <strong>one</strong> LOS check per <em>expanded vertex</em>, versus Theta*'s
+  one per <em>relaxation</em>. When LOS checks dominate (long segments, dense grids), this is the practical win.</li>
+<li>w &gt; 1 (weighted, Pohl 1970<sup id="fnref:pohl"><a class="footnote-ref" href="#fn:pohl">4</a></sup>): inflating the heuristic reduces expanded nodes at the cost of
+  path quality, exactly as in weighted A*/Theta*.</li>
+</ul>
+<h2 id="lazy-vs-eager-where-the-checks-go">Lazy vs. Eager — where the checks go<a class="anchor" href="#lazy-vs-eager-where-the-checks-go" title="Permanent link">¶</a></h2>
+<p><strong>Notation.</strong> Treat grid cell centres as points in <span class="arithmatex">\(\mathbb{R}^2\)</span>. An any-angle path
+<span class="arithmatex">\(P=(v_0,\dots,v_k)\)</span> is a polyline of LOS-clear segments with cost
+<span class="arithmatex">\(\operatorname{cost}(P)=\sum_i\lVert v_{i+1}-v_i\rVert_2\)</span>, and <span class="arithmatex">\(h(n)=\lVert n-\text{goal}\rVert_2\)</span>.
+The admissibility/consistency of <span class="arithmatex">\(h\)</span> and the "no longer than grid A*" argument carry over verbatim
+from <a href="theta_star.html">Theta*</a>; this section isolates only what the <em>lazy</em> scheme changes.</p>
+<p><strong>Lemma (every settled vertex ends with a visible parent).</strong> When <code>SET-VERTEX(s)</code> returns, either the
+optimistic <span class="arithmatex">\(\text{parent}(s)=p\)</span> already satisfied LOS<span class="arithmatex">\((p,s)\)</span>, or the repair reassigned
+<span class="arithmatex">\(\text{parent}(s)=s'\)</span> for some settled grid neighbour <span class="arithmatex">\(s'\)</span>.</p>
+<p><em>Proof.</em> Let <span class="arithmatex">\(s\)</span> be popped and generated (relaxed to its current <span class="arithmatex">\(g\)</span>) by a vertex <span class="arithmatex">\(u\)</span>. Relaxation only
+happens from a vertex being expanded, so <span class="arithmatex">\(u\)</span> is settled, and <span class="arithmatex">\(s\)</span> was enumerated in
+<span class="arithmatex">\(\text{neighbors}(u)\)</span>, hence <span class="arithmatex">\(u\in\text{neighbors}(s)\)</span> (grid adjacency is symmetric). Thus
+<span class="arithmatex">\(\text{neighbors}(s)\cap\text{settled}\neq\varnothing\)</span>. Adjacent cells always have LOS (Path 1 is a
+legal move), so the <span class="arithmatex">\(\arg\min\)</span> ranges over a non-empty set of <strong>visible</strong> candidates and assigns a
+visible parent. If the optimistic <span class="arithmatex">\(p\)</span> was already visible the branch is skipped and the visible <span class="arithmatex">\(p\)</span>
+stays. ∎</p>
+<p><strong>Corollary (feasibility).</strong> Unrolling the parent chain of any settled <span class="arithmatex">\(s\)</span> back to start yields an
+obstacle-free polyline of length exactly <span class="arithmatex">\(g[s]\)</span>, since every link <span class="arithmatex">\(\text{parent}(x)\to x\)</span> is LOS-clear
+by the Lemma. In particular the returned <span class="arithmatex">\(g[\text{goal}]\)</span> is an achievable upper bound — the path Lazy
+Theta* emits is always feasible. ∎</p>
+<p><strong>Check-count.</strong> Theta* evaluates <code>line_of_sight</code> once for <strong>every</strong> relaxation
+<span class="arithmatex">\((s\to s_2)\)</span>; Lazy Theta* evaluates it <strong>once per settled vertex</strong> inside <code>SET-VERTEX</code>. Since a vertex
+is settled at most once but relaxed once per incident edge, the number of LOS checks drops from
+<span class="arithmatex">\(\Theta(|E|)\)</span> to <span class="arithmatex">\(\Theta(|V|)\)</span> over the explored subgraph. The optimism can occasionally re-parent to a
+slightly different (equally feasible) polyline, which is why the emitted path is <em>close to</em> but not
+bit-identical to eager Theta* — the trade is <strong>fewer checks for a marginally different any-angle
+path</strong><sup id="fnref2:nk10"><a class="footnote-ref" href="#fn:nk10">1</a></sup>.</p>
+<h2 id="parameters">Parameters<a class="anchor" href="#parameters" title="Permanent link">¶</a></h2>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Default</th>
+<th>Range</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>heuristic_weight</code></td>
+<td>float</td>
+<td>1.0</td>
+<td>[1.0, 5.0]</td>
+<td>The w in f = g + w·h (h is Euclidean). 1.0 = standard Lazy Theta*, above = weighted</td>
+</tr>
+</tbody>
+</table>
+<h2 id="emitted-trace-events">Emitted Trace Events<a class="anchor" href="#emitted-trace-events" title="Permanent link">¶</a></h2>
+<p><code>planning_started</code> → (<code>node_expanded</code>, <code>candidate_evaluated</code>, <code>edge_added</code>)* → <code>path_found</code> → <code>planning_finished</code></p>
+<p>No new event type is introduced. Optimistic relaxations emit <code>candidate_evaluated</code> + <code>edge_added</code> with
+a <strong>non-adjacent grandparent</strong> as <code>parent</code> (Path 2), exactly as in Theta*. When <code>SET-VERTEX</code> repairs a
+vertex, it <strong>re-emits</strong> that vertex with <code>candidate_evaluated</code> + <code>edge_added(state=s, parent=s')</code> where
+<code>s'</code> is the visible grid neighbour, so <code>replay.py</code> redraws the corrected straight segment and the
+lazy-repair is visible in the animation. The schema imposes no adjacency constraint on <code>parent</code>.</p>
+<h2 id="references">References<a class="anchor" href="#references" title="Permanent link">¶</a></h2>
+<div class="footnote">
+<hr />
+<ol>
+<li id="fn:nk10">
+<p>Nash, A., Koenig, S., &amp; Tovey, C. (2010). "Lazy Theta*: Any-Angle Path Planning and Path Length Analysis in 3D." <em>Proc. AAAI Conference on Artificial Intelligence</em>, 147–154. <a href="http://idm-lab.org/bib/abstracts/papers/aaai10b.pdf">PDF</a>&#160;<a class="footnote-backref" href="#fnref:nk10" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:nk10" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:nk10" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref4:nk10" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+</li>
+<li id="fn:nash">
+<p>Nash, A., Daniel, K., Koenig, S., &amp; Felner, A. (2007). "Theta*: Any-Angle Path Planning on Grids." <em>Proc. AAAI Conference on Artificial Intelligence</em>, 1177–1183. <a href="https://ojs.aaai.org/index.php/AAAI/article/view/11009">PDF</a>&#160;<a class="footnote-backref" href="#fnref:nash" title="Jump back to footnote 2 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:nash" title="Jump back to footnote 2 in the text">&#8617;</a></p>
+</li>
+<li id="fn:aw">
+<p>Amanatides, J., &amp; Woo, A. (1987). "A Fast Voxel Traversal Algorithm for Ray Tracing." <em>Proc. Eurographics</em>, 3–10. <a href="https://www.cse.yorku.ca/~amana/research/grid.pdf">PDF</a>&#160;<a class="footnote-backref" href="#fnref:aw" title="Jump back to footnote 3 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:aw" title="Jump back to footnote 3 in the text">&#8617;</a></p>
+</li>
+<li id="fn:pohl">
+<p>Pohl, I. (1970). "Heuristic search viewed as path finding in a graph." <em>Artificial Intelligence</em>, 1(3–4), 193–204. <a href="https://doi.org/10.1016/0004-3702%2870%2990007-X">doi:10.1016/0004-3702(70)90007-X</a>&#160;<a class="footnote-backref" href="#fnref:pohl" title="Jump back to footnote 4 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:pohl" title="Jump back to footnote 4 in the text">&#8617;</a></p>
+</li>
+</ol>
+</div><nav class="pager"><a href="../../en/algorithms/hybrid_astar.html"><div class="dir">← Prev</div><div class="ttl">Hybrid A*</div></a><a class="next" href="../../en/algorithms/jps.html"><div class="dir">Next →</div><div class="ttl">JPS</div></a></nav></article></main>
+<aside class="toc" id="toc"></aside>
+</div>
+<div class="backdrop"></div>
+<footer class="site-footer">
+  <p>navigation study — robot navigation planning algorithms · C++ / Python dual implementation</p>
+  <p>Built as a static site · <a href="../../ko/index.html">한국어</a> · <a href="../../en/index.html">English</a></p>
+</footer>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script" async></script>
+</body></html>
