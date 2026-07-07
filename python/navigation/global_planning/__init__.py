@@ -28,7 +28,17 @@ from .sampling import (
     RRTConnect,
     RRTStar,
 )
-from .search import BFS, JPS, Anya, AStar, Dijkstra, DStarLite, HybridAStar, LazyThetaStar, ThetaStar
+from .search import (
+    BFS,
+    JPS,
+    Anya,
+    AStar,
+    Dijkstra,
+    DStarLite,
+    HybridAStar,
+    LazyThetaStar,
+    ThetaStar,
+)
 
 __all__ = [
     "BFS",
