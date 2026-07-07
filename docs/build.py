@@ -92,12 +92,13 @@ DEFAULT_OG_IMAGE = "assets/astar/maze01_final.png"
 # C++/Python 모두 이 하위폴더 아래로 이동했으므로 chip 경로를 함께 갱신한다.
 _GLOBAL_LINEAGE = {
     "bfs": "search", "dijkstra": "search", "astar": "search", "jps": "search",
+    "ara_star": "search",
     "dstar_lite": "search", "theta_star": "search", "lazy_theta_star": "search",
     "visibility_astar": "search", "hybrid_astar": "search",
     "rrt": "sampling", "rrt_connect": "sampling", "rrt_star": "sampling",
     "kinodynamic_rrt_star": "sampling", "informed_rrt_star": "sampling", "fast_rrt": "sampling",
     "prm": "sampling", "prm_star": "sampling",
-    "bit_star": "sampling", "fmt_star": "sampling", "sst": "sampling",
+    "bit_star": "sampling", "abit_star": "sampling", "fmt_star": "sampling", "sst": "sampling",
     "ait_star": "sampling", "eit_star": "sampling", "fcit_star": "sampling",
 }
 
@@ -125,6 +126,7 @@ _GLOBAL_SEARCH = [
     ("algorithms/dijkstra.md", "algorithms/dijkstra.html", "Dijkstra"),  # 1959
     ("algorithms/astar.md", "algorithms/astar.html", "A*"),          # 1968
     ("algorithms/dstar_lite.md", "algorithms/dstar_lite.html", "D* Lite"),  # 2002
+    ("algorithms/ara_star.md", "algorithms/ara_star.html", "ARA*"),  # 2003
     ("algorithms/theta_star.md", "algorithms/theta_star.html", "Theta*"),  # 2007
     ("algorithms/hybrid_astar.md", "algorithms/hybrid_astar.html", "Hybrid A*"),  # 2008
     ("algorithms/lazy_theta_star.md", "algorithms/lazy_theta_star.html", "Lazy Theta*"),  # 2010
@@ -142,6 +144,7 @@ _GLOBAL_SAMPLING = [
     ("algorithms/fmt_star.md", "algorithms/fmt_star.html", "FMT*"),  # 2015
     ("algorithms/bit_star.md", "algorithms/bit_star.html", "BIT*"),  # 2015
     ("algorithms/sst.md", "algorithms/sst.html", "SST"),  # 2016
+    ("algorithms/abit_star.md", "algorithms/abit_star.html", "ABIT*"),  # 2020
     ("algorithms/ait_star.md", "algorithms/ait_star.html", "AIT*"),  # 2020
     ("algorithms/fast_rrt.md", "algorithms/fast_rrt.html", "Fast-RRT"),  # 2021
     ("algorithms/eit_star.md", "algorithms/eit_star.html", "EIT*"),  # 2022
@@ -492,6 +495,7 @@ def build_landing(_=None):
         ("dijkstra", "Dijkstra", "cost-optimal"),
         ("astar", "A*", "informed search"),
         ("jps", "JPS", "grid symmetry breaking"),
+        ("ara_star", "ARA*", "anytime repairing"),
         ("dstar_lite", "D* Lite", "dynamic replanning"),
         ("theta_star", "Theta*", "any-angle search"),
         ("lazy_theta_star", "Lazy Theta*", "any-angle · lazy LOS"),
@@ -507,6 +511,7 @@ def build_landing(_=None):
         ("fmt_star", "FMT*", "fast marching tree"),
         ("bit_star", "BIT*", "batch informed trees"),
         ("sst", "SST", "sparse kinodynamic"),
+        ("abit_star", "ABIT*", "advanced batch informed"),
         ("ait_star", "AIT*", "adaptively informed trees"),
         ("fast_rrt", "Fast-RRT", "Fast-Sampling + shortcut"),
         ("eit_star", "EIT*", "effort informed trees"),

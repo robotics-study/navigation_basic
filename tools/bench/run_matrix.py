@@ -29,6 +29,7 @@ _REQUIRED: dict[str, Capability] = {
     "bfs": Capability.DISCRETE_SPACE,
     "dijkstra": Capability.DISCRETE_SPACE,
     "astar": Capability.DISCRETE_SPACE,
+    "ara_star": Capability.DISCRETE_SPACE,
     # Binding constraint: LINE_OF_SIGHT_SPACE implies DISCRETE_SPACE (it extends
     # it), so a discrete-only map is correctly marked incompatible for Theta*.
     "theta_star": Capability.LINE_OF_SIGHT_SPACE,
@@ -42,14 +43,15 @@ _REQUIRED: dict[str, Capability] = {
     "prm_star": Capability.SAMPLING_SPACE,
     "fmt_star": Capability.SAMPLING_SPACE,
     "bit_star": Capability.SAMPLING_SPACE,
+    "abit_star": Capability.SAMPLING_SPACE,
     "ait_star": Capability.SAMPLING_SPACE,
     "eit_star": Capability.SAMPLING_SPACE,
     "fcit_star": Capability.SAMPLING_SPACE,
     "fast_rrt": Capability.SAMPLING_SPACE,
 }
-_ORDER = ["bfs", "dijkstra", "astar", "theta_star", "dstar_lite", "hybrid_astar", "rrt",
-          "rrt_connect", "rrt_star", "informed_rrt_star", "prm", "prm_star", "fmt_star",
-          "bit_star", "ait_star", "eit_star", "fcit_star", "fast_rrt"]
+_ORDER = ["bfs", "dijkstra", "astar", "ara_star", "theta_star", "dstar_lite", "hybrid_astar",
+          "rrt", "rrt_connect", "rrt_star", "informed_rrt_star", "prm", "prm_star", "fmt_star",
+          "bit_star", "abit_star", "ait_star", "eit_star", "fcit_star", "fast_rrt"]
 
 
 @dataclass
