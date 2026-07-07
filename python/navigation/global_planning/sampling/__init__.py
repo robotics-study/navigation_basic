@@ -13,6 +13,7 @@ from .fcit_star import FCITStar
 from .fmt_star import FMTStar
 from .informed_rrt_star import InformedRRTStar
 from .kinodynamic_rrt_star import KinodynamicRRTStar
+from .lqr_rrt_star import LQRRRTStar
 from .prm import PRM
 from .prm_star import PRMStar
 from .rrt import RRT
@@ -35,5 +36,6 @@ __all__ = [
     "EITStar",
     "FCITStar",
     "KinodynamicRRTStar",
+    "LQRRRTStar",
     "SST",
 ]

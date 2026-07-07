@@ -92,10 +92,11 @@ DEFAULT_OG_IMAGE = "assets/astar/maze01_final.png"
 # C++/Python 모두 이 하위폴더 아래로 이동했으므로 chip 경로를 함께 갱신한다.
 _GLOBAL_LINEAGE = {
     "bfs": "search", "dijkstra": "search", "astar": "search", "jps": "search",
-    "ara_star": "search",
+    "ara_star": "search", "ad_star": "search", "anya": "search",
     "dstar_lite": "search", "theta_star": "search", "lazy_theta_star": "search",
     "visibility_astar": "search", "hybrid_astar": "search",
     "rrt": "sampling", "rrt_connect": "sampling", "rrt_star": "sampling",
+    "lqr_rrt_star": "sampling",
     "kinodynamic_rrt_star": "sampling", "informed_rrt_star": "sampling", "fast_rrt": "sampling",
     "prm": "sampling", "prm_star": "sampling",
     "bit_star": "sampling", "abit_star": "sampling", "fmt_star": "sampling", "sst": "sampling",
@@ -127,11 +128,13 @@ _GLOBAL_SEARCH = [
     ("algorithms/astar.md", "algorithms/astar.html", "A*"),          # 1968
     ("algorithms/dstar_lite.md", "algorithms/dstar_lite.html", "D* Lite"),  # 2002
     ("algorithms/ara_star.md", "algorithms/ara_star.html", "ARA*"),  # 2003
+    ("algorithms/ad_star.md", "algorithms/ad_star.html", "AD*"),  # 2005
     ("algorithms/theta_star.md", "algorithms/theta_star.html", "Theta*"),  # 2007
     ("algorithms/hybrid_astar.md", "algorithms/hybrid_astar.html", "Hybrid A*"),  # 2008
     ("algorithms/lazy_theta_star.md", "algorithms/lazy_theta_star.html", "Lazy Theta*"),  # 2010
     ("algorithms/jps.md", "algorithms/jps.html", "JPS"),  # 2011
     ("algorithms/visibility_astar.md", "algorithms/visibility_astar.html", "Visibility A*"),  # any-angle
+    ("algorithms/anya.md", "algorithms/anya.html", "Anya"),  # 2016 · optimal any-angle
 ]
 _GLOBAL_SAMPLING = [
     ("algorithms/prm.md", "algorithms/prm.html", "PRM"),             # 1996
@@ -139,6 +142,7 @@ _GLOBAL_SAMPLING = [
     ("algorithms/rrt_connect.md", "algorithms/rrt_connect.html", "RRT-Connect"),  # 2000
     ("algorithms/rrt_star.md", "algorithms/rrt_star.html", "RRT*"),  # 2011
     ("algorithms/prm_star.md", "algorithms/prm_star.html", "PRM*"),  # 2011
+    ("algorithms/lqr_rrt_star.md", "algorithms/lqr_rrt_star.html", "LQR-RRT*"),  # 2012
     ("algorithms/kinodynamic_rrt_star.md", "algorithms/kinodynamic_rrt_star.html", "Kinodynamic RRT*"),  # 2013
     ("algorithms/informed_rrt_star.md", "algorithms/informed_rrt_star.html", "Informed RRT*"),  # 2014
     ("algorithms/fmt_star.md", "algorithms/fmt_star.html", "FMT*"),  # 2015
@@ -496,16 +500,19 @@ def build_landing(_=None):
         ("astar", "A*", "informed search"),
         ("jps", "JPS", "grid symmetry breaking"),
         ("ara_star", "ARA*", "anytime repairing"),
+        ("ad_star", "AD*", "anytime dynamic replanning"),
         ("dstar_lite", "D* Lite", "dynamic replanning"),
         ("theta_star", "Theta*", "any-angle search"),
         ("lazy_theta_star", "Lazy Theta*", "any-angle · lazy LOS"),
         ("visibility_astar", "Visibility A*", "any-angle · visibility graph"),
+        ("anya", "Anya", "optimal any-angle · interval"),
         ("hybrid_astar", "Hybrid A*", "kinodynamic SE(2)"),
         ("prm", "PRM", "roadmap · multi-query"),
         ("rrt", "RRT", "feasible sampling"),
         ("rrt_connect", "RRT-Connect", "bidirectional single-query"),
         ("rrt_star", "RRT*", "asymptotically optimal"),
         ("prm_star", "PRM*", "optimal roadmap"),
+        ("lqr_rrt_star", "LQR-RRT*", "LQR-derived heuristics"),
         ("kinodynamic_rrt_star", "Kinodynamic RRT*", "kinodynamic optimal"),
         ("informed_rrt_star", "Informed RRT*", "ellipsoidal informed"),
         ("fmt_star", "FMT*", "fast marching tree"),

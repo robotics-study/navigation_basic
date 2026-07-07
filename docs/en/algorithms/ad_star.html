@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AD* · navigation study</title>
+<meta name="description" content="Two demands land on one robot at once. (1) anytime: there is no time budget, so">
+<meta name="robots" content="index,follow">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b1020" media="(prefers-color-scheme: dark)">
+<link rel="canonical" href="https://robotics-study.github.io/navigation/en/algorithms/ad_star.html">
+<link rel="alternate" hreflang="ko" href="https://robotics-study.github.io/navigation/ko/algorithms/ad_star.html">
+<link rel="alternate" hreflang="en" href="https://robotics-study.github.io/navigation/en/algorithms/ad_star.html">
+<link rel="alternate" hreflang="x-default" href="https://robotics-study.github.io/navigation/en/algorithms/ad_star.html">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="navigation study">
+<meta property="og:title" content="AD* · navigation study">
+<meta property="og:description" content="Two demands land on one robot at once. (1) anytime: there is no time budget, so">
+<meta property="og:url" content="https://robotics-study.github.io/navigation/en/algorithms/ad_star.html">
+<meta property="og:image" content="https://robotics-study.github.io/navigation/assets/ad_star/maze01_final.png">
+<meta property="og:image:alt" content="AD*">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="ko_KR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="AD* · navigation study">
+<meta name="twitter:description" content="Two demands land on one robot at once. (1) anytime: there is no time budget, so">
+<meta name="twitter:image" content="https://robotics-study.github.io/navigation/assets/ad_star/maze01_final.png">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "AD*", "description": "Two demands land on one robot at once. (1) anytime: there is no time budget, so", "image": "https://robotics-study.github.io/navigation/assets/ad_star/maze01_final.png", "inLanguage": "en", "url": "https://robotics-study.github.io/navigation/en/algorithms/ad_star.html", "isPartOf": {"@type": "WebSite", "name": "navigation study", "url": "https://robotics-study.github.io/navigation/"}}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=6d6dae56">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Crect width='24' height='24' rx='6' fill='%230b1020'/%3E%3Cpath d='M4 19V11h8V5h8' stroke='%23818cf8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='4' cy='19' r='2.4' fill='%23818cf8'/%3E%3Ccircle cx='20' cy='5' r='2.4' fill='%2322d3ee'/%3E%3C/svg%3E">
+<script src="../../assets/site.js?v=6d6dae56"></script>
+</head>
+<body>
+<header class="topbar">
+  <button id="menu-btn" class="iconbtn menu-btn" aria-label="menu"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  <div class="brandcrumb">
+    <a class="brand hub" href="https://robotics-study.github.io/" aria-label="robotics-study home"><svg class="logo" width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true"><defs><linearGradient id="navlg" x1="0" y1="1" x2="1" y2="0"><stop stop-color="#6366f1"/><stop offset="1" stop-color="#06b6d4"/></linearGradient></defs><path d="M4 19V11h8V5h8" stroke="url(#navlg)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="4" cy="19" r="2.6" fill="url(#navlg)"/><circle cx="20" cy="5" r="2.6" fill="url(#navlg)"/></svg><span class="wm">robotics<span class="wm-dim"> study</span></span></a>
+    <span class="crumb-sep" aria-hidden="true">/</span>
+    <a class="brand" href="../../index.html"><span class="wm">navigation<span class="wm-dim"> study</span></span></a>
+  </div>
+  <nav class="topnav"><a href="../../en/index.html">Overview</a><a href="../../en/algorithms/index.html">Algorithms</a><a href="../../en/maps.html">Maps</a><a href="../../en/benchmarks.html">Benchmarks</a><a href="https://github.com/robotics-study/navigation" target="_blank" rel="noopener">GitHub<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a></nav>
+  <span class="spacer"></span>
+  <div class="search"><svg class="s-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg><input id="search-input" type="search" placeholder="검색 / Search…" data-base="../../" autocomplete="off"><div id="search-results" class="search-results"></div></div>
+  <div class="lang-toggle" role="group" aria-label="language"><svg class="g-ico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.5 2.5 3.8 5.6 3.8 9s-1.3 6.5-3.8 9c-2.5-2.5-3.8-5.6-3.8-9S9.5 5.5 12 3Z"/></svg><a href="../../ko/algorithms/ad_star.html" class="">KO</a><span class="l-sep">/</span><a href="../../en/algorithms/ad_star.html" class="active">EN</a></div>
+</header>
+<div class="layout">
+<aside class="sidebar"><h4>Overview</h4>
+<a href="../../en/index.html">Overview</a>
+<a href="../../en/algorithms/index.html">All algorithms</a>
+<h4>Global planning</h4>
+<details class="nav-sub" open><summary>Search</summary><div class="nav-sub-body"><div class="nav-sub-inner"><a href="../../en/algorithms/bfs.html">BFS</a><a href="../../en/algorithms/dijkstra.html">Dijkstra</a><a href="../../en/algorithms/astar.html">A*</a><a href="../../en/algorithms/dstar_lite.html">D* Lite</a><a href="../../en/algorithms/ara_star.html">ARA*</a><a href="../../en/algorithms/ad_star.html" class="active">AD*</a><a href="../../en/algorithms/theta_star.html">Theta*</a><a href="../../en/algorithms/hybrid_astar.html">Hybrid A*</a><a href="../../en/algorithms/lazy_theta_star.html">Lazy Theta*</a><a href="../../en/algorithms/jps.html">JPS</a><a href="../../en/algorithms/visibility_astar.html">Visibility A*</a><a href="../../en/algorithms/anya.html">Anya</a></div></div></details>
+<details class="nav-sub"><summary>Sampling</summary><div class="nav-sub-body"><div class="nav-sub-inner"><a href="../../en/algorithms/prm.html">PRM</a><a href="../../en/algorithms/rrt.html">RRT</a><a href="../../en/algorithms/rrt_connect.html">RRT-Connect</a><a href="../../en/algorithms/rrt_star.html">RRT*</a><a href="../../en/algorithms/prm_star.html">PRM*</a><a href="../../en/algorithms/lqr_rrt_star.html">LQR-RRT*</a><a href="../../en/algorithms/kinodynamic_rrt_star.html">Kinodynamic RRT*</a><a href="../../en/algorithms/informed_rrt_star.html">Informed RRT*</a><a href="../../en/algorithms/fmt_star.html">FMT*</a><a href="../../en/algorithms/bit_star.html">BIT*</a><a href="../../en/algorithms/sst.html">SST</a><a href="../../en/algorithms/abit_star.html">ABIT*</a><a href="../../en/algorithms/ait_star.html">AIT*</a><a href="../../en/algorithms/fast_rrt.html">Fast-RRT</a><a href="../../en/algorithms/eit_star.html">EIT*</a><a href="../../en/algorithms/fcit_star.html">FCIT*</a></div></div></details>
+<a href="../../en/benchmarks.html">Benchmarks</a>
+<h4>Local planning <span class="soon">planned</span></h4>
+<span class="planned">DWA</span>
+<span class="planned">Pure Pursuit</span>
+<span class="planned">VFH</span>
+<span class="planned">MPC</span>
+<span class="planned">Benchmarks</span>
+<h4>Multi-agent <span class="soon">planned</span></h4>
+<span class="planned">Prioritized A*</span>
+<span class="planned">Joint-space A*</span>
+<span class="planned">CBS</span>
+<span class="planned">Benchmarks</span>
+<h4>Maps</h4>
+<a href="../../en/maps.html">Map representations</a>
+<h4>Reference</h4>
+<a href="../../en/architecture.html">Architecture</a>
+<a href="../../en/references.html">References</a></aside>
+<main class="content"><article class="content-inner"><h1 id="ad-anytime-dynamic-a">AD<em> (Anytime Dynamic A</em>)<a class="anchor" href="#ad-anytime-dynamic-a" title="Permanent link">¶</a></h1>
+<div class="code-links"><span class="cl-label">Source</span><a href="https://github.com/robotics-study/navigation/blob/main/cpp/src/global_planning/search/ad_star.cpp" target="_blank" rel="noopener">C++</a><a href="https://github.com/robotics-study/navigation/blob/main/cpp/include/navigation/global_planning/search/ad_star.hpp" target="_blank" rel="noopener">C++ header</a><a href="https://github.com/robotics-study/navigation/blob/main/python/navigation/global_planning/search/ad_star.py" target="_blank" rel="noopener">Python</a><a href="https://github.com/robotics-study/navigation/blob/main/python/demos/demo_ad_star.py" target="_blank" rel="noopener">demo</a></div>
+<table class="spec-table">
+<thead>
+<tr>
+<th>Item</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Category</td>
+<td>anytime + incremental / dynamic replanning graph search</td>
+</tr>
+<tr>
+<td>Required capability</td>
+<td><code>DynamicGridSpace</code> (<code>passable_neighbors</code> + <code>is_blocked</code>)</td>
+</tr>
+<tr>
+<td>Completeness</td>
+<td>complete (finite grids, non-negative costs)</td>
+</tr>
+<tr>
+<td>Optimality</td>
+<td><strong>anytime, belief-bounded-suboptimal</strong> — each solution is ε-suboptimal for the current belief; ε → 1 gives the belief optimum</td>
+</tr>
+<tr>
+<td>Complexity</td>
+<td>ARA*'s ε steps × D* Lite's incremental repair. Prior search is reused both when ε is lowered and when an edge cost changes</td>
+</tr>
+<tr>
+<td>Original paper</td>
+<td>Likhachev, Ferguson, Gordon, Stentz &amp; Thrun (2005) <sup id="fnref2:adstar"><a class="footnote-ref" href="#fn:adstar">1</a></sup></td>
+</tr>
+</tbody>
+</table>
+<h2 id="background">Background<a class="anchor" href="#background" title="Permanent link">¶</a></h2>
+<p>Two demands land on one robot at once. <strong>(1) anytime</strong>: there is no time budget, so
+produce <em>some</em> solution fast and refine it as time allows — the problem ARA*<sup id="fnref:ara"><a class="footnote-ref" href="#fn:ara">2</a></sup>
+solves. <strong>(2) dynamic replanning</strong>: the robot starts with no map, moves while
+<strong>sensing only its surroundings</strong>, and must repair its route when it meets an
+unexpected obstacle — the problem D* Lite<sup id="fnref:dstar"><a class="footnote-ref" href="#fn:dstar">3</a></sup> solves. Solving either from scratch
+(ARA* restarts per ε; replanning restarts A* per step) repeats most of the work.</p>
+<p><strong>AD*</strong><sup id="fnref:adstar"><a class="footnote-ref" href="#fn:adstar">1</a></sup> fuses the two into a <strong>single search</strong>. Like D* Lite it keeps a
+<strong>backward</strong> search rooted at the goal, storing <code>g</code> (computed cost-to-goal) and <code>rhs</code>
+(one-step look-ahead) at each cell and prioritising by a heuristic toward <code>s_start</code>.
+Onto that it grafts ARA*'s two devices:</p>
+<ul>
+<li><strong>ε-inflated key</strong> — only an <em>over-consistent</em> vertex's priority inflates its
+  heuristic by ε (weighted A*), fetching a first solution quickly. An
+  <em>under-consistent</em> vertex is <strong>not</strong> inflated (the paper's <code>key(s)</code>), so a cost
+  <strong>increase</strong> propagates on an admissible key.</li>
+<li><strong>INCONS list</strong> — a vertex that becomes inconsistent again <em>after</em> it was expanded
+  (is in CLOSED) is parked in INCONS instead of re-entering OPEN; when ε is lowered or
+  an edge cost changes, <strong>OPEN ∪ INCONS is reopened with keys recomputed</strong> under the
+  new ε, reusing prior work.</li>
+</ul>
+<p>The robot steps only once ε has reached <code>eps_final</code> (the plan is <strong>optimal</strong> for the
+current belief), so the executed trajectory matches D* Lite's. <code>plan()</code> simulates the
+whole improve → move → sense → repair loop internally and returns the <strong>executed
+trajectory</strong>. The belief is planner-internal: the blocked set starts empty, so every
+in-bounds cell is <strong>assumed free</strong>.</p>
+<h2 id="how-it-works">How it works<a class="anchor" href="#how-it-works" title="Permanent link">¶</a></h2>
+<p><code>maze01</code>. The robot (cyan diamond) sets off assuming an empty map. At each position it
+first produces a suboptimal solution fast under a large ε (anytime), lowers ε to the
+belief optimum, then steps one cell along that belief-optimal path. Discovering a wall
+(fogged in as a black cell) re-inflates ε for a fresh suboptimal solution, then refines
+it again.</p>
+<p><img alt="AD* on maze01" src="../../assets/ad_star/maze01.gif" /></p>
+<p>Search / motion in progress (left → right: early / middle / final trajectory):</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;"></th>
+<th style="text-align: center;"></th>
+<th style="text-align: center;"></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;"><img alt="early" src="../../assets/ad_star/maze01_snap_02.png" /></td>
+<td style="text-align: center;"><img alt="mid" src="../../assets/ad_star/maze01_snap_05.png" /></td>
+<td style="text-align: center;"><img alt="final" src="../../assets/ad_star/maze01_final.png" /></td>
+</tr>
+</tbody>
+</table>
+<p>Because the search runs backward, the heuristic is <code>h(s_start, s)</code> (from a searched
+vertex <code>s</code> to the <strong>current robot position</strong> <code>s_start</code>). As the robot moves, this
+reference point shifts, so — as in D* Lite — an offset <code>k_m</code> is accumulated to keep
+queue keys monotone.</p>
+<pre><code>CalcKey(s):                                    # priority = [k1, k2] (lexicographic)
+    if g(s) &gt; rhs(s):                          # over-consistent → inflate by ε
+        return [rhs(s) + ε·h(s_start, s) + k_m,  rhs(s)]
+    else:                                      # under/consistent → NOT inflated
+        return [g(s) +   h(s_start, s) + k_m,  g(s)]
+
+UpdateState(u):
+    if u ≠ s_goal:
+        rhs(u) ← min over s' ∈ Succ(u) of ( c(u, s') + g(s') )
+    remove u from OPEN·INCONS
+    if g(u) ≠ rhs(u):
+        if u ∉ CLOSED: OPEN.insert(u, CalcKey(u))     # not yet expanded → normal queue
+        else:          INCONS.insert(u)               # already expanded → defer to reopen
+
+ComputeOrImprovePath():
+    while OPEN.top_key() &lt; CalcKey(s_start) or rhs(s_start) ≠ g(s_start):
+        u ← OPEN.pop_min()
+        if g(u) &gt; rhs(u):     g(u) ← rhs(u);  CLOSED ← CLOSED ∪ {u}   # over-consistent
+                              for s ∈ Pred(u): UpdateState(s)
+        else:                 g(u) ← ∞                                # under-consistent
+                              for s ∈ Pred(u) ∪ {u}: UpdateState(s)
+
+Main():
+    s_last ← s_start;  Initialize();  ε ← ε0
+    sense(s_start);  ComputeOrImprovePath();  publish()      # first (suboptimal) solution
+    while s_start ≠ s_goal:
+        if ε &gt; eps_final:                                    # ── improve (anytime) ──
+            ε ← max(eps_final, ε − eps_step)
+            OPEN ← OPEN ∪ INCONS;  recompute keys;  CLOSED ← ∅   # reopen
+            ComputeOrImprovePath();  publish();  continue
+        if g(s_start) = ∞: return &quot;no path&quot;                  # ── belief-optimal → move ──
+        s_start ← argmin over s' ∈ Succ(s_start) of ( c + g(s') )
+        changed ← sense(s_start)                             # refresh belief in the sensor disk
+        if changed ≠ ∅:                                      # ── change → replan ──
+            k_m ← k_m + h(s_last, s_start);  s_last ← s_start
+            for c ∈ changed: UpdateState(neighbours of c)
+            ε ← ε0                                           # significant change: re-inflate ε
+            OPEN ← OPEN ∪ INCONS;  recompute keys;  CLOSED ← ∅
+            ComputeOrImprovePath();  publish()
+</code></pre>
+<p>Grid moves are symmetric (undirected), so <code>Succ = Pred = passable_neighbors</code> (neighbours
+traversable under the belief). The robot steps to the min-<code>g</code> neighbour only at the
+belief-optimal moment ε = <code>eps_final</code> — i.e. every move follows the <strong>shortest path over
+the known map</strong> (as in D* Lite).</p>
+<h3 id="sensing-and-belief-owned-by-the-capability">Sensing and belief — owned by the capability<a class="anchor" href="#sensing-and-belief-owned-by-the-capability" title="Permanent link">¶</a></h3>
+<p>Each step the robot queries true occupancy (<code>is_blocked</code>) over the <strong>Euclidean disk</strong> of
+radius <code>sensor_radius</code> cells (<code>dr² + dc² ≤ r²</code>) around it. A blocked cell not yet in the
+belief is added, an <code>obstacle_revealed</code> event is emitted, and only the neighbouring
+vertices that route into it are repaired via <code>UpdateState</code>. Grid geometry (move table,
+corner-cut rule) belongs to the map's <code>passable_neighbors</code>, not the algorithm, so AD*
+never touches coordinates.</p>
+<h3 id="heuristic-octile-backward-robot-referenced">Heuristic — octile (backward, robot-referenced)<a class="anchor" href="#heuristic-octile-backward-robot-referenced" title="Permanent link">¶</a></h3>
+<p><code>h(a, b)</code> is the <strong>octile distance</strong> <code>(hi − lo) + √2·lo</code> (hi/lo = max/min of |Δrow|,
+|Δcol|), admissible for 8-connected moves, computed in exactly the same operation order
+as the map's A* heuristic so C++/Python keys agree bit-for-bit.</p>
+<h2 id="anytime-refine-the-solution-as-shrinks">anytime — refine the solution as ε shrinks<a class="anchor" href="#anytime-refine-the-solution-as-shrinks" title="Permanent link">¶</a></h2>
+<p>A large ε inflates the heuristic, driving the search toward the robot to reach a first
+solution <strong>fast</strong> (few expansions, suboptimal). Each time ε drops by <code>eps_step</code>, OPEN ∪
+INCONS is reopened to <strong>reuse</strong> prior expansions while the solution is refined, converging
+to the belief optimum at ε → 1. Every improved solution is emitted via <code>path_found</code>
+(anytime).</p>
+<p>Suboptimality in a backward search comes from early termination: the inflated key expands
+the robot's neighbourhood first, so the path to <code>s_start</code> can be fixed over a <strong>less-fully-
+relaxed subgraph</strong>, giving <code>g(s_start) ≤ ε·g*(s_start)</code>. When obstacles sit near
+<code>s_start</code> (the robot), this early commitment can miss a detour and make the first solution
+markedly longer.</p>
+<p>Measured example (in-memory field, obstacles near the start, <code>eps_start = 4</code>,
+<code>eps_step = 0.5</code>, sensor radius large so belief = truth):</p>
+<table>
+<thead>
+<tr>
+<th>ε</th>
+<th>4.0</th>
+<th>3.5</th>
+<th>3.0</th>
+<th>2.5</th>
+<th>2.0</th>
+<th>1.5</th>
+<th>1.0</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>emitted cost</td>
+<td>14.243</td>
+<td>14.243</td>
+<td>14.243</td>
+<td>14.243</td>
+<td>14.243</td>
+<td>12.243</td>
+<td><strong>11.414</strong></td>
+</tr>
+</tbody>
+</table>
+<p>The first solution (14.243) is suboptimal; ε → 1 converges to the optimum (11.414), and
+no solution is ever worse than the previous.</p>
+<h2 id="dynamic-replan-when-a-change-appears">dynamic — replan when a change appears<a class="anchor" href="#dynamic-replan-when-a-change-appears" title="Permanent link">¶</a></h2>
+<p>When the robot senses an obstacle absent from the belief, the edge cost into that cell
+effectively rises to ∞. As in D* Lite, only affected vertices are repaired via
+<code>UpdateState</code> and <code>k_m += h(s_last, s_start)</code> preserves key monotonicity. The change is
+treated as significant, so ε is raised back to <code>ε0</code> for a fast new suboptimal solution and
+then refined down to ε → 1 — anytime and incremental interlock in the same queue.</p>
+<p><code>dstar_trap01</code> is a <strong>C-shaped trap</strong> whose mouth faces the robot. Assuming an empty map
+the robot heads straight in, senses the back wall, then backs out and goes around.</p>
+<p><img alt="AD* counterexample — C-trap" src="../../assets/ad_star/trap.gif" /></p>
+<p>Measurements (Python, <code>sensor_radius = 3</code>, <code>eps_start = 2.5</code>):</p>
+<table>
+<thead>
+<tr>
+<th>map</th>
+<th>AD* executed cost</th>
+<th>omniscient A* cost</th>
+<th>AD* cumulative expanded</th>
+<th>replans</th>
+<th>obstacles found</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>maze01</td>
+<td>28.728</td>
+<td>28.728</td>
+<td>159</td>
+<td>20</td>
+<td>41</td>
+</tr>
+<tr>
+<td>dstar_trap01</td>
+<td>34.971</td>
+<td>25.071</td>
+<td>186</td>
+<td>9</td>
+<td>17</td>
+</tr>
+</tbody>
+</table>
+<p>On <code>maze01</code> the discovered walls never block the optimal path, so the executed trajectory
+matches the A* optimum exactly. On <code>dstar_trap01</code> the robot only learns the back wall
+after entering, so the executed cost is ~40 % higher — not a defect but the <strong>nature of
+replanning in an unknown environment</strong> (every instantaneous decision was belief-optimal).</p>
+<p>Reproduce:</p>
+<pre><code class="language-bash">python python/demos/demo_ad_star.py \
+  --map maps/grid/maze01.yaml --scenario maps/scenarios/maze01_s1.yaml \
+  --params configs/global_planning/ad_star.yaml --trace out/ad_star.jsonl
+python tools/viz/replay.py out/ad_star.jsonl --gif out/ad_star.gif --snapshots out/ad_snaps/
+</code></pre>
+<h2 id="properties">Properties<a class="anchor" href="#properties" title="Permanent link">¶</a></h2>
+<ul>
+<li><strong>Completeness</strong>: complete on finite grids with non-negative costs. If a path exists in
+  the true map the robot reaches the goal; otherwise <code>g(s_start) = ∞</code> reports unreachable.</li>
+<li><strong>Anytime bounded-suboptimal</strong>: at <code>ComputeOrImprovePath</code> termination <code>g(s_start) ≤
+  ε·g*(s_start)</code> for the current belief; ε → 1 gives the belief optimum, and each improved
+  solution is no worse than the previous.</li>
+<li><strong>Optimality (execution)</strong>: the robot moves only at the belief-optimal moment ε =
+  <code>eps_final</code>, so every executed step is optimal for the belief then held. Detouring around
+  freshly seen obstacles can make the executed cost exceed omniscient A* (<code>executed cost ≥
+  A\* cost</code>).</li>
+<li><strong>Incrementality</strong>: prior search is reused both when ε is lowered (reopen INCONS ∪ OPEN)
+  and when an edge cost changes (<code>k_m</code> + repairing only affected vertices) — avoiding both
+  ARA*'s per-ε restart and naïve per-step replanning.</li>
+</ul>
+<h2 id="correctness-overunder-consistency-key-incons-reuse-k_m">Correctness: over/under-consistency · ε key · INCONS reuse · <span class="arithmatex">\(k_m\)</span><a class="anchor" href="#correctness-overunder-consistency-key-incons-reuse-k_m" title="Permanent link">¶</a></h2>
+<p><strong>Local consistency.</strong> Each vertex carries <span class="arithmatex">\(g(s)\)</span> and the look-ahead</p>
+<div class="arithmatex">\[
+rhs(s)=
+\begin{cases}
+0 &amp; s=s_\text{goal}\\[2pt]
+\displaystyle\min_{s'\in\text{Succ}(s)}\bigl(c(s,s')+g(s')\bigr) &amp; \text{otherwise.}
+\end{cases}
+\]</div>
+<p>A vertex with <span class="arithmatex">\(g(s)=rhs(s)\)</span> is locally consistent; if all are, <span class="arithmatex">\(g\equiv g^\ast\)</span> (the unique
+fixed point of the belief graph's Bellman optimality equation).</p>
+<p><strong>Over/under-consistent handling.</strong> A popped <span class="arithmatex">\(u\)</span> is inconsistent in one of two ways.</p>
+<ul>
+<li><strong>over-consistent</strong> <span class="arithmatex">\(g(u)&gt;rhs(u)\)</span>: the look-ahead is better → set <span class="arithmatex">\(g(u)\leftarrow rhs(u)\)</span>,
+  add <span class="arithmatex">\(u\)</span> to CLOSED, and propagate to <span class="arithmatex">\(\text{Pred}(u)\)</span>.</li>
+<li><strong>under-consistent</strong> <span class="arithmatex">\(g(u)&lt;rhs(u)\)</span>: a blocked edge left the old <span class="arithmatex">\(g\)</span> underestimating →
+  invalidate with <span class="arithmatex">\(g(u)\leftarrow\infty\)</span> and re-evaluate <span class="arithmatex">\(u\cup\text{Pred}(u)\)</span>. This branch
+  absorbs the cost <strong>increases</strong> of dynamic changes.</li>
+</ul>
+<p><strong>Why ε is not applied to under-consistent keys.</strong> ε-inflation gives a bounded-suboptimality
+guarantee only to the cost-<strong>decreasing</strong> over-consistent propagation. Inflating the keys of
+cost-<strong>increasing</strong> under-consistent vertices would break admissibility and could fail to
+reach a vertex that needs raising. Hence the paper's <code>key(s)</code> inflates only over-consistent
+keys, leaving under-consistent ones at pure <span class="arithmatex">\(g(u)+h\)</span>.</p>
+<p><strong>INCONS reuse.</strong> Lowering ε (or a changed edge cost) makes some CLOSED vertices improvable
+again. Re-expanding them immediately every time would erase ARA*'s savings, so a vertex made
+inconsistent after expansion is collected in INCONS and moved back into OPEN in bulk at the
+next reopen — the crux of each step reusing the previous one's expansions.</p>
+<p><strong><span class="arithmatex">\(k_m\)</span> offset.</strong> Being a backward search, the heuristic's reference point is the robot
+<span class="arithmatex">\(s_\text{start}\)</span>. When the robot moves <span class="arithmatex">\(s_\text{old}\to s_\text{new}\)</span>, the octile metric's
+triangle inequality bounds how much smaller any vertex's key can look by
+<span class="arithmatex">\(h(s_\text{old},s_\text{new})\)</span>. Accumulating exactly that into later keys
+(<span class="arithmatex">\(k_m\mathrel{+}=h(s_\text{old},s_\text{new})\)</span>) preserves the monotone lower bound on
+priorities without re-sorting the whole queue.</p>
+<h2 id="parameters">Parameters<a class="anchor" href="#parameters" title="Permanent link">¶</a></h2>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Default</th>
+<th>Range</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>eps_start</code></td>
+<td>float</td>
+<td>2.5</td>
+<td>[1, 10]</td>
+<td>ε0 for the first improvement (applied to over-consistent keys only). Larger = faster but more suboptimal first solution</td>
+</tr>
+<tr>
+<td><code>eps_final</code></td>
+<td>float</td>
+<td>1.0</td>
+<td>[1, 10]</td>
+<td>Target ε the improvement converges to. 1.0 = belief optimum. The robot moves only once ε reaches this</td>
+</tr>
+<tr>
+<td><code>eps_step</code></td>
+<td>float</td>
+<td>0.5</td>
+<td>[0.01, 10]</td>
+<td>Amount ε drops per improvement (ε ← max(eps_final, ε − eps_step))</td>
+</tr>
+<tr>
+<td><code>sensor_radius</code></td>
+<td>int</td>
+<td>3</td>
+<td>[1, 50]</td>
+<td>Sensor radius (cells). Senses cells with <code>dr² + dc² ≤ r²</code> each step</td>
+</tr>
+<tr>
+<td><code>max_expansions</code></td>
+<td>int</td>
+<td>2000000</td>
+<td>[1, 10⁸]</td>
+<td>Cumulative node-expansion cap over the whole simulation (safety)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="emitted-trace-events">Emitted trace events<a class="anchor" href="#emitted-trace-events" title="Permanent link">¶</a></h2>
+<p><code>planning_started</code> → ( <code>node_expanded</code>, <code>candidate_evaluated</code>, <code>edge_added</code>, <code>path_found</code>, <code>robot_moved</code>, <code>obstacle_revealed</code> )* → <code>path_found</code> → <code>planning_finished</code></p>
+<ul>
+<li><code>path_found</code> — emitted for every improved (anytime) solution and after each replan.</li>
+<li><code>robot_moved</code> (state = robot's new executed cell) — publishes the trajectory one step at a time.</li>
+<li><code>obstacle_revealed</code> (state = newly sensed blocked cell) — the moment the sensor finds an obstacle absent from the belief.</li>
+</ul>
+<p>With <code>robot_moved</code>/<code>obstacle_revealed</code> present, <code>replay.py</code> lays the background all-free
+(belief), fogs in discovered obstacles as black cells over time, and draws the robot's trail.</p>
+<p><code>planning_finished.metrics</code>: <code>path_cost</code> (executed trajectory cost) · <code>expanded_nodes</code>
+(cumulative) · <code>replan_count</code> · <code>sensed_cells</code> · <code>final_eps</code> · <code>runtime_sec</code>.</p>
+<h2 id="references">References<a class="anchor" href="#references" title="Permanent link">¶</a></h2>
+<div class="footnote">
+<hr />
+<ol>
+<li id="fn:adstar">
+<p>Likhachev, M., Ferguson, D., Gordon, G., Stentz, A., &amp; Thrun, S. (2005). "Anytime Dynamic A*: An Anytime, Replanning Algorithm." <em>Proc. Int. Conf. on Automated Planning and Scheduling (ICAPS)</em>, 262–271.&#160;<a class="footnote-backref" href="#fnref:adstar" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:adstar" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+</li>
+<li id="fn:ara">
+<p>Likhachev, M., Gordon, G., &amp; Thrun, S. (2003). "ARA*: Anytime A* with Provable Bounds on Sub-Optimality." <em>Advances in Neural Information Processing Systems (NIPS)</em> 16.&#160;<a class="footnote-backref" href="#fnref:ara" title="Jump back to footnote 2 in the text">&#8617;</a></p>
+</li>
+<li id="fn:dstar">
+<p>Koenig, S., &amp; Likhachev, M. (2002). "D* Lite." <em>Proc. AAAI Conference on Artificial Intelligence</em>, 476–483. <a href="https://www.aaai.org/Papers/AAAI/2002/AAAI02-072.pdf">PDF</a>&#160;<a class="footnote-backref" href="#fnref:dstar" title="Jump back to footnote 3 in the text">&#8617;</a></p>
+</li>
+</ol>
+</div><nav class="pager"><a href="../../en/algorithms/ara_star.html"><div class="dir">← Prev</div><div class="ttl">ARA*</div></a><a class="next" href="../../en/algorithms/theta_star.html"><div class="dir">Next →</div><div class="ttl">Theta*</div></a></nav></article></main>
+<aside class="toc" id="toc"></aside>
+</div>
+<div class="backdrop"></div>
+<footer class="site-footer">
+  <p>navigation study — robot navigation planning algorithms · C++ / Python dual implementation</p>
+  <p>Built as a static site · <a href="../../ko/index.html">한국어</a> · <a href="../../en/index.html">English</a></p>
+</footer>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script" async></script>
+</body></html>
