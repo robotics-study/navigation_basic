@@ -40,6 +40,22 @@ $\hat h$ 를 준다. 해가 생기면 이후 배치는 **informed ellipse**(Gamm
 
 ## 동작 원리
 
+`maze01` 에서의 탐색. 누적된 모든 표본이 서로 완전히 연결되므로, 단일 트리를 점증적으로 키우는
+대신 배치마다 그래프가 조밀하게 채워지고, 새 배치가 올 때마다 경로가 조여진다.
+
+![FCIT* on maze01](../../assets/fcit_star/maze01.gif)
+
+탐색 중간 과정 (좌 → 우: 초반 / 중반 / 최종 경로):
+
+| | | |
+|:---:|:---:|:---:|
+| ![early](../../assets/fcit_star/maze01_snap_02.png) | ![mid](../../assets/fcit_star/maze01_snap_05.png) | ![final](../../assets/fcit_star/maze01_final.png) |
+
+`open01` 최종 결과 — 완전 그래프가 start-goal 직접 간선을 포함하므로, 첫 배치만으로 이미
+거의 직선에 가까운 경로가 연결된다:
+
+![FCIT* on open01](../../assets/fcit_star/open01_final.png)
+
 `points[0]=start`, `points[1]=goal`. 각 배치마다:
 
 1. **배치 성장.** informed 타원에서 `batch_size` 개 표본을 뽑아 유효한 것만 누적 배열에 추가.

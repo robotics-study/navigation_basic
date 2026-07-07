@@ -36,6 +36,22 @@ Gammell 등[^gammell] 은 [RRT\*](rrt_star.md)[^karaman] 의 **트리 성장 방
 
 ## 동작 원리
 
+`maze01` 에서의 탐색. 해가 나오기 전까지는 순수 RRT\* 와 표본화가 동일하지만, 첫 경로가 발견되는
+순간 파면이 informed ellipse 안으로 눈에 띄게 수축하고, incumbent 가 개선될 때마다 더 조여진다.
+
+![Informed RRT* on maze01](../../assets/informed_rrt_star/maze01.gif)
+
+탐색 중간 과정 (좌 → 우: 초반 / 중반 / 최종 경로):
+
+| | | |
+|:---:|:---:|:---:|
+| ![early](../../assets/informed_rrt_star/maze01_snap_02.png) | ![mid](../../assets/informed_rrt_star/maze01_snap_05.png) | ![final](../../assets/informed_rrt_star/maze01_final.png) |
+
+`open01` 최종 결과 — 타원이 start-goal 직선에 거의 밀착할 만큼 줄어들어, 해를 찾은 이후 표본
+대부분이 직선 경로 주변에 떨어진다:
+
+![Informed RRT* on open01](../../assets/informed_rrt_star/open01_final.png)
+
 RRT\* 와 딱 한 줄만 다르다 — 표본을 뽑는 방식이다:
 
 ```

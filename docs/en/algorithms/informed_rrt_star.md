@@ -38,6 +38,23 @@ rewire, anytime incumbent tracking — are identical to [RRT\*](rrt_star.md).
 
 ## How It Works
 
+Search on `maze01`. Before a solution exists sampling looks like plain RRT\*, but once the first
+path is found the frontier visibly collapses into the informed ellipse and keeps tightening as the
+incumbent improves.
+
+![Informed RRT* on maze01](../../assets/informed_rrt_star/maze01.gif)
+
+Intermediate search progress (left → right: early / middle / final path):
+
+| | | |
+|:---:|:---:|:---:|
+| ![early](../../assets/informed_rrt_star/maze01_snap_02.png) | ![mid](../../assets/informed_rrt_star/maze01_snap_05.png) | ![final](../../assets/informed_rrt_star/maze01_final.png) |
+
+Final result on `open01` — the ellipse shrinks almost onto the start-goal line, so nearly all
+post-solution samples land right around the direct path:
+
+![Informed RRT* on open01](../../assets/informed_rrt_star/open01_final.png)
+
 It differs from RRT\* by exactly one line — how a sample is drawn:
 
 ```

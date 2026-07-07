@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lazy Theta* · navigation study</title>
+<meta name="description" content="Theta* 는 매 relaxation 마다 현재 노드의 부모가 후보 후속자를 볼 수 있는지">
+<meta name="robots" content="index,follow">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b1020" media="(prefers-color-scheme: dark)">
+<link rel="canonical" href="https://robotics-study.github.io/navigation/ko/algorithms/lazy_theta_star.html">
+<link rel="alternate" hreflang="ko" href="https://robotics-study.github.io/navigation/ko/algorithms/lazy_theta_star.html">
+<link rel="alternate" hreflang="en" href="https://robotics-study.github.io/navigation/en/algorithms/lazy_theta_star.html">
+<link rel="alternate" hreflang="x-default" href="https://robotics-study.github.io/navigation/en/algorithms/lazy_theta_star.html">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="navigation study">
+<meta property="og:title" content="Lazy Theta* · navigation study">
+<meta property="og:description" content="Theta* 는 매 relaxation 마다 현재 노드의 부모가 후보 후속자를 볼 수 있는지">
+<meta property="og:url" content="https://robotics-study.github.io/navigation/ko/algorithms/lazy_theta_star.html">
+<meta property="og:image" content="https://robotics-study.github.io/navigation/assets/lazy_theta_star/maze01_final.png">
+<meta property="og:image:alt" content="Lazy Theta*">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:locale:alternate" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Lazy Theta* · navigation study">
+<meta name="twitter:description" content="Theta* 는 매 relaxation 마다 현재 노드의 부모가 후보 후속자를 볼 수 있는지">
+<meta name="twitter:image" content="https://robotics-study.github.io/navigation/assets/lazy_theta_star/maze01_final.png">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "Lazy Theta*", "description": "Theta* 는 매 relaxation 마다 현재 노드의 부모가 후보 후속자를 볼 수 있는지", "image": "https://robotics-study.github.io/navigation/assets/lazy_theta_star/maze01_final.png", "inLanguage": "ko", "url": "https://robotics-study.github.io/navigation/ko/algorithms/lazy_theta_star.html", "isPartOf": {"@type": "WebSite", "name": "navigation study", "url": "https://robotics-study.github.io/navigation/"}}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=6d6dae56">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Crect width='24' height='24' rx='6' fill='%230b1020'/%3E%3Cpath d='M4 19V11h8V5h8' stroke='%23818cf8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='4' cy='19' r='2.4' fill='%23818cf8'/%3E%3Ccircle cx='20' cy='5' r='2.4' fill='%2322d3ee'/%3E%3C/svg%3E">
+<script src="../../assets/site.js?v=6d6dae56"></script>
+</head>
+<body>
+<header class="topbar">
+  <button id="menu-btn" class="iconbtn menu-btn" aria-label="menu"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  <div class="brandcrumb">
+    <a class="brand hub" href="https://robotics-study.github.io/" aria-label="robotics-study home"><svg class="logo" width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true"><defs><linearGradient id="navlg" x1="0" y1="1" x2="1" y2="0"><stop stop-color="#6366f1"/><stop offset="1" stop-color="#06b6d4"/></linearGradient></defs><path d="M4 19V11h8V5h8" stroke="url(#navlg)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="4" cy="19" r="2.6" fill="url(#navlg)"/><circle cx="20" cy="5" r="2.6" fill="url(#navlg)"/></svg><span class="wm">robotics<span class="wm-dim"> study</span></span></a>
+    <span class="crumb-sep" aria-hidden="true">/</span>
+    <a class="brand" href="../../index.html"><span class="wm">navigation<span class="wm-dim"> study</span></span></a>
+  </div>
+  <nav class="topnav"><a href="../../ko/index.html">개요</a><a href="../../ko/algorithms/index.html">알고리즘</a><a href="../../ko/maps.html">맵</a><a href="../../ko/benchmarks.html">벤치마크</a><a href="https://github.com/robotics-study/navigation" target="_blank" rel="noopener">GitHub<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a></nav>
+  <span class="spacer"></span>
+  <div class="search"><svg class="s-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg><input id="search-input" type="search" placeholder="검색 / Search…" data-base="../../" autocomplete="off"><div id="search-results" class="search-results"></div></div>
+  <div class="lang-toggle" role="group" aria-label="language"><svg class="g-ico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.5 2.5 3.8 5.6 3.8 9s-1.3 6.5-3.8 9c-2.5-2.5-3.8-5.6-3.8-9S9.5 5.5 12 3Z"/></svg><a href="../../ko/algorithms/lazy_theta_star.html" class="active">KO</a><span class="l-sep">/</span><a href="../../en/algorithms/lazy_theta_star.html" class="">EN</a></div>
+</header>
+<div class="layout">
+<aside class="sidebar"><h4>개요</h4>
+<a href="../../ko/index.html">개요</a>
+<a href="../../ko/algorithms/index.html">알고리즘 목록</a>
+<h4>Global planning</h4>
+<details class="nav-sub" open><summary>Search</summary><div class="nav-sub-body"><div class="nav-sub-inner"><a href="../../ko/algorithms/bfs.html">BFS</a><a href="../../ko/algorithms/dijkstra.html">Dijkstra</a><a href="../../ko/algorithms/astar.html">A*</a><a href="../../ko/algorithms/dstar_lite.html">D* Lite</a><a href="../../ko/algorithms/theta_star.html">Theta*</a><a href="../../ko/algorithms/hybrid_astar.html">Hybrid A*</a><a href="../../ko/algorithms/lazy_theta_star.html" class="active">Lazy Theta*</a><a href="../../ko/algorithms/jps.html">JPS</a><a href="../../ko/algorithms/anya.html">Anya</a></div></div></details>
+<details class="nav-sub"><summary>Sampling</summary><div class="nav-sub-body"><div class="nav-sub-inner"><a href="../../ko/algorithms/prm.html">PRM</a><a href="../../ko/algorithms/rrt.html">RRT</a><a href="../../ko/algorithms/rrt_connect.html">RRT-Connect</a><a href="../../ko/algorithms/rrt_star.html">RRT*</a><a href="../../ko/algorithms/prm_star.html">PRM*</a><a href="../../ko/algorithms/kinodynamic_rrt_star.html">Kinodynamic RRT*</a><a href="../../ko/algorithms/informed_rrt_star.html">Informed RRT*</a><a href="../../ko/algorithms/fmt_star.html">FMT*</a><a href="../../ko/algorithms/bit_star.html">BIT*</a><a href="../../ko/algorithms/sst.html">SST</a><a href="../../ko/algorithms/ait_star.html">AIT*</a><a href="../../ko/algorithms/fast_rrt.html">Fast-RRT</a><a href="../../ko/algorithms/eit_star.html">EIT*</a><a href="../../ko/algorithms/fcit_star.html">FCIT*</a></div></div></details>
+<a href="../../ko/benchmarks.html">벤치마크</a>
+<h4>Local planning <span class="soon">예정</span></h4>
+<span class="planned">DWA</span>
+<span class="planned">Pure Pursuit</span>
+<span class="planned">VFH</span>
+<span class="planned">MPC</span>
+<span class="planned">벤치마크</span>
+<h4>Multi-agent <span class="soon">예정</span></h4>
+<span class="planned">Prioritized A*</span>
+<span class="planned">Joint-space A*</span>
+<span class="planned">CBS</span>
+<span class="planned">벤치마크</span>
+<h4>Maps</h4>
+<a href="../../ko/maps.html">맵 표현</a>
+<h4>레퍼런스</h4>
+<a href="../../ko/architecture.html">아키텍처</a>
+<a href="../../ko/references.html">참고 문헌</a></aside>
+<main class="content"><article class="content-inner"><h1 id="lazy-theta-line-of-sight">Lazy Theta* (지연 line-of-sight)<a class="anchor" href="#lazy-theta-line-of-sight" title="Permanent link">¶</a></h1>
+<div class="code-links"><span class="cl-label">소스 코드</span><a href="https://github.com/robotics-study/navigation/blob/main/cpp/src/global_planning/search/lazy_theta_star.cpp" target="_blank" rel="noopener">C++</a><a href="https://github.com/robotics-study/navigation/blob/main/cpp/include/navigation/global_planning/search/lazy_theta_star.hpp" target="_blank" rel="noopener">C++ header</a><a href="https://github.com/robotics-study/navigation/blob/main/python/navigation/global_planning/search/lazy_theta_star.py" target="_blank" rel="noopener">Python</a><a href="https://github.com/robotics-study/navigation/blob/main/python/demos/demo_lazy_theta_star.py" target="_blank" rel="noopener">demo</a></div>
+<table class="spec-table">
+<thead>
+<tr>
+<th>항목</th>
+<th>내용</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>분류</td>
+<td>any-angle graph search</td>
+</tr>
+<tr>
+<td>요구 capability</td>
+<td><code>LineOfSightSpace</code> (<code>neighbors</code> + <code>heuristic</code> + <code>line_of_sight</code>)</td>
+</tr>
+<tr>
+<td>완전성</td>
+<td>complete (유한 그래프, 비음수 비용)</td>
+</tr>
+<tr>
+<td>최적성</td>
+<td>any-angle 경로 — <strong>grid-optimal 은 보장하지 않음</strong> (Nash &amp; Koenig 2010)</td>
+</tr>
+<tr>
+<td>복잡도</td>
+<td>A<em> 수준 + </em><em>확장 정점당</em>* line-of-sight 검사 1회 (relaxation 당이 아님)</td>
+</tr>
+<tr>
+<td>원 논문</td>
+<td>Nash &amp; Koenig (2010) <sup id="fnref4:nk10"><a class="footnote-ref" href="#fn:nk10">1</a></sup> · 원조 Theta*: Nash et al. (2007) <sup id="fnref2:nash"><a class="footnote-ref" href="#fn:nash">2</a></sup> · LOS: Amanatides &amp; Woo (1987) <sup id="fnref2:aw"><a class="footnote-ref" href="#fn:aw">3</a></sup> · weighted: Pohl (1970) <sup id="fnref2:pohl"><a class="footnote-ref" href="#fn:pohl">4</a></sup></td>
+</tr>
+</tbody>
+</table>
+<h2 id="_1">배경<a class="anchor" href="#_1" title="Permanent link">¶</a></h2>
+<p><strong>Theta*</strong><sup id="fnref:nash"><a class="footnote-ref" href="#fn:nash">2</a></sup> 는 <strong>매 relaxation 마다</strong> 현재 노드의 부모가 후보 후속자를 볼 수 있는지
+(<code>line_of_sight</code>)를 물어 grid 경로를 곧게 편다. 이 LOS 질의가 알고리즘에서 가장 비싼 부분인데,
+Theta* 는 간선마다 한 번씩 — 대부분 나중에 버려지는 간선까지 — 이 비용을 치른다.</p>
+<p><strong>Lazy Theta*</strong><sup id="fnref:nk10"><a class="footnote-ref" href="#fn:nk10">1</a></sup> 는 any-angle 규칙은 그대로 두고 검사 <strong>시점</strong>만 바꾼다. 후속자를 생성할 때
+조부모가 보인다고(Path 2) <strong>낙관적으로 가정</strong>하여 <code>parent(s2) = parent(s)</code>,
+<code>g(s2) = g(parent(s)) + euclid</code> 를 <strong>검사 없이</strong> 기록한다. 단 한 번의 LOS 질의는 <code>s2</code> 가 확장을 위해
+pop 되는 순간(<code>SetVertex</code>)으로 미룬다: 그때서야 <code>line_of_sight(parent(s2), s2)</code> 를 확인하고, 낙관적
+가정이 틀렸으면 부모를 이미 settle 된 가장 값싼 grid 이웃으로 <strong>수리(repair)</strong> 한다. 결과적으로
+간선당이 아니라 <strong>확장 정점당 LOS 검사 1회</strong> — 같은 any-angle 경로를 훨씬 적은 검사로 얻는다.</p>
+<p>이 저장소의 demo 에서 <code>maze01</code> 은 Lazy Theta* <strong>cost 27.76 · waypoint 5개</strong> 로 수렴한다 — eager
+Theta*(27.75)와 사실상 같은 경로를 더 가벼운 검사 예산으로 만든다.</p>
+<h2 id="_2">동작 원리<a class="anchor" href="#_2" title="Permanent link">¶</a></h2>
+<p><code>maze01</code> 에서의 탐색. 파면은 Theta* 와 똑같이 goal 쪽으로 자라지만, 최종 경로는 장애물 모서리만
+스치는 <strong>성근 직선 다각선</strong>이다. 지연 검사가 낙관적 부모를 기각한 지점에서는 정점이 확장되기 전에
+보이는 grid 이웃으로 재부모화된다.</p>
+<p><img alt="Lazy Theta* on maze01" src="../../assets/lazy_theta_star/maze01.gif" /></p>
+<p>탐색 중간 과정 (좌 → 우: 초반 / 중반 / 최종 경로):</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;"></th>
+<th style="text-align: center;"></th>
+<th style="text-align: center;"></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;"><img alt="early" src="../../assets/lazy_theta_star/maze01_snap_02.png" /></td>
+<td style="text-align: center;"><img alt="mid" src="../../assets/lazy_theta_star/maze01_snap_05.png" /></td>
+<td style="text-align: center;"><img alt="final" src="../../assets/lazy_theta_star/maze01_final.png" /></td>
+</tr>
+</tbody>
+</table>
+<p><code>open01</code> 최종 결과 — 장애물이 적으면 start→goal 가 거의 단일 직선으로 연결된다:</p>
+<p><img alt="Lazy Theta* on open01" src="../../assets/lazy_theta_star/open01_final.png" /></p>
+<pre><code>LAZY-THETASTAR(start, goal):
+    g[start] ← 0; parent[start] ← start
+    open ← priority queue keyed by f = g + w·h        # h = 유클리드 직선거리
+    while open is not empty:
+        s ← open.pop_min()
+        if s already settled: continue                # lazy deletion
+        SET-VERTEX(s)                                 # 지연 LOS 검사 + 수리
+        settle(s)
+        if s == goal: return reconstruct(parent, s)
+        for (s2, _) in neighbors(s):
+            if s2 not settled:
+                UPDATE-VERTEX(s, s2)
+    return failure
+
+UPDATE-VERTEX(s, s2):                                 # 낙관적 — 여기서 LOS 검사 안 함
+    p ← parent[s]
+    cand ← g[p] + euclid(p, s2)                       # line_of_sight(p, s2) 가 성립한다고 가정
+    if cand &lt; g[s2]:
+        g[s2] ← cand; parent[s2] ← p
+        open.push(s2, cand + w·h(s2, goal))
+
+SET-VERTEX(s):                                        # s 가 pop 될 때 1회 실행
+    p ← parent[s]
+    if p ≠ s and NOT line_of_sight(p, s):             # 낙관이 틀림 → 수리
+        parent[s] ← argmin_{s' ∈ neighbors(s) ∩ settled} ( g[s'] + euclid(s', s) )
+        g[s]      ← min   _{s' ∈ neighbors(s) ∩ settled} ( g[s'] + euclid(s', s) )
+</code></pre>
+<p>Theta* 와의 유일한 차이는 <code>line_of_sight</code> 호출의 <strong>위치</strong>다: <code>UPDATE-VERTEX</code> 는 이를 빼고(낙관),
+<code>SET-VERTEX</code> 는 pop 시점에 정확히 하나를 더한다. 낙관적 가정이 항상 성립하면 수리는 한 번도
+발동하지 않고 반환 경로는 Theta* 와 동일하다. 실패하면 수리가 <strong>가시성이 보장된</strong> grid 이웃으로
+되돌린다(인접 셀 사이 Path 1 은 항상 합법적 이동이고, 정점의 생성자가 바로 그런 settle 된
+이웃이다). 따라서 방출되는 경로는 언제나 실행 가능하다.</p>
+<h3 id="settle">낙관이 안전한 이유 — settle 된 이웃으로의 수리<a class="anchor" href="#settle" title="Permanent link">¶</a></h3>
+<p>수리 후보를 <strong>이미 settle 된</strong> grid 이웃으로 제한하는 것은 의도된 설계다: 그들의 <code>g</code> 값은
+확정이므로 <code>min(g[s'] + euclid(s', s))</code> 는 실재하는 달성 가능 비용이다. 정점은 어떤 확장된(즉
+settle 된) 이웃이 생성했으므로 이 집합은 결코 비지 않는다 — 항상 최소 하나의 보이는 fallback 이
+있고, <code>SET-VERTEX</code> 는 보이지 않는 부모를 남긴 채 정점을 settle 할 수 없다.</p>
+<h3 id="line-of-sight-grid">Line of sight — grid 충돌 모델과 일치<a class="anchor" href="#line-of-sight-grid" title="Permanent link">¶</a></h3>
+<p><code>line_of_sight(a, b)</code> 는 두 셀 중심을 잇는 선분이 지나갈 수 있는지를 <code>neighbors()</code> 와 <strong>동일한
+corner-cut 금지 규칙</strong>으로 판정한다. 이 저장소는 선분이 닿는 모든 셀을 방문하는 <strong>supercover</strong><sup id="fnref:aw"><a class="footnote-ref" href="#fn:aw">3</a></sup>
+(맵의 <code>is_motion_valid</code> 위임)를 쓰므로 "LOS 로 보이는 쌍" ⇔ "합법적 직선 이동" 이 되어, Lazy
+Theta* 와 grid A<em> 가 </em><em>하나의 충돌 모델</em>*을 공유한다. 이는 Theta* 에서 그대로 물려받았고, Lazy
+Theta* 는 그저 이를 덜 부를 뿐이다.</p>
+<h3 id="heuristic-octile">Heuristic — 유클리드 (octile 아님)<a class="anchor" href="#heuristic-octile" title="Permanent link">¶</a></h3>
+<p>Lazy Theta* 의 g 값은 직선(유클리드) 거리이므로 heuristic 도 <strong>유클리드</strong>를 쓴다:</p>
+<pre><code>h(a, b) = √((Δrow)² + (Δcol)²)
+</code></pre>
+<p>맵이 A<em> 용으로 제공하는 octile heuristic 은 octile ≥ 유클리드 이므로 any-angle 비용에 대해
+</em><em>inadmissible</em>*(과대평가)이라 쓰지 않는다. 유클리드는 임의 각도 이동에 대한 admissible 하한이다.</p>
+<p>측정치 (Python, w = 1.0, trace on · 같은 인스턴스의 eager Theta* 비교):</p>
+<table>
+<thead>
+<tr>
+<th>map</th>
+<th>Lazy Theta* cost</th>
+<th>Theta* cost</th>
+<th>Lazy expanded</th>
+<th>Theta* expanded</th>
+<th>Lazy waypoints</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>maze01</td>
+<td>27.757</td>
+<td>27.748</td>
+<td>105</td>
+<td>104</td>
+<td>5</td>
+</tr>
+<tr>
+<td>open01</td>
+<td><strong>24.241</strong></td>
+<td>24.241</td>
+<td><strong>57</strong></td>
+<td>66</td>
+<td>3</td>
+</tr>
+</tbody>
+</table>
+<p>비용은 eager Theta* 를 1% 미만으로 따라가면서, LOS 검사 예산은 relaxation 당에서 확장 정점당으로
+줄어든다(<code>open01</code> 에서는 지연 방식이 오히려 더 적은 노드를 settle 한다).</p>
+<p>재현:</p>
+<pre><code class="language-bash">python python/demos/demo_lazy_theta_star.py \
+  --map maps/grid/maze01.yaml --scenario maps/scenarios/maze01_s1.yaml \
+  --params configs/global_planning/lazy_theta_star.yaml --trace out/lazy_theta_star.jsonl
+python tools/viz/replay.py out/lazy_theta_star.jsonl --gif out/lazy_theta_star.gif --snapshots out/lts_snaps/
+</code></pre>
+<h2 id="_3">성질<a class="anchor" href="#_3" title="Permanent link">¶</a></h2>
+<ul>
+<li><strong>완전성</strong>: 유한 grid + 비음수 비용에서 완전 (A* / Theta* 와 동일).</li>
+<li><strong>최적성</strong>: basic Theta* 와 마찬가지로 Lazy Theta* 도 <strong>grid-optimal 도 true-optimal 도 보장하지
+  않는다</strong><sup id="fnref3:nk10"><a class="footnote-ref" href="#fn:nk10">1</a></sup>. 부모 후보가 여전히 (가정된) 조부모 또는 국소 grid 이웃뿐이라, 진짜 최단
+  any-angle 경로를 놓칠 수 있다(대신 매우 근접).</li>
+<li><strong>품질</strong>: 반환 경로는 grid 경로를 any-angle 로 곧게 편 것으로 비용이 eager Theta* 를 가깝게
+  따라간다. 지연 검사는 <em>어떤</em> 지름길을 취하는지를 바꾸지 않고, 가시성을 확인하는 <em>시점</em>만 바꾼다.</li>
+<li><strong>복잡도</strong>: A<em> 와 같은 탐색에 </em><em>확장 정점당</em>* LOS 검사 1회 — Theta* 의 relaxation 당 1회와 대비된다.
+  LOS 검사가 지배적일 때(긴 선분, 밀집 grid) 실전 이득이 여기서 나온다.</li>
+<li>w &gt; 1 (weighted, Pohl 1970<sup id="fnref:pohl"><a class="footnote-ref" href="#fn:pohl">4</a></sup>): heuristic 을 부풀려 확장 노드를 줄이되 경로 품질을 완화 —
+  weighted A*/Theta* 와 동일.</li>
+</ul>
+<h2 id="lazy-vs-eager">Lazy vs. Eager — 검사가 어디로 가는가<a class="anchor" href="#lazy-vs-eager" title="Permanent link">¶</a></h2>
+<p><strong>기호.</strong> 격자 셀 중심을 <span class="arithmatex">\(\mathbb{R}^2\)</span> 위의 점으로 본다. any-angle 경로 <span class="arithmatex">\(P=(v_0,\dots,v_k)\)</span> 는
+LOS-clear 선분의 꺾은선이며 비용은 <span class="arithmatex">\(\operatorname{cost}(P)=\sum_i\lVert v_{i+1}-v_i\rVert_2\)</span>,
+<span class="arithmatex">\(h(n)=\lVert n-\text{goal}\rVert_2\)</span> 이다. <span class="arithmatex">\(h\)</span> 의 admissibility·consistency 와 "grid A<em> 이하" 논거는
+<a href="theta_star.html">Theta*</a> 에서 그대로 이어지므로, 이 절은 </em>lazy* 방식이 바꾸는 것만 짚는다.</p>
+<p><strong>보조정리 (settle 된 정점은 항상 보이는 부모로 끝난다).</strong> <code>SET-VERTEX(s)</code> 가 반환할 때, 낙관적
+<span class="arithmatex">\(\text{parent}(s)=p\)</span> 가 이미 LOS<span class="arithmatex">\((p,s)\)</span> 를 만족했거나, 수리가 어떤 settle 된 grid 이웃 <span class="arithmatex">\(s'\)</span> 로
+<span class="arithmatex">\(\text{parent}(s)=s'\)</span> 를 재배정했다.</p>
+<p><em>증명.</em> <span class="arithmatex">\(s\)</span> 를 pop 시키고 (현재 <span class="arithmatex">\(g\)</span> 로 relax 하여) 생성한 정점을 <span class="arithmatex">\(u\)</span> 라 하자. relaxation 은 확장
+중인 정점에서만 일어나므로 <span class="arithmatex">\(u\)</span> 는 settle 되어 있고, <span class="arithmatex">\(s\)</span> 는 <span class="arithmatex">\(\text{neighbors}(u)\)</span> 에 열거되었으므로
+<span class="arithmatex">\(u\in\text{neighbors}(s)\)</span>(grid 인접은 대칭). 따라서 <span class="arithmatex">\(\text{neighbors}(s)\cap\text{settled}\neq\varnothing\)</span>.
+인접 셀은 항상 LOS 를 가지므로(Path 1 은 합법적 이동) <span class="arithmatex">\(\arg\min\)</span> 은 비지 않은 <strong>보이는</strong> 후보들
+위에서 계산되어 보이는 부모를 배정한다. 낙관적 <span class="arithmatex">\(p\)</span> 가 이미 보였다면 분기를 건너뛰고 보이는 <span class="arithmatex">\(p\)</span> 가
+유지된다. ∎</p>
+<p><strong>따름정리 (feasibility).</strong> settle 된 임의의 <span class="arithmatex">\(s\)</span> 의 부모 사슬을 start 까지 펼치면 정확히 <span class="arithmatex">\(g[s]\)</span>
+길이의 충돌 없는 꺾은선이 된다 — 보조정리에 의해 모든 링크 <span class="arithmatex">\(\text{parent}(x)\to x\)</span> 가 LOS-clear
+이기 때문. 특히 반환된 <span class="arithmatex">\(g[\text{goal}]\)</span> 는 달성 가능한 상계다 — Lazy Theta* 가 내놓는 경로는 항상
+실행 가능하다. ∎</p>
+<p><strong>검사 횟수.</strong> Theta* 는 <strong>모든</strong> relaxation <span class="arithmatex">\((s\to s_2)\)</span> 마다 <code>line_of_sight</code> 를 평가하고, Lazy
+Theta* 는 <code>SET-VERTEX</code> 안에서 <strong>settle 된 정점당 1회</strong> 평가한다. 정점은 최대 한 번 settle 되지만
+인접 간선마다 relax 되므로, LOS 검사 수는 탐색된 부분그래프에서 <span class="arithmatex">\(\Theta(|E|)\)</span> 에서 <span class="arithmatex">\(\Theta(|V|)\)</span> 로
+줄어든다. 낙관은 이따금 약간 다른 (동등하게 feasible 한) 꺾은선으로 재부모화할 수 있어, 방출 경로가
+eager Theta* 와 <em>근접하지만</em> bit-identical 은 아닌 이유가 된다 — <strong>검사를 줄이는 대가로 미세하게
+다른 any-angle 경로</strong>를 얻는 교환이다<sup id="fnref2:nk10"><a class="footnote-ref" href="#fn:nk10">1</a></sup>.</p>
+<h2 id="_4">파라미터<a class="anchor" href="#_4" title="Permanent link">¶</a></h2>
+<table>
+<thead>
+<tr>
+<th>이름</th>
+<th>타입</th>
+<th>기본값</th>
+<th>범위</th>
+<th>설명</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>heuristic_weight</code></td>
+<td>float</td>
+<td>1.0</td>
+<td>[1.0, 5.0]</td>
+<td>f = g + w·h 의 w (h 는 유클리드). 1.0 = 표준 Lazy Theta*, 초과 = weighted</td>
+</tr>
+</tbody>
+</table>
+<h2 id="trace">방출 trace 이벤트<a class="anchor" href="#trace" title="Permanent link">¶</a></h2>
+<p><code>planning_started</code> → (<code>node_expanded</code>, <code>candidate_evaluated</code>, <code>edge_added</code>)* → <code>path_found</code> → <code>planning_finished</code></p>
+<p>새 이벤트 타입을 도입하지 않는다. 낙관적 relaxation 은 Theta* 와 똑같이 <strong>비인접 조부모</strong>를
+<code>parent</code> 로 하는 <code>candidate_evaluated</code> + <code>edge_added</code> 를 방출한다(Path 2). <code>SET-VERTEX</code> 가 정점을
+수리하면 그 정점을 <code>candidate_evaluated</code> + <code>edge_added(state=s, parent=s')</code>(여기서 <code>s'</code> 는 보이는
+grid 이웃)로 <strong>재방출</strong>하므로, <code>replay.py</code> 가 수정된 직선 구간을 다시 그려 lazy-repair 가 애니메이션에
+드러난다. 스키마는 <code>parent</code> 에 인접 제약을 두지 않는다.</p>
+<h2 id="references">References<a class="anchor" href="#references" title="Permanent link">¶</a></h2>
+<div class="footnote">
+<hr />
+<ol>
+<li id="fn:nk10">
+<p>Nash, A., Koenig, S., &amp; Tovey, C. (2010). "Lazy Theta*: Any-Angle Path Planning and Path Length Analysis in 3D." <em>Proc. AAAI Conference on Artificial Intelligence</em>, 147–154. <a href="http://idm-lab.org/bib/abstracts/papers/aaai10b.pdf">PDF</a>&#160;<a class="footnote-backref" href="#fnref:nk10" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:nk10" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:nk10" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref4:nk10" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+</li>
+<li id="fn:nash">
+<p>Nash, A., Daniel, K., Koenig, S., &amp; Felner, A. (2007). "Theta*: Any-Angle Path Planning on Grids." <em>Proc. AAAI Conference on Artificial Intelligence</em>, 1177–1183. <a href="https://ojs.aaai.org/index.php/AAAI/article/view/11009">PDF</a>&#160;<a class="footnote-backref" href="#fnref:nash" title="Jump back to footnote 2 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:nash" title="Jump back to footnote 2 in the text">&#8617;</a></p>
+</li>
+<li id="fn:aw">
+<p>Amanatides, J., &amp; Woo, A. (1987). "A Fast Voxel Traversal Algorithm for Ray Tracing." <em>Proc. Eurographics</em>, 3–10. <a href="https://www.cse.yorku.ca/~amana/research/grid.pdf">PDF</a>&#160;<a class="footnote-backref" href="#fnref:aw" title="Jump back to footnote 3 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:aw" title="Jump back to footnote 3 in the text">&#8617;</a></p>
+</li>
+<li id="fn:pohl">
+<p>Pohl, I. (1970). "Heuristic search viewed as path finding in a graph." <em>Artificial Intelligence</em>, 1(3–4), 193–204. <a href="https://doi.org/10.1016/0004-3702%2870%2990007-X">doi:10.1016/0004-3702(70)90007-X</a>&#160;<a class="footnote-backref" href="#fnref:pohl" title="Jump back to footnote 4 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:pohl" title="Jump back to footnote 4 in the text">&#8617;</a></p>
+</li>
+</ol>
+</div><nav class="pager"><a href="../../ko/algorithms/hybrid_astar.html"><div class="dir">← 이전</div><div class="ttl">Hybrid A*</div></a><a class="next" href="../../ko/algorithms/jps.html"><div class="dir">다음 →</div><div class="ttl">JPS</div></a></nav></article></main>
+<aside class="toc" id="toc"></aside>
+</div>
+<div class="backdrop"></div>
+<footer class="site-footer">
+  <p>navigation study — robot navigation planning algorithms · C++ / Python dual implementation</p>
+  <p>Built as a static site · <a href="../../ko/index.html">한국어</a> · <a href="../../en/index.html">English</a></p>
+</footer>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script" async></script>
+</body></html>

@@ -42,6 +42,23 @@ tightening the path across batches.
 
 ## How It Works
 
+Search on `maze01`. Because every accumulated sample connects to every other, the graph fills in
+densely batch by batch instead of growing a single incremental tree, and the path tightens as new
+batches arrive.
+
+![FCIT* on maze01](../../assets/fcit_star/maze01.gif)
+
+Intermediate search progress (left → right: early / middle / final path):
+
+| | | |
+|:---:|:---:|:---:|
+| ![early](../../assets/fcit_star/maze01_snap_02.png) | ![mid](../../assets/fcit_star/maze01_snap_05.png) | ![final](../../assets/fcit_star/maze01_final.png) |
+
+Final result on `open01` — the complete graph contains the direct start-goal edge, so the very
+first batch already connects an almost-straight-line path:
+
+![FCIT* on open01](../../assets/fcit_star/open01_final.png)
+
 `points[0]=start`, `points[1]=goal`. Per batch:
 
 1. **Grow the batch.** Draw `batch_size` informed-ellipse samples, keep the valid ones, append to a

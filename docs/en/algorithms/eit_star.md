@@ -42,6 +42,23 @@ learned validator-cost model are replaced with simple stand-ins.
 
 ## How It Works
 
+Search on `maze01`. Cost still drives the forward search — as in AIT\* it flows around the maze
+walls batch by batch — but the effort tie-break nudges it toward the cheaper-to-validate of two
+near-equal-cost routes.
+
+![EIT* on maze01](../../assets/eit_star/maze01.gif)
+
+Intermediate search progress (left → right: early / middle / final path):
+
+| | | |
+|:---:|:---:|:---:|
+| ![early](../../assets/eit_star/maze01_snap_02.png) | ![mid](../../assets/eit_star/maze01_snap_05.png) | ![final](../../assets/eit_star/maze01_final.png) |
+
+Final result on `open01` — with no detours to route around, cost alone already picks the
+straight-line solution and the effort tie-break rarely matters:
+
+![EIT* on open01](../../assets/eit_star/open01_final.png)
+
 Each batch performs the following.
 
 1. **Grow the RGG** — draw `batch_size` informed samples (Gammell et al. 2014[^gammell] ellipse),

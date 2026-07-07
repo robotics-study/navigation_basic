@@ -39,6 +39,23 @@ Strub & Gammell[^strub_eit] 의 EIT\* 는 AIT\* 계열을 잇는다. AIT\* 는 g
 
 ## 동작 원리
 
+`maze01` 에서의 탐색. 순방향 탐색을 이끄는 것은 여전히 비용이라 — AIT\* 처럼 배치를 거듭하며
+미로 벽을 따라 우회한다 — 다만 비용이 비슷한 두 경로 사이에서는 effort tie-break 가 검증이 더
+싼 쪽으로 밀어준다.
+
+![EIT* on maze01](../../assets/eit_star/maze01.gif)
+
+탐색 중간 과정 (좌 → 우: 초반 / 중반 / 최종 경로):
+
+| | | |
+|:---:|:---:|:---:|
+| ![early](../../assets/eit_star/maze01_snap_02.png) | ![mid](../../assets/eit_star/maze01_snap_05.png) | ![final](../../assets/eit_star/maze01_final.png) |
+
+`open01` 최종 결과 — 우회할 장애물이 없어 비용만으로 이미 직선 해가 선택되고, effort tie-break
+가 개입할 일이 거의 없다:
+
+![EIT* on open01](../../assets/eit_star/open01_final.png)
+
 배치마다 다음을 수행한다.
 
 1. **RGG 성장** — `batch_size` 개의 informed 표본(Gammell et al. 2014[^gammell] 타원)을 뽑아 유효한

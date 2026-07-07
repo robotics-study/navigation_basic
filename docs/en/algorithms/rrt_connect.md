@@ -38,6 +38,22 @@ bidirectional growth itself supplies goal-directedness. This implementation ther
 
 ## How It Works
 
+Search on `maze01`. Two trees grow at once — one rooted at start, one at goal — and reach toward
+each other instead of toward a fixed target, so the frontier expands from both ends of the map.
+
+![RRT-Connect on maze01](../../assets/rrt_connect/maze01.gif)
+
+Intermediate search progress (left → right: early / middle / final path):
+
+| | | |
+|:---:|:---:|:---:|
+| ![early](../../assets/rrt_connect/maze01_snap_02.png) | ![mid](../../assets/rrt_connect/maze01_snap_05.png) | ![final](../../assets/rrt_connect/maze01_final.png) |
+
+Final result on `open01` — with almost no obstacles, CONNECT's greedy strides let the two trees
+meet after only a couple of iterations:
+
+![RRT-Connect on open01](../../assets/rrt_connect/open01_final.png)
+
 The key primitive is **CONNECT**. A plain bidirectional RRT extends each tree by a single step per
 iteration, but RRT-Connect greedily runs **consecutive EXTENDs** in CONNECT until it reaches the
 target node or hits an obstacle. In free space one CONNECT crosses many steps at once, greatly

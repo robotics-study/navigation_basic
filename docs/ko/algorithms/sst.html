@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SST · navigation study</title>
+<meta name="description" content="RRT* 같은 optimal sampling planner 는 steering function — 임의의 두 상태를 잇는">
+<meta name="robots" content="index,follow">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b1020" media="(prefers-color-scheme: dark)">
+<link rel="canonical" href="https://robotics-study.github.io/navigation/ko/algorithms/sst.html">
+<link rel="alternate" hreflang="ko" href="https://robotics-study.github.io/navigation/ko/algorithms/sst.html">
+<link rel="alternate" hreflang="en" href="https://robotics-study.github.io/navigation/en/algorithms/sst.html">
+<link rel="alternate" hreflang="x-default" href="https://robotics-study.github.io/navigation/en/algorithms/sst.html">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="navigation study">
+<meta property="og:title" content="SST · navigation study">
+<meta property="og:description" content="RRT* 같은 optimal sampling planner 는 steering function — 임의의 두 상태를 잇는">
+<meta property="og:url" content="https://robotics-study.github.io/navigation/ko/algorithms/sst.html">
+<meta property="og:image" content="https://robotics-study.github.io/navigation/assets/sst/maze01_final.png">
+<meta property="og:image:alt" content="SST">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:locale:alternate" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="SST · navigation study">
+<meta name="twitter:description" content="RRT* 같은 optimal sampling planner 는 steering function — 임의의 두 상태를 잇는">
+<meta name="twitter:image" content="https://robotics-study.github.io/navigation/assets/sst/maze01_final.png">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "SST", "description": "RRT* 같은 optimal sampling planner 는 steering function — 임의의 두 상태를 잇는", "image": "https://robotics-study.github.io/navigation/assets/sst/maze01_final.png", "inLanguage": "ko", "url": "https://robotics-study.github.io/navigation/ko/algorithms/sst.html", "isPartOf": {"@type": "WebSite", "name": "navigation study", "url": "https://robotics-study.github.io/navigation/"}}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=6d6dae56">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Crect width='24' height='24' rx='6' fill='%230b1020'/%3E%3Cpath d='M4 19V11h8V5h8' stroke='%23818cf8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='4' cy='19' r='2.4' fill='%23818cf8'/%3E%3Ccircle cx='20' cy='5' r='2.4' fill='%2322d3ee'/%3E%3C/svg%3E">
+<script src="../../assets/site.js?v=6d6dae56"></script>
+</head>
+<body>
+<header class="topbar">
+  <button id="menu-btn" class="iconbtn menu-btn" aria-label="menu"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  <div class="brandcrumb">
+    <a class="brand hub" href="https://robotics-study.github.io/" aria-label="robotics-study home"><svg class="logo" width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true"><defs><linearGradient id="navlg" x1="0" y1="1" x2="1" y2="0"><stop stop-color="#6366f1"/><stop offset="1" stop-color="#06b6d4"/></linearGradient></defs><path d="M4 19V11h8V5h8" stroke="url(#navlg)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="4" cy="19" r="2.6" fill="url(#navlg)"/><circle cx="20" cy="5" r="2.6" fill="url(#navlg)"/></svg><span class="wm">robotics<span class="wm-dim"> study</span></span></a>
+    <span class="crumb-sep" aria-hidden="true">/</span>
+    <a class="brand" href="../../index.html"><span class="wm">navigation<span class="wm-dim"> study</span></span></a>
+  </div>
+  <nav class="topnav"><a href="../../ko/index.html">개요</a><a href="../../ko/algorithms/index.html">알고리즘</a><a href="../../ko/maps.html">맵</a><a href="../../ko/benchmarks.html">벤치마크</a><a href="https://github.com/robotics-study/navigation" target="_blank" rel="noopener">GitHub<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a></nav>
+  <span class="spacer"></span>
+  <div class="search"><svg class="s-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg><input id="search-input" type="search" placeholder="검색 / Search…" data-base="../../" autocomplete="off"><div id="search-results" class="search-results"></div></div>
+  <div class="lang-toggle" role="group" aria-label="language"><svg class="g-ico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.5 2.5 3.8 5.6 3.8 9s-1.3 6.5-3.8 9c-2.5-2.5-3.8-5.6-3.8-9S9.5 5.5 12 3Z"/></svg><a href="../../ko/algorithms/sst.html" class="active">KO</a><span class="l-sep">/</span><a href="../../en/algorithms/sst.html" class="">EN</a></div>
+</header>
+<div class="layout">
+<aside class="sidebar"><h4>개요</h4>
+<a href="../../ko/index.html">개요</a>
+<a href="../../ko/algorithms/index.html">알고리즘 목록</a>
+<h4>Global planning</h4>
+<details class="nav-sub"><summary>Search</summary><div class="nav-sub-body"><div class="nav-sub-inner"><a href="../../ko/algorithms/bfs.html">BFS</a><a href="../../ko/algorithms/dijkstra.html">Dijkstra</a><a href="../../ko/algorithms/astar.html">A*</a><a href="../../ko/algorithms/dstar_lite.html">D* Lite</a><a href="../../ko/algorithms/theta_star.html">Theta*</a><a href="../../ko/algorithms/hybrid_astar.html">Hybrid A*</a><a href="../../ko/algorithms/lazy_theta_star.html">Lazy Theta*</a><a href="../../ko/algorithms/jps.html">JPS</a><a href="../../ko/algorithms/anya.html">Anya</a></div></div></details>
+<details class="nav-sub" open><summary>Sampling</summary><div class="nav-sub-body"><div class="nav-sub-inner"><a href="../../ko/algorithms/prm.html">PRM</a><a href="../../ko/algorithms/rrt.html">RRT</a><a href="../../ko/algorithms/rrt_connect.html">RRT-Connect</a><a href="../../ko/algorithms/rrt_star.html">RRT*</a><a href="../../ko/algorithms/prm_star.html">PRM*</a><a href="../../ko/algorithms/kinodynamic_rrt_star.html">Kinodynamic RRT*</a><a href="../../ko/algorithms/informed_rrt_star.html">Informed RRT*</a><a href="../../ko/algorithms/fmt_star.html">FMT*</a><a href="../../ko/algorithms/bit_star.html">BIT*</a><a href="../../ko/algorithms/sst.html" class="active">SST</a><a href="../../ko/algorithms/ait_star.html">AIT*</a><a href="../../ko/algorithms/fast_rrt.html">Fast-RRT</a><a href="../../ko/algorithms/eit_star.html">EIT*</a><a href="../../ko/algorithms/fcit_star.html">FCIT*</a></div></div></details>
+<a href="../../ko/benchmarks.html">벤치마크</a>
+<h4>Local planning <span class="soon">예정</span></h4>
+<span class="planned">DWA</span>
+<span class="planned">Pure Pursuit</span>
+<span class="planned">VFH</span>
+<span class="planned">MPC</span>
+<span class="planned">벤치마크</span>
+<h4>Multi-agent <span class="soon">예정</span></h4>
+<span class="planned">Prioritized A*</span>
+<span class="planned">Joint-space A*</span>
+<span class="planned">CBS</span>
+<span class="planned">벤치마크</span>
+<h4>Maps</h4>
+<a href="../../ko/maps.html">맵 표현</a>
+<h4>레퍼런스</h4>
+<a href="../../ko/architecture.html">아키텍처</a>
+<a href="../../ko/references.html">참고 문헌</a></aside>
+<main class="content"><article class="content-inner"><h1 id="sst-sst-stable-sparse-rrt">SST / SST* (Stable Sparse RRT)<a class="anchor" href="#sst-sst-stable-sparse-rrt" title="Permanent link">¶</a></h1>
+<div class="code-links"><span class="cl-label">소스 코드</span><a href="https://github.com/robotics-study/navigation/blob/main/cpp/src/global_planning/sampling/sst.cpp" target="_blank" rel="noopener">C++</a><a href="https://github.com/robotics-study/navigation/blob/main/cpp/include/navigation/global_planning/sampling/sst.hpp" target="_blank" rel="noopener">C++ header</a><a href="https://github.com/robotics-study/navigation/blob/main/python/navigation/global_planning/sampling/sst.py" target="_blank" rel="noopener">Python</a><a href="https://github.com/robotics-study/navigation/blob/main/python/demos/demo_sst.py" target="_blank" rel="noopener">demo</a></div>
+<table class="spec-table">
+<thead>
+<tr>
+<th>항목</th>
+<th>내용</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>분류</td>
+<td>sampling-based, kinodynamic, single-query, anytime</td>
+</tr>
+<tr>
+<td>요구 capability</td>
+<td><code>SamplingSpace</code></td>
+</tr>
+<tr>
+<td>완전성</td>
+<td>probabilistically complete (forward propagation 하에서 점근적)</td>
+</tr>
+<tr>
+<td>최적성</td>
+<td>SST: near-optimal (bounded); <strong>SST*</strong>: asymptotically optimal (반경 축소)</td>
+</tr>
+<tr>
+<td>복잡도</td>
+<td>반복당: sparse active 집합에 대한 BestNear + forward propagation 1회 + witness 질의</td>
+</tr>
+<tr>
+<td>원 논문</td>
+<td>Li, Littlefield &amp; Bekris (2016) <sup id="fnref4:li"><a class="footnote-ref" href="#fn:li">1</a></sup></td>
+</tr>
+</tbody>
+</table>
+<h2 id="_1">배경<a class="anchor" href="#_1" title="Permanent link">¶</a></h2>
+<p><a href="rrt_star.html">RRT*</a> 같은 optimal sampling planner 는 <strong>steering function</strong> — 임의의 두 상태를 잇는
+two-point boundary-value problem(BVP)의 정확한 해 — 에 의존한다. 동역학이 복잡한 시스템에서는 이 BVP
+가 비싸거나 닫힌 해가 없다. Li, Littlefield &amp; Bekris<sup id="fnref:li"><a class="footnote-ref" href="#fn:li">1</a></sup> 는 트리를 <strong>sparse</strong> 하게 유지하기만 하면
+<strong>forward propagation 만으로</strong> (제어를 앞으로 적분하고 충돌만 검사, steering 없이) 점근적 (near-)optimal
+을 유지할 수 있음을 보였다.</p>
+<p>SST 는 신중히 고른 노드에서 <strong>랜덤 제어를 랜덤 시간 동안</strong> propagate 하여 트리를 키운다. "stable" +
+"sparse" 를 만드는 두 아이디어:</p>
+<ol>
+<li><strong>BestNear 선택</strong> — 단일 nearest 노드가 아니라 sample 주변 반경 <code>delta_bn</code> 볼 안의 <strong>최소 cost
+   active 노드</strong>를 확장 부모로 고른다. 값싼 노드를 확장하니 incumbent cost 가 내려간다 (stability).</li>
+<li><strong>Witness-set pruning</strong> — 서로 최소 <code>delta_s</code> 떨어진 <strong>witness</strong> 점들이 각각 단일 <strong>active
+   representative</strong>(그 <code>delta_s</code> 볼 안 최소 cost 노드)를 유지한다. 새 노드는 자신의 witness
+   representative 를 <em>개선할 때만</em> 유지되고, 밀려난 representative 는 비활성화되어 leaf 가 된 비활성
+   조상들과 함께 pruning 된다. 반복 수와 무관하게 <strong>active 노드 수를 유한하게 묶는다</strong> (sparsity).</li>
+</ol>
+<p><strong>SST*</strong> 는 <code>delta_bn</code> 과 <code>delta_s</code> 를 반복에 따라 축소(schedule)해 sparse 트리가 계속 정제되게 하여
+<strong>asymptotic optimality</strong> 를 회복한다. 같은 클래스가 둘 다 제공한다: <code>sst_star = false</code> 는 SST(고정
+반경), <code>sst_star = true</code> 는 SST*.</p>
+<h2 id="_2">동작 원리<a class="anchor" href="#_2" title="Permanent link">¶</a></h2>
+<p><code>maze01</code> — unicycle(상태 (x, y, θ), 제어 (v, ω))이 랜덤 arc 를 forward-propagate 한다. 빽빽한 초록
+구름은 뽑힌 sample 이고, 그 아래 성긴 하늘색 트리가 witness 가 묶어 둔 <strong>active</strong> 집합이다. 최종 경로는
+매끈한, 동역학적으로 실현 가능한 궤적이다 (직선 steer 경로가 아니다).</p>
+<p><img alt="SST on maze01" src="../../assets/sst/maze01.gif" /></p>
+<p>탐색 중간 과정 (좌 → 우: 초반 / 중반 / 최종 경로):</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;"></th>
+<th style="text-align: center;"></th>
+<th style="text-align: center;"></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;"><img alt="early" src="../../assets/sst/maze01_snap_02.png" /></td>
+<td style="text-align: center;"><img alt="mid" src="../../assets/sst/maze01_snap_05.png" /></td>
+<td style="text-align: center;"><img alt="final" src="../../assets/sst/maze01_final.png" /></td>
+</tr>
+</tbody>
+</table>
+<p><code>open01</code> 최종 결과 — 직선 최적에 가까운 매끈한 곡선 궤적:</p>
+<p><img alt="SST on open01" src="../../assets/sst/open01_final.png" /></p>
+<pre><code>SST(start, goal):
+    V_active ← {start};  S ← {witness(start) → rep=start}          # witness 집합
+    for i in 1..max_iterations:                                     # anytime
+        s_sample ← (goal with prob. goal_bias) else sample()
+        x_sel    ← BestNear(V_active, s_sample, delta_bn)           # 볼 안 최소 cost (없으면 nearest)
+        x_new, arc ← MonteCarloProp(x_sel)                          # 랜덤 (v, ω) 를 랜덤 시간 propagate
+        if arc collides: continue                                   # forward-propagation 만, steer 없음
+        w ← nearest_witness(x_new)
+        if dist(x_new, w) &gt; delta_s: S.add(witness(x_new) → rep=∅)  # 새 witness
+        x_peer ← rep(witness of x_new)
+        if x_peer = ∅ or cost(x_new) &lt; cost(x_peer):                # locally best?
+            V_active.add(x_new);  rep(witness) ← x_new
+            if x_peer ≠ ∅: deactivate x_peer; prune inactive leaf ancestors   # 트리를 묶는다
+            if dist(x_new, goal) ≤ goal_tolerance:
+                best ← min(best, cost(x_new))                        # 해를 갱신하며 계속
+    return best
+</code></pre>
+<p>측정치 (seed = 1, 30,000 iterations, trace on):</p>
+<table>
+<thead>
+<tr>
+<th>map</th>
+<th>언어</th>
+<th>path cost</th>
+<th>active nodes</th>
+<th>nodes added</th>
+<th>runtime</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>maze01</td>
+<td>Python</td>
+<td>13.683</td>
+<td>198</td>
+<td>1,286</td>
+<td>1.20 s</td>
+</tr>
+<tr>
+<td>open01</td>
+<td>Python</td>
+<td>12.005</td>
+<td>186</td>
+<td>1,226</td>
+<td>1.19 s</td>
+</tr>
+</tbody>
+</table>
+<p><strong>active nodes</strong>(198 / 186)와 <strong>nodes added</strong>(1,286 / 1,226)의 격차가 곧 witness pruning 의 효과다.
+받아들인 노드 다섯 중 넷 이상이 나중에 밀려나 pruning 되므로 active 트리는 작게 유지되고, 순수 RRT
+라면 모든 노드를 보유했을 것이다. <code>open01</code> 의 cost(12.005)는 직선 하한(≈12.02)의 ~0.1% 이내다. C++
+포트는 알고리즘을 그대로 미러링하지만 독립적인 <code>std::mt19937</code> 스트림을 쓰므로 정확한 수치는 다르다
+(CMake 로 빌드해 재현).</p>
+<p>재현:</p>
+<pre><code class="language-bash">python python/demos/demo_sst.py \
+  --map maps/grid/maze01.yaml --scenario maps/scenarios/maze01_s1.yaml \
+  --params configs/global_planning/sst.yaml --trace out/sst.jsonl
+python tools/viz/replay.py out/sst.jsonl --gif out/sst.gif
+</code></pre>
+<h2 id="_3">성질<a class="anchor" href="#_3" title="Permanent link">¶</a></h2>
+<ul>
+<li><strong>Steering / BVP solver 불필요.</strong> SST 는 forward propagation + 충돌 검사만 필요하므로 두 상태를
+  정확히 잇기 어려운 시스템에도 적용된다<sup id="fnref2:li"><a class="footnote-ref" href="#fn:li">1</a></sup>. 여기 모델은 unicycle 이며, 동역학은 planner 가 소유하고
+  맵은 state / motion validity(<code>SamplingSpace</code>)만 답한다.</li>
+<li><strong>Sparsity 가 유한하다.</strong> witness 집합이 active 노드 수를 <code>delta_s</code> 로 분리된 witness 개수
+  (≈ 자유공간 넓이 / <code>delta_s</code>²)로 묶으며, 이는 <code>max_iterations</code> 와 <em>무관</em>하다.</li>
+<li><strong>Anytime, 단조 incumbent.</strong> BestNear + "representative 를 개선할 때만 유지" 규칙이 각 representative
+  의 cost 를 비증가로 만들어, best 해가 나빠지지 않는다.</li>
+<li><strong>최적성.</strong> 고정 반경(SST)은 <code>delta_bn</code> / <code>delta_s</code> 에 묶인 near-optimal 해를, 축소 schedule
+  (SST*)은 asymptotic optimality 를 준다<sup id="fnref3:li"><a class="footnote-ref" href="#fn:li">1</a></sup>.</li>
+</ul>
+<h2 id="_4">파라미터<a class="anchor" href="#_4" title="Permanent link">¶</a></h2>
+<table>
+<thead>
+<tr>
+<th>이름</th>
+<th>타입</th>
+<th>기본값</th>
+<th>범위</th>
+<th>설명</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>max_iterations</code></td>
+<td>int</td>
+<td>30000</td>
+<td>[1, 2000000]</td>
+<td>반복 예산 (anytime — 소진 시 현재 best 반환)</td>
+</tr>
+<tr>
+<td><code>goal_bias</code></td>
+<td>float</td>
+<td>0.1</td>
+<td>[0.0, 1.0]</td>
+<td>goal 을 직접 sample 할 확률</td>
+</tr>
+<tr>
+<td><code>goal_tolerance</code></td>
+<td>float</td>
+<td>0.6</td>
+<td>[0.0, 100.0]</td>
+<td>goal 도달 판정 반경 (m, 위치 기준)</td>
+</tr>
+<tr>
+<td><code>delta_bn</code></td>
+<td>float</td>
+<td>1.2</td>
+<td>[0.01, 100.0]</td>
+<td>BestNear 반경 δ_BN (m) — 최소 cost active 노드 볼</td>
+</tr>
+<tr>
+<td><code>delta_s</code></td>
+<td>float</td>
+<td>0.5</td>
+<td>[0.01, 100.0]</td>
+<td>witness / sparsification 반경 δ_s (m) — active 노드 밀도 상한</td>
+</tr>
+<tr>
+<td><code>max_velocity</code></td>
+<td>float</td>
+<td>1.5</td>
+<td>[0.01, 100.0]</td>
+<td>전진 속도 v 상한 (m/s); [0, v_max] 에서 샘플</td>
+</tr>
+<tr>
+<td><code>max_omega</code></td>
+<td>float</td>
+<td>1.5</td>
+<td>[0.0, 100.0]</td>
+<td>각속도 ω 상한 (rad/s); [−ω_max, ω_max] 에서 샘플</td>
+</tr>
+<tr>
+<td><code>prop_duration_min</code></td>
+<td>float</td>
+<td>0.2</td>
+<td>[0.001, 100.0]</td>
+<td>propagation 지속 시간 하한 (s)</td>
+</tr>
+<tr>
+<td><code>prop_duration_max</code></td>
+<td>float</td>
+<td>0.8</td>
+<td>[0.001, 100.0]</td>
+<td>propagation 지속 시간 상한 (s)</td>
+</tr>
+<tr>
+<td><code>sst_star</code></td>
+<td>bool</td>
+<td>false</td>
+<td>—</td>
+<td>true → SST* (δ_BN / δ_s 를 반복에 따라 축소, asymptotic optimality)</td>
+</tr>
+<tr>
+<td><code>seed</code></td>
+<td>int</td>
+<td>1</td>
+<td>[0, 2³¹−1]</td>
+<td>난수 시드 (재현성)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="trace">방출 trace 이벤트<a class="anchor" href="#trace" title="Permanent link">¶</a></h2>
+<p><code>planning_started</code> → (<code>sample_drawn</code>, <code>edge_added</code><em>, <code>rewire</code>?)</em> → <code>path_found</code>* → <code>planning_finished</code></p>
+<p><code>edge_added</code> 는 arc chord 마다 방출되어 곡선 propagation 이 매끈하게 렌더링된다. <code>rewire</code> 는 witness
+representative 가 더 싼 노드로 옮겨감(밀려난 branch 는 pruning)을 표시해, 재생 시 트리가 sparse 하게
+유지되는 모습을 보여준다. <code>path_found</code> 는 여러 번 방출될 수 있다 (incumbent 개선 시마다).</p>
+<h2 id="references">References<a class="anchor" href="#references" title="Permanent link">¶</a></h2>
+<div class="footnote">
+<hr />
+<ol>
+<li id="fn:li">
+<p>Li, Y., Littlefield, Z., &amp; Bekris, K. E. (2016). "Asymptotically optimal sampling-based kinodynamic planning." <em>The International Journal of Robotics Research</em>, 35(5), 528–564. <a href="https://doi.org/10.1177/0278364915614386">doi:10.1177/0278364915614386</a> · <a href="https://arxiv.org/abs/1407.2896">PDF (arXiv)</a>&#160;<a class="footnote-backref" href="#fnref:li" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:li" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:li" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref4:li" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+</li>
+</ol>
+</div><nav class="pager"><a href="../../ko/algorithms/bit_star.html"><div class="dir">← 이전</div><div class="ttl">BIT*</div></a><a class="next" href="../../ko/algorithms/ait_star.html"><div class="dir">다음 →</div><div class="ttl">AIT*</div></a></nav></article></main>
+<aside class="toc" id="toc"></aside>
+</div>
+<div class="backdrop"></div>
+<footer class="site-footer">
+  <p>navigation study — robot navigation planning algorithms · C++ / Python dual implementation</p>
+  <p>Built as a static site · <a href="../../ko/index.html">한국어</a> · <a href="../../en/index.html">English</a></p>
+</footer>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script" async></script>
+</body></html>

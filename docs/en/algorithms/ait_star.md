@@ -42,6 +42,23 @@ search's invalid-edge discoveries tighten the graph the next reverse search runs
 
 ## How it works
 
+Search on `maze01`. The reverse search's obstacle-aware heuristic lets the forward search flow
+around the maze walls batch by batch instead of stalling on a straight-line estimate that ignores
+them.
+
+![AIT* on maze01](../../assets/ait_star/maze01.gif)
+
+Intermediate search progress (left → right: early / middle / final path):
+
+| | | |
+|:---:|:---:|:---:|
+| ![early](../../assets/ait_star/maze01_snap_02.png) | ![mid](../../assets/ait_star/maze01_snap_05.png) | ![final](../../assets/ait_star/maze01_final.png) |
+
+Final result on `open01` — with no detours to route around, the reverse heuristic already matches
+the straight-line distance, so the search connects quickly:
+
+![AIT* on open01](../../assets/ait_star/open01_final.png)
+
 Each batch performs:
 
 ```

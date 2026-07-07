@@ -41,6 +41,22 @@ BIT\*[^gammell_bit] 는 cost-to-go 휴리스틱으로 직선거리 $\hat h(x)=\l
 
 ## 동작 원리
 
+`maze01` 에서의 탐색. 역방향 탐색이 주는 장애물 반영 휴리스틱 덕분에, 벽을 무시하는 직선 추정에
+막히는 대신 forward 탐색이 배치를 거듭하며 미로 벽을 따라 우회해 나간다.
+
+![AIT* on maze01](../../assets/ait_star/maze01.gif)
+
+탐색 중간 과정 (좌 → 우: 초반 / 중반 / 최종 경로):
+
+| | | |
+|:---:|:---:|:---:|
+| ![early](../../assets/ait_star/maze01_snap_02.png) | ![mid](../../assets/ait_star/maze01_snap_05.png) | ![final](../../assets/ait_star/maze01_final.png) |
+
+`open01` 최종 결과 — 우회할 장애물이 없어 역방향 휴리스틱이 이미 직선거리와 일치하므로 탐색이
+빠르게 연결된다:
+
+![AIT* on open01](../../assets/ait_star/open01_final.png)
+
 배치마다 다음을 수행한다.
 
 ```

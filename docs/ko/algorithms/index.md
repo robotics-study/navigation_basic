@@ -22,17 +22,22 @@ permalink: /ko/algorithms/
 | [BFS](bfs.md) | 1959 | uninformed search | complete | edge 수 최소 (unit cost 에서 최적) | Moore [^moore] |
 | [Dijkstra](dijkstra.md) | 1959 | uninformed search | complete | cost 최적 | Dijkstra [^dijkstra] |
 | [A*](astar.md) | 1968 | informed search | complete | cost 최적 (admissible h) | Hart, Nilsson & Raphael [^hart] |
+| [JPS](jps.md) | 2011 | grid 대칭 제거 | complete | cost 최적 (= 8-connected A*) | Harabor & Grastien [^harabor_jps] |
 | [D\* Lite](dstar_lite.md) | 2002 | dynamic replanning | complete | belief 기준 최적 (증분 수리) | Koenig & Likhachev [^koenig] |
 | [Theta\*](theta_star.md) | 2007 | any-angle search | complete | any-angle (grid-optimal 아님) | Nash, Daniel, Koenig & Felner [^nash] |
+| [Lazy Theta\*](lazy_theta_star.md) | 2010 | any-angle search (lazy LOS) | complete | any-angle (grid-optimal 아님) | Nash, Koenig & Tovey [^nash_lazy] |
+| [Anya](anya.md) | 2016 | optimal any-angle search | complete | optimal any-angle (유클리드 최단) | Harabor, Grastien, Öz & Aksakalli [^harabor_anya] |
 | [Hybrid A\*](hybrid_astar.md) | 2008 | kinodynamic search | resolution-complete | resolution-suboptimal (feasible) | Dolgov, Thrun, Montemerlo & Diebel [^dolgov] |
 | [RRT](rrt.md) | 1998 | sampling | probabilistically complete | 비최적 (feasible) | LaValle [^lavalle98] |
 | [RRT-Connect](rrt_connect.md) | 2000 | sampling (양방향) | probabilistically complete | 비최적 (feasible, single-query) | Kuffner & LaValle [^kuffner] |
 | [RRT\*](rrt_star.md) | 2011 | sampling | probabilistically complete | asymptotically optimal | Karaman & Frazzoli [^karaman] |
+| [Kinodynamic RRT\*](kinodynamic_rrt_star.md) | 2013 | sampling (kinodynamic) | probabilistically complete | asymptotically optimal (동역학 비용) | Webb & van den Berg [^webb] |
 | [Informed RRT\*](informed_rrt_star.md) | 2014 | sampling (direct informed) | probabilistically complete | asymptotically optimal | Gammell, Srinivasa & Barfoot [^gammell] |
 | [PRM](prm.md) | 1996 | sampling (roadmap) | probabilistically complete | 비최적 (고정 반경) | Kavraki et al. [^kavraki] |
 | [PRM\*](prm_star.md) | 2011 | sampling (roadmap) | probabilistically complete | asymptotically optimal | Karaman & Frazzoli [^karaman] |
 | [FMT\*](fmt_star.md) | 2015 | sampling (batch marching) | probabilistically complete | asymptotically optimal | Janson et al. [^janson] |
 | [BIT\*](bit_star.md) | 2015 | sampling (batch + informed) | probabilistically complete | almost-surely asymptotically optimal | Gammell et al. [^gammell_bit] |
+| [SST](sst.md) | 2016 | sampling (kinodynamic, forward-propagation) | probabilistically complete | near-optimal (SST) / asymptotically optimal (SST\*) | Li, Littlefield & Bekris [^li] |
 | [AIT\*](ait_star.md) | 2020 | sampling (비대칭 양방향) | probabilistically complete | almost-surely asymptotically optimal | Strub & Gammell [^strub_ait] |
 | [EIT\*](eit_star.md) | 2022 | sampling (effort-informed 양방향) | probabilistically complete | almost-surely asymptotically optimal | Strub & Gammell [^strub_eit] |
 | [FCIT\*](fcit_star.md) | 2025 | sampling (완전 연결 informed) | probabilistically complete | almost-surely asymptotically optimal | Wilson, Strub & Gammell [^wilson_fcit] |
@@ -44,7 +49,15 @@ permalink: /ko/algorithms/
 > 적응적 역방향 휴리스틱을 쓰는 비대칭 양방향) → EIT\* (2022, effort-informed) → FCIT\* (2025, 값싼
 > 충돌검사를 활용한 완전 연결)로 합류한다 — 현재 점근 최적의 최전선이다. 별개로 **RRT-Connect**
 > (2000)는 RRT 의 양방향 single-query 후손이고, [Fast-RRT](fast_rrt.md) (2021)는 shortcut 으로
-> 수렴을 앞당긴 RRT\* 변형이다. 소스는 평탄한 디렉토리에 두되, 위 트리는 폴더 구조가 아니라 계보다.
+> 수렴을 앞당긴 RRT\* 변형이다. kinodynamic sampling 갈래에서는 **Kinodynamic RRT\*** (2013)가 최적
+> steering controller 로 RRT\* 의 최적성을 미분 제약 시스템까지 확장하고, **SST** (2016)는 witness
+> 집합으로 트리를 sparse 하게 유지해 steering/BVP 없이 forward propagation 만으로 점근 최적을 달성한다.
+>
+> **grid 탐색** 계열도 갈라진다. **JPS** (2011)는 A\* 의 무손실 successor pruning 으로 균일비용
+> 8-connected grid 에서 동일한 최적 경로를 확장 수를 한 자릿수 줄여 반환하고, **any-angle** 계열은
+> Theta\* (2007) → **Lazy Theta\*** (2010, LOS 검사를 간선당이 아니라 확장 정점당 1회로) → **Anya**
+> (2016)로 이어지며 Anya 는 조부모 지름길에 그치지 않고 `(root, interval)` 노드로 추론해 any-angle
+> 탐색을 증명적으로 *최적*으로 만든다. 소스는 평탄한 디렉토리에 두되, 위 트리는 폴더 구조가 아니라 계보다.
 
 ## 계획 (미구현)
 
@@ -92,6 +105,11 @@ python tools/viz/replay.py out/<algo>.jsonl --gif out/<algo>.gif --snapshots out
 [^strub_ait]: Strub, M. P., & Gammell, J. D. (2020). "Adaptively Informed Trees (AIT\*): Fast Asymptotically Optimal Path Planning through Adaptive Heuristics." *Proc. IEEE ICRA*, 3191–3198. [doi:10.1109/ICRA40945.2020.9197338](https://doi.org/10.1109/ICRA40945.2020.9197338) · Extended in Strub & Gammell (2022), *IJRR* 41(4), 390–417. [PDF (arXiv)](https://arxiv.org/abs/2111.01877)
 [^strub_eit]: Strub, M. P., & Gammell, J. D. (2022). "Adaptively Informed Trees (AIT\*) and Effort Informed Trees (EIT\*): Asymmetric bidirectional sampling-based path planning." *The International Journal of Robotics Research*, 41(4), 390–417. [doi:10.1177/02783649211069572](https://doi.org/10.1177/02783649211069572) · [PDF (arXiv)](https://arxiv.org/abs/2111.01877)
 [^wilson_fcit]: Wilson, T., Strub, M. P., & Gammell, J. D. (2025). "Nearest-Neighbourless Asymptotically Optimal Motion Planning with Fully Connected Informed Trees (FCIT\*)." *Proc. IEEE ICRA*. [PDF (arXiv:2411.17902)](https://arxiv.org/abs/2411.17902)
+[^harabor_jps]: Harabor, D., & Grastien, A. (2011). "Online Graph Pruning for Pathfinding on Grid Maps." *Proc. AAAI Conference on Artificial Intelligence*, 1114–1119. [PDF](https://ojs.aaai.org/index.php/AAAI/article/view/7994)
+[^nash_lazy]: Nash, A., Koenig, S., & Tovey, C. (2010). "Lazy Theta\*: Any-Angle Path Planning and Path Length Analysis in 3D." *Proc. AAAI Conference on Artificial Intelligence*, 147–154. [PDF](http://idm-lab.org/bib/abstracts/papers/aaai10b.pdf)
+[^harabor_anya]: Harabor, D., Grastien, A., Öz, D., & Aksakalli, V. (2016). "Optimal Any-Angle Pathfinding In Practice." *Journal of Artificial Intelligence Research*, 56, 89–118. [doi:10.1613/jair.5007](https://doi.org/10.1613/jair.5007)
+[^webb]: Webb, D. J., & van den Berg, J. (2013). "Kinodynamic RRT\*: Asymptotically Optimal Motion Planning for Robots with Linear Dynamics." *Proc. IEEE ICRA*, 5054–5061. [doi:10.1109/ICRA.2013.6631299](https://doi.org/10.1109/ICRA.2013.6631299) · [PDF (arXiv)](https://arxiv.org/abs/1205.5088)
+[^li]: Li, Y., Littlefield, Z., & Bekris, K. E. (2016). "Asymptotically optimal sampling-based kinodynamic planning." *The International Journal of Robotics Research*, 35(5), 528–564. [doi:10.1177/0278364915614386](https://doi.org/10.1177/0278364915614386) · [PDF (arXiv)](https://arxiv.org/abs/1407.2896)
 [^kuffner]: Kuffner, J. J., & LaValle, S. M. (2000). "RRT-Connect: An efficient approach to single-query path planning." *Proc. IEEE ICRA*, 995–1001. [doi:10.1109/ROBOT.2000.844730](https://doi.org/10.1109/ROBOT.2000.844730)
 [^gammell]: Gammell, J. D., Srinivasa, S. S., & Barfoot, T. D. (2014). "Informed RRT\*: Optimal sampling-based path planning focused via direct sampling of an admissible ellipsoidal heuristic." *Proc. IEEE/RSJ IROS*, 2997–3004. [doi:10.1109/IROS.2014.6942976](https://doi.org/10.1109/IROS.2014.6942976) · [PDF (arXiv)](https://arxiv.org/abs/1404.2334)
 [^fox]: Fox, D., Burgard, W., & Thrun, S. (1997). "The dynamic window approach to collision avoidance." *IEEE Robotics & Automation Magazine*, 4(1), 23–33. [doi:10.1109/100.580977](https://doi.org/10.1109/100.580977)

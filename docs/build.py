@@ -91,12 +91,13 @@ DEFAULT_OG_IMAGE = "assets/astar/maze01_final.png"
 # global_planning 알고리즘의 계보 카테고리 → 소스가 놓인 하위폴더.
 # C++/Python 모두 이 하위폴더 아래로 이동했으므로 chip 경로를 함께 갱신한다.
 _GLOBAL_LINEAGE = {
-    "bfs": "search", "dijkstra": "search", "astar": "search", "dstar_lite": "search",
-    "theta_star": "search", "hybrid_astar": "search",
+    "bfs": "search", "dijkstra": "search", "astar": "search", "jps": "search",
+    "dstar_lite": "search", "theta_star": "search", "lazy_theta_star": "search",
+    "anya": "search", "hybrid_astar": "search",
     "rrt": "sampling", "rrt_connect": "sampling", "rrt_star": "sampling",
-    "informed_rrt_star": "sampling", "fast_rrt": "sampling",
+    "kinodynamic_rrt_star": "sampling", "informed_rrt_star": "sampling", "fast_rrt": "sampling",
     "prm": "sampling", "prm_star": "sampling",
-    "bit_star": "sampling", "fmt_star": "sampling",
+    "bit_star": "sampling", "fmt_star": "sampling", "sst": "sampling",
     "ait_star": "sampling", "eit_star": "sampling", "fcit_star": "sampling",
 }
 
@@ -126,6 +127,9 @@ _GLOBAL_SEARCH = [
     ("algorithms/dstar_lite.md", "algorithms/dstar_lite.html", "D* Lite"),  # 2002
     ("algorithms/theta_star.md", "algorithms/theta_star.html", "Theta*"),  # 2007
     ("algorithms/hybrid_astar.md", "algorithms/hybrid_astar.html", "Hybrid A*"),  # 2008
+    ("algorithms/lazy_theta_star.md", "algorithms/lazy_theta_star.html", "Lazy Theta*"),  # 2010
+    ("algorithms/jps.md", "algorithms/jps.html", "JPS"),  # 2011
+    ("algorithms/anya.md", "algorithms/anya.html", "Anya"),  # 2016
 ]
 _GLOBAL_SAMPLING = [
     ("algorithms/prm.md", "algorithms/prm.html", "PRM"),             # 1996
@@ -133,9 +137,11 @@ _GLOBAL_SAMPLING = [
     ("algorithms/rrt_connect.md", "algorithms/rrt_connect.html", "RRT-Connect"),  # 2000
     ("algorithms/rrt_star.md", "algorithms/rrt_star.html", "RRT*"),  # 2011
     ("algorithms/prm_star.md", "algorithms/prm_star.html", "PRM*"),  # 2011
+    ("algorithms/kinodynamic_rrt_star.md", "algorithms/kinodynamic_rrt_star.html", "Kinodynamic RRT*"),  # 2013
     ("algorithms/informed_rrt_star.md", "algorithms/informed_rrt_star.html", "Informed RRT*"),  # 2014
     ("algorithms/fmt_star.md", "algorithms/fmt_star.html", "FMT*"),  # 2015
     ("algorithms/bit_star.md", "algorithms/bit_star.html", "BIT*"),  # 2015
+    ("algorithms/sst.md", "algorithms/sst.html", "SST"),  # 2016
     ("algorithms/ait_star.md", "algorithms/ait_star.html", "AIT*"),  # 2020
     ("algorithms/fast_rrt.md", "algorithms/fast_rrt.html", "Fast-RRT"),  # 2021
     ("algorithms/eit_star.md", "algorithms/eit_star.html", "EIT*"),  # 2022
@@ -485,16 +491,26 @@ def build_landing(_=None):
         ("bfs", "BFS", "uninformed search"),
         ("dijkstra", "Dijkstra", "cost-optimal"),
         ("astar", "A*", "informed search"),
+        ("jps", "JPS", "grid symmetry breaking"),
         ("dstar_lite", "D* Lite", "dynamic replanning"),
         ("theta_star", "Theta*", "any-angle search"),
+        ("lazy_theta_star", "Lazy Theta*", "any-angle · lazy LOS"),
+        ("anya", "Anya", "optimal any-angle"),
         ("hybrid_astar", "Hybrid A*", "kinodynamic SE(2)"),
         ("prm", "PRM", "roadmap · multi-query"),
         ("rrt", "RRT", "feasible sampling"),
+        ("rrt_connect", "RRT-Connect", "bidirectional single-query"),
         ("rrt_star", "RRT*", "asymptotically optimal"),
         ("prm_star", "PRM*", "optimal roadmap"),
+        ("kinodynamic_rrt_star", "Kinodynamic RRT*", "kinodynamic optimal"),
+        ("informed_rrt_star", "Informed RRT*", "ellipsoidal informed"),
         ("fmt_star", "FMT*", "fast marching tree"),
         ("bit_star", "BIT*", "batch informed trees"),
+        ("sst", "SST", "sparse kinodynamic"),
+        ("ait_star", "AIT*", "adaptively informed trees"),
         ("fast_rrt", "Fast-RRT", "Fast-Sampling + shortcut"),
+        ("eit_star", "EIT*", "effort informed trees"),
+        ("fcit_star", "FCIT*", "fully connected informed"),
     ]
     cards = "".join(
         f'<a class="gif-card" href="ko/algorithms/{k}.html">'
