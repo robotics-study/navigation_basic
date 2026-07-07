@@ -166,8 +166,6 @@ class AITStar(GlobalPlanner[Point, "SamplingSpace[Point]"]):
                     if _edge(v, x) in invalid_edges:
                         continue
                     d = space.distance(points[v], points[x])
-                    if recorder is not None:
-                        recorder.candidate_evaluated(points[x], g[v] + d)
                     if not space.is_motion_valid(points[v], points[x]):
                         # Discovered invalid: exclude it from every future batch's
                         # reverse search — this is AIT*'s adaptive feedback loop.
@@ -179,6 +177,11 @@ class AITStar(GlobalPlanner[Point, "SamplingSpace[Point]"]):
                         g[x] = new_g
                         parent[x] = v
                         if recorder is not None:
+                            # Emit candidate_evaluated only for feasible, improving
+                            # edges (not every relaxed neighbour) so the trace stays
+                            # renderable by replay.py — matches BIT*'s emit-on-accept
+                            # scale rather than exploding on the batch-recomputed graph.
+                            recorder.candidate_evaluated(points[x], new_g)
                             if first:
                                 recorder.edge_added(points[x], points[v], d)
                             else:

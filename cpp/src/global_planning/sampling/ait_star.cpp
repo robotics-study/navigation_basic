@@ -120,8 +120,6 @@ core::PlanResult<Point> AitStarPlanner::plan(SamplingSpace<Point>& space, const 
       for (int x : nbr[static_cast<size_t>(v)]) {
         if (invalid_edges.count(make_edge(v, x))) continue;
         double d = space.distance(points[static_cast<size_t>(v)], points[static_cast<size_t>(x)]);
-        if (recorder)
-          recorder->candidate_evaluated(points[static_cast<size_t>(x)], g[static_cast<size_t>(v)] + d);
         if (!space.is_motion_valid(points[static_cast<size_t>(v)], points[static_cast<size_t>(x)])) {
           // Discovered invalid: exclude it from every future batch's reverse
           // search — this is AIT*'s adaptive feedback loop.
@@ -134,6 +132,11 @@ core::PlanResult<Point> AitStarPlanner::plan(SamplingSpace<Point>& space, const 
           g[static_cast<size_t>(x)] = new_g;
           parent[static_cast<size_t>(x)] = v;
           if (recorder) {
+            // Emit candidate_evaluated only for feasible, improving edges (not
+            // every relaxed neighbour) so the trace stays renderable by replay.py
+            // — matches BIT*'s emit-on-accept scale rather than exploding on the
+            // batch-recomputed graph.
+            recorder->candidate_evaluated(points[static_cast<size_t>(x)], new_g);
             if (first)
               recorder->edge_added(points[static_cast<size_t>(x)], points[static_cast<size_t>(v)], d);
             else

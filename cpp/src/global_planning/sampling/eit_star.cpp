@@ -147,9 +147,6 @@ core::PlanResult<Point> EitStarPlanner::plan(SamplingSpace<Point>& space, const 
       ++expanded;
       for (int x : adjacency[static_cast<size_t>(v)]) {
         double d = space.distance(points[static_cast<size_t>(v)], points[static_cast<size_t>(x)]);
-        // Cost is the primary reported metric for a candidate.
-        if (recorder) recorder->candidate_evaluated(points[static_cast<size_t>(x)],
-                                                     g[static_cast<size_t>(v)] + d);
         if (!space.is_motion_valid(points[static_cast<size_t>(v)],
                                    points[static_cast<size_t>(x)])) {
           invalid_edges.insert(edge_key(v, x));
@@ -169,6 +166,11 @@ core::PlanResult<Point> EitStarPlanner::plan(SamplingSpace<Point>& space, const 
           heap.emplace(new_g + h_hat[static_cast<size_t>(x)],
                        new_effort + e_hat[static_cast<size_t>(x)], x);
           if (recorder) {
+            // Emit candidate_evaluated only for feasible, improving edges (not
+            // every relaxed neighbour) so the trace stays renderable by replay.py
+            // — matches BIT*'s emit-on-accept scale rather than exploding on the
+            // batch-recomputed graph. Cost is the primary reported metric.
+            recorder->candidate_evaluated(points[static_cast<size_t>(x)], new_g);
             if (first)
               recorder->edge_added(points[static_cast<size_t>(x)], points[static_cast<size_t>(v)],
                                    d);

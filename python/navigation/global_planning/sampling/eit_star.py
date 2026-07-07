@@ -241,9 +241,6 @@ class EITStar(GlobalPlanner[Point, "SamplingSpace[Point]"]):
             expanded += 1
             for x in adjacency[v]:
                 d = space.distance(points[v], points[x])
-                if recorder is not None:
-                    # Cost is the primary reported metric for a candidate.
-                    recorder.candidate_evaluated(points[x], g[v] + d)
                 if not space.is_motion_valid(points[v], points[x]):
                     invalid_edges.add(_edge_key(v, x))
                     continue
@@ -259,6 +256,12 @@ class EITStar(GlobalPlanner[Point, "SamplingSpace[Point]"]):
                     closed[x] = False  # improved: allow re-expansion this batch
                     heapq.heappush(heap, (new_g + h_hat[x], new_effort + e_hat[x], x))
                     if recorder is not None:
+                        # Emit candidate_evaluated only for feasible, improving edges
+                        # (not every relaxed neighbour) so the trace stays renderable
+                        # by replay.py — matches BIT*'s emit-on-accept scale rather
+                        # than exploding on the batch-recomputed graph. Cost is the
+                        # primary reported metric for a candidate.
+                        recorder.candidate_evaluated(points[x], new_g)
                         if first:
                             recorder.edge_added(points[x], points[v], d)
                         else:
