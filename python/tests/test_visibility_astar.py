@@ -1,5 +1,5 @@
-"""Anya — optimal any-angle: matches the true shortest any-angle cost, dominates
-Theta*, and the no-path / parameter-validation contracts."""
+"""Visibility A* — matches the cell-centre visibility-graph shortest cost, never
+exceeds Theta*, and the no-path / parameter-validation contracts."""
 
 from __future__ import annotations
 
@@ -15,9 +15,9 @@ from conftest import config, grid_from, open_grid, write_config
 from navigation.core.params import ParamError, ParamSet
 from navigation.core.trace import TraceRecorder
 from navigation.core.types import Cell
-from navigation.global_planning.search.anya import Anya
 from navigation.global_planning.search.astar import AStar
 from navigation.global_planning.search.theta_star import ThetaStar
+from navigation.global_planning.search.visibility_astar import VisibilityAStarPlanner
 
 
 def _euclid(a: Cell, b: Cell) -> float:
@@ -33,11 +33,13 @@ def _path_los_clear(grid: object, path: list[Cell]) -> bool:
 
 
 def _visibility_optimum(grid: object, start: Cell, goal: Cell) -> float:
-    """Independent ground truth: the Euclidean-shortest any-angle cost over
-    cell-centre vertices = Dijkstra on the full visibility graph (every pair of
-    mutually LOS-visible reachable free cells, weighted by straight-line length).
-    A different, obviously-correct computation than Anya's interval search, so
-    agreement is a real optimality check, not a restatement of the planner."""
+    """Independent ground truth: the shortest path over the cell-centre visibility
+    graph = Dijkstra over every pair of mutually LOS-visible reachable free cells,
+    weighted by straight-line length. This is what Visibility A* optimises — a
+    cell-centre approximation of the true any-angle optimum, since turns are pinned
+    to cell centres rather than obstacle corners. Computed differently from the
+    planner's interval search, so agreement is a real correctness check, not a
+    restatement of the planner."""
     seen: set[Cell] = {start}
     stack = [start]
     while stack:  # reachable free component via 8-connected neighbors
@@ -68,18 +70,18 @@ def _visibility_optimum(grid: object, start: Cell, goal: Cell) -> float:
     return math.inf
 
 
-# (a) optimal any-angle path -------------------------------------------------
+# (a) valid any-angle path ---------------------------------------------------
 
-def test_anya_returns_optimal_straight_line() -> None:
-    # Goal directly visible from start on an open grid: the global any-angle
-    # optimum is the single straight segment, cost = Euclidean. Anya must return
-    # exactly it, no longer than Theta* and strictly shorter than grid A*.
+def test_visibility_astar_returns_straight_line_when_visible() -> None:
+    # Goal directly visible from start on an open grid: the cell-centre visibility
+    # optimum is the single straight segment, cost = Euclidean. Visibility A* must
+    # return exactly it, no longer than Theta* and strictly shorter than grid A*.
     grid = open_grid(3, 3)
     start, goal = (2, 0), (0, 1)
-    res = Anya(config("anya")).plan(grid, start, goal)
+    res = VisibilityAStarPlanner(config("visibility_astar")).plan(grid, start, goal)
     assert res.success
     assert res.path[0] == start and res.path[-1] == goal
-    assert res.cost == pytest.approx(math.sqrt(5))  # analytically-known shortest
+    assert res.cost == pytest.approx(math.sqrt(5))  # analytically-known straight leg
     assert _path_los_clear(grid, res.path)
     theta = ThetaStar(config("theta_star")).plan(grid, start, goal)
     astar = AStar(config("astar")).plan(grid, start, goal)
@@ -87,13 +89,13 @@ def test_anya_returns_optimal_straight_line() -> None:
     assert res.cost < astar.cost
 
 
-def test_anya_matches_true_optimum_around_obstacle() -> None:
-    # A blocker hides the goal, forcing a bend. Anya's cost must equal the
-    # visibility-graph optimum (true shortest any-angle cost) and never exceed
-    # Theta*, which only relaxes toward its grandparent and can be suboptimal.
+def test_visibility_astar_matches_visibility_optimum_around_obstacle() -> None:
+    # A blocker hides the goal, forcing a bend. The cost must equal the cell-centre
+    # visibility-graph optimum and never exceed Theta*, which only relaxes toward
+    # its grandparent and can leave the string slightly slack.
     grid = grid_from([".....", ".....", "..#..", "..#..", "....."])
     start, goal = (4, 0), (0, 4)
-    res = Anya(config("anya")).plan(grid, start, goal)
+    res = VisibilityAStarPlanner(config("visibility_astar")).plan(grid, start, goal)
     assert res.success
     assert res.path[0] == start and res.path[-1] == goal
     assert _path_los_clear(grid, res.path)
@@ -104,9 +106,9 @@ def test_anya_matches_true_optimum_around_obstacle() -> None:
     assert res.cost <= theta.cost + 1e-9
 
 
-def test_anya_matches_true_optimum_on_asymmetric_map() -> None:
+def test_visibility_astar_matches_visibility_optimum_on_asymmetric_map() -> None:
     # Second, differently-shaped instance: guards against a projection that is
-    # optimal only on the symmetric bend above.
+    # correct only on the symmetric bend above.
     grid = grid_from([
         "........",
         "...##...",
@@ -116,7 +118,7 @@ def test_anya_matches_true_optimum_on_asymmetric_map() -> None:
         "........",
     ])
     start, goal = (5, 0), (0, 7)
-    res = Anya(config("anya")).plan(grid, start, goal)
+    res = VisibilityAStarPlanner(config("visibility_astar")).plan(grid, start, goal)
     assert res.success
     assert _path_los_clear(grid, res.path)
     assert res.cost == pytest.approx(_visibility_optimum(grid, start, goal))
@@ -126,15 +128,17 @@ def test_anya_matches_true_optimum_on_asymmetric_map() -> None:
 
 # trace: (root, interval) info surfaced via the event data field ------------
 
-def test_anya_emits_root_interval_data() -> None:
+def test_visibility_astar_emits_root_interval_data() -> None:
     buf = io.StringIO()
-    Anya(config("anya")).plan(open_grid(6, 6), (0, 0), (5, 5), TraceRecorder(buf))
+    VisibilityAStarPlanner(config("visibility_astar")).plan(
+        open_grid(6, 6), (0, 0), (5, 5), TraceRecorder(buf)
+    )
     intervals = [
         json.loads(line)["data"]
         for line in buf.getvalue().splitlines()
         if json.loads(line)["event"] == "edge_added"
     ]
-    assert intervals, "Anya must tag any-angle edges with their (root, interval) node"
+    assert intervals, "must tag any-angle edges with their (root, interval) node"
     for d in intervals:
         assert d.keys() == {"row", "col_lo", "col_hi"}
         assert d["col_lo"] <= d["col_hi"]  # a real column run
@@ -142,9 +146,9 @@ def test_anya_emits_root_interval_data() -> None:
 
 # (b) no-path case -----------------------------------------------------------
 
-def test_anya_no_path_when_walled_off() -> None:
+def test_visibility_astar_no_path_when_walled_off() -> None:
     grid = grid_from(["..#..", "..#..", "..#..", "..#..", "..#.."])
-    res = Anya(config("anya")).plan(grid, (0, 0), (0, 4))
+    res = VisibilityAStarPlanner(config("visibility_astar")).plan(grid, (0, 0), (0, 4))
     assert not res.success
     assert res.path == []
     assert res.cost == 0.0
@@ -152,12 +156,12 @@ def test_anya_no_path_when_walled_off() -> None:
 
 # (c) parameter validation failure -------------------------------------------
 
-def test_anya_rejects_out_of_range_weight(tmp_path: Path) -> None:
-    # anya declares heuristic_weight >= 1.0; a below-min default must fail at load
-    # time, so an invalid weight can never reach plan().
+def test_visibility_astar_rejects_out_of_range_weight(tmp_path: Path) -> None:
+    # visibility_astar declares heuristic_weight >= 1.0; a below-min default must
+    # fail at load time, so an invalid weight can never reach plan().
     cfg = write_config(
-        tmp_path / "bad_anya.yaml",
-        "anya",
+        tmp_path / "bad_visibility_astar.yaml",
+        "visibility_astar",
         [{"name": "heuristic_weight", "type": "float", "default": 0.5,
           "min": 1.0, "max": 5.0, "description": "below min"}],
     )

@@ -51,7 +51,7 @@ demo GIF/PNG + 실측 metric + **원 논문 각주**.
 |---|---|---|
 | [BFS](https://robotics-study.github.io/navigation/ko/algorithms/bfs.html) — Moore 1959 | [Dijkstra](https://robotics-study.github.io/navigation/ko/algorithms/dijkstra.html) — Dijkstra 1959 | [A*](https://robotics-study.github.io/navigation/ko/algorithms/astar.html) — Hart et al. 1968 |
 | [JPS](https://robotics-study.github.io/navigation/ko/algorithms/jps.html) — Harabor & Grastien 2011 | [D* Lite](https://robotics-study.github.io/navigation/ko/algorithms/dstar_lite.html) — Koenig & Likhachev 2002 | [Theta*](https://robotics-study.github.io/navigation/ko/algorithms/theta_star.html) — Nash et al. 2007 |
-| [Lazy Theta*](https://robotics-study.github.io/navigation/ko/algorithms/lazy_theta_star.html) — Nash, Koenig & Tovey 2010 | [Anya](https://robotics-study.github.io/navigation/ko/algorithms/anya.html) — Harabor et al. 2016 | [Hybrid A*](https://robotics-study.github.io/navigation/ko/algorithms/hybrid_astar.html) — Dolgov et al. 2008 |
+| [Lazy Theta*](https://robotics-study.github.io/navigation/ko/algorithms/lazy_theta_star.html) — Nash, Koenig & Tovey 2010 | [Visibility A*](https://robotics-study.github.io/navigation/ko/algorithms/visibility_astar.html) — cell-centre any-angle | [Hybrid A*](https://robotics-study.github.io/navigation/ko/algorithms/hybrid_astar.html) — Dolgov et al. 2008 |
 | [PRM](https://robotics-study.github.io/navigation/ko/algorithms/prm.html) — Kavraki et al. 1996 | [RRT](https://robotics-study.github.io/navigation/ko/algorithms/rrt.html) — LaValle 1998 | [RRT-Connect](https://robotics-study.github.io/navigation/ko/algorithms/rrt_connect.html) — Kuffner & LaValle 2000 |
 | [RRT*](https://robotics-study.github.io/navigation/ko/algorithms/rrt_star.html) — Karaman & Frazzoli 2011 | [PRM*](https://robotics-study.github.io/navigation/ko/algorithms/prm_star.html) — Karaman & Frazzoli 2011 | [Kinodynamic RRT*](https://robotics-study.github.io/navigation/ko/algorithms/kinodynamic_rrt_star.html) — Webb & van den Berg 2013 |
 | [Informed RRT*](https://robotics-study.github.io/navigation/ko/algorithms/informed_rrt_star.html) — Gammell et al. 2014 | [FMT*](https://robotics-study.github.io/navigation/ko/algorithms/fmt_star.html) — Janson et al. 2015 | [BIT*](https://robotics-study.github.io/navigation/ko/algorithms/bit_star.html) — Gammell et al. 2015 |
@@ -81,7 +81,7 @@ demo GIF/PNG + 실측 metric + **원 논문 각주**.
 | global_planning | D* Lite | ✅ | ✅ | Koenig & Likhachev (2002) |
 | global_planning | Theta* | ✅ | ✅ | Nash, Daniel, Koenig & Felner (2007) |
 | global_planning | Lazy Theta* | ✅ | ✅ | Nash, Koenig & Tovey (2010) |
-| global_planning | Anya | ✅ | ✅ | Harabor, Grastien, Öz & Aksakalli (2016) |
+| global_planning | Visibility A* (cell-centre any-angle) | ✅ | ✅ | visibility-graph A* (Lozano-Pérez & Wesley 1979) |
 | global_planning | Hybrid A* | ✅ | ✅ | Dolgov, Thrun, Montemerlo & Diebel (2008) |
 | global_planning | RRT | ✅ | ✅ | LaValle (1998) |
 | global_planning | RRT-Connect | ✅ | ✅ | Kuffner & LaValle (2000) |

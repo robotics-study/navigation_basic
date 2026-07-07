@@ -51,7 +51,7 @@
 <a href="../../ko/index.html">개요</a>
 <a href="../../ko/algorithms/index.html" class="active">알고리즘 목록</a>
 <h4>Global planning</h4>
-<details class="nav-sub"><summary>Search</summary><div class="nav-sub-body"><div class="nav-sub-inner"><a href="../../ko/algorithms/bfs.html">BFS</a><a href="../../ko/algorithms/dijkstra.html">Dijkstra</a><a href="../../ko/algorithms/astar.html">A*</a><a href="../../ko/algorithms/dstar_lite.html">D* Lite</a><a href="../../ko/algorithms/theta_star.html">Theta*</a><a href="../../ko/algorithms/hybrid_astar.html">Hybrid A*</a><a href="../../ko/algorithms/lazy_theta_star.html">Lazy Theta*</a><a href="../../ko/algorithms/jps.html">JPS</a><a href="../../ko/algorithms/anya.html">Anya</a></div></div></details>
+<details class="nav-sub"><summary>Search</summary><div class="nav-sub-body"><div class="nav-sub-inner"><a href="../../ko/algorithms/bfs.html">BFS</a><a href="../../ko/algorithms/dijkstra.html">Dijkstra</a><a href="../../ko/algorithms/astar.html">A*</a><a href="../../ko/algorithms/dstar_lite.html">D* Lite</a><a href="../../ko/algorithms/theta_star.html">Theta*</a><a href="../../ko/algorithms/hybrid_astar.html">Hybrid A*</a><a href="../../ko/algorithms/lazy_theta_star.html">Lazy Theta*</a><a href="../../ko/algorithms/jps.html">JPS</a><a href="../../ko/algorithms/visibility_astar.html">Visibility A*</a></div></div></details>
 <details class="nav-sub"><summary>Sampling</summary><div class="nav-sub-body"><div class="nav-sub-inner"><a href="../../ko/algorithms/prm.html">PRM</a><a href="../../ko/algorithms/rrt.html">RRT</a><a href="../../ko/algorithms/rrt_connect.html">RRT-Connect</a><a href="../../ko/algorithms/rrt_star.html">RRT*</a><a href="../../ko/algorithms/prm_star.html">PRM*</a><a href="../../ko/algorithms/kinodynamic_rrt_star.html">Kinodynamic RRT*</a><a href="../../ko/algorithms/informed_rrt_star.html">Informed RRT*</a><a href="../../ko/algorithms/fmt_star.html">FMT*</a><a href="../../ko/algorithms/bit_star.html">BIT*</a><a href="../../ko/algorithms/sst.html">SST</a><a href="../../ko/algorithms/ait_star.html">AIT*</a><a href="../../ko/algorithms/fast_rrt.html">Fast-RRT</a><a href="../../ko/algorithms/eit_star.html">EIT*</a><a href="../../ko/algorithms/fcit_star.html">FCIT*</a></div></div></details>
 <a href="../../ko/benchmarks.html">벤치마크</a>
 <h4>Local planning <span class="soon">예정</span></h4>
@@ -144,12 +144,12 @@
 <td>Nash, Koenig &amp; Tovey <sup id="fnref:nash_lazy"><a class="footnote-ref" href="#fn:nash_lazy">17</a></sup></td>
 </tr>
 <tr>
-<td><a href="anya.html">Anya</a></td>
-<td>2016</td>
-<td>optimal any-angle search</td>
+<td><a href="visibility_astar.html">Visibility A*</a></td>
+<td>—</td>
+<td>any-angle (visibility graph)</td>
 <td>complete</td>
-<td>optimal any-angle (유클리드 최단)</td>
-<td>Harabor, Grastien, Öz &amp; Aksakalli <sup id="fnref:harabor_anya"><a class="footnote-ref" href="#fn:harabor_anya">18</a></sup></td>
+<td>cell-centre visibility 최단 (참 Euclidean 최적 아님)</td>
+<td>—</td>
 </tr>
 <tr>
 <td><a href="hybrid_astar.html">Hybrid A*</a></td>
@@ -173,7 +173,7 @@
 <td>sampling (양방향)</td>
 <td>probabilistically complete</td>
 <td>비최적 (feasible, single-query)</td>
-<td>Kuffner &amp; LaValle <sup id="fnref:kuffner"><a class="footnote-ref" href="#fn:kuffner">21</a></sup></td>
+<td>Kuffner &amp; LaValle <sup id="fnref:kuffner"><a class="footnote-ref" href="#fn:kuffner">20</a></sup></td>
 </tr>
 <tr>
 <td><a href="rrt_star.html">RRT*</a></td>
@@ -189,7 +189,7 @@
 <td>sampling (kinodynamic)</td>
 <td>probabilistically complete</td>
 <td>asymptotically optimal (동역학 비용)</td>
-<td>Webb &amp; van den Berg <sup id="fnref:webb"><a class="footnote-ref" href="#fn:webb">19</a></sup></td>
+<td>Webb &amp; van den Berg <sup id="fnref:webb"><a class="footnote-ref" href="#fn:webb">18</a></sup></td>
 </tr>
 <tr>
 <td><a href="informed_rrt_star.html">Informed RRT*</a></td>
@@ -197,7 +197,7 @@
 <td>sampling (direct informed)</td>
 <td>probabilistically complete</td>
 <td>asymptotically optimal</td>
-<td>Gammell, Srinivasa &amp; Barfoot <sup id="fnref:gammell"><a class="footnote-ref" href="#fn:gammell">22</a></sup></td>
+<td>Gammell, Srinivasa &amp; Barfoot <sup id="fnref:gammell"><a class="footnote-ref" href="#fn:gammell">21</a></sup></td>
 </tr>
 <tr>
 <td><a href="prm.html">PRM</a></td>
@@ -237,7 +237,7 @@
 <td>sampling (kinodynamic, forward-propagation)</td>
 <td>probabilistically complete</td>
 <td>near-optimal (SST) / asymptotically optimal (SST*)</td>
-<td>Li, Littlefield &amp; Bekris <sup id="fnref:li"><a class="footnote-ref" href="#fn:li">20</a></sup></td>
+<td>Li, Littlefield &amp; Bekris <sup id="fnref:li"><a class="footnote-ref" href="#fn:li">19</a></sup></td>
 </tr>
 <tr>
 <td><a href="ait_star.html">AIT*</a></td>
@@ -285,9 +285,10 @@ steering controller 로 RRT* 의 최적성을 미분 제약 시스템까지 확�
 집합으로 트리를 sparse 하게 유지해 steering/BVP 없이 forward propagation 만으로 점근 최적을 달성한다.</p>
 <p><strong>grid 탐색</strong> 계열도 갈라진다. <strong>JPS</strong> (2011)는 A* 의 무손실 successor pruning 으로 균일비용
 8-connected grid 에서 동일한 최적 경로를 확장 수를 한 자릿수 줄여 반환하고, <strong>any-angle</strong> 계열은
-Theta* (2007) → <strong>Lazy Theta*</strong> (2010, LOS 검사를 간선당이 아니라 확장 정점당 1회로) → <strong>Anya</strong>
-(2016)로 이어지며 Anya 는 조부모 지름길에 그치지 않고 <code>(root, interval)</code> 노드로 추론해 any-angle
-탐색을 증명적으로 <em>최적</em>으로 만든다. 소스는 평탄한 디렉토리에 두되, 위 트리는 폴더 구조가 아니라 계보다.</p>
+Theta* (2007) → <strong>Lazy Theta*</strong> (2010, LOS 검사를 간선당이 아니라 확장 정점당 1회로) →
+<strong>Visibility A*</strong>로 이어지며, 확장된 root 에서 LOS-가시한 모든 셀을 relax 해 셀-중심 visibility graph
+위 최단을 얻는다 — Theta* 를 지배하지만 회전점이 셀 중심에 고정된 근사다(참 Euclidean 최적 아님).
+소스는 평탄한 디렉토리에 두되, 위 트리는 폴더 구조가 아니라 계보다.</p>
 </blockquote>
 <h2 id="_2">계획 (미구현)<a class="anchor" href="#_2" title="Permanent link">¶</a></h2>
 <table>
@@ -302,17 +303,17 @@ Theta* (2007) → <strong>Lazy Theta*</strong> (2010, LOS 검사를 간선당이
 <tr>
 <td>local_planning</td>
 <td>DWA</td>
-<td>Fox, Burgard &amp; Thrun (1997) <sup id="fnref:fox"><a class="footnote-ref" href="#fn:fox">23</a></sup></td>
+<td>Fox, Burgard &amp; Thrun (1997) <sup id="fnref:fox"><a class="footnote-ref" href="#fn:fox">22</a></sup></td>
 </tr>
 <tr>
 <td>local_planning</td>
 <td>Pure Pursuit</td>
-<td>Coulter (1992) <sup id="fnref:coulter"><a class="footnote-ref" href="#fn:coulter">24</a></sup></td>
+<td>Coulter (1992) <sup id="fnref:coulter"><a class="footnote-ref" href="#fn:coulter">23</a></sup></td>
 </tr>
 <tr>
 <td>local_planning</td>
 <td>VFH</td>
-<td>Borenstein &amp; Koren (1991) <sup id="fnref:borenstein"><a class="footnote-ref" href="#fn:borenstein">25</a></sup></td>
+<td>Borenstein &amp; Koren (1991) <sup id="fnref:borenstein"><a class="footnote-ref" href="#fn:borenstein">24</a></sup></td>
 </tr>
 <tr>
 <td>local_planning</td>
@@ -322,12 +323,12 @@ Theta* (2007) → <strong>Lazy Theta*</strong> (2010, LOS 검사를 간선당이
 <tr>
 <td>multi_agent</td>
 <td>Prioritized planning</td>
-<td>Erdmann &amp; Lozano-Pérez (1987) <sup id="fnref:erdmann"><a class="footnote-ref" href="#fn:erdmann">26</a></sup></td>
+<td>Erdmann &amp; Lozano-Pérez (1987) <sup id="fnref:erdmann"><a class="footnote-ref" href="#fn:erdmann">25</a></sup></td>
 </tr>
 <tr>
 <td>multi_agent</td>
 <td>CBS</td>
-<td>Sharon et al. (2015) <sup id="fnref:sharon"><a class="footnote-ref" href="#fn:sharon">27</a></sup></td>
+<td>Sharon et al. (2015) <sup id="fnref:sharon"><a class="footnote-ref" href="#fn:sharon">26</a></sup></td>
 </tr>
 </tbody>
 </table>
@@ -400,35 +401,32 @@ python tools/viz/replay.py out/&lt;algo&gt;.jsonl --gif out/&lt;algo&gt;.gif --s
 <li id="fn:nash_lazy">
 <p>Nash, A., Koenig, S., &amp; Tovey, C. (2010). "Lazy Theta*: Any-Angle Path Planning and Path Length Analysis in 3D." <em>Proc. AAAI Conference on Artificial Intelligence</em>, 147–154. <a href="http://idm-lab.org/bib/abstracts/papers/aaai10b.pdf">PDF</a>&#160;<a class="footnote-backref" href="#fnref:nash_lazy" title="Jump back to footnote 17 in the text">&#8617;</a></p>
 </li>
-<li id="fn:harabor_anya">
-<p>Harabor, D., Grastien, A., Öz, D., &amp; Aksakalli, V. (2016). "Optimal Any-Angle Pathfinding In Practice." <em>Journal of Artificial Intelligence Research</em>, 56, 89–118. <a href="https://doi.org/10.1613/jair.5007">doi:10.1613/jair.5007</a>&#160;<a class="footnote-backref" href="#fnref:harabor_anya" title="Jump back to footnote 18 in the text">&#8617;</a></p>
-</li>
 <li id="fn:webb">
-<p>Webb, D. J., &amp; van den Berg, J. (2013). "Kinodynamic RRT*: Asymptotically Optimal Motion Planning for Robots with Linear Dynamics." <em>Proc. IEEE ICRA</em>, 5054–5061. <a href="https://doi.org/10.1109/ICRA.2013.6631299">doi:10.1109/ICRA.2013.6631299</a> · <a href="https://arxiv.org/abs/1205.5088">PDF (arXiv)</a>&#160;<a class="footnote-backref" href="#fnref:webb" title="Jump back to footnote 19 in the text">&#8617;</a></p>
+<p>Webb, D. J., &amp; van den Berg, J. (2013). "Kinodynamic RRT*: Asymptotically Optimal Motion Planning for Robots with Linear Dynamics." <em>Proc. IEEE ICRA</em>, 5054–5061. <a href="https://doi.org/10.1109/ICRA.2013.6631299">doi:10.1109/ICRA.2013.6631299</a> · <a href="https://arxiv.org/abs/1205.5088">PDF (arXiv)</a>&#160;<a class="footnote-backref" href="#fnref:webb" title="Jump back to footnote 18 in the text">&#8617;</a></p>
 </li>
 <li id="fn:li">
-<p>Li, Y., Littlefield, Z., &amp; Bekris, K. E. (2016). "Asymptotically optimal sampling-based kinodynamic planning." <em>The International Journal of Robotics Research</em>, 35(5), 528–564. <a href="https://doi.org/10.1177/0278364915614386">doi:10.1177/0278364915614386</a> · <a href="https://arxiv.org/abs/1407.2896">PDF (arXiv)</a>&#160;<a class="footnote-backref" href="#fnref:li" title="Jump back to footnote 20 in the text">&#8617;</a></p>
+<p>Li, Y., Littlefield, Z., &amp; Bekris, K. E. (2016). "Asymptotically optimal sampling-based kinodynamic planning." <em>The International Journal of Robotics Research</em>, 35(5), 528–564. <a href="https://doi.org/10.1177/0278364915614386">doi:10.1177/0278364915614386</a> · <a href="https://arxiv.org/abs/1407.2896">PDF (arXiv)</a>&#160;<a class="footnote-backref" href="#fnref:li" title="Jump back to footnote 19 in the text">&#8617;</a></p>
 </li>
 <li id="fn:kuffner">
-<p>Kuffner, J. J., &amp; LaValle, S. M. (2000). "RRT-Connect: An efficient approach to single-query path planning." <em>Proc. IEEE ICRA</em>, 995–1001. <a href="https://doi.org/10.1109/ROBOT.2000.844730">doi:10.1109/ROBOT.2000.844730</a>&#160;<a class="footnote-backref" href="#fnref:kuffner" title="Jump back to footnote 21 in the text">&#8617;</a></p>
+<p>Kuffner, J. J., &amp; LaValle, S. M. (2000). "RRT-Connect: An efficient approach to single-query path planning." <em>Proc. IEEE ICRA</em>, 995–1001. <a href="https://doi.org/10.1109/ROBOT.2000.844730">doi:10.1109/ROBOT.2000.844730</a>&#160;<a class="footnote-backref" href="#fnref:kuffner" title="Jump back to footnote 20 in the text">&#8617;</a></p>
 </li>
 <li id="fn:gammell">
-<p>Gammell, J. D., Srinivasa, S. S., &amp; Barfoot, T. D. (2014). "Informed RRT*: Optimal sampling-based path planning focused via direct sampling of an admissible ellipsoidal heuristic." <em>Proc. IEEE/RSJ IROS</em>, 2997–3004. <a href="https://doi.org/10.1109/IROS.2014.6942976">doi:10.1109/IROS.2014.6942976</a> · <a href="https://arxiv.org/abs/1404.2334">PDF (arXiv)</a>&#160;<a class="footnote-backref" href="#fnref:gammell" title="Jump back to footnote 22 in the text">&#8617;</a></p>
+<p>Gammell, J. D., Srinivasa, S. S., &amp; Barfoot, T. D. (2014). "Informed RRT*: Optimal sampling-based path planning focused via direct sampling of an admissible ellipsoidal heuristic." <em>Proc. IEEE/RSJ IROS</em>, 2997–3004. <a href="https://doi.org/10.1109/IROS.2014.6942976">doi:10.1109/IROS.2014.6942976</a> · <a href="https://arxiv.org/abs/1404.2334">PDF (arXiv)</a>&#160;<a class="footnote-backref" href="#fnref:gammell" title="Jump back to footnote 21 in the text">&#8617;</a></p>
 </li>
 <li id="fn:fox">
-<p>Fox, D., Burgard, W., &amp; Thrun, S. (1997). "The dynamic window approach to collision avoidance." <em>IEEE Robotics &amp; Automation Magazine</em>, 4(1), 23–33. <a href="https://doi.org/10.1109/100.580977">doi:10.1109/100.580977</a>&#160;<a class="footnote-backref" href="#fnref:fox" title="Jump back to footnote 23 in the text">&#8617;</a></p>
+<p>Fox, D., Burgard, W., &amp; Thrun, S. (1997). "The dynamic window approach to collision avoidance." <em>IEEE Robotics &amp; Automation Magazine</em>, 4(1), 23–33. <a href="https://doi.org/10.1109/100.580977">doi:10.1109/100.580977</a>&#160;<a class="footnote-backref" href="#fnref:fox" title="Jump back to footnote 22 in the text">&#8617;</a></p>
 </li>
 <li id="fn:coulter">
-<p>Coulter, R. C. (1992). "Implementation of the Pure Pursuit path tracking algorithm." Technical Report CMU-RI-TR-92-01, Robotics Institute, Carnegie Mellon University. <a href="https://publications.ri.cmu.edu/storage/publications/pub_files/pub3/coulter_r_craig_1992_1/coulter_r_craig_1992_1.pdf">PDF</a>&#160;<a class="footnote-backref" href="#fnref:coulter" title="Jump back to footnote 24 in the text">&#8617;</a></p>
+<p>Coulter, R. C. (1992). "Implementation of the Pure Pursuit path tracking algorithm." Technical Report CMU-RI-TR-92-01, Robotics Institute, Carnegie Mellon University. <a href="https://publications.ri.cmu.edu/storage/publications/pub_files/pub3/coulter_r_craig_1992_1/coulter_r_craig_1992_1.pdf">PDF</a>&#160;<a class="footnote-backref" href="#fnref:coulter" title="Jump back to footnote 23 in the text">&#8617;</a></p>
 </li>
 <li id="fn:borenstein">
-<p>Borenstein, J., &amp; Koren, Y. (1991). "The vector field histogram — fast obstacle avoidance for mobile robots." <em>IEEE Transactions on Robotics and Automation</em>, 7(3), 278–288. <a href="https://doi.org/10.1109/70.88137">doi:10.1109/70.88137</a>&#160;<a class="footnote-backref" href="#fnref:borenstein" title="Jump back to footnote 25 in the text">&#8617;</a></p>
+<p>Borenstein, J., &amp; Koren, Y. (1991). "The vector field histogram — fast obstacle avoidance for mobile robots." <em>IEEE Transactions on Robotics and Automation</em>, 7(3), 278–288. <a href="https://doi.org/10.1109/70.88137">doi:10.1109/70.88137</a>&#160;<a class="footnote-backref" href="#fnref:borenstein" title="Jump back to footnote 24 in the text">&#8617;</a></p>
 </li>
 <li id="fn:erdmann">
-<p>Erdmann, M., &amp; Lozano-Pérez, T. (1987). "On multiple moving objects." <em>Algorithmica</em>, 2, 477–521. <a href="https://doi.org/10.1007/BF01840371">doi:10.1007/BF01840371</a>&#160;<a class="footnote-backref" href="#fnref:erdmann" title="Jump back to footnote 26 in the text">&#8617;</a></p>
+<p>Erdmann, M., &amp; Lozano-Pérez, T. (1987). "On multiple moving objects." <em>Algorithmica</em>, 2, 477–521. <a href="https://doi.org/10.1007/BF01840371">doi:10.1007/BF01840371</a>&#160;<a class="footnote-backref" href="#fnref:erdmann" title="Jump back to footnote 25 in the text">&#8617;</a></p>
 </li>
 <li id="fn:sharon">
-<p>Sharon, G., Stern, R., Felner, A., &amp; Sturtevant, N. R. (2015). "Conflict-based search for optimal multi-agent pathfinding." <em>Artificial Intelligence</em>, 219, 40–66. <a href="https://doi.org/10.1016/j.artint.2014.11.006">doi:10.1016/j.artint.2014.11.006</a>&#160;<a class="footnote-backref" href="#fnref:sharon" title="Jump back to footnote 27 in the text">&#8617;</a></p>
+<p>Sharon, G., Stern, R., Felner, A., &amp; Sturtevant, N. R. (2015). "Conflict-based search for optimal multi-agent pathfinding." <em>Artificial Intelligence</em>, 219, 40–66. <a href="https://doi.org/10.1016/j.artint.2014.11.006">doi:10.1016/j.artint.2014.11.006</a>&#160;<a class="footnote-backref" href="#fnref:sharon" title="Jump back to footnote 26 in the text">&#8617;</a></p>
 </li>
 </ol>
 </div><nav class="pager"><a href="../../ko/index.html"><div class="dir">← 이전</div><div class="ttl">개요</div></a><a class="next" href="../../ko/algorithms/bfs.html"><div class="dir">다음 →</div><div class="ttl">BFS</div></a></nav></article></main>

@@ -31,13 +31,13 @@ from .sampling import (
 from .search import (
     BFS,
     JPS,
-    Anya,
     AStar,
     Dijkstra,
     DStarLite,
     HybridAStar,
     LazyThetaStar,
     ThetaStar,
+    VisibilityAStarPlanner,
 )
 
 __all__ = [
@@ -48,7 +48,7 @@ __all__ = [
     "DStarLite",
     "ThetaStar",
     "LazyThetaStar",
-    "Anya",
+    "VisibilityAStarPlanner",
     "HybridAStar",
     "RRT",
     "RRTConnect",

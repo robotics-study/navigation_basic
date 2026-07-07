@@ -1,4 +1,4 @@
-#include "navigation/global_planning/search/anya.hpp"
+#include "navigation/global_planning/search/visibility_astar.hpp"
 
 #include <algorithm>
 #include <chrono>
@@ -30,10 +30,11 @@ double euclid(const Cell& a, const Cell& b) {
 
 }  // namespace
 
-core::PlanResult<Cell> AnyaPlanner::plan(LineOfSightSpace<Cell>& space, const Cell& start,
-                                         const Cell& goal, TraceRecorder* recorder) {
-  // f = g + w*h, h Euclidean (straight-line). w == 1 is optimal Anya (Harabor,
-  // Grastien, Öz & Aksakalli 2016); w > 1 trades optimality for speed (Pohl 1970).
+core::PlanResult<Cell> VisibilityAStarPlanner::plan(LineOfSightSpace<Cell>& space,
+                                                    const Cell& start, const Cell& goal,
+                                                    TraceRecorder* recorder) {
+  // f = g + w*h, h Euclidean (straight-line). w == 1 settles the cell-centre
+  // visibility-graph shortest path; w > 1 trades that for speed (Pohl 1970).
   const double w = params_.get_float("heuristic_weight");
   auto h = [&](const Cell& c) { return w * euclid(c, goal); };
 
@@ -54,8 +55,9 @@ core::PlanResult<Cell> AnyaPlanner::plan(LineOfSightSpace<Cell>& space, const Ce
   // Candidate vertex set = the start's connected free component, discovered
   // through the capability's neighbors() alone (no concrete-map access). Any
   // feasible path stays inside it, so restricting roots / interval members here
-  // preserves optimality; a goal outside it is genuinely unreachable. Bucketed by
-  // row with sorted columns — the per-row layout the interval projection scans.
+  // preserves the visibility-graph optimum; a goal outside it is genuinely
+  // unreachable. Bucketed by row with sorted columns — the per-row layout the
+  // interval projection scans.
   std::unordered_set<Cell> reachable{start};
   std::vector<Cell> stack{start};
   while (!stack.empty()) {
@@ -98,9 +100,9 @@ core::PlanResult<Cell> AnyaPlanner::plan(LineOfSightSpace<Cell>& space, const Ce
     }
     const double g_root = g[root];
     // Project the root's visibility into per-row successor intervals and relax
-    // every cell they contain (Harabor et al. 2016). An interval is a maximal run
-    // of row-adjacent free cells all LOS-visible from the root; relaxing the whole
-    // visible set makes the search the cell-centre visibility-graph optimum.
+    // every cell they contain. An interval is a maximal run of row-adjacent free
+    // cells all LOS-visible from the root; relaxing the whole visible set makes
+    // the search the cell-centre visibility-graph optimum.
     for (const auto& [row, cols] : by_row) {
       const int n = static_cast<int>(cols.size());
       int i = 0;

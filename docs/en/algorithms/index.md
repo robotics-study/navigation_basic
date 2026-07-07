@@ -24,7 +24,7 @@ Detailed pages for each implemented algorithm. Every page covers the theoretical
 | [D\* Lite](dstar_lite.md) | 2002 | dynamic replanning | complete | optimal for the belief (incremental repair) | Koenig & Likhachev [^koenig] |
 | [Theta\*](theta_star.md) | 2007 | any-angle search | complete | any-angle (not grid-optimal) | Nash, Daniel, Koenig & Felner [^nash] |
 | [Lazy Theta\*](lazy_theta_star.md) | 2010 | any-angle search (lazy LOS) | complete | any-angle (not grid-optimal) | Nash, Koenig & Tovey [^nash_lazy] |
-| [Anya](anya.md) | 2016 | optimal any-angle search | complete | optimal any-angle (Euclidean-shortest) | Harabor, Grastien, Öz & Aksakalli [^harabor_anya] |
+| [Visibility A\*](visibility_astar.md) | — | any-angle (visibility graph) | complete | cell-centre visibility shortest (not true Euclidean optimum) | — |
 | [Hybrid A\*](hybrid_astar.md) | 2008 | kinodynamic search | resolution-complete | resolution-suboptimal (feasible) | Dolgov, Thrun, Montemerlo & Diebel [^dolgov] |
 | [RRT](rrt.md) | 1998 | sampling | probabilistically complete | non-optimal (feasible) | LaValle [^lavalle98] |
 | [RRT-Connect](rrt_connect.md) | 2000 | sampling (bidirectional) | probabilistically complete | non-optimal (feasible, single-query) | Kuffner & LaValle [^kuffner] |
@@ -56,8 +56,9 @@ Detailed pages for each implemented algorithm. Every page covers the theoretical
 > The **grid-search** lineage branches too: **JPS** (2011) is a lossless successor-pruning of A\* that
 > returns identical optimal paths on uniform-cost 8-connected grids with an order of magnitude fewer
 > expansions, while the **any-angle** line runs Theta\* (2007) → **Lazy Theta\*** (2010, one line-of-sight
-> check per expanded vertex instead of per edge) → **Anya** (2016), which makes any-angle search provably
-> *optimal* by reasoning over `(root, interval)` nodes rather than only shortcutting to a grandparent.
+> check per expanded vertex instead of per edge) → **Visibility A\***, which relaxes every LOS-visible
+> cell from each expanded root to settle the cell-centre visibility-graph optimum — dominating Theta\*,
+> though still an approximation (turns pinned to cell centres, not the true Euclidean any-angle optimum).
 > Sources stay in a flat directory layout; the tree above is the lineage, not the folder structure.
 
 ## Planned (Not Yet Implemented)
@@ -108,7 +109,6 @@ python tools/viz/replay.py out/<algo>.jsonl --gif out/<algo>.gif --snapshots out
 [^wilson_fcit]: Wilson, T., Strub, M. P., & Gammell, J. D. (2025). "Nearest-Neighbourless Asymptotically Optimal Motion Planning with Fully Connected Informed Trees (FCIT\*)." *Proc. IEEE ICRA*. [PDF (arXiv:2411.17902)](https://arxiv.org/abs/2411.17902)
 [^harabor_jps]: Harabor, D., & Grastien, A. (2011). "Online Graph Pruning for Pathfinding on Grid Maps." *Proc. AAAI Conference on Artificial Intelligence*, 1114–1119. [PDF](https://ojs.aaai.org/index.php/AAAI/article/view/7994)
 [^nash_lazy]: Nash, A., Koenig, S., & Tovey, C. (2010). "Lazy Theta\*: Any-Angle Path Planning and Path Length Analysis in 3D." *Proc. AAAI Conference on Artificial Intelligence*, 147–154. [PDF](http://idm-lab.org/bib/abstracts/papers/aaai10b.pdf)
-[^harabor_anya]: Harabor, D., Grastien, A., Öz, D., & Aksakalli, V. (2016). "Optimal Any-Angle Pathfinding In Practice." *Journal of Artificial Intelligence Research*, 56, 89–118. [doi:10.1613/jair.5007](https://doi.org/10.1613/jair.5007)
 [^webb]: Webb, D. J., & van den Berg, J. (2013). "Kinodynamic RRT\*: Asymptotically Optimal Motion Planning for Robots with Linear Dynamics." *Proc. IEEE ICRA*, 5054–5061. [doi:10.1109/ICRA.2013.6631299](https://doi.org/10.1109/ICRA.2013.6631299) · [PDF (arXiv)](https://arxiv.org/abs/1205.5088)
 [^li]: Li, Y., Littlefield, Z., & Bekris, K. E. (2016). "Asymptotically optimal sampling-based kinodynamic planning." *The International Journal of Robotics Research*, 35(5), 528–564. [doi:10.1177/0278364915614386](https://doi.org/10.1177/0278364915614386) · [PDF (arXiv)](https://arxiv.org/abs/1407.2896)
 [^kuffner]: Kuffner, J. J., & LaValle, S. M. (2000). "RRT-Connect: An efficient approach to single-query path planning." *Proc. IEEE ICRA*, 995–1001. [doi:10.1109/ROBOT.2000.844730](https://doi.org/10.1109/ROBOT.2000.844730)

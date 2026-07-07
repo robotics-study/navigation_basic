@@ -8,9 +8,9 @@
 
 #include <gtest/gtest.h>
 
-#include "navigation/global_planning/search/anya.hpp"
 #include "navigation/global_planning/search/astar.hpp"
 #include "navigation/global_planning/search/theta_star.hpp"
+#include "navigation/global_planning/search/visibility_astar.hpp"
 #include "test_util.hpp"
 
 using namespace navigation;
@@ -35,11 +35,12 @@ bool path_los_clear(maps::OccupancyGrid2D& g, const std::vector<Cell>& path) {
   return true;
 }
 
-// Independent ground truth: the Euclidean-shortest any-angle cost over cell-centre
-// vertices = Dijkstra on the full visibility graph (every pair of mutually
-// LOS-visible reachable free cells, weighted by straight-line length). A different,
-// obviously-correct computation than Anya's interval search, so agreement is a real
-// optimality check.
+// Independent ground truth: the shortest path over the cell-centre visibility graph
+// = Dijkstra over every pair of mutually LOS-visible reachable free cells, weighted
+// by straight-line length. This is what Visibility A* optimises — a cell-centre
+// approximation of the true any-angle optimum (turns pinned to cell centres, not
+// obstacle corners). A different computation than the planner's interval search, so
+// agreement is a real correctness check.
 double visibility_optimum(maps::OccupancyGrid2D& grid, const Cell& start, const Cell& goal) {
   std::unordered_set<Cell> seen{start};
   std::vector<Cell> st{start};
@@ -81,16 +82,16 @@ double visibility_optimum(maps::OccupancyGrid2D& grid, const Cell& start, const 
 
 }  // namespace
 
-// (a) optimal any-angle path -------------------------------------------------
+// (a) valid any-angle path ---------------------------------------------------
 
-// Goal directly visible from start on an open grid: the global any-angle optimum
-// is the single straight segment (cost = Euclidean). Anya returns exactly it, no
-// longer than Theta* and strictly shorter than grid A*.
-TEST(Anya, ReturnsOptimalStraightLine) {
+// Goal directly visible from start on an open grid: the cell-centre visibility
+// optimum is the single straight segment (cost = Euclidean). Visibility A* returns
+// exactly it, no longer than Theta* and strictly shorter than grid A*.
+TEST(VisibilityAStar, ReturnsStraightLineWhenVisible) {
   auto g = test::make_grid({"...", "...", "..."});
   Cell start{2, 0}, goal{0, 1};
-  global_planning::AnyaPlanner anya(cfg("anya"));
-  auto ra = anya.plan(g, start, goal, nullptr);
+  global_planning::VisibilityAStarPlanner va(cfg("visibility_astar"));
+  auto ra = va.plan(g, start, goal, nullptr);
   ASSERT_TRUE(ra.success);
   EXPECT_EQ(ra.path.front(), start);
   EXPECT_EQ(ra.path.back(), goal);
@@ -102,13 +103,13 @@ TEST(Anya, ReturnsOptimalStraightLine) {
   EXPECT_LT(ra.cost, astar.plan(g, start, goal, nullptr).cost);
 }
 
-// A blocker hides the goal, forcing a bend. Anya's cost must equal the
-// visibility-graph optimum (true shortest any-angle cost) and never exceed Theta*.
-TEST(Anya, MatchesTrueOptimumAroundObstacle) {
+// A blocker hides the goal, forcing a bend. The cost must equal the cell-centre
+// visibility-graph optimum and never exceed Theta*.
+TEST(VisibilityAStar, MatchesVisibilityOptimumAroundObstacle) {
   auto g = test::make_grid({".....", ".....", "..#..", "..#..", "....."});
   Cell start{4, 0}, goal{0, 4};
-  global_planning::AnyaPlanner anya(cfg("anya"));
-  auto ra = anya.plan(g, start, goal, nullptr);
+  global_planning::VisibilityAStarPlanner va(cfg("visibility_astar"));
+  auto ra = va.plan(g, start, goal, nullptr);
   ASSERT_TRUE(ra.success);
   EXPECT_EQ(ra.path.front(), start);
   EXPECT_EQ(ra.path.back(), goal);
@@ -119,15 +120,15 @@ TEST(Anya, MatchesTrueOptimumAroundObstacle) {
   EXPECT_LE(ra.cost, theta.plan(g, start, goal, nullptr).cost + 1e-9);
 }
 
-// Second, differently-shaped instance: guards against a projection optimal only
+// Second, differently-shaped instance: guards against a projection correct only
 // on the symmetric bend above.
-TEST(Anya, MatchesTrueOptimumOnAsymmetricMap) {
+TEST(VisibilityAStar, MatchesVisibilityOptimumOnAsymmetricMap) {
   auto g = test::make_grid({
       "........", "...##...", "...##...", ".....#..", "..#.....", "........",
   });
   Cell start{5, 0}, goal{0, 7};
-  global_planning::AnyaPlanner anya(cfg("anya"));
-  auto ra = anya.plan(g, start, goal, nullptr);
+  global_planning::VisibilityAStarPlanner va(cfg("visibility_astar"));
+  auto ra = va.plan(g, start, goal, nullptr);
   ASSERT_TRUE(ra.success);
   EXPECT_TRUE(path_los_clear(g, ra.path));
   EXPECT_NEAR(ra.cost, visibility_optimum(g, start, goal), 1e-9);
@@ -137,10 +138,10 @@ TEST(Anya, MatchesTrueOptimumOnAsymmetricMap) {
 
 // (b) no-path case -----------------------------------------------------------
 
-TEST(Anya, NoPathWhenWalledOff) {
+TEST(VisibilityAStar, NoPathWhenWalledOff) {
   auto g = test::make_grid({"..#..", "..#..", "..#..", "..#..", "..#.."});
-  global_planning::AnyaPlanner anya(cfg("anya"));
-  auto ra = anya.plan(g, Cell{0, 0}, Cell{0, 4}, nullptr);
+  global_planning::VisibilityAStarPlanner va(cfg("visibility_astar"));
+  auto ra = va.plan(g, Cell{0, 0}, Cell{0, 4}, nullptr);
   EXPECT_FALSE(ra.success);
   EXPECT_TRUE(ra.path.empty());
   EXPECT_EQ(ra.cost, 0.0);
@@ -148,10 +149,10 @@ TEST(Anya, NoPathWhenWalledOff) {
 
 // (c) param validation failure -----------------------------------------------
 
-TEST(Anya, BadParamThrows) {
+TEST(VisibilityAStar, BadParamThrows) {
   std::string bad = test::write_temp(
-      "anya.yaml",
-      "algorithm: anya\ncategory: global_planning\nparams:\n"
+      "visibility_astar.yaml",
+      "algorithm: visibility_astar\ncategory: global_planning\nparams:\n"
       "  - name: heuristic_weight\n    type: float\n    default: 0.5\n    min: 1.0\n    max: 5.0\n"
       "    description: below min\n");
   EXPECT_THROW(core::ParamSet::from_yaml(bad), std::runtime_error);

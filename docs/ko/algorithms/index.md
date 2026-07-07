@@ -26,7 +26,7 @@ permalink: /ko/algorithms/
 | [D\* Lite](dstar_lite.md) | 2002 | dynamic replanning | complete | belief 기준 최적 (증분 수리) | Koenig & Likhachev [^koenig] |
 | [Theta\*](theta_star.md) | 2007 | any-angle search | complete | any-angle (grid-optimal 아님) | Nash, Daniel, Koenig & Felner [^nash] |
 | [Lazy Theta\*](lazy_theta_star.md) | 2010 | any-angle search (lazy LOS) | complete | any-angle (grid-optimal 아님) | Nash, Koenig & Tovey [^nash_lazy] |
-| [Anya](anya.md) | 2016 | optimal any-angle search | complete | optimal any-angle (유클리드 최단) | Harabor, Grastien, Öz & Aksakalli [^harabor_anya] |
+| [Visibility A\*](visibility_astar.md) | — | any-angle (visibility graph) | complete | cell-centre visibility 최단 (참 Euclidean 최적 아님) | — |
 | [Hybrid A\*](hybrid_astar.md) | 2008 | kinodynamic search | resolution-complete | resolution-suboptimal (feasible) | Dolgov, Thrun, Montemerlo & Diebel [^dolgov] |
 | [RRT](rrt.md) | 1998 | sampling | probabilistically complete | 비최적 (feasible) | LaValle [^lavalle98] |
 | [RRT-Connect](rrt_connect.md) | 2000 | sampling (양방향) | probabilistically complete | 비최적 (feasible, single-query) | Kuffner & LaValle [^kuffner] |
@@ -55,9 +55,10 @@ permalink: /ko/algorithms/
 >
 > **grid 탐색** 계열도 갈라진다. **JPS** (2011)는 A\* 의 무손실 successor pruning 으로 균일비용
 > 8-connected grid 에서 동일한 최적 경로를 확장 수를 한 자릿수 줄여 반환하고, **any-angle** 계열은
-> Theta\* (2007) → **Lazy Theta\*** (2010, LOS 검사를 간선당이 아니라 확장 정점당 1회로) → **Anya**
-> (2016)로 이어지며 Anya 는 조부모 지름길에 그치지 않고 `(root, interval)` 노드로 추론해 any-angle
-> 탐색을 증명적으로 *최적*으로 만든다. 소스는 평탄한 디렉토리에 두되, 위 트리는 폴더 구조가 아니라 계보다.
+> Theta\* (2007) → **Lazy Theta\*** (2010, LOS 검사를 간선당이 아니라 확장 정점당 1회로) →
+> **Visibility A\***로 이어지며, 확장된 root 에서 LOS-가시한 모든 셀을 relax 해 셀-중심 visibility graph
+> 위 최단을 얻는다 — Theta\* 를 지배하지만 회전점이 셀 중심에 고정된 근사다(참 Euclidean 최적 아님).
+> 소스는 평탄한 디렉토리에 두되, 위 트리는 폴더 구조가 아니라 계보다.
 
 ## 계획 (미구현)
 
@@ -107,7 +108,6 @@ python tools/viz/replay.py out/<algo>.jsonl --gif out/<algo>.gif --snapshots out
 [^wilson_fcit]: Wilson, T., Strub, M. P., & Gammell, J. D. (2025). "Nearest-Neighbourless Asymptotically Optimal Motion Planning with Fully Connected Informed Trees (FCIT\*)." *Proc. IEEE ICRA*. [PDF (arXiv:2411.17902)](https://arxiv.org/abs/2411.17902)
 [^harabor_jps]: Harabor, D., & Grastien, A. (2011). "Online Graph Pruning for Pathfinding on Grid Maps." *Proc. AAAI Conference on Artificial Intelligence*, 1114–1119. [PDF](https://ojs.aaai.org/index.php/AAAI/article/view/7994)
 [^nash_lazy]: Nash, A., Koenig, S., & Tovey, C. (2010). "Lazy Theta\*: Any-Angle Path Planning and Path Length Analysis in 3D." *Proc. AAAI Conference on Artificial Intelligence*, 147–154. [PDF](http://idm-lab.org/bib/abstracts/papers/aaai10b.pdf)
-[^harabor_anya]: Harabor, D., Grastien, A., Öz, D., & Aksakalli, V. (2016). "Optimal Any-Angle Pathfinding In Practice." *Journal of Artificial Intelligence Research*, 56, 89–118. [doi:10.1613/jair.5007](https://doi.org/10.1613/jair.5007)
 [^webb]: Webb, D. J., & van den Berg, J. (2013). "Kinodynamic RRT\*: Asymptotically Optimal Motion Planning for Robots with Linear Dynamics." *Proc. IEEE ICRA*, 5054–5061. [doi:10.1109/ICRA.2013.6631299](https://doi.org/10.1109/ICRA.2013.6631299) · [PDF (arXiv)](https://arxiv.org/abs/1205.5088)
 [^li]: Li, Y., Littlefield, Z., & Bekris, K. E. (2016). "Asymptotically optimal sampling-based kinodynamic planning." *The International Journal of Robotics Research*, 35(5), 528–564. [doi:10.1177/0278364915614386](https://doi.org/10.1177/0278364915614386) · [PDF (arXiv)](https://arxiv.org/abs/1407.2896)
 [^kuffner]: Kuffner, J. J., & LaValle, S. M. (2000). "RRT-Connect: An efficient approach to single-query path planning." *Proc. IEEE ICRA*, 995–1001. [doi:10.1109/ROBOT.2000.844730](https://doi.org/10.1109/ROBOT.2000.844730)

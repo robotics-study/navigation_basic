@@ -1,23 +1,21 @@
-"""Anya — optimal any-angle path planning on grids.
+"""Visibility A* — any-angle path planning over the cell-centre visibility graph.
 
-Harabor, Grastien, Öz & Aksakalli (2016), "Optimal Any-Angle Pathfinding In
-Practice" (JAIR 56). Anya searches over ``(root, interval)`` nodes: an interval
-is a contiguous run of same-row points visible from the root along straight
-lines, and expansion *projects* the interval through the grid to enumerate the
-observable successors. Unlike Theta* (any-angle but not optimal), Anya returns
-the provably Euclidean-shortest any-angle path.
+Plain A* whose successor relation is *line-of-sight visibility* rather than grid
+adjacency: from an expanded cell it relaxes every free cell it can see along an
+obstacle-free straight line, at Euclidean cost. The result is the shortest path
+over the cell-centre visibility graph (V = reachable free cells, E = mutually
+LOS-visible pairs, weight = straight-line length), found with the admissible +
+consistent Euclidean heuristic. Weighting h by w > 1 trades that optimality for
+speed (Pohl 1970).
 
-This repository stores states as cell centres (``Cell = (row, col)``) and paths
-as ``list[Cell]``, exactly like Theta*, so turning points are cell centres and
-every returned leg is a LOS-clear straight segment. Anya is adapted to that
-vertex model: roots are cell centres settled in best-first order (A* with the
-admissible+consistent Euclidean heuristic), and a root's successors are the
-LOS-visible free cells grouped, per grid row, into maximal column intervals
-(Harabor et al. 2016's interval grouping of row-contiguous visible successors).
-Because every cell visible from a settled root is relaxed, the search settles
-the shortest path over the cell-centre visibility graph — the Euclidean
-any-angle optimum — which is therefore always <= the Theta* cost on the same
-instance. Weighting h by w > 1 trades that optimality for speed (Pohl 1970).
+This is a cell-centre approximation, NOT a true Euclidean any-angle optimum:
+turning points are restricted to cell centres, whereas the genuinely shortest
+any-angle route may turn at obstacle corners that no cell centre lands on. It is
+therefore not an interval-based optimal any-angle search (which would place turns
+at those corners). What it does give is a valid any-angle path whose every leg is
+a LOS-clear straight segment, and — because any Theta* output
+is itself a cell-centre LOS polyline, i.e. one path in this same graph — a cost
+no worse than Theta* on the same instance.
 
 Depends only on the ``LineOfSightSpace`` capability (``neighbors`` +
 ``line_of_sight``); it never references a concrete map. The candidate vertex set
@@ -51,14 +49,14 @@ def _euclid(a: Cell, b: Cell) -> float:
     return math.sqrt(dr * dr + dc * dc)
 
 
-class Anya(GlobalPlanner[Cell, "LineOfSightSpace[Cell]"]):
+class VisibilityAStarPlanner(GlobalPlanner[Cell, "LineOfSightSpace[Cell]"]):
     def __init__(self, params: ParamSet) -> None:
         super().__init__(params)
         self._heuristic_weight = params.get_float("heuristic_weight")
 
     @property
     def name(self) -> str:
-        return "anya"
+        return "visibility_astar"
 
     def required_capabilities(self) -> set[Capability]:
         return {Capability.DISCRETE_SPACE, Capability.LINE_OF_SIGHT_SPACE}
@@ -79,8 +77,8 @@ class Anya(GlobalPlanner[Cell, "LineOfSightSpace[Cell]"]):
         # Candidate vertex set = the start's connected free component, discovered
         # through the capability's neighbors() alone (no concrete-map access).
         # Any feasible path stays inside this component, so restricting roots and
-        # interval members to it preserves optimality; a goal outside it is
-        # genuinely unreachable.
+        # interval members to it preserves the visibility-graph optimum; a goal
+        # outside it is genuinely unreachable.
         by_row = self._reachable_rows(space, start)
 
         g: dict[Cell, float] = {start: 0.0}
@@ -150,10 +148,10 @@ class Anya(GlobalPlanner[Cell, "LineOfSightSpace[Cell]"]):
         recorder: TraceRecorder | None,
     ) -> None:
         """Project ``root``'s visibility into per-row successor intervals and relax
-        every cell they contain (Harabor et al. 2016). An interval is a maximal
-        run of row-adjacent free cells all LOS-visible from ``root``; relaxing the
-        whole visible set makes the search the cell-centre visibility-graph
-        optimum. Each improving relaxation is emitted as an any-angle
+        every cell they contain. An interval is a maximal run of row-adjacent free
+        cells all LOS-visible from ``root``; relaxing the whole visible set makes
+        the search the cell-centre visibility-graph optimum. Each improving
+        relaxation is emitted as an any-angle
         ``root -> cell`` edge, so the replayer draws the fan of visible intervals
         (its parent-link straight-line rendering already handles non-adjacent
         edges, as with Theta*'s grandparent shortcut)."""

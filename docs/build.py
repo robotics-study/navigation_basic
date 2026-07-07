@@ -93,7 +93,7 @@ DEFAULT_OG_IMAGE = "assets/astar/maze01_final.png"
 _GLOBAL_LINEAGE = {
     "bfs": "search", "dijkstra": "search", "astar": "search", "jps": "search",
     "dstar_lite": "search", "theta_star": "search", "lazy_theta_star": "search",
-    "anya": "search", "hybrid_astar": "search",
+    "visibility_astar": "search", "hybrid_astar": "search",
     "rrt": "sampling", "rrt_connect": "sampling", "rrt_star": "sampling",
     "kinodynamic_rrt_star": "sampling", "informed_rrt_star": "sampling", "fast_rrt": "sampling",
     "prm": "sampling", "prm_star": "sampling",
@@ -129,7 +129,7 @@ _GLOBAL_SEARCH = [
     ("algorithms/hybrid_astar.md", "algorithms/hybrid_astar.html", "Hybrid A*"),  # 2008
     ("algorithms/lazy_theta_star.md", "algorithms/lazy_theta_star.html", "Lazy Theta*"),  # 2010
     ("algorithms/jps.md", "algorithms/jps.html", "JPS"),  # 2011
-    ("algorithms/anya.md", "algorithms/anya.html", "Anya"),  # 2016
+    ("algorithms/visibility_astar.md", "algorithms/visibility_astar.html", "Visibility A*"),  # any-angle
 ]
 _GLOBAL_SAMPLING = [
     ("algorithms/prm.md", "algorithms/prm.html", "PRM"),             # 1996
@@ -495,7 +495,7 @@ def build_landing(_=None):
         ("dstar_lite", "D* Lite", "dynamic replanning"),
         ("theta_star", "Theta*", "any-angle search"),
         ("lazy_theta_star", "Lazy Theta*", "any-angle · lazy LOS"),
-        ("anya", "Anya", "optimal any-angle"),
+        ("visibility_astar", "Visibility A*", "any-angle · visibility graph"),
         ("hybrid_astar", "Hybrid A*", "kinodynamic SE(2)"),
         ("prm", "PRM", "roadmap · multi-query"),
         ("rrt", "RRT", "feasible sampling"),
