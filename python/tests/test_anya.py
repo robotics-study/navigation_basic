@@ -4,6 +4,8 @@ Theta*, and the no-path / parameter-validation contracts."""
 from __future__ import annotations
 
 import heapq
+import io
+import json
 import math
 from pathlib import Path
 
@@ -11,6 +13,7 @@ import pytest
 from conftest import config, grid_from, open_grid, write_config
 
 from navigation.core.params import ParamError, ParamSet
+from navigation.core.trace import TraceRecorder
 from navigation.core.types import Cell
 from navigation.global_planning.search.anya import Anya
 from navigation.global_planning.search.astar import AStar
@@ -119,6 +122,22 @@ def test_anya_matches_true_optimum_on_asymmetric_map() -> None:
     assert res.cost == pytest.approx(_visibility_optimum(grid, start, goal))
     theta = ThetaStar(config("theta_star")).plan(grid, start, goal)
     assert res.cost <= theta.cost + 1e-9
+
+
+# trace: (root, interval) info surfaced via the event data field ------------
+
+def test_anya_emits_root_interval_data() -> None:
+    buf = io.StringIO()
+    Anya(config("anya")).plan(open_grid(6, 6), (0, 0), (5, 5), TraceRecorder(buf))
+    intervals = [
+        json.loads(line)["data"]
+        for line in buf.getvalue().splitlines()
+        if json.loads(line)["event"] == "edge_added"
+    ]
+    assert intervals, "Anya must tag any-angle edges with their (root, interval) node"
+    for d in intervals:
+        assert d.keys() == {"row", "col_lo", "col_hi"}
+        assert d["col_lo"] <= d["col_hi"]  # a real column run
 
 
 # (b) no-path case -----------------------------------------------------------

@@ -23,43 +23,48 @@ class TraceRecorder {
                         const std::map<std::string, ParamValue>& params);
   void planning_finished(bool success, const std::map<std::string, double>& metrics);
 
+  // `data` (spec/trace_schema.json) carries optional algorithm-specific extra info
+  // that viz may read or ignore; an empty map is omitted so unused traces are
+  // byte-identical. Kept numeric (like `metrics`) so both language recorders mirror.
+  using EventData = std::map<std::string, double>;
+
   template <class State>
-  void node_expanded(const State& s) {
-    ev_state("node_expanded", to_trace(s), nullptr);
+  void node_expanded(const State& s, const EventData& data = {}) {
+    ev_state("node_expanded", to_trace(s), nullptr, ptr(data));
   }
   template <class State>
-  void node_expanded(const State& s, double cost) {
-    ev_state("node_expanded", to_trace(s), &cost);
+  void node_expanded(const State& s, double cost, const EventData& data = {}) {
+    ev_state("node_expanded", to_trace(s), &cost, ptr(data));
   }
   template <class State>
-  void sample_drawn(const State& s) {
-    ev_state("sample_drawn", to_trace(s), nullptr);
+  void sample_drawn(const State& s, const EventData& data = {}) {
+    ev_state("sample_drawn", to_trace(s), nullptr, ptr(data));
   }
   template <class State>
-  void candidate_evaluated(const State& s, double cost) {
-    ev_state("candidate_evaluated", to_trace(s), &cost);
+  void candidate_evaluated(const State& s, double cost, const EventData& data = {}) {
+    ev_state("candidate_evaluated", to_trace(s), &cost, ptr(data));
   }
   // Dynamic replanning (D* Lite): the robot's new executed cell, and a cell newly
   // sensed as blocked (revealed obstacle). No cost field.
   template <class State>
   void robot_moved(const State& s) {
-    ev_state("robot_moved", to_trace(s), nullptr);
+    ev_state("robot_moved", to_trace(s), nullptr, nullptr);
   }
   template <class State>
   void obstacle_revealed(const State& s) {
-    ev_state("obstacle_revealed", to_trace(s), nullptr);
+    ev_state("obstacle_revealed", to_trace(s), nullptr, nullptr);
   }
   template <class State>
-  void edge_added(const State& s, const State& parent) {
-    ev_edge("edge_added", to_trace(s), to_trace(parent), nullptr);
+  void edge_added(const State& s, const State& parent, const EventData& data = {}) {
+    ev_edge("edge_added", to_trace(s), to_trace(parent), nullptr, ptr(data));
   }
   template <class State>
-  void edge_added(const State& s, const State& parent, double cost) {
-    ev_edge("edge_added", to_trace(s), to_trace(parent), &cost);
+  void edge_added(const State& s, const State& parent, double cost, const EventData& data = {}) {
+    ev_edge("edge_added", to_trace(s), to_trace(parent), &cost, ptr(data));
   }
   template <class State>
-  void rewire(const State& s, const State& parent) {
-    ev_edge("rewire", to_trace(s), to_trace(parent), nullptr);
+  void rewire(const State& s, const State& parent, const EventData& data = {}) {
+    ev_edge("rewire", to_trace(s), to_trace(parent), nullptr, ptr(data));
   }
   template <class State>
   void path_found(const std::vector<State>& path) {
@@ -70,9 +75,11 @@ class TraceRecorder {
   }
 
  private:
-  void ev_state(const char* event, const std::vector<double>& s, const double* cost);
+  static const EventData* ptr(const EventData& d) { return d.empty() ? nullptr : &d; }
+  void ev_state(const char* event, const std::vector<double>& s, const double* cost,
+                const EventData* data);
   void ev_edge(const char* event, const std::vector<double>& s, const std::vector<double>& parent,
-               const double* cost);
+               const double* cost, const EventData* data);
   void ev_path(const std::vector<std::vector<double>>& path);
   void begin_event(const char* event);
   void end_event();

@@ -114,7 +114,8 @@ core::PlanResult<Cell> AnyaPlanner::plan(LineOfSightSpace<Cell>& space, const Ce
                space.line_of_sight(root, Cell{row, cols[j + 1]})) {
           ++j;
         }
-        for (int col = cols[i]; col <= cols[j]; ++col) {
+        int lo = cols[i], hi = cols[j];
+        for (int col = lo; col <= hi; ++col) {
           Cell cell{row, col};
           if (cell == root || settled[cell]) continue;
           double ecost = euclid(root, cell);
@@ -123,8 +124,16 @@ core::PlanResult<Cell> AnyaPlanner::plan(LineOfSightSpace<Cell>& space, const Ce
           if (it == g.end() || cand < it->second) {
             g[cell] = cand;
             parent[cell] = root;
-            if (recorder) recorder->candidate_evaluated(cell, cand);
-            if (recorder) recorder->edge_added(cell, root, ecost);  // any-angle edge
+            if (recorder) {
+              // Expose the (root, interval) node so viz can draw the visible
+              // column run [lo, hi] this cell was relaxed from.
+              core::TraceRecorder::EventData interval{
+                  {"row", static_cast<double>(row)},
+                  {"col_lo", static_cast<double>(lo)},
+                  {"col_hi", static_cast<double>(hi)}};
+              recorder->candidate_evaluated(cell, cand);
+              recorder->edge_added(cell, root, ecost, interval);  // any-angle edge
+            }
             open.push({cand + h(cell), seq++, cell});
           }
         }

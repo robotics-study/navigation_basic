@@ -174,7 +174,8 @@ class Anya(GlobalPlanner[Cell, "LineOfSightSpace[Cell]"]):
                     and space.line_of_sight(root, (row, cols[j + 1]))
                 ):
                     j += 1
-                for col in range(cols[i], cols[j] + 1):
+                lo, hi = cols[i], cols[j]
+                for col in range(lo, hi + 1):
                     cell = (row, col)
                     if cell == root or cell in closed:
                         continue
@@ -184,7 +185,10 @@ class Anya(GlobalPlanner[Cell, "LineOfSightSpace[Cell]"]):
                         g[cell] = cand
                         parent[cell] = root
                         if recorder is not None:
+                            # Expose the (root, interval) node so viz can draw the
+                            # visible column run [lo, hi] this cell was relaxed from.
+                            interval = {"row": row, "col_lo": lo, "col_hi": hi}
                             recorder.candidate_evaluated(cell, cand)
-                            recorder.edge_added(cell, root, ecost)
+                            recorder.edge_added(cell, root, ecost, data=interval)
                         heapq.heappush(frontier, (cand + h(cell), next(counter), cell))
                 i = j + 1

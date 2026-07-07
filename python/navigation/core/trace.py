@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import json
 import time
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from types import TracebackType
 from typing import TextIO
 
@@ -18,6 +18,17 @@ from .params import ParamValue
 
 # A serialized state is a numeric tuple -> JSON array (Cell ints, Point floats).
 State = Sequence[float]
+# Optional algorithm-specific extra info attached to an event (spec/trace_schema.json
+# `data`). Numeric only, mirroring the C++ recorder's std::map<string, double>; viz may
+# read it or ignore it. Never put info here that a common field already carries.
+EventData = Mapping[str, float]
+
+
+def _add_data(fields: dict[str, object], data: EventData | None) -> None:
+    # Empty data carries no information, so it is elided to keep traces (and the
+    # C++ recorder, which omits an empty map) byte-identical when unused.
+    if data:
+        fields["data"] = dict(data)
 
 
 class TraceRecorder:
@@ -55,26 +66,40 @@ class TraceRecorder:
     ) -> None:
         self._emit("planning_started", {"algorithm": algorithm, "map": map_path, "params": params})
 
-    def node_expanded(self, state: State, cost: float | None = None) -> None:
+    def node_expanded(
+        self, state: State, cost: float | None = None, data: EventData | None = None
+    ) -> None:
         fields: dict[str, object] = {"state": list(state)}
         if cost is not None:
             fields["cost"] = cost
+        _add_data(fields, data)
         self._emit("node_expanded", fields)
 
-    def edge_added(self, state: State, parent: State, cost: float | None = None) -> None:
+    def edge_added(
+        self, state: State, parent: State, cost: float | None = None, data: EventData | None = None
+    ) -> None:
         fields: dict[str, object] = {"state": list(state), "parent": list(parent)}
         if cost is not None:
             fields["cost"] = cost
+        _add_data(fields, data)
         self._emit("edge_added", fields)
 
-    def sample_drawn(self, state: State) -> None:
-        self._emit("sample_drawn", {"state": list(state)})
+    def sample_drawn(self, state: State, data: EventData | None = None) -> None:
+        fields: dict[str, object] = {"state": list(state)}
+        _add_data(fields, data)
+        self._emit("sample_drawn", fields)
 
-    def rewire(self, state: State, parent: State) -> None:
-        self._emit("rewire", {"state": list(state), "parent": list(parent)})
+    def rewire(self, state: State, parent: State, data: EventData | None = None) -> None:
+        fields: dict[str, object] = {"state": list(state), "parent": list(parent)}
+        _add_data(fields, data)
+        self._emit("rewire", fields)
 
-    def candidate_evaluated(self, state: State, cost: float) -> None:
-        self._emit("candidate_evaluated", {"state": list(state), "cost": cost})
+    def candidate_evaluated(
+        self, state: State, cost: float, data: EventData | None = None
+    ) -> None:
+        fields: dict[str, object] = {"state": list(state), "cost": cost}
+        _add_data(fields, data)
+        self._emit("candidate_evaluated", fields)
 
     def robot_moved(self, state: State) -> None:
         # Dynamic replanning (D* Lite): the robot's new executed cell.
