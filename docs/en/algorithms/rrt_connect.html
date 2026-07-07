@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RRT-Connect · navigation study</title>
+<meta name="description" content="Kuffner and LaValle extended the single-tree RRT into a bidirectional">
+<meta name="robots" content="index,follow">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b1020" media="(prefers-color-scheme: dark)">
+<link rel="canonical" href="https://robotics-study.github.io/navigation/en/algorithms/rrt_connect.html">
+<link rel="alternate" hreflang="ko" href="https://robotics-study.github.io/navigation/ko/algorithms/rrt_connect.html">
+<link rel="alternate" hreflang="en" href="https://robotics-study.github.io/navigation/en/algorithms/rrt_connect.html">
+<link rel="alternate" hreflang="x-default" href="https://robotics-study.github.io/navigation/en/algorithms/rrt_connect.html">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="navigation study">
+<meta property="og:title" content="RRT-Connect · navigation study">
+<meta property="og:description" content="Kuffner and LaValle extended the single-tree RRT into a bidirectional">
+<meta property="og:url" content="https://robotics-study.github.io/navigation/en/algorithms/rrt_connect.html">
+<meta property="og:image" content="https://robotics-study.github.io/navigation/assets/rrt_connect/maze01_final.png">
+<meta property="og:image:alt" content="RRT-Connect">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="ko_KR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="RRT-Connect · navigation study">
+<meta name="twitter:description" content="Kuffner and LaValle extended the single-tree RRT into a bidirectional">
+<meta name="twitter:image" content="https://robotics-study.github.io/navigation/assets/rrt_connect/maze01_final.png">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "RRT-Connect", "description": "Kuffner and LaValle extended the single-tree RRT into a bidirectional", "image": "https://robotics-study.github.io/navigation/assets/rrt_connect/maze01_final.png", "inLanguage": "en", "url": "https://robotics-study.github.io/navigation/en/algorithms/rrt_connect.html", "isPartOf": {"@type": "WebSite", "name": "navigation study", "url": "https://robotics-study.github.io/navigation/"}}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=6d6dae56">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Crect width='24' height='24' rx='6' fill='%230b1020'/%3E%3Cpath d='M4 19V11h8V5h8' stroke='%23818cf8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='4' cy='19' r='2.4' fill='%23818cf8'/%3E%3Ccircle cx='20' cy='5' r='2.4' fill='%2322d3ee'/%3E%3C/svg%3E">
+<script src="../../assets/site.js?v=6d6dae56"></script>
+</head>
+<body>
+<header class="topbar">
+  <button id="menu-btn" class="iconbtn menu-btn" aria-label="menu"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  <div class="brandcrumb">
+    <a class="brand hub" href="https://robotics-study.github.io/" aria-label="robotics-study home"><svg class="logo" width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true"><defs><linearGradient id="navlg" x1="0" y1="1" x2="1" y2="0"><stop stop-color="#6366f1"/><stop offset="1" stop-color="#06b6d4"/></linearGradient></defs><path d="M4 19V11h8V5h8" stroke="url(#navlg)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="4" cy="19" r="2.6" fill="url(#navlg)"/><circle cx="20" cy="5" r="2.6" fill="url(#navlg)"/></svg><span class="wm">robotics<span class="wm-dim"> study</span></span></a>
+    <span class="crumb-sep" aria-hidden="true">/</span>
+    <a class="brand" href="../../index.html"><span class="wm">navigation<span class="wm-dim"> study</span></span></a>
+  </div>
+  <nav class="topnav"><a href="../../en/index.html">Overview</a><a href="../../en/algorithms/index.html">Algorithms</a><a href="../../en/maps.html">Maps</a><a href="../../en/benchmarks.html">Benchmarks</a><a href="https://github.com/robotics-study/navigation" target="_blank" rel="noopener">GitHub<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a></nav>
+  <span class="spacer"></span>
+  <div class="search"><svg class="s-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg><input id="search-input" type="search" placeholder="검색 / Search…" data-base="../../" autocomplete="off"><div id="search-results" class="search-results"></div></div>
+  <div class="lang-toggle" role="group" aria-label="language"><svg class="g-ico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.5 2.5 3.8 5.6 3.8 9s-1.3 6.5-3.8 9c-2.5-2.5-3.8-5.6-3.8-9S9.5 5.5 12 3Z"/></svg><a href="../../ko/algorithms/rrt_connect.html" class="">KO</a><span class="l-sep">/</span><a href="../../en/algorithms/rrt_connect.html" class="active">EN</a></div>
+</header>
+<div class="layout">
+<aside class="sidebar"><h4>Overview</h4>
+<a href="../../en/index.html">Overview</a>
+<a href="../../en/algorithms/index.html">All algorithms</a>
+<h4>Global planning</h4>
+<details class="nav-sub"><summary>Search</summary><div class="nav-sub-body"><div class="nav-sub-inner"><a href="../../en/algorithms/bfs.html">BFS</a><a href="../../en/algorithms/dijkstra.html">Dijkstra</a><a href="../../en/algorithms/astar.html">A*</a><a href="../../en/algorithms/dstar_lite.html">D* Lite</a><a href="../../en/algorithms/theta_star.html">Theta*</a><a href="../../en/algorithms/hybrid_astar.html">Hybrid A*</a></div></div></details>
+<details class="nav-sub" open><summary>Sampling</summary><div class="nav-sub-body"><div class="nav-sub-inner"><a href="../../en/algorithms/prm.html">PRM</a><a href="../../en/algorithms/rrt.html">RRT</a><a href="../../en/algorithms/rrt_connect.html" class="active">RRT-Connect</a><a href="../../en/algorithms/rrt_star.html">RRT*</a><a href="../../en/algorithms/prm_star.html">PRM*</a><a href="../../en/algorithms/informed_rrt_star.html">Informed RRT*</a><a href="../../en/algorithms/fmt_star.html">FMT*</a><a href="../../en/algorithms/bit_star.html">BIT*</a><a href="../../en/algorithms/ait_star.html">AIT*</a><a href="../../en/algorithms/fast_rrt.html">Fast-RRT</a><a href="../../en/algorithms/eit_star.html">EIT*</a><a href="../../en/algorithms/fcit_star.html">FCIT*</a></div></div></details>
+<a href="../../en/benchmarks.html">Benchmarks</a>
+<h4>Local planning <span class="soon">planned</span></h4>
+<span class="planned">DWA</span>
+<span class="planned">Pure Pursuit</span>
+<span class="planned">VFH</span>
+<span class="planned">MPC</span>
+<span class="planned">Benchmarks</span>
+<h4>Multi-agent <span class="soon">planned</span></h4>
+<span class="planned">Prioritized A*</span>
+<span class="planned">Joint-space A*</span>
+<span class="planned">CBS</span>
+<span class="planned">Benchmarks</span>
+<h4>Maps</h4>
+<a href="../../en/maps.html">Map representations</a>
+<h4>Reference</h4>
+<a href="../../en/architecture.html">Architecture</a>
+<a href="../../en/references.html">References</a></aside>
+<main class="content"><article class="content-inner"><h1 id="rrt-connect">RRT-Connect<a class="anchor" href="#rrt-connect" title="Permanent link">¶</a></h1>
+<div class="code-links"><span class="cl-label">Source</span><a href="https://github.com/robotics-study/navigation/blob/main/cpp/src/global_planning/sampling/rrt_connect.cpp" target="_blank" rel="noopener">C++</a><a href="https://github.com/robotics-study/navigation/blob/main/cpp/include/navigation/global_planning/sampling/rrt_connect.hpp" target="_blank" rel="noopener">C++ header</a><a href="https://github.com/robotics-study/navigation/blob/main/python/navigation/global_planning/sampling/rrt_connect.py" target="_blank" rel="noopener">Python</a><a href="https://github.com/robotics-study/navigation/blob/main/python/demos/demo_rrt_connect.py" target="_blank" rel="noopener">demo</a></div>
+<table class="spec-table">
+<thead>
+<tr>
+<th>Item</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Category</td>
+<td>sampling-based, bidirectional, single-query</td>
+</tr>
+<tr>
+<td>Required capability</td>
+<td><code>SamplingSpace</code></td>
+</tr>
+<tr>
+<td>Completeness</td>
+<td>probabilistically complete</td>
+</tr>
+<tr>
+<td>Optimality</td>
+<td><strong>non-optimal</strong> (feasible) — does not minimize path length</td>
+</tr>
+<tr>
+<td>Complexity</td>
+<td>one EXTEND + greedy CONNECT (repeated EXTEND) per iteration</td>
+</tr>
+<tr>
+<td>Original paper</td>
+<td>Kuffner &amp; LaValle (2000) <sup id="fnref2:kuffner"><a class="footnote-ref" href="#fn:kuffner">1</a></sup></td>
+</tr>
+</tbody>
+</table>
+<h2 id="background">Background<a class="anchor" href="#background" title="Permanent link">¶</a></h2>
+<p>Kuffner and LaValle<sup id="fnref:kuffner"><a class="footnote-ref" href="#fn:kuffner">1</a></sup> extended the single-tree RRT<sup id="fnref:lavalle"><a class="footnote-ref" href="#fn:lavalle">2</a></sup> into a <strong>bidirectional</strong>
+planner, RRT-Connect. Two trees grow simultaneously — <span class="arithmatex">\(T_a\)</span> rooted at the start and <span class="arithmatex">\(T_b\)</span> rooted at
+the goal. Each iteration EXTENDs one tree one step toward a random sample, then <strong>greedily CONNECTs
+the other tree toward that new node</strong> until it either reaches the node or is blocked; when the trees
+meet, the search stops.</p>
+<p>Because the two trees grow toward each other, there is no need to bias samples toward the goal — the
+bidirectional growth itself supplies goal-directedness. This implementation therefore has no
+<code>goal_bias</code> parameter.</p>
+<h2 id="how-it-works">How It Works<a class="anchor" href="#how-it-works" title="Permanent link">¶</a></h2>
+<p>The key primitive is <strong>CONNECT</strong>. A plain bidirectional RRT extends each tree by a single step per
+iteration, but RRT-Connect greedily runs <strong>consecutive EXTENDs</strong> in CONNECT until it reaches the
+target node or hits an obstacle. In free space one CONNECT crosses many steps at once, greatly
+increasing tree growth per sample.</p>
+<div class="arithmatex">\[
+\text{CONNECT stride} = \Big\lceil \tfrac{\lVert q_{\text{near}} - q_{\text{new}}\rVert}{\texttt{step\_size}} \Big\rceil \text{ steps advanced in a single iteration}
+\]</div>
+<p>The trees spread into unexplored space via <strong>Voronoi bias</strong> over the sample space (LaValle &amp; Kuffner
+2001), and because both ends spread at once, RRT-Connect threads a map with a single narrow passage
+faster than a single tree.</p>
+<pre><code>RRT_CONNECT(start, goal):
+    Ta ← {start};  Tb ← {goal}
+    for it in 1..max_iterations:
+        q_rand ← sample()                          # no goal bias
+        q_new ← EXTEND(Ta, q_rand)
+        if q_new ≠ Trapped:                        # Advanced
+            if CONNECT(Tb, q_new) = Reached:       # the two trees meet
+                return SPLICE(Ta, Tb, q_new)       # start … q_new … goal
+        SWAP(Ta, Tb)                               # swap roles next iteration
+    return failure
+
+EXTEND(T, q):                                      # one step
+    q_near ← nearest(T, q)
+    q_new  ← steer(q_near, q, step_size)
+    if is_motion_valid(q_near, q_new):
+        T.add(q_new, parent = q_near)
+        return q_new                               # Advanced
+    return Trapped
+
+CONNECT(T, q):                                     # repeated EXTEND until blocked
+    repeat:
+        s ← EXTEND(T, q)
+    until s = Trapped  or  ‖s − q‖ ≤ goal_tolerance
+    return Reached if ‖s − q‖ ≤ goal_tolerance else Trapped
+</code></pre>
+<p><strong>Splice.</strong> When CONNECT ends in Reached, <span class="arithmatex">\(T_a\)</span> holds a branch from its root to <span class="arithmatex">\(q_{\text{new}}\)</span> and
+<span class="arithmatex">\(T_b\)</span> a branch from its root to the meeting node. Joining them at the meeting point yields</p>
+<div class="arithmatex">\[
+\text{root}(T_a) \to \cdots \to q_{\text{new}} \to \cdots \to \text{root}(T_b).
+\]</div>
+<p>Since the SWAP each iteration alternates which tree is the start tree, if the extending tree happened
+to be the goal tree at splice time the whole path is reversed so the returned path <strong>always begins at
+start and ends at goal</strong>.</p>
+<p><strong>Termination.</strong> <code>steer</code> clamps to the target once the target is within <code>step_size</code>. Each Advanced
+step in CONNECT is therefore monotonic progress toward the target, and CONNECT ends in Reached or
+Trapped within <span class="arithmatex">\(\lceil \lVert\cdot\rVert/\texttt{step\_size}\rceil + 1\)</span> steps — the inner loop needs
+no separate cap.</p>
+<p>Reproduce:</p>
+<pre><code class="language-bash">python python/demos/demo_rrt_connect.py \
+  --map maps/grid/maze01.yaml --scenario maps/scenarios/maze01_s1.yaml \
+  --params configs/global_planning/rrt_connect.yaml --trace out/rrt_connect.jsonl
+python tools/viz/replay.py out/rrt_connect.jsonl --gif out/viz/rrt_connect/py/rrt_connect.gif \
+  --snapshots out/viz/rrt_connect/py/
+</code></pre>
+<p>The animated GIF and intermediate PNG snapshots are generated separately by <code>replay.py</code> above
+(<code>out/</code> is gitignored).</p>
+<h2 id="properties">Properties<a class="anchor" href="#properties" title="Permanent link">¶</a></h2>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Completeness</td>
+<td>probabilistically complete<sup id="fnref3:kuffner"><a class="footnote-ref" href="#fn:kuffner">1</a></sup> — as iterations grow, the probability of finding an existing solution tends to 1</td>
+</tr>
+<tr>
+<td>Optimality</td>
+<td><strong>non-optimal.</strong> Returns the first feasible path and does not improve its length</td>
+</tr>
+<tr>
+<td>Goal bias</td>
+<td><strong>none</strong> — bidirectional growth replaces it</td>
+</tr>
+<tr>
+<td>Speed</td>
+<td>the greedy CONNECT's long strides usually thread faster than single-tree RRT</td>
+</tr>
+<tr>
+<td>Failure</td>
+<td>on exhausting <code>max_iterations</code>, returns an empty path with cost 0.0</td>
+</tr>
+</tbody>
+</table>
+<h2 id="parameters">Parameters<a class="anchor" href="#parameters" title="Permanent link">¶</a></h2>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Default</th>
+<th>Range</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>max_iterations</code></td>
+<td>int</td>
+<td>4000</td>
+<td>[1, 200000]</td>
+<td>Maximum EXTEND/CONNECT iterations</td>
+</tr>
+<tr>
+<td><code>step_size</code></td>
+<td>float</td>
+<td>0.5</td>
+<td>[0.01, 100.0]</td>
+<td>steer distance eta (meters); shared by EXTEND and CONNECT</td>
+</tr>
+<tr>
+<td><code>goal_tolerance</code></td>
+<td>float</td>
+<td>0.3</td>
+<td>[0.0, 100.0]</td>
+<td>CONNECT "Reached" distance threshold (meters)</td>
+</tr>
+<tr>
+<td><code>seed</code></td>
+<td>int</td>
+<td>1</td>
+<td>[0, 2³¹−1]</td>
+<td>Random seed (reproducibility)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="emitted-trace-events">Emitted Trace Events<a class="anchor" href="#emitted-trace-events" title="Permanent link">¶</a></h2>
+<p><code>planning_started</code> → <code>sample_drawn</code>* → <code>edge_added</code>* → <code>path_found</code> → <code>planning_finished</code></p>
+<p><code>sample_drawn</code> marks the uniform sample per iteration, <code>edge_added</code> every edge attached to either tree
+by EXTEND/CONNECT, and <code>path_found</code> is emitted once for the spliced final path.</p>
+<h2 id="references">References<a class="anchor" href="#references" title="Permanent link">¶</a></h2>
+<div class="footnote">
+<hr />
+<ol>
+<li id="fn:kuffner">
+<p>Kuffner, J. J., &amp; LaValle, S. M. (2000). "RRT-Connect: An efficient approach to single-query path planning." <em>Proc. IEEE ICRA</em>, 995–1001. <a href="https://doi.org/10.1109/ROBOT.2000.844730">doi:10.1109/ROBOT.2000.844730</a>&#160;<a class="footnote-backref" href="#fnref:kuffner" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:kuffner" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:kuffner" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+</li>
+<li id="fn:lavalle">
+<p>LaValle, S. M. (1998). "Rapidly-exploring random trees: A new tool for path planning." <em>Technical Report TR 98-11</em>, Computer Science Dept., Iowa State University.&#160;<a class="footnote-backref" href="#fnref:lavalle" title="Jump back to footnote 2 in the text">&#8617;</a></p>
+</li>
+</ol>
+</div><nav class="pager"><a href="../../en/algorithms/rrt.html"><div class="dir">← Prev</div><div class="ttl">RRT</div></a><a class="next" href="../../en/algorithms/rrt_star.html"><div class="dir">Next →</div><div class="ttl">RRT*</div></a></nav></article></main>
+<aside class="toc" id="toc"></aside>
+</div>
+<div class="backdrop"></div>
+<footer class="site-footer">
+  <p>navigation study — robot navigation planning algorithms · C++ / Python dual implementation</p>
+  <p>Built as a static site · <a href="../../ko/index.html">한국어</a> · <a href="../../en/index.html">English</a></p>
+</footer>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script" async></script>
+</body></html>

@@ -17,7 +17,7 @@ visualization and a benchmark matrix. Docs available in [Korean](https://robotic
 ![C++20](https://img.shields.io/badge/C%2B%2B-20-blue.svg)
 ![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB.svg)
 ![CMake](https://img.shields.io/badge/CMake-%E2%89%A53.20-064F8C.svg)
-![Tests](https://img.shields.io/badge/tests-86%20py%20%2B%2051%20cpp-brightgreen.svg)
+![Tests](https://img.shields.io/badge/tests-107%20py%20%2B%2067%20cpp-brightgreen.svg)
 
 | A* (1968) | RRT* (2011) | Fast-RRT (2021) |
 |:---:|:---:|:---:|
@@ -50,9 +50,11 @@ demo GIF/PNG + 실측 metric + **원 논문 각주**.
 | | | |
 |---|---|---|
 | [BFS](https://robotics-study.github.io/navigation/ko/algorithms/bfs.html) — Moore 1959 | [Dijkstra](https://robotics-study.github.io/navigation/ko/algorithms/dijkstra.html) — Dijkstra 1959 | [A*](https://robotics-study.github.io/navigation/ko/algorithms/astar.html) — Hart et al. 1968 |
-| [RRT](https://robotics-study.github.io/navigation/ko/algorithms/rrt.html) — LaValle 1998 | [RRT*](https://robotics-study.github.io/navigation/ko/algorithms/rrt_star.html) — Karaman & Frazzoli 2011 | [PRM](https://robotics-study.github.io/navigation/ko/algorithms/prm.html) — Kavraki et al. 1996 |
-| [PRM*](https://robotics-study.github.io/navigation/ko/algorithms/prm_star.html) — Karaman & Frazzoli 2011 | [FMT*](https://robotics-study.github.io/navigation/ko/algorithms/fmt_star.html) — Janson et al. 2015 | [BIT*](https://robotics-study.github.io/navigation/ko/algorithms/bit_star.html) — Gammell et al. 2015 |
-| [Fast-RRT](https://robotics-study.github.io/navigation/ko/algorithms/fast_rrt.html) — Wu et al. 2021 | | |
+| [D* Lite](https://robotics-study.github.io/navigation/ko/algorithms/dstar_lite.html) — Koenig & Likhachev 2002 | [Theta*](https://robotics-study.github.io/navigation/ko/algorithms/theta_star.html) — Nash et al. 2007 | [Hybrid A*](https://robotics-study.github.io/navigation/ko/algorithms/hybrid_astar.html) — Dolgov et al. 2008 |
+| [RRT](https://robotics-study.github.io/navigation/ko/algorithms/rrt.html) — LaValle 1998 | [RRT-Connect](https://robotics-study.github.io/navigation/ko/algorithms/rrt_connect.html) — Kuffner & LaValle 2000 | [RRT*](https://robotics-study.github.io/navigation/ko/algorithms/rrt_star.html) — Karaman & Frazzoli 2011 |
+| [Informed RRT*](https://robotics-study.github.io/navigation/ko/algorithms/informed_rrt_star.html) — Gammell et al. 2014 | [PRM](https://robotics-study.github.io/navigation/ko/algorithms/prm.html) — Kavraki et al. 1996 | [PRM*](https://robotics-study.github.io/navigation/ko/algorithms/prm_star.html) — Karaman & Frazzoli 2011 |
+| [FMT*](https://robotics-study.github.io/navigation/ko/algorithms/fmt_star.html) — Janson et al. 2015 | [BIT*](https://robotics-study.github.io/navigation/ko/algorithms/bit_star.html) — Gammell et al. 2015 | [AIT*](https://robotics-study.github.io/navigation/ko/algorithms/ait_star.html) — Strub & Gammell 2020 |
+| [EIT*](https://robotics-study.github.io/navigation/ko/algorithms/eit_star.html) — Strub & Gammell 2022 | [FCIT*](https://robotics-study.github.io/navigation/ko/algorithms/fcit_star.html) — Wilson et al. 2025 | [Fast-RRT](https://robotics-study.github.io/navigation/ko/algorithms/fast_rrt.html) — Wu et al. 2021 |
 
 > **문서 사이트는 손수 디자인한 정적 HTML** 이다 (Jekyll 테마 없음, `docs/.nojekyll`).
 > 콘텐츠 소스는 `docs/{ko,en}/**.md`, 공통 크롬·CSS·수식은 한 곳에서 관리하고
@@ -77,13 +79,16 @@ demo GIF/PNG + 실측 metric + **원 논문 각주**.
 | global_planning | Theta* | ✅ | ✅ | Nash, Daniel, Koenig & Felner (2007) |
 | global_planning | Hybrid A* | ✅ | ✅ | Dolgov, Thrun, Montemerlo & Diebel (2008) |
 | global_planning | RRT | ✅ | ✅ | LaValle (1998) |
-| global_planning | RRT-Connect | ⬜ | ⬜ | Kuffner & LaValle (2000) |
+| global_planning | RRT-Connect | ✅ | ✅ | Kuffner & LaValle (2000) |
 | global_planning | RRT* | ✅ | ✅ | Karaman & Frazzoli (2011) |
+| global_planning | Informed RRT* | ✅ | ✅ | Gammell et al. (2014) |
 | global_planning | PRM | ✅ | ✅ | Kavraki et al. (1996) |
 | global_planning | PRM* | ✅ | ✅ | Karaman & Frazzoli (2011) |
 | global_planning | FMT* | ✅ | ✅ | Janson et al. (2015) |
 | global_planning | BIT* | ✅ | ✅ | Gammell et al. (2015) |
-| global_planning | Informed RRT* | ⬜ | ⬜ | Gammell et al. (2014) |
+| global_planning | AIT* | ✅ | ✅ | Strub & Gammell (2020/2022) |
+| global_planning | EIT* | ✅ | ✅ | Strub & Gammell (2022) |
+| global_planning | FCIT* | ✅ | ✅ | Wilson, Strub & Gammell (2025) |
 | global_planning | Fast-RRT | ✅ | ✅ | Wu et al. (2021) |
 | local_planning | DWA | ⬜ | ⬜ | Fox, Burgard & Thrun (1997) |
 | local_planning | Pure Pursuit | ⬜ | ⬜ | Coulter (1992) |

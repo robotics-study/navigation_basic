@@ -26,24 +26,30 @@ permalink: /ko/algorithms/
 | [Theta\*](theta_star.md) | 2007 | any-angle search | complete | any-angle (grid-optimal 아님) | Nash, Daniel, Koenig & Felner [^nash] |
 | [Hybrid A\*](hybrid_astar.md) | 2008 | kinodynamic search | resolution-complete | resolution-suboptimal (feasible) | Dolgov, Thrun, Montemerlo & Diebel [^dolgov] |
 | [RRT](rrt.md) | 1998 | sampling | probabilistically complete | 비최적 (feasible) | LaValle [^lavalle98] |
+| [RRT-Connect](rrt_connect.md) | 2000 | sampling (양방향) | probabilistically complete | 비최적 (feasible, single-query) | Kuffner & LaValle [^kuffner] |
 | [RRT\*](rrt_star.md) | 2011 | sampling | probabilistically complete | asymptotically optimal | Karaman & Frazzoli [^karaman] |
+| [Informed RRT\*](informed_rrt_star.md) | 2014 | sampling (direct informed) | probabilistically complete | asymptotically optimal | Gammell, Srinivasa & Barfoot [^gammell] |
 | [PRM](prm.md) | 1996 | sampling (roadmap) | probabilistically complete | 비최적 (고정 반경) | Kavraki et al. [^kavraki] |
 | [PRM\*](prm_star.md) | 2011 | sampling (roadmap) | probabilistically complete | asymptotically optimal | Karaman & Frazzoli [^karaman] |
 | [FMT\*](fmt_star.md) | 2015 | sampling (batch marching) | probabilistically complete | asymptotically optimal | Janson et al. [^janson] |
 | [BIT\*](bit_star.md) | 2015 | sampling (batch + informed) | probabilistically complete | almost-surely asymptotically optimal | Gammell et al. [^gammell_bit] |
+| [AIT\*](ait_star.md) | 2020 | sampling (비대칭 양방향) | probabilistically complete | almost-surely asymptotically optimal | Strub & Gammell [^strub_ait] |
+| [EIT\*](eit_star.md) | 2022 | sampling (effort-informed 양방향) | probabilistically complete | almost-surely asymptotically optimal | Strub & Gammell [^strub_eit] |
+| [FCIT\*](fcit_star.md) | 2025 | sampling (완전 연결 informed) | probabilistically complete | almost-surely asymptotically optimal | Wilson, Strub & Gammell [^wilson_fcit] |
 | [Fast-RRT](fast_rrt.md) | 2021 | sampling (RRT\* 계열 변형) | probabilistically complete | near-optimal (RRT\* 대비 고속 수렴) | Wu et al. [^wu] |
 
-> **계보 메모.** RRT\* 는 두 갈래로 뻗는다. 로드맵/배치 최적 계열 PRM → PRM\* → FMT\* → BIT\* 는
-> 반경 정책과 배치 탐색으로 점근 최적을 얻고, [Fast-RRT](fast_rrt.md) 는 **RRT\* 에서 파생된
-> 변형**(RRT\* variant, 2021)으로 shortcut 을 더해 수렴을 앞당긴다. 소스는 평탄한 디렉토리에
-> 그대로 두되, 계보상 Fast-RRT 는 RRT\* 의 후손이다.
+> **계보 메모.** sampling 최적 계열은 두 흐름이 모두 informed·batch·양방향 탐색으로 수렴한다.
+> **단일 트리 최적:** RRT\* (2011) → Informed RRT\* (2014, 타원체 direct sampling). **로드맵/배치
+> 최적:** PRM → PRM\* → FMT\* → BIT\* (2015). 이 둘은 **informed-trees 계열** BIT\* → AIT\* (2020,
+> 적응적 역방향 휴리스틱을 쓰는 비대칭 양방향) → EIT\* (2022, effort-informed) → FCIT\* (2025, 값싼
+> 충돌검사를 활용한 완전 연결)로 합류한다 — 현재 점근 최적의 최전선이다. 별개로 **RRT-Connect**
+> (2000)는 RRT 의 양방향 single-query 후손이고, [Fast-RRT](fast_rrt.md) (2021)는 shortcut 으로
+> 수렴을 앞당긴 RRT\* 변형이다. 소스는 평탄한 디렉토리에 두되, 위 트리는 폴더 구조가 아니라 계보다.
 
 ## 계획 (미구현)
 
 | 카테고리 | 알고리즘 | 원 논문 |
 |---|---|---|
-| global_planning | RRT-Connect | Kuffner & LaValle (2000) [^kuffner] |
-| global_planning | Informed RRT\* | Gammell, Srinivasa & Barfoot (2014) [^gammell] |
 | local_planning | DWA | Fox, Burgard & Thrun (1997) [^fox] |
 | local_planning | Pure Pursuit | Coulter (1992) [^coulter] |
 | local_planning | VFH | Borenstein & Koren (1991) [^borenstein] |
@@ -83,6 +89,9 @@ python tools/viz/replay.py out/<algo>.jsonl --gif out/<algo>.gif --snapshots out
 [^janson]: Janson, L., Schmerling, E., Clark, A., & Pavone, M. (2015). "Fast marching tree: A fast marching sampling-based method for optimal motion planning in many dimensions." *The International Journal of Robotics Research*, 34(7), 883–921. [doi:10.1177/0278364915577958](https://doi.org/10.1177/0278364915577958) · [PDF (arXiv)](https://arxiv.org/abs/1306.3532)
 [^gammell_bit]: Gammell, J. D., Srinivasa, S. S., & Barfoot, T. D. (2015). "Batch Informed Trees (BIT\*): Sampling-based optimal planning via the heuristically guided search of implicit random geometric graphs." *Proc. IEEE ICRA*, 3067–3074. [doi:10.1109/ICRA.2015.7139620](https://doi.org/10.1109/ICRA.2015.7139620) · [PDF (arXiv)](https://arxiv.org/abs/1405.5848)
 [^wu]: Wu, Z., Meng, Z., Zhao, W., & Wu, Z. (2021). "Fast-RRT: A RRT-Based Optimal Path Finding Method." *Applied Sciences*, 11(24), 11777. [doi:10.3390/app112411777](https://doi.org/10.3390/app112411777) · [PDF (open access)](https://www.mdpi.com/2076-3417/11/24/11777)
+[^strub_ait]: Strub, M. P., & Gammell, J. D. (2020). "Adaptively Informed Trees (AIT\*): Fast Asymptotically Optimal Path Planning through Adaptive Heuristics." *Proc. IEEE ICRA*, 3191–3198. [doi:10.1109/ICRA40945.2020.9197338](https://doi.org/10.1109/ICRA40945.2020.9197338) · Extended in Strub & Gammell (2022), *IJRR* 41(4), 390–417. [PDF (arXiv)](https://arxiv.org/abs/2111.01877)
+[^strub_eit]: Strub, M. P., & Gammell, J. D. (2022). "Adaptively Informed Trees (AIT\*) and Effort Informed Trees (EIT\*): Asymmetric bidirectional sampling-based path planning." *The International Journal of Robotics Research*, 41(4), 390–417. [doi:10.1177/02783649211069572](https://doi.org/10.1177/02783649211069572) · [PDF (arXiv)](https://arxiv.org/abs/2111.01877)
+[^wilson_fcit]: Wilson, T., Strub, M. P., & Gammell, J. D. (2025). "Nearest-Neighbourless Asymptotically Optimal Motion Planning with Fully Connected Informed Trees (FCIT\*)." *Proc. IEEE ICRA*. [PDF (arXiv:2411.17902)](https://arxiv.org/abs/2411.17902)
 [^kuffner]: Kuffner, J. J., & LaValle, S. M. (2000). "RRT-Connect: An efficient approach to single-query path planning." *Proc. IEEE ICRA*, 995–1001. [doi:10.1109/ROBOT.2000.844730](https://doi.org/10.1109/ROBOT.2000.844730)
 [^gammell]: Gammell, J. D., Srinivasa, S. S., & Barfoot, T. D. (2014). "Informed RRT\*: Optimal sampling-based path planning focused via direct sampling of an admissible ellipsoidal heuristic." *Proc. IEEE/RSJ IROS*, 2997–3004. [doi:10.1109/IROS.2014.6942976](https://doi.org/10.1109/IROS.2014.6942976) · [PDF (arXiv)](https://arxiv.org/abs/1404.2334)
 [^fox]: Fox, D., Burgard, W., & Thrun, S. (1997). "The dynamic window approach to collision avoidance." *IEEE Robotics & Automation Magazine*, 4(1), 23–33. [doi:10.1109/100.580977](https://doi.org/10.1109/100.580977)

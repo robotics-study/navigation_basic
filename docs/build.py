@@ -93,9 +93,11 @@ DEFAULT_OG_IMAGE = "assets/astar/maze01_final.png"
 _GLOBAL_LINEAGE = {
     "bfs": "search", "dijkstra": "search", "astar": "search", "dstar_lite": "search",
     "theta_star": "search", "hybrid_astar": "search",
-    "rrt": "sampling", "rrt_star": "sampling", "fast_rrt": "sampling",
+    "rrt": "sampling", "rrt_connect": "sampling", "rrt_star": "sampling",
+    "informed_rrt_star": "sampling", "fast_rrt": "sampling",
     "prm": "sampling", "prm_star": "sampling",
     "bit_star": "sampling", "fmt_star": "sampling",
+    "ait_star": "sampling", "eit_star": "sampling", "fcit_star": "sampling",
 }
 
 
@@ -128,11 +130,16 @@ _GLOBAL_SEARCH = [
 _GLOBAL_SAMPLING = [
     ("algorithms/prm.md", "algorithms/prm.html", "PRM"),             # 1996
     ("algorithms/rrt.md", "algorithms/rrt.html", "RRT"),             # 1998
+    ("algorithms/rrt_connect.md", "algorithms/rrt_connect.html", "RRT-Connect"),  # 2000
     ("algorithms/rrt_star.md", "algorithms/rrt_star.html", "RRT*"),  # 2011
     ("algorithms/prm_star.md", "algorithms/prm_star.html", "PRM*"),  # 2011
+    ("algorithms/informed_rrt_star.md", "algorithms/informed_rrt_star.html", "Informed RRT*"),  # 2014
     ("algorithms/fmt_star.md", "algorithms/fmt_star.html", "FMT*"),  # 2015
     ("algorithms/bit_star.md", "algorithms/bit_star.html", "BIT*"),  # 2015
+    ("algorithms/ait_star.md", "algorithms/ait_star.html", "AIT*"),  # 2020
     ("algorithms/fast_rrt.md", "algorithms/fast_rrt.html", "Fast-RRT"),  # 2021
+    ("algorithms/eit_star.md", "algorithms/eit_star.html", "EIT*"),  # 2022
+    ("algorithms/fcit_star.md", "algorithms/fcit_star.html", "FCIT*"),  # 2025
 ]
 _GLOBAL = _GLOBAL_SEARCH + _GLOBAL_SAMPLING
 # 사이드바용: 계보별 disclosure 서브그룹 (dict = <details> 로 렌더).
