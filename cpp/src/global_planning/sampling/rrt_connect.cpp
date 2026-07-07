@@ -75,7 +75,10 @@ core::PlanResult<Point> RrtConnectPlanner::plan(SamplingSpace<Point>& space, con
       // 값 복사: 아래 tb 확장이 ta 를 건드리진 않지만, connect 로 넘기기 전에 안전하게 고정.
       Point q_new = ta->nodes[new_idx];
       int tb_idx = connect(*tb, space, q_new, step_size, goal_tolerance, recorder);
-      if (tb_idx >= 0) {
+      // CONNECT 는 tb 를 q_new 의 goal_tolerance 안까지만 당기므로 접합 두 노드 사이에
+      // 최대 goal_tolerance 구간이 남는다. 이 bridge 를 명시적으로 충돌 검사해야 얇은 벽을
+      // 관통하는 경로가 성공으로 새어나가지 않는다 (Kuffner & LaValle 2000 의 갭 보정).
+      if (tb_idx >= 0 && space.is_motion_valid(q_new, tb->nodes[tb_idx])) {
         std::vector<Point> bridge = extract_path(*ta, new_idx);  // root(ta)...q_new
         std::vector<Point> b_path = extract_path(*tb, tb_idx);   // root(tb)...q_step
         for (auto rit = b_path.rbegin(); rit != b_path.rend(); ++rit) bridge.push_back(*rit);
