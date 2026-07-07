@@ -5,6 +5,7 @@
 #include <limits>
 #include <numbers>
 #include <random>
+#include <string>
 
 #include "navigation/global_planning/sampling/sampling_common.hpp"
 
@@ -51,6 +52,8 @@ core::PlanResult<Point> FastRrtPlanner::plan(SamplingSpace<Point>& space, const 
   const double goal_bias = params_.get_float("goal_bias");
   const double goal_tolerance = params_.get_float("goal_tolerance");
   const double neighbor_radius = params_.get_float("neighbor_radius");
+  const std::string radius_mode = params_.get_string("radius_mode");
+  const double rgg_gamma = params_.get_float("rgg_gamma");
   const double reached_radius = params_.get_float("reached_radius");
   const int steering_attempts = params_.get_int("steering_attempts");
   std::mt19937 rng(static_cast<unsigned>(params_.get_int("seed")));
@@ -102,7 +105,11 @@ core::PlanResult<Point> FastRrtPlanner::plan(SamplingSpace<Point>& space, const 
     }
     if (!extended) continue;
 
-    std::vector<int> nbrs = near(tree, space, q_new, neighbor_radius);
+    // shrinking 모드는 트리 크기 n 에 따라 근방 반경을 줄인다 (Karaman & Frazzoli 2011);
+    // fixed(기본)는 상수 neighbor_radius 를 그대로 써 기존 동작을 보존한다.
+    double radius = near_radius(radius_mode, neighbor_radius, rgg_gamma,
+                               static_cast<int>(tree.nodes.size()));
+    std::vector<int> nbrs = near(tree, space, q_new, radius);
     double new_cost = 0.0;
     int parent = choose_parent(tree, space, q_new, nbrs, ni, new_cost, recorder);
     int ci = tree.add(q_new, parent, new_cost);
