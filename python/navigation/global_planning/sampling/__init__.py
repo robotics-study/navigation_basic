@@ -11,11 +11,13 @@ from .fast_rrt import FastRRT
 from .fcit_star import FCITStar
 from .fmt_star import FMTStar
 from .informed_rrt_star import InformedRRTStar
+from .kinodynamic_rrt_star import KinodynamicRRTStar
 from .prm import PRM
 from .prm_star import PRMStar
 from .rrt import RRT
 from .rrt_connect import RRTConnect
 from .rrt_star import RRTStar
+from .sst import SST
 
 __all__ = [
     "RRT",
@@ -30,4 +32,6 @@ __all__ = [
     "AITStar",
     "EITStar",
     "FCITStar",
+    "KinodynamicRRTStar",
+    "SST",
 ]

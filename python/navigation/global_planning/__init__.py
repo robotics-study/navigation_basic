@@ -15,6 +15,7 @@ private `_discrete` / `_bestfirst` (search) and `_sampling` / `_roadmap`
 from .sampling import (
     PRM,
     RRT,
+    SST,
     AITStar,
     BITStar,
     EITStar,
@@ -22,18 +23,22 @@ from .sampling import (
     FCITStar,
     FMTStar,
     InformedRRTStar,
+    KinodynamicRRTStar,
     PRMStar,
     RRTConnect,
     RRTStar,
 )
-from .search import BFS, AStar, Dijkstra, DStarLite, HybridAStar, ThetaStar
+from .search import BFS, JPS, Anya, AStar, Dijkstra, DStarLite, HybridAStar, LazyThetaStar, ThetaStar
 
 __all__ = [
     "BFS",
     "Dijkstra",
     "AStar",
+    "JPS",
     "DStarLite",
     "ThetaStar",
+    "LazyThetaStar",
+    "Anya",
     "HybridAStar",
     "RRT",
     "RRTConnect",
@@ -47,4 +52,6 @@ __all__ = [
     "AITStar",
     "EITStar",
     "FCITStar",
+    "KinodynamicRRTStar",
+    "SST",
 ]

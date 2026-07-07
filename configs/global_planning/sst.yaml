@@ -1,0 +1,67 @@
+algorithm: sst
+category: global_planning
+params:
+  - name: max_iterations
+    type: int
+    default: 30000
+    min: 1
+    max: 2000000
+    description: 최대 확장 반복 수 (anytime; 소진 시 현재 best 반환).
+  - name: goal_bias
+    type: float
+    default: 0.1
+    min: 0.0
+    max: 1.0
+    description: 매 반복 goal 을 직접 sample 할 확률 (0~1).
+  - name: goal_tolerance
+    type: float
+    default: 0.6
+    min: 0.0
+    max: 100.0
+    description: goal 도달 판정 반경 (meters, 위치 기준).
+  - name: delta_bn
+    type: float
+    default: 1.2
+    min: 0.01
+    max: 100.0
+    description: BestNear 반경 δ_BN — s_sample 근방에서 최소 cost active 노드를 고르는 반경 (Li, Littlefield & Bekris 2016).
+  - name: delta_s
+    type: float
+    default: 0.5
+    min: 0.01
+    max: 100.0
+    description: witness/sparsification 반경 δ_s — active 노드 밀도를 제한해 트리를 sparse 하게 유지 (Li, Littlefield & Bekris 2016).
+  - name: max_velocity
+    type: float
+    default: 1.5
+    min: 0.01
+    max: 100.0
+    description: 전진 속도 v 의 상한 (m/s). 매 propagation 마다 [0, max_velocity] 에서 랜덤 샘플.
+  - name: max_omega
+    type: float
+    default: 1.5
+    min: 0.0
+    max: 100.0
+    description: 각속도(yaw rate) ω 의 상한 (rad/s). 매 propagation 마다 [-max_omega, max_omega] 에서 랜덤 샘플.
+  - name: prop_duration_min
+    type: float
+    default: 0.2
+    min: 0.001
+    max: 100.0
+    description: forward propagation 지속 시간 하한 (s).
+  - name: prop_duration_max
+    type: float
+    default: 0.8
+    min: 0.001
+    max: 100.0
+    description: forward propagation 지속 시간 상한 (s).
+  - name: sst_star
+    type: bool
+    default: false
+    description: true 면 SST* — δ_BN/δ_s 를 반복에 따라 축소해 asymptotic optimality 를 회복 (Li, Littlefield & Bekris 2016 §V).
+  - name: seed
+    type: int
+    default: 1
+    min: 0
+    max: 2147483647
+    description: 난수 시드 (재현성).
