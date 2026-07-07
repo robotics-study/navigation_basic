@@ -1,0 +1,27 @@
+algorithm: rrt_connect
+category: global_planning
+params:
+  - name: max_iterations
+    type: int
+    default: 4000
+    min: 1
+    max: 200000
+    description: 최대 EXTEND/CONNECT 반복 수. 초과 시 실패 반환.
+  - name: step_size
+    type: float
+    default: 0.5
+    min: 0.01
+    max: 100.0
+    description: steer 확장 거리 eta (meters). EXTEND·CONNECT 양쪽이 사용.
+  - name: goal_tolerance
+    type: float
+    default: 0.3
+    min: 0.0
+    max: 100.0
+    description: CONNECT "Reached" 판정 거리 (meters).
+  - name: seed
+    type: int
+    default: 1
+    min: 0
+    max: 2147483647
+    description: 난수 시드 (재현성).

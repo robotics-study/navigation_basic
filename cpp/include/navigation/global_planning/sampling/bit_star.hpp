@@ -1,6 +1,5 @@
 #pragma once
 
-#include <random>
 #include <set>
 #include <string>
 
@@ -24,12 +23,6 @@ class BitStarPlanner final : public core::SamplingPlanner {
   core::PlanResult<core::Point> plan(core::SamplingSpace<core::Point>& space,
                                      const core::Point& start, const core::Point& goal,
                                      core::TraceRecorder* recorder) override;
-
- private:
-  // Uniform draw before a solution; informed-ellipse draw (foci start/goal,
-  // transverse diameter c_best) once one exists.
-  core::Point sample_state(core::SamplingSpace<core::Point>& space, const core::Point& start,
-                           const core::Point& goal, double c_best, std::mt19937& rng);
 };
 
 }  // namespace navigation::global_planning

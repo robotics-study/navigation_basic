@@ -1,0 +1,33 @@
+algorithm: eit_star
+category: global_planning
+params:
+  - name: batch_size
+    type: int
+    default: 200
+    min: 1
+    max: 100000
+    description: 배치당 새로 뿌리는 (informed) 샘플 수. (Strub & Gammell 2022)
+  - name: max_batches
+    type: int
+    default: 15
+    min: 1
+    max: 10000
+    description: 최대 배치 수 (anytime; 소진 시 현재 best 반환).
+  - name: gamma
+    type: float
+    default: 30.0
+    min: 0.01
+    max: 1000.0
+    description: RGG 연결 반경 계수 γ. r_n = γ·(log n / n)^(1/2). (Karaman & Frazzoli 2011)
+  - name: step_size
+    type: float
+    default: 0.5
+    min: 0.01
+    max: 100.0
+    description: effort 추정용 이산화 간격 (meters). effort(u,v)=max(1, round(dist/step_size)).
+  - name: seed
+    type: int
+    default: 1
+    min: 0
+    max: 2147483647
+    description: 난수 시드 (재현성).

@@ -159,4 +159,28 @@ void emit_finished_batch(TraceRecorder* recorder, bool success, double cost, int
   recorder->planning_finished(success, metrics);
 }
 
+namespace {
+constexpr double kInf = std::numeric_limits<double>::infinity();
+constexpr double kTwoPi = 6.283185307179586;
+}  // namespace
+
+Point informed_sample(SamplingSpace<Point>& space, const Point& start, const Point& goal,
+                      double c_best, std::mt19937& rng) {
+  double c_min = space.distance(start, goal);
+  if (c_best >= kInf || c_best <= c_min) return space.sample();
+  std::uniform_real_distribution<double> unit(0.0, 1.0);
+  double cx = (start.x + goal.x) / 2.0;
+  double cy = (start.y + goal.y) / 2.0;
+  double r1 = c_best / 2.0;
+  double r2 = std::sqrt(std::max(c_best * c_best - c_min * c_min, 0.0)) / 2.0;
+  double theta = std::atan2(goal.y - start.y, goal.x - start.x);
+  double ang = unit(rng) * kTwoPi;
+  double rad = std::sqrt(unit(rng));
+  double ux = rad * std::cos(ang) * r1;
+  double uy = rad * std::sin(ang) * r2;
+  double x = cx + std::cos(theta) * ux - std::sin(theta) * uy;
+  double y = cy + std::sin(theta) * ux + std::cos(theta) * uy;
+  return Point{x, y};
+}
+
 }  // namespace navigation::global_planning
