@@ -1,0 +1,75 @@
+algorithm: lqr_rrt_star
+category: global_planning
+params:
+  - name: max_iterations
+    type: int
+    default: 4000
+    min: 1
+    max: 200000
+    description: 최대 확장 반복 수 (anytime; 소진 시 현재 best 반환).
+  - name: step_size
+    type: float
+    default: 1.5
+    min: 0.01
+    max: 100.0
+    description: 확장 스텝 상한 eta (meters). sample 방향으로 이 거리까지 rest waypoint 를 잡아 LQR steer 한다.
+  - name: goal_bias
+    type: float
+    default: 0.1
+    min: 0.0
+    max: 1.0
+    description: 매 반복 goal 상태(정지)를 직접 sample 할 확률 (0~1).
+  - name: goal_tolerance
+    type: float
+    default: 1.0
+    min: 0.0
+    max: 100.0
+    description: goal 연결을 시도하는 위치 근접 반경 (meters).
+  - name: neighbor_radius
+    type: float
+    default: 2.0
+    min: 0.01
+    max: 100.0
+    description: choose-parent / rewire 근방 위치 반경 (meters). 이 안의 노드에 대해서만 LQR 연결을 평가한다.
+  - name: q_pos
+    type: float
+    default: 1.0
+    min: 0.001
+    max: 1000.0
+    description: LQR 상태비용의 위치 가중 (J=∫ xᵀQx+uᵀRu dt, Q=diag(q_pos,q_vel)). 클수록 위치 오차 페널티 (Perez et al. 2012).
+  - name: q_vel
+    type: float
+    default: 1.0
+    min: 0.001
+    max: 1000.0
+    description: LQR 상태비용의 속도 가중. 클수록 속도 오차/급기동 페널티 (Perez et al. 2012).
+  - name: r_ctrl
+    type: float
+    default: 1.0
+    min: 0.001
+    max: 1000.0
+    description: LQR 제어비용 가중 r (R=r·I). 클수록 제어(가속) 노력에 페널티 (Perez et al. 2012).
+  - name: lqr_dt
+    type: float
+    default: 0.2
+    min: 0.01
+    max: 10.0
+    description: LQR 이산화/적분 스텝 (seconds). double integrator 를 이 스텝으로 이산화해 DARE 를 풀고 궤적을 전파한다.
+  - name: control_limit
+    type: float
+    default: 10.0
+    min: 0.01
+    max: 1000.0
+    description: 축별 제어(가속) 입력 clamp |u| ≤ control_limit (m/s²).
+  - name: max_velocity
+    type: float
+    default: 1.5
+    min: 0.01
+    max: 100.0
+    description: nearest LQR-metric 용 sample 상태의 축별 속도 범위 [-v_max, v_max] (m/s). double integrator 상태 (x, y, vx, vy).
+  - name: seed
+    type: int
+    default: 1
+    min: 0
+    max: 2147483647
+    description: 난수 시드 (재현성).

@@ -1,0 +1,381 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LQR-RRT* · navigation study</title>
+<meta name="description" content="RRT* 를 동역학이 있는 시스템에 쓰려면 두 가지 확장 휴리스틱(extension heuristic) 이 필요하다:">
+<meta name="robots" content="index,follow">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b1020" media="(prefers-color-scheme: dark)">
+<link rel="canonical" href="https://robotics-study.github.io/navigation/ko/algorithms/lqr_rrt_star.html">
+<link rel="alternate" hreflang="ko" href="https://robotics-study.github.io/navigation/ko/algorithms/lqr_rrt_star.html">
+<link rel="alternate" hreflang="en" href="https://robotics-study.github.io/navigation/en/algorithms/lqr_rrt_star.html">
+<link rel="alternate" hreflang="x-default" href="https://robotics-study.github.io/navigation/en/algorithms/lqr_rrt_star.html">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="navigation study">
+<meta property="og:title" content="LQR-RRT* · navigation study">
+<meta property="og:description" content="RRT* 를 동역학이 있는 시스템에 쓰려면 두 가지 확장 휴리스틱(extension heuristic) 이 필요하다:">
+<meta property="og:url" content="https://robotics-study.github.io/navigation/ko/algorithms/lqr_rrt_star.html">
+<meta property="og:image" content="https://robotics-study.github.io/navigation/assets/lqr_rrt_star/maze01_final.png">
+<meta property="og:image:alt" content="LQR-RRT*">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:locale:alternate" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="LQR-RRT* · navigation study">
+<meta name="twitter:description" content="RRT* 를 동역학이 있는 시스템에 쓰려면 두 가지 확장 휴리스틱(extension heuristic) 이 필요하다:">
+<meta name="twitter:image" content="https://robotics-study.github.io/navigation/assets/lqr_rrt_star/maze01_final.png">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "LQR-RRT*", "description": "RRT* 를 동역학이 있는 시스템에 쓰려면 두 가지 확장 휴리스틱(extension heuristic) 이 필요하다:", "image": "https://robotics-study.github.io/navigation/assets/lqr_rrt_star/maze01_final.png", "inLanguage": "ko", "url": "https://robotics-study.github.io/navigation/ko/algorithms/lqr_rrt_star.html", "isPartOf": {"@type": "WebSite", "name": "navigation study", "url": "https://robotics-study.github.io/navigation/"}}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=6d6dae56">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Crect width='24' height='24' rx='6' fill='%230b1020'/%3E%3Cpath d='M4 19V11h8V5h8' stroke='%23818cf8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='4' cy='19' r='2.4' fill='%23818cf8'/%3E%3Ccircle cx='20' cy='5' r='2.4' fill='%2322d3ee'/%3E%3C/svg%3E">
+<script src="../../assets/site.js?v=6d6dae56"></script>
+</head>
+<body>
+<header class="topbar">
+  <button id="menu-btn" class="iconbtn menu-btn" aria-label="menu"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  <div class="brandcrumb">
+    <a class="brand hub" href="https://robotics-study.github.io/" aria-label="robotics-study home"><svg class="logo" width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true"><defs><linearGradient id="navlg" x1="0" y1="1" x2="1" y2="0"><stop stop-color="#6366f1"/><stop offset="1" stop-color="#06b6d4"/></linearGradient></defs><path d="M4 19V11h8V5h8" stroke="url(#navlg)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="4" cy="19" r="2.6" fill="url(#navlg)"/><circle cx="20" cy="5" r="2.6" fill="url(#navlg)"/></svg><span class="wm">robotics<span class="wm-dim"> study</span></span></a>
+    <span class="crumb-sep" aria-hidden="true">/</span>
+    <a class="brand" href="../../index.html"><span class="wm">navigation<span class="wm-dim"> study</span></span></a>
+  </div>
+  <nav class="topnav"><a href="../../ko/index.html">개요</a><a href="../../ko/algorithms/index.html">알고리즘</a><a href="../../ko/maps.html">맵</a><a href="../../ko/benchmarks.html">벤치마크</a><a href="https://github.com/robotics-study/navigation" target="_blank" rel="noopener">GitHub<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a></nav>
+  <span class="spacer"></span>
+  <div class="search"><svg class="s-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg><input id="search-input" type="search" placeholder="검색 / Search…" data-base="../../" autocomplete="off"><div id="search-results" class="search-results"></div></div>
+  <div class="lang-toggle" role="group" aria-label="language"><svg class="g-ico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.5 2.5 3.8 5.6 3.8 9s-1.3 6.5-3.8 9c-2.5-2.5-3.8-5.6-3.8-9S9.5 5.5 12 3Z"/></svg><a href="../../ko/algorithms/lqr_rrt_star.html" class="active">KO</a><span class="l-sep">/</span><a href="../../en/algorithms/lqr_rrt_star.html" class="">EN</a></div>
+</header>
+<div class="layout">
+<aside class="sidebar"><h4>개요</h4>
+<a href="../../ko/index.html">개요</a>
+<a href="../../ko/algorithms/index.html">알고리즘 목록</a>
+<h4>Global planning</h4>
+<details class="nav-sub"><summary>Search</summary><div class="nav-sub-body"><div class="nav-sub-inner"><a href="../../ko/algorithms/bfs.html">BFS</a><a href="../../ko/algorithms/dijkstra.html">Dijkstra</a><a href="../../ko/algorithms/astar.html">A*</a><a href="../../ko/algorithms/dstar_lite.html">D* Lite</a><a href="../../ko/algorithms/ara_star.html">ARA*</a><a href="../../ko/algorithms/ad_star.html">AD*</a><a href="../../ko/algorithms/theta_star.html">Theta*</a><a href="../../ko/algorithms/hybrid_astar.html">Hybrid A*</a><a href="../../ko/algorithms/lazy_theta_star.html">Lazy Theta*</a><a href="../../ko/algorithms/jps.html">JPS</a><a href="../../ko/algorithms/visibility_astar.html">Visibility A*</a><a href="../../ko/algorithms/anya.html">Anya</a></div></div></details>
+<details class="nav-sub" open><summary>Sampling</summary><div class="nav-sub-body"><div class="nav-sub-inner"><a href="../../ko/algorithms/prm.html">PRM</a><a href="../../ko/algorithms/rrt.html">RRT</a><a href="../../ko/algorithms/rrt_connect.html">RRT-Connect</a><a href="../../ko/algorithms/rrt_star.html">RRT*</a><a href="../../ko/algorithms/prm_star.html">PRM*</a><a href="../../ko/algorithms/lqr_rrt_star.html" class="active">LQR-RRT*</a><a href="../../ko/algorithms/kinodynamic_rrt_star.html">Kinodynamic RRT*</a><a href="../../ko/algorithms/informed_rrt_star.html">Informed RRT*</a><a href="../../ko/algorithms/fmt_star.html">FMT*</a><a href="../../ko/algorithms/bit_star.html">BIT*</a><a href="../../ko/algorithms/sst.html">SST</a><a href="../../ko/algorithms/abit_star.html">ABIT*</a><a href="../../ko/algorithms/ait_star.html">AIT*</a><a href="../../ko/algorithms/fast_rrt.html">Fast-RRT</a><a href="../../ko/algorithms/eit_star.html">EIT*</a><a href="../../ko/algorithms/fcit_star.html">FCIT*</a></div></div></details>
+<a href="../../ko/benchmarks.html">벤치마크</a>
+<h4>Local planning <span class="soon">예정</span></h4>
+<span class="planned">DWA</span>
+<span class="planned">Pure Pursuit</span>
+<span class="planned">VFH</span>
+<span class="planned">MPC</span>
+<span class="planned">벤치마크</span>
+<h4>Multi-agent <span class="soon">예정</span></h4>
+<span class="planned">Prioritized A*</span>
+<span class="planned">Joint-space A*</span>
+<span class="planned">CBS</span>
+<span class="planned">벤치마크</span>
+<h4>Maps</h4>
+<a href="../../ko/maps.html">맵 표현</a>
+<h4>레퍼런스</h4>
+<a href="../../ko/architecture.html">아키텍처</a>
+<a href="../../ko/references.html">참고 문헌</a></aside>
+<main class="content"><article class="content-inner"><h1 id="lqr-rrt">LQR-RRT*<a class="anchor" href="#lqr-rrt" title="Permanent link">¶</a></h1>
+<div class="code-links"><span class="cl-label">소스 코드</span><a href="https://github.com/robotics-study/navigation/blob/main/cpp/src/global_planning/sampling/lqr_rrt_star.cpp" target="_blank" rel="noopener">C++</a><a href="https://github.com/robotics-study/navigation/blob/main/cpp/include/navigation/global_planning/sampling/lqr_rrt_star.hpp" target="_blank" rel="noopener">C++ header</a><a href="https://github.com/robotics-study/navigation/blob/main/python/navigation/global_planning/sampling/lqr_rrt_star.py" target="_blank" rel="noopener">Python</a><a href="https://github.com/robotics-study/navigation/blob/main/python/demos/demo_lqr_rrt_star.py" target="_blank" rel="noopener">demo</a></div>
+<table class="spec-table">
+<thead>
+<tr>
+<th>항목</th>
+<th>내용</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>분류</td>
+<td>sampling-based, single-query, anytime, <strong>kinodynamic</strong></td>
+</tr>
+<tr>
+<td>요구 capability</td>
+<td><code>SamplingSpace</code></td>
+</tr>
+<tr>
+<td>완전성</td>
+<td>probabilistically complete</td>
+</tr>
+<tr>
+<td>최적성</td>
+<td>asymptotically optimal — LQR 비용 기준 (Perez et al. 2012)</td>
+</tr>
+<tr>
+<td>복잡도</td>
+<td>반복당 near-neighbor 마다 LQR feedback roll(적분) 계산이 지배. 단, metric·gain 은 Riccati 를 <strong>1회</strong> 풀어 재사용</td>
+</tr>
+<tr>
+<td>원 논문</td>
+<td>Perez, Platt, Konidaris, Kaelbling &amp; Lozano-Pérez (2012) <sup id="fnref4:lqr"><a class="footnote-ref" href="#fn:lqr">1</a></sup></td>
+</tr>
+</tbody>
+</table>
+<h2 id="_1">배경<a class="anchor" href="#_1" title="Permanent link">¶</a></h2>
+<p>RRT<em> 를 동역학이 있는 시스템에 쓰려면 두 가지 </em><em>확장 휴리스틱(extension heuristic)</em><em> 이 필요하다:
+두 상태 사이 </em><em>거리 metric</em><em> 과, 한 상태에서 다른 상태로 뻗는 </em><em>steering</em><em> 함수다. 기하 RRT</em> 는
+이를 유클리드 거리와 직선으로 손쉽게 얻지만, 동역학이 붙으면 둘 다 손으로 설계하기 어렵다.
+Kinodynamic RRT*<sup id="fnref:webb"><a class="footnote-ref" href="#fn:webb">2</a></sup> 는 fixed-final-state OBVP 를 정확히 풀어 이를 얻지만(2013), 시스템마다
+닫힌 형태 해를 유도해야 한다.</p>
+<p>Perez et al.<sup id="fnref:lqr"><a class="footnote-ref" href="#fn:lqr">1</a></sup> 은 이 둘을 <strong>LQR(Linear-Quadratic Regulator) 로 자동 유도</strong> 한다. 동역학을
+국소 선형화하고 2차 비용 <span class="arithmatex">\(J=\int(x^\top Q x + u^\top R u)\,dt\)</span> 를 정하면, LQR 해가</p>
+<ul>
+<li><strong>거리 metric</strong> <span class="arithmatex">\(\mathrm{dist}(a,b)=(a-b)^\top S\,(a-b)\)</span> — <span class="arithmatex">\(S\)</span> 는 Riccati cost-to-go 행렬,</li>
+<li><strong>steering</strong> — LQR feedback 정책 <span class="arithmatex">\(u=-K(x-x_\text{ref})\)</span>, <span class="arithmatex">\(K=(R+B^\top P B)^{-1}B^\top P A\)</span> 를 전파,</li>
+</ul>
+<p>를 자동으로 준다. 손으로 짠 metric/steer 가 필요 없다. 계보상 기하 RRT<em>(2011, 직선·유클리드)와
+Kinodynamic RRT</em>(2013, 정확 OBVP) <strong>사이의 다리</strong> 다: LQR 은 값싸고 일반적인 <em>feedback</em> 확장을
+주는 대신, 정확한 2-point 해가 아니라 <strong>점근적(asymptotic)</strong> 이다.</p>
+<p>이 구현은 repo 의 Kinodynamic RRT<em> 와 </em><em>동일한 2D double integrator</em>* 를 소유한다: 상태
+<span class="arithmatex">\((x, y, v_x, v_y)\)</span>, 제어 = 가속도. 같은 벤치마크 위에서 두 알고리즘을 비교하기 위해서다.
+<code>SamplingSpace</code> capability 에만 의존한다 — 맵은 <span class="arithmatex">\((x, y)\)</span> 투영에 대해 <code>is_motion_valid</code> 만 답하고
+속도는 모른다.</p>
+<h2 id="_2">동작 원리<a class="anchor" href="#_2" title="Permanent link">¶</a></h2>
+<p><code>maze01</code> — 트리 edge 가 LQR feedback 궤적(곡선)이다. 노드는 정지(rest) 상태로, 각 edge 는 부모에서
+자식 rest 상태로 매끄럽게 가·감속하는 실행 가능 궤적이다. rewire 가 LQR 비용 공간에서 incumbent 를
+곧게 편다.</p>
+<p><img alt="LQR-RRT* on maze01" src="../../assets/lqr_rrt_star/maze01.gif" /></p>
+<p>탐색 중간 과정 (좌 → 우: 초반 / 중반 / 최종 경로):</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;"></th>
+<th style="text-align: center;"></th>
+<th style="text-align: center;"></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;"><img alt="early" src="../../assets/lqr_rrt_star/maze01_snap_02.png" /></td>
+<td style="text-align: center;"><img alt="mid" src="../../assets/lqr_rrt_star/maze01_snap_05.png" /></td>
+<td style="text-align: center;"><img alt="final" src="../../assets/lqr_rrt_star/maze01_final.png" /></td>
+</tr>
+</tbody>
+</table>
+<p><code>open01</code> 최종 결과:</p>
+<p><img alt="LQR-RRT* on open01" src="../../assets/lqr_rrt_star/open01_final.png" /></p>
+<pre><code>LQR_RRT_STAR(start, goal):
+    S, K ← SOLVE_RICCATI(A, B, Q, R)                   # DARE 1회 — metric·gain 유도
+    x_start ← (start, v=0);  x_goal ← (goal, v=0)      # 정지 상태로 들어올림
+    T ← {x_start}
+    for i in 1..max_iterations:                        # anytime — 끝까지 돈다
+        x_rand ← (확률 goal_bias 로 goal 정지상태) else (위치 sample + 임의 속도)
+        x_near ← argmin_{x∈T} (x−x_rand)ᵀ S (x−x_rand)  # LQR metric
+        x_new  ← x_near 에서 x_rand 방향 step_size 거리의 rest waypoint
+        (edge, c) ← LQR_STEER(x_near, x_new)           # u=−K(x−x_new) 적분, 충돌검사
+        if edge = ∅: continue
+        N ← near(T, x_new, neighbor_radius)
+        parent ← argmin_{x∈N∪{x_near}} cost(x) + LQR_STEER(x, x_new).cost   # choose-parent
+        T.add(x_new, parent)
+        for x ∈ N:                                     # rewire
+            if cost(x_new) + LQR_STEER(x_new, x).cost &lt; cost(x): x.parent ← x_new
+        if ‖x_new − goal‖ ≤ goal_tolerance:
+            best ← min(best, path through x_new to x_goal)
+    return best
+</code></pre>
+<p><code>LQR_STEER(a,b)</code> 는 feedback 정책 <span class="arithmatex">\(u=-K(x-b)\)</span> 를 clamp 하며 <span class="arithmatex">\(a\)</span> 에서 rest 목표 <span class="arithmatex">\(b\)</span> 로 적분해
+궤적과 realised LQR 비용 <span class="arithmatex">\(\sum(x^\top Q x + u^\top R u)\,dt\)</span> 를 낸다. 각 궤적은 waypoint 를 샘플링해
+<code>is_motion_valid</code> 로 충돌 검사한다(기하 RRT* 가 직선 edge 에 하던 검증과 동일).</p>
+<p>측정치 (Python, seed = 1, 4000 iterations, trace on):</p>
+<table>
+<thead>
+<tr>
+<th>map</th>
+<th>path cost (LQR)</th>
+<th>tree size</th>
+<th>runtime</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>maze01</td>
+<td>4.643</td>
+<td>2,904</td>
+<td>~1.9 s</td>
+</tr>
+<tr>
+<td>open01</td>
+<td>4.269</td>
+<td>2,775</td>
+<td>~1.8 s</td>
+</tr>
+</tbody>
+</table>
+<p>비용 스케일이 Kinodynamic RRT* 와 다른 것은 정상이다 — LQR 의 stage cost <span class="arithmatex">\(\int x^\top Q x+u^\top R u\)</span> 는
+Webb 의 <span class="arithmatex">\(\int 1+u^\top R u\)</span> 와 다른 비용 함수다. C++ 구현은 동일 알고리즘이며, 난수 스트림이 Python 과
+달라 정확한 비용은 다른 planner 들과 마찬가지로 미세하게 다르다.</p>
+<p>재현:</p>
+<pre><code class="language-bash">python python/demos/demo_lqr_rrt_star.py \
+  --map maps/grid/maze01.yaml --scenario maps/scenarios/maze01_s1.yaml \
+  --params configs/global_planning/lqr_rrt_star.yaml --trace out/lqr.jsonl
+python tools/viz/replay.py out/lqr.jsonl --gif out/lqr.gif
+</code></pre>
+<h2 id="lqr">자동 유도되는 확장 휴리스틱 — LQR<a class="anchor" href="#lqr" title="Permanent link">¶</a></h2>
+<p><strong>시스템.</strong> 위치 <span class="arithmatex">\(p\in\mathbb{R}^2\)</span>, 속도 <span class="arithmatex">\(v\in\mathbb{R}^2\)</span>, 상태 <span class="arithmatex">\(x=(p,v)\)</span> 의 double integrator 는
+축별로 분리된다:</p>
+<div class="arithmatex">\[
+A=\begin{bmatrix}0 &amp; 1\\ 0 &amp; 0\end{bmatrix},\quad
+B=\begin{bmatrix}0\\ 1\end{bmatrix},\quad
+Q=\mathrm{diag}(q_\text{pos}, q_\text{vel}),\quad
+R=r_\text{ctrl}.
+\]</div>
+<p><strong>Riccati.</strong> 무한지평 LQR 의 cost-to-go 행렬 <span class="arithmatex">\(S\)</span> 는 대수 Riccati 방정식을 만족한다. 연속시간형은</p>
+<div class="arithmatex">\[
+A^\top S + S A - S B R^{-1} B^\top S + Q = 0,
+\]</div>
+<p>이고 최적 gain 은 <span class="arithmatex">\(K=R^{-1}B^\top S\)</span> 다. 구현은 시스템을 <span class="arithmatex">\(dt\)</span> 로 이산화(<span class="arithmatex">\(A_d=[[1,dt],[0,1]]\)</span>,
+<span class="arithmatex">\(B_d=[[dt^2/2],[dt]]\)</span>)한 뒤 <strong>이산 Riccati 반복(DARE)</strong> 의 고정점을 취한다:</p>
+<div class="arithmatex">\[
+P \leftarrow Q + A_d^\top P A_d - A_d^\top P B_d\,(R + B_d^\top P B_d)^{-1} B_d^\top P A_d,\qquad
+K = (R + B_d^\top P B_d)^{-1} B_d^\top P A_d.
+\]</div>
+<p>double integrator 는 가제어이고 <span class="arithmatex">\(Q\succ0\)</span> 이므로 <span class="arithmatex">\(P_0=Q\)</span> 에서 반복은 유일한 안정화 해로 수렴한다.
+LTI 이고 <span class="arithmatex">\(Q\)</span> 가 블록대각이라 <span class="arithmatex">\(S,K\)</span> 는 <strong>상태 무관</strong> — 축마다, 그리고 매 반복 동일하므로 planner 시작
+시 <strong>한 번만</strong> 푼다. (Kinodynamic RRT* 와의 결정적 차이: 그쪽은 Riccati 를 풀지 않고 정확 도착시간을
+위한 quartic 을 매 후보 edge 마다 근찾기 한다. 여기서는 metric·steer 가 <span class="arithmatex">\(S,K\)</span> 에서 나온다.)</p>
+<p>기본값 <span class="arithmatex">\(q_\text{pos}=q_\text{vel}=r_\text{ctrl}=1\)</span>, <span class="arithmatex">\(dt=0.2\)</span> 에서
+<span class="arithmatex">\(S\approx\begin{bmatrix}9.19 &amp; 5.02\\ 5.02 &amp; 9.23\end{bmatrix}\)</span>, <span class="arithmatex">\(K\approx[0.841,\ 1.546]\)</span>.</p>
+<p><strong>거리 metric.</strong> 두 축 합으로</p>
+<div class="arithmatex">\[
+\mathrm{dist}(a,b)=(a-b)^\top S\,(a-b)
+= S_{00}(\Delta p_x^2+\Delta p_y^2) + 2S_{01}(\Delta p_x \Delta v_x + \Delta p_y \Delta v_y)
++ S_{11}(\Delta v_x^2 + \Delta v_y^2).
+\]</div>
+<p><span class="arithmatex">\(S_{00}=0\)</span> iff <span class="arithmatex">\(a=b\)</span>, 그 외 양수. sample 이 속도를 가지므로 nearest 선택은 위치뿐 아니라 속도
+방향까지 반영한다(유클리드와 달리 방향 의존). <span class="arithmatex">\(Q/R\)</span> 을 바꾸면 <span class="arithmatex">\(S\)</span> 가 바뀌어 같은 기동의 비용이 달라진다.</p>
+<p><strong>Steering.</strong> feedback 정책 <span class="arithmatex">\(u=-K(x-x_\text{ref})\)</span> 를 <span class="arithmatex">\(dt\)</span> 스텝으로 적분한다(입력 clamp
+<span class="arithmatex">\(|u|\le u_\text{max}\)</span>). 노드를 <strong>정지(rest)</strong> 상태로 두면 rest 는 double integrator 의 평형점이라
+닫힌 루프 <span class="arithmatex">\(A-BK\)</span> 가 Hurwitz — steady-state 오차 없이 목표에 정확히 regulate 한다. 따라서 저장되는
+모든 edge 는 실제로 자식에 도달하는 실행 가능·충돌 없는 궤적이고, RRT* 의 rewire 가 정확히 성립한다.
+sample 은 여전히 임의 속도를 실어 nearest metric 을 full-state 로 만들지만, 확장 자체는 sample
+방향으로 <code>step_size</code> 이내 rest waypoint 로 steer 한다.</p>
+<h2 id="_3">성질<a class="anchor" href="#_3" title="Permanent link">¶</a></h2>
+<ul>
+<li><strong>완전성</strong>: probabilistically complete<sup id="fnref2:lqr"><a class="footnote-ref" href="#fn:lqr">1</a></sup>.</li>
+<li><strong>최적성</strong>: LQR 비용 기준 asymptotically optimal — 선형화가 국소적으로 타당한 영역에서 incumbent 가
+  최소 LQR 비용 궤적으로 수렴한다<sup id="fnref3:lqr"><a class="footnote-ref" href="#fn:lqr">1</a></sup>.</li>
+<li><strong>Kinodynamic RRT* 와의 차이</strong>: 확장이 정확한 2-point OBVP 가 아니라 <strong>LQR feedback</strong> 이다.
+  값싸고(Riccati 1회 + 후보마다 적분) 일반적이지만 점근적이다. 이 구현은 노드를 정지 상태로 두어
+  reach 를 정확히 만들고(정지-정지 regulation), 그 대가로 경로가 "waypoint 마다 정지" 하는
+  가·감속열이다 — 관성을 궤적 내내 실어 나르는 Kinodynamic RRT* 와 대비된다.</li>
+<li><strong>실무 주의</strong>: 고정 <code>neighbor_radius</code>(위치 prefilter)를 쓰고 near/nearest 후보를 상한으로 캡한다
+  (k-nearest RRT* 변형, Karaman &amp; Frazzoli 2011). 후보 사이 선택은 여전히 정확한 LQR 비용으로 한다.</li>
+</ul>
+<h2 id="_4">파라미터<a class="anchor" href="#_4" title="Permanent link">¶</a></h2>
+<table>
+<thead>
+<tr>
+<th>이름</th>
+<th>타입</th>
+<th>기본값</th>
+<th>범위</th>
+<th>설명</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>max_iterations</code></td>
+<td>int</td>
+<td>4000</td>
+<td>[1, 200000]</td>
+<td>반복 예산 (anytime — 소진 시 현재 best 반환)</td>
+</tr>
+<tr>
+<td><code>step_size</code></td>
+<td>float</td>
+<td>1.5</td>
+<td>[0.01, 100.0]</td>
+<td>확장 스텝 상한 <span class="arithmatex">\(\eta\)</span> (m). sample 방향 rest waypoint 까지의 거리</td>
+</tr>
+<tr>
+<td><code>goal_bias</code></td>
+<td>float</td>
+<td>0.1</td>
+<td>[0.0, 1.0]</td>
+<td>goal 정지상태를 직접 sample 할 확률</td>
+</tr>
+<tr>
+<td><code>goal_tolerance</code></td>
+<td>float</td>
+<td>1.0</td>
+<td>[0.0, 100.0]</td>
+<td>goal 연결을 시도하는 위치 근접 반경 (m)</td>
+</tr>
+<tr>
+<td><code>neighbor_radius</code></td>
+<td>float</td>
+<td>2.0</td>
+<td>[0.01, 100.0]</td>
+<td>choose-parent / rewire 위치 근방 반경 (m)</td>
+</tr>
+<tr>
+<td><code>q_pos</code></td>
+<td>float</td>
+<td>1.0</td>
+<td>[0.001, 1000.0]</td>
+<td>LQR 위치 상태비용 <span class="arithmatex">\(q_\text{pos}\)</span> (<span class="arithmatex">\(Q=\mathrm{diag}(q_\text{pos},q_\text{vel})\)</span>)</td>
+</tr>
+<tr>
+<td><code>q_vel</code></td>
+<td>float</td>
+<td>1.0</td>
+<td>[0.001, 1000.0]</td>
+<td>LQR 속도 상태비용 <span class="arithmatex">\(q_\text{vel}\)</span></td>
+</tr>
+<tr>
+<td><code>r_ctrl</code></td>
+<td>float</td>
+<td>1.0</td>
+<td>[0.001, 1000.0]</td>
+<td>LQR 제어비용 <span class="arithmatex">\(r\)</span> (<span class="arithmatex">\(R=r\,I\)</span>)</td>
+</tr>
+<tr>
+<td><code>lqr_dt</code></td>
+<td>float</td>
+<td>0.2</td>
+<td>[0.01, 10.0]</td>
+<td>LQR 이산화·적분 스텝 (s)</td>
+</tr>
+<tr>
+<td><code>control_limit</code></td>
+<td>float</td>
+<td>10.0</td>
+<td>[0.01, 1000.0]</td>
+<td>축별 제어 입력 clamp $</td>
+</tr>
+<tr>
+<td><code>max_velocity</code></td>
+<td>float</td>
+<td>1.5</td>
+<td>[0.01, 100.0]</td>
+<td>nearest metric 용 sample 속도 범위 <span class="arithmatex">\([-v_{\max}, v_{\max}]\)</span> (m/s)</td>
+</tr>
+<tr>
+<td><code>seed</code></td>
+<td>int</td>
+<td>1</td>
+<td>[0, 2^31−1]</td>
+<td>난수 시드 (재현성)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="trace">방출 trace 이벤트<a class="anchor" href="#trace" title="Permanent link">¶</a></h2>
+<p><code>planning_started</code> → (<code>sample_drawn</code>, <code>candidate_evaluated</code>, <code>edge_added</code>, <code>rewire</code><em>)</em> → <code>path_found</code>* → <code>planning_finished</code></p>
+<p><code>path_found</code> 는 여러 번 방출될 수 있다 (incumbent 개선 시마다). edge 는 각 LQR feedback 궤적을 따라
+chord 사슬로 방출되어 viz 가 곡선을 렌더링한다.</p>
+<h2 id="references">References<a class="anchor" href="#references" title="Permanent link">¶</a></h2>
+<div class="footnote">
+<hr />
+<ol>
+<li id="fn:lqr">
+<p>Perez, A., Platt, R., Konidaris, G., Kaelbling, L., &amp; Lozano-Pérez, T. (2012). "LQR-RRT*: Optimal Sampling-Based Motion Planning with Automatically Derived Extension Heuristics." <em>IEEE International Conference on Robotics and Automation (ICRA)</em>, 2537–2542. <a href="https://doi.org/10.1109/ICRA.2012.6225177">doi:10.1109/ICRA.2012.6225177</a> · <a href="https://lis.csail.mit.edu/pubs/perez-icra12.pdf">PDF</a>&#160;<a class="footnote-backref" href="#fnref:lqr" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:lqr" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:lqr" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref4:lqr" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+</li>
+<li id="fn:webb">
+<p>Webb, D. J., &amp; van den Berg, J. (2013). "Kinodynamic RRT*: Asymptotically Optimal Motion Planning for Robots with Linear Dynamics." <em>IEEE International Conference on Robotics and Automation (ICRA)</em>, 5054–5061. <a href="https://doi.org/10.1109/ICRA.2013.6631299">doi:10.1109/ICRA.2013.6631299</a> · <a href="https://arxiv.org/abs/1205.5088">PDF (arXiv)</a>&#160;<a class="footnote-backref" href="#fnref:webb" title="Jump back to footnote 2 in the text">&#8617;</a></p>
+</li>
+</ol>
+</div><nav class="pager"><a href="../../ko/algorithms/prm_star.html"><div class="dir">← 이전</div><div class="ttl">PRM*</div></a><a class="next" href="../../ko/algorithms/kinodynamic_rrt_star.html"><div class="dir">다음 →</div><div class="ttl">Kinodynamic RRT*</div></a></nav></article></main>
+<aside class="toc" id="toc"></aside>
+</div>
+<div class="backdrop"></div>
+<footer class="site-footer">
+  <p>navigation study — robot navigation planning algorithms · C++ / Python dual implementation</p>
+  <p>Built as a static site · <a href="../../ko/index.html">한국어</a> · <a href="../../en/index.html">English</a></p>
+</footer>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script" async></script>
+</body></html>

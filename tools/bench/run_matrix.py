@@ -32,7 +32,12 @@ _REQUIRED: dict[str, Capability] = {
     "ara_star": Capability.DISCRETE_SPACE,
     # Binding constraint: LINE_OF_SIGHT_SPACE implies DISCRETE_SPACE (it extends
     # it), so a discrete-only map is correctly marked incompatible for Theta*.
+    "jps": Capability.DYNAMIC_GRID_SPACE,
+    "ad_star": Capability.DYNAMIC_GRID_SPACE,
     "theta_star": Capability.LINE_OF_SIGHT_SPACE,
+    "lazy_theta_star": Capability.LINE_OF_SIGHT_SPACE,
+    "visibility_astar": Capability.LINE_OF_SIGHT_SPACE,
+    "anya": Capability.LINE_OF_SIGHT_SPACE,
     "dstar_lite": Capability.DYNAMIC_GRID_SPACE,
     "hybrid_astar": Capability.SE2_COLLISION_SPACE,
     "rrt": Capability.SAMPLING_SPACE,
@@ -48,10 +53,15 @@ _REQUIRED: dict[str, Capability] = {
     "eit_star": Capability.SAMPLING_SPACE,
     "fcit_star": Capability.SAMPLING_SPACE,
     "fast_rrt": Capability.SAMPLING_SPACE,
+    "lqr_rrt_star": Capability.SAMPLING_SPACE,
+    "kinodynamic_rrt_star": Capability.SAMPLING_SPACE,
+    "sst": Capability.SAMPLING_SPACE,
 }
-_ORDER = ["bfs", "dijkstra", "astar", "ara_star", "theta_star", "dstar_lite", "hybrid_astar",
-          "rrt", "rrt_connect", "rrt_star", "informed_rrt_star", "prm", "prm_star", "fmt_star",
-          "bit_star", "abit_star", "ait_star", "eit_star", "fcit_star", "fast_rrt"]
+_ORDER = ["bfs", "dijkstra", "astar", "ara_star", "jps", "ad_star", "dstar_lite", "theta_star",
+          "lazy_theta_star", "visibility_astar", "anya", "hybrid_astar",
+          "rrt", "rrt_connect", "rrt_star", "prm_star", "lqr_rrt_star", "kinodynamic_rrt_star",
+          "informed_rrt_star", "prm", "fmt_star", "bit_star", "abit_star", "sst",
+          "ait_star", "fast_rrt", "eit_star", "fcit_star"]
 
 
 @dataclass
