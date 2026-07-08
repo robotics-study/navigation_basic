@@ -15,7 +15,14 @@ from navigation.core.capabilities import SamplingSpace
 from navigation.core.trace import TraceRecorder
 from navigation.core.types import PlanResult, PlanStats, Point
 
-from ._sampling import Tree, _SamplingPlanner, insert_best_parent, path_length, rewire
+from ._sampling import (
+    Tree,
+    _SamplingPlanner,
+    insert_best_parent,
+    near_radius,
+    path_length,
+    rewire,
+)
 
 
 class RRTStar(_SamplingPlanner):
@@ -33,6 +40,8 @@ class RRTStar(_SamplingPlanner):
         t0 = time.monotonic()
         max_iter, step_size, goal_bias, goal_tol, seed = self._common_params()
         neighbor_radius = self.params.get_float("neighbor_radius")
+        radius_mode = self.params.get_string("radius_mode")
+        rgg_gamma = self.params.get_float("rgg_gamma")
         rng = np.random.default_rng(seed)
         tree = Tree(start)
         # goal is not inserted into the tree (it must not become a growth/rewire
@@ -50,7 +59,10 @@ class RRTStar(_SamplingPlanner):
             if not space.is_motion_valid(tree.points[near_idx], q_new):
                 continue
 
-            neighborhood = tree.near(q_new, neighbor_radius, space)
+            # shrinking 모드는 트리 크기 n 에 따라 근방 반경을 줄인다 (Karaman & Frazzoli
+            # 2011); fixed(기본)는 상수 neighbor_radius 라 기존 동작을 보존한다.
+            radius = near_radius(radius_mode, neighbor_radius, rgg_gamma, len(tree))
+            neighborhood = tree.near(q_new, radius, space)
             new_idx = insert_best_parent(space, tree, q_new, near_idx, neighborhood, recorder)
             rewire(space, tree, new_idx, q_new, neighborhood, recorder)
 

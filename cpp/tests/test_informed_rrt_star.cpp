@@ -29,6 +29,8 @@ std::string informed_cfg(int max_iterations) {
       "  - {name: goal_bias, type: float, default: 0.2, min: 0.0, max: 1.0, description: b}\n"
       "  - {name: goal_tolerance, type: float, default: 0.3, min: 0.0, max: 100, description: t}\n"
       "  - {name: neighbor_radius, type: float, default: 1.5, min: 0.01, max: 100, description: r}\n"
+      "  - {name: radius_mode, type: enum, default: fixed, choices: [fixed, shrinking], description: m}\n"
+      "  - {name: rgg_gamma, type: float, default: 2.0, min: 0.01, max: 100, description: g}\n"
       "  - {name: seed, type: int, default: 7, min: 0, max: 2147483647, description: s}\n");
 }
 

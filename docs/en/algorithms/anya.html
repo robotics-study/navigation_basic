@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Anya · navigation study</title>
+<meta name="description" content="Any-angle planners like Theta* and Visibility A* keep their paths on grid cell centres">
+<meta name="robots" content="index,follow">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b1020" media="(prefers-color-scheme: dark)">
+<link rel="canonical" href="https://robotics-study.github.io/navigation/en/algorithms/anya.html">
+<link rel="alternate" hreflang="ko" href="https://robotics-study.github.io/navigation/ko/algorithms/anya.html">
+<link rel="alternate" hreflang="en" href="https://robotics-study.github.io/navigation/en/algorithms/anya.html">
+<link rel="alternate" hreflang="x-default" href="https://robotics-study.github.io/navigation/en/algorithms/anya.html">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="navigation study">
+<meta property="og:title" content="Anya · navigation study">
+<meta property="og:description" content="Any-angle planners like Theta* and Visibility A* keep their paths on grid cell centres">
+<meta property="og:url" content="https://robotics-study.github.io/navigation/en/algorithms/anya.html">
+<meta property="og:image" content="https://robotics-study.github.io/navigation/assets/anya/maze01_final.png">
+<meta property="og:image:alt" content="Anya">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="ko_KR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Anya · navigation study">
+<meta name="twitter:description" content="Any-angle planners like Theta* and Visibility A* keep their paths on grid cell centres">
+<meta name="twitter:image" content="https://robotics-study.github.io/navigation/assets/anya/maze01_final.png">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "Anya", "description": "Any-angle planners like Theta* and Visibility A* keep their paths on grid cell centres", "image": "https://robotics-study.github.io/navigation/assets/anya/maze01_final.png", "inLanguage": "en", "url": "https://robotics-study.github.io/navigation/en/algorithms/anya.html", "isPartOf": {"@type": "WebSite", "name": "navigation study", "url": "https://robotics-study.github.io/navigation/"}}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=6d6dae56">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Crect width='24' height='24' rx='6' fill='%230b1020'/%3E%3Cpath d='M4 19V11h8V5h8' stroke='%23818cf8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='4' cy='19' r='2.4' fill='%23818cf8'/%3E%3Ccircle cx='20' cy='5' r='2.4' fill='%2322d3ee'/%3E%3C/svg%3E">
+<script src="../../assets/site.js?v=6d6dae56"></script>
+</head>
+<body>
+<header class="topbar">
+  <button id="menu-btn" class="iconbtn menu-btn" aria-label="menu"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  <div class="brandcrumb">
+    <a class="brand hub" href="https://robotics-study.github.io/" aria-label="robotics-study home"><svg class="logo" width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true"><defs><linearGradient id="navlg" x1="0" y1="1" x2="1" y2="0"><stop stop-color="#6366f1"/><stop offset="1" stop-color="#06b6d4"/></linearGradient></defs><path d="M4 19V11h8V5h8" stroke="url(#navlg)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="4" cy="19" r="2.6" fill="url(#navlg)"/><circle cx="20" cy="5" r="2.6" fill="url(#navlg)"/></svg><span class="wm">robotics<span class="wm-dim"> study</span></span></a>
+    <span class="crumb-sep" aria-hidden="true">/</span>
+    <a class="brand" href="../../index.html"><span class="wm">navigation<span class="wm-dim"> study</span></span></a>
+  </div>
+  <nav class="topnav"><a href="../../en/index.html">Overview</a><a href="../../en/algorithms/index.html">Algorithms</a><a href="../../en/maps.html">Maps</a><a href="../../en/benchmarks.html">Benchmarks</a><a href="https://github.com/robotics-study/navigation" target="_blank" rel="noopener">GitHub<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a></nav>
+  <span class="spacer"></span>
+  <div class="search"><svg class="s-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg><input id="search-input" type="search" placeholder="검색 / Search…" data-base="../../" autocomplete="off"><div id="search-results" class="search-results"></div></div>
+  <div class="lang-toggle" role="group" aria-label="language"><svg class="g-ico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.5 2.5 3.8 5.6 3.8 9s-1.3 6.5-3.8 9c-2.5-2.5-3.8-5.6-3.8-9S9.5 5.5 12 3Z"/></svg><a href="../../ko/algorithms/anya.html" class="">KO</a><span class="l-sep">/</span><a href="../../en/algorithms/anya.html" class="active">EN</a></div>
+</header>
+<div class="layout">
+<aside class="sidebar"><h4>Overview</h4>
+<a href="../../en/index.html">Overview</a>
+<a href="../../en/algorithms/index.html">All algorithms</a>
+<h4>Global planning</h4>
+<details class="nav-sub" open><summary>Search</summary><div class="nav-sub-body"><div class="nav-sub-inner"><a href="../../en/algorithms/bfs.html">BFS</a><a href="../../en/algorithms/dijkstra.html">Dijkstra</a><a href="../../en/algorithms/astar.html">A*</a><a href="../../en/algorithms/dstar_lite.html">D* Lite</a><a href="../../en/algorithms/ara_star.html">ARA*</a><a href="../../en/algorithms/ad_star.html">AD*</a><a href="../../en/algorithms/theta_star.html">Theta*</a><a href="../../en/algorithms/hybrid_astar.html">Hybrid A*</a><a href="../../en/algorithms/lazy_theta_star.html">Lazy Theta*</a><a href="../../en/algorithms/jps.html">JPS</a><a href="../../en/algorithms/visibility_astar.html">Visibility A*</a><a href="../../en/algorithms/anya.html" class="active">Anya</a></div></div></details>
+<details class="nav-sub"><summary>Sampling</summary><div class="nav-sub-body"><div class="nav-sub-inner"><a href="../../en/algorithms/prm.html">PRM</a><a href="../../en/algorithms/rrt.html">RRT</a><a href="../../en/algorithms/rrt_connect.html">RRT-Connect</a><a href="../../en/algorithms/rrt_star.html">RRT*</a><a href="../../en/algorithms/prm_star.html">PRM*</a><a href="../../en/algorithms/lqr_rrt_star.html">LQR-RRT*</a><a href="../../en/algorithms/kinodynamic_rrt_star.html">Kinodynamic RRT*</a><a href="../../en/algorithms/informed_rrt_star.html">Informed RRT*</a><a href="../../en/algorithms/fmt_star.html">FMT*</a><a href="../../en/algorithms/bit_star.html">BIT*</a><a href="../../en/algorithms/sst.html">SST</a><a href="../../en/algorithms/abit_star.html">ABIT*</a><a href="../../en/algorithms/ait_star.html">AIT*</a><a href="../../en/algorithms/fast_rrt.html">Fast-RRT</a><a href="../../en/algorithms/eit_star.html">EIT*</a><a href="../../en/algorithms/fcit_star.html">FCIT*</a></div></div></details>
+<a href="../../en/benchmarks.html">Benchmarks</a>
+<h4>Local planning <span class="soon">planned</span></h4>
+<span class="planned">DWA</span>
+<span class="planned">Pure Pursuit</span>
+<span class="planned">VFH</span>
+<span class="planned">MPC</span>
+<span class="planned">Benchmarks</span>
+<h4>Multi-agent <span class="soon">planned</span></h4>
+<span class="planned">Prioritized A*</span>
+<span class="planned">Joint-space A*</span>
+<span class="planned">CBS</span>
+<span class="planned">Benchmarks</span>
+<h4>Maps</h4>
+<a href="../../en/maps.html">Map representations</a>
+<h4>Reference</h4>
+<a href="../../en/architecture.html">Architecture</a>
+<a href="../../en/references.html">References</a></aside>
+<main class="content"><article class="content-inner"><h1 id="anya-optimal-any-angle">Anya (optimal any-angle)<a class="anchor" href="#anya-optimal-any-angle" title="Permanent link">¶</a></h1>
+<div class="code-links"><span class="cl-label">Source</span><a href="https://github.com/robotics-study/navigation/blob/main/cpp/src/global_planning/search/anya.cpp" target="_blank" rel="noopener">C++</a><a href="https://github.com/robotics-study/navigation/blob/main/cpp/include/navigation/global_planning/search/anya.hpp" target="_blank" rel="noopener">C++ header</a><a href="https://github.com/robotics-study/navigation/blob/main/python/navigation/global_planning/search/anya.py" target="_blank" rel="noopener">Python</a><a href="https://github.com/robotics-study/navigation/blob/main/python/demos/demo_anya.py" target="_blank" rel="noopener">demo</a></div>
+<table class="spec-table">
+<thead>
+<tr>
+<th>Item</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Category</td>
+<td>optimal any-angle graph search (interval search)</td>
+</tr>
+<tr>
+<td>Required capability</td>
+<td><code>LineOfSightSpace</code> (<code>neighbors</code> + <code>heuristic</code> + <code>line_of_sight</code>)</td>
+</tr>
+<tr>
+<td>Completeness</td>
+<td>complete (finite grid, non-negative costs)</td>
+</tr>
+<tr>
+<td>Optimality</td>
+<td><strong>true continuous Euclidean shortest any-angle path</strong> (Harabor et al. 2016) <sup id="fnref3:anya"><a class="footnote-ref" href="#fn:anya">1</a></sup></td>
+</tr>
+<tr>
+<td>Complexity</td>
+<td>one interval-projection sweep per corner (each with LOS checks)</td>
+</tr>
+<tr>
+<td>Original paper</td>
+<td>Harabor, Grastien, Öz &amp; Aksakalli (2016) <sup id="fnref4:anya"><a class="footnote-ref" href="#fn:anya">1</a></sup> · LOS supercover: Amanatides &amp; Woo (1987) <sup id="fnref:aw"><a class="footnote-ref" href="#fn:aw">3</a></sup> · A*: Hart, Nilsson &amp; Raphael (1968) <sup id="fnref:hart"><a class="footnote-ref" href="#fn:hart">4</a></sup></td>
+</tr>
+</tbody>
+</table>
+<h2 id="background">Background<a class="anchor" href="#background" title="Permanent link">¶</a></h2>
+<p>Any-angle planners like Theta*<sup id="fnref:theta"><a class="footnote-ref" href="#fn:theta">2</a></sup> and Visibility A* keep their paths on grid <strong>cell centres</strong>
+and merely take straight-line shortcuts. They are therefore not truly shortest but <strong>cell-centre
+approximations</strong>: when the genuinely shortest route must bend at an <strong>obstacle corner</strong> that no cell
+centre lands on, a path pinned to cell centres is slightly longer.</p>
+<p><strong>Anya</strong><sup id="fnref:anya"><a class="footnote-ref" href="#fn:anya">1</a></sup> makes a search node a <code>(root, interval)</code> pair. The <code>interval</code> is a contiguous run of
+points on one grid <strong>row</strong> (endpoints are grid-vertex coordinates, float) and the <code>root</code> is a grid
+<strong>corner (vertex)</strong> visible from every point of that interval. In a polygonal (blocked-cell) domain a
+shortest Euclidean path is a taut string that bends <strong>only at convex obstacle corners</strong>, so placing
+turning points (roots) exactly on those corners lets Anya return the <strong>true continuous Euclidean
+shortest any-angle path</strong>, not a cell-centre approximation. That is the essential difference from
+Visibility A* / Theta*.</p>
+<p>On this repository's <code>maze01</code>, Anya reaches <strong>cost 26.802 · 4 waypoints</strong>, <strong>strictly shorter</strong> than
+Visibility A* / Theta* (27.748) on the same instance — because it turns at corners, not cell centres.</p>
+<h2 id="how-it-works">How It Works<a class="anchor" href="#how-it-works" title="Permanent link">¶</a></h2>
+<p>Search on <code>maze01</code>. The sky-coloured fans radiating from each expanded corner root are the
+<strong>interval projection</strong> (the root's visibility projected row by row); the final path is a sparse
+straight-line polyline grazing only obstacle corners.</p>
+<p><img alt="Anya on maze01" src="../../assets/anya/maze01.gif" /></p>
+<p>Intermediate search progress (left → right: early / middle / final path):</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;"></th>
+<th style="text-align: center;"></th>
+<th style="text-align: center;"></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;"><img alt="early" src="../../assets/anya/maze01_snap_02.png" /></td>
+<td style="text-align: center;"><img alt="mid" src="../../assets/anya/maze01_snap_05.png" /></td>
+<td style="text-align: center;"><img alt="final" src="../../assets/anya/maze01_final.png" /></td>
+</tr>
+</tbody>
+</table>
+<pre><code>ANYA(start, goal):
+    g[start] ← 0
+    open ← priority queue keyed by f = g(root) + ‖root − goal‖   # admissible straight-line bound
+    push start
+    while open not empty:
+        root ← open.pop_min()                 # a corner (or start), settled once
+        if f(root) ≥ best_goal_cost: break
+        if line_of_sight(root, goal):          # final leg: corner sees the goal directly
+            relax goal via root
+        for (corner, interval) in SUCCESSORS(root):   # interval projection
+            relax g[corner] ← g[root] + ‖root − corner‖
+    return reconstruct(goal)
+
+SUCCESSORS(root):                              # generate (root, interval) nodes
+    for dir in {up, down}:                     # --- cone successors (fans) ---
+        I ← visible interval on the adjacent row from root
+        while I nonempty:
+            emit every convex obstacle corner inside I     # = new turning point (root)
+            I ← project(I, root, next row) split at walls  # project one row further
+    for dir in {left, right}:                  # --- flat successors (same row) ---
+        walk along root's row, emitting the reachable corners
+</code></pre>
+<h3 id="interval-projection-cone-flat-successors">Interval projection — cone / flat successors<a class="anchor" href="#interval-projection-cone-flat-successors" title="Permanent link">¶</a></h3>
+<p>Expanding a <code>root</code> <strong>projects its visibility row by row</strong>. The fan spreading into the adjacent rows
+is a <strong>cone successor</strong>; the run extending along the root's own row is a <strong>flat successor</strong>. Each
+projected interval is clipped by the obstacle walls of the cell-row it crosses into maximal
+<em>observable</em> sub-intervals, and the <strong>convex corner a wall creates becomes a new root</strong>. Because
+corners are finite, the search is really <strong>A* over a corner graph</strong> — not per-cell relaxation — with
+the interval sweep discovering each root's successors (the first corners it can see around).</p>
+<h3 id="line-of-sight-corner-geometry">Line of sight — corner geometry<a class="anchor" href="#line-of-sight-corner-geometry" title="Permanent link">¶</a></h3>
+<p>Anya's turning points are grid vertices, not cell centres, so visibility is decided by <strong>corner
+geometry</strong>: a segment is traversable iff it crosses no blocked cell <strong>interior</strong> and does not squeeze
+through the <strong>pinch corner</strong> between two diagonally blocked cells (the same corner-cut-forbidden model
+as <code>neighbors()</code>). Crucially, <strong>edge-grazing</strong> is allowed: a segment lying exactly on a grid line
+(integer x or y) only touches cell boundaries and enters no interior, so it is traversable when one
+adjacent cell is blocked as long as the <strong>other side is free</strong> — this is what lets a taut path hug an
+obstacle corner, and it is required for the true Euclidean optimum. (Snapping the boundary sample to
+one cell with <code>floor</code> would wrongly forbid such grazing legs and miss the optimum.) The capability's
+<code>line_of_sight</code> answers only cell-centre pairs and cannot express corner endpoints, so corner LOS is
+computed here.</p>
+<h3 id="heuristic-euclidean-straight-line-bound">Heuristic — Euclidean straight-line bound<a class="anchor" href="#heuristic-euclidean-straight-line-bound" title="Permanent link">¶</a></h3>
+<p>The frontier is ordered by <code>f = g(root) + ‖root − goal‖</code>. <code>‖root − goal‖</code> is an admissible lower
+bound because no feasible path is shorter than the straight-line distance between its endpoints
+(triangle inequality). The original paper uses a tighter <em>per-interval</em> bound <code>h(root, I)</code> that
+<strong>reflects</strong> the goal across the interval's row when the goal is on the far side (an optimisation that
+expands fewer nodes); the straight-line bound alone already secures admissibility and optimality.</p>
+<p>Measurements (Python, trace on · comparison on the same instance):</p>
+<table>
+<thead>
+<tr>
+<th>map</th>
+<th>Anya cost</th>
+<th>Visibility A* cost</th>
+<th>Theta* cost</th>
+<th>Anya expanded</th>
+<th>Anya waypoints</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>maze01</td>
+<td><strong>26.802</strong></td>
+<td>27.748</td>
+<td>27.748</td>
+<td>38</td>
+<td>4</td>
+</tr>
+</tbody>
+</table>
+<p>Reproduce:</p>
+<pre><code class="language-bash">python python/demos/demo_anya.py \
+  --map maps/grid/maze01.yaml --scenario maps/scenarios/maze01_s1.yaml \
+  --params configs/global_planning/anya.yaml --trace out/anya.jsonl
+python tools/viz/replay.py out/anya.jsonl --gif out/anya.gif --snapshots out/anya_snaps/
+</code></pre>
+<h2 id="properties">Properties<a class="anchor" href="#properties" title="Permanent link">¶</a></h2>
+<ul>
+<li><strong>Completeness</strong>: complete on a finite grid with non-negative costs.</li>
+<li><strong>Optimality</strong>: by allowing corners as turning points it returns the <strong>true continuous Euclidean
+  shortest any-angle path</strong><sup id="fnref2:anya"><a class="footnote-ref" href="#fn:anya">1</a></sup>, with no cell-centre restriction (unlike the Visibility A* /
+  Theta* approximation). This optimum is taut-string optimal under the <strong>corner-cutting-forbidden
+  model</strong> (a path cannot squeeze through a diagonal pinch of two blocked cells): edge-grazing is
+  permitted but diagonal pinch traversal is not, i.e. the shortest path under the same traversal rule
+  as <code>neighbors()</code>.</li>
+<li><strong>Quality</strong>: the returned cost is always <strong>≤</strong> Visibility A* / Theta* on the same grid, since the
+  cell-centre optimum is an upper bound on the corner optimum (this repo's maze01: Anya 26.802 ≤
+  Visibility 27.748).</li>
+<li><strong>Observed occupancy</strong>: the planner observes only the free component reachable via <code>neighbors()</code>;
+  everything else (other components, obstacles, out of bounds) is treated as blocked. Optimality
+  therefore holds over the <strong>grid-connected</strong> region.</li>
+<li><strong>Path representation</strong>: the returned <code>path</code> snaps corners to an incident free cell for the shared
+  <code>list[Cell]</code> / viz contract; <code>cost</code> is the <strong>exact corner-geometry Euclidean length</strong>, not the snap.</li>
+</ul>
+<h2 id="true-euclidean-optimality-why-corners">True Euclidean Optimality (why corners)<a class="anchor" href="#true-euclidean-optimality-why-corners" title="Permanent link">¶</a></h2>
+<p><strong>Notation.</strong> In a planar region <span class="arithmatex">\(F\subseteq\mathbb{R}^2\)</span> whose obstacles are the union of blocked
+unit cells, a feasible path is a polyline inside <span class="arithmatex">\(F\)</span> and its cost is the sum of Euclidean lengths. Let
+<span class="arithmatex">\(C^\ast\)</span> be the minimum start→goal cost.</p>
+<p><strong>Proposition (a shortest path bends only at convex corners).</strong> When the boundary of <span class="arithmatex">\(F\)</span> is polygonal
+(the boundary of a union of axis-aligned unit squares), every interior turning point of a shortest
+path <span class="arithmatex">\(P^\ast\)</span> is a <strong>reflex vertex of <span class="arithmatex">\(F\)</span></strong> — a convex obstacle corner.</p>
+<p><em>Reason.</em> If a turning point <span class="arithmatex">\(v\)</span> were not an obstacle vertex, a small neighbourhood of <span class="arithmatex">\(v\)</span> lies
+entirely in <span class="arithmatex">\(F\)</span>, so the two segments through <span class="arithmatex">\(v\)</span> can be locally straightened and the triangle
+inequality <strong>strictly shortens</strong> the path — contradicting the minimality of <span class="arithmatex">\(P^\ast\)</span>. Hence every turn
+sits at an obstacle vertex that locally blocks free space convexly, i.e. a grid corner. ∎</p>
+<p><strong>Corollary (Anya finds <span class="arithmatex">\(C^\ast\)</span>).</strong> Each segment of the optimal path is a <strong>taut visible straight
+line</strong> between two corners (or start/goal). Anya's interval sweep discovers exactly these taut visible
+corners as successors of each root, keeps <span class="arithmatex">\(g(\text{root})\)</span> equal to the real start→root Euclidean
+length, and runs A* with an admissible <span class="arithmatex">\(h\)</span>. Every edge the optimal path uses is in this successor
+set, so best-first expansion converges to <span class="arithmatex">\(C^\ast\)</span>. Where Visibility A* / Theta* miss <span class="arithmatex">\(C^\ast\)</span> by
+restricting turns to cell centres, Anya recovers it exactly by allowing corners. ∎</p>
+<h2 id="parameters">Parameters<a class="anchor" href="#parameters" title="Permanent link">¶</a></h2>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Default</th>
+<th>Range</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>vertex_epsilon</code></td>
+<td>float</td>
+<td>1e-9</td>
+<td>[1e-12, 1e-3]</td>
+<td>float tolerance for the grid-vertex / pinch test. Not a behavioural tuning knob; does not affect path optimality</td>
+</tr>
+</tbody>
+</table>
+<p>Anya is an optimal algorithm and so has no quality/speed trade-off knob (weighting it would break
+optimality). <code>vertex_epsilon</code> is purely for numerical stability.</p>
+<h2 id="emitted-trace-events">Emitted Trace Events<a class="anchor" href="#emitted-trace-events" title="Permanent link">¶</a></h2>
+<p><code>planning_started</code> → (<code>node_expanded</code>, <code>candidate_evaluated</code>, <code>edge_added</code>)* → <code>path_found</code> → <code>planning_finished</code></p>
+<p><code>node_expanded</code> is an expanded corner root; <code>edge_added(state=corner, parent=root)</code> is a taut
+any-angle edge. Its <code>data</code> carries the <code>(root, interval)</code> node the corner was discovered through, in
+cell-index coordinates <code>{row, col_lo, col_hi}</code> (the same convention as Visibility A*), so the
+visualizer can draw the interval.</p>
+<h2 id="references">References<a class="anchor" href="#references" title="Permanent link">¶</a></h2>
+<div class="footnote">
+<hr />
+<ol>
+<li id="fn:anya">
+<p>Harabor, D., Grastien, A., Öz, D., &amp; Aksakalli, V. (2016). "Optimal Any-Angle Pathfinding In Practice." <em>Journal of Artificial Intelligence Research</em>, 56, 89–118. <a href="https://doi.org/10.1613/jair.5007">doi:10.1613/jair.5007</a>&#160;<a class="footnote-backref" href="#fnref:anya" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:anya" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:anya" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref4:anya" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+</li>
+<li id="fn:theta">
+<p>Nash, A., Daniel, K., Koenig, S., &amp; Felner, A. (2007). "Theta*: Any-Angle Path Planning on Grids." <em>Proc. AAAI Conference on Artificial Intelligence</em>, 1177–1183. <a href="https://ojs.aaai.org/index.php/AAAI/article/view/11009">PDF</a>&#160;<a class="footnote-backref" href="#fnref:theta" title="Jump back to footnote 2 in the text">&#8617;</a></p>
+</li>
+<li id="fn:aw">
+<p>Amanatides, J., &amp; Woo, A. (1987). "A Fast Voxel Traversal Algorithm for Ray Tracing." <em>Proc. Eurographics</em>, 3–10. <a href="https://www.cse.yorku.ca/~amana/research/grid.pdf">PDF</a>&#160;<a class="footnote-backref" href="#fnref:aw" title="Jump back to footnote 3 in the text">&#8617;</a></p>
+</li>
+<li id="fn:hart">
+<p>Hart, P. E., Nilsson, N. J., &amp; Raphael, B. (1968). "A Formal Basis for the Heuristic Determination of Minimum Cost Paths." <em>IEEE Transactions on Systems Science and Cybernetics</em>, 4(2), 100–107. <a href="https://doi.org/10.1109/TSSC.1968.300136">doi:10.1109/TSSC.1968.300136</a>&#160;<a class="footnote-backref" href="#fnref:hart" title="Jump back to footnote 4 in the text">&#8617;</a></p>
+</li>
+</ol>
+</div><nav class="pager"><a href="../../en/algorithms/visibility_astar.html"><div class="dir">← Prev</div><div class="ttl">Visibility A*</div></a><a class="next" href="../../en/algorithms/prm.html"><div class="dir">Next →</div><div class="ttl">PRM</div></a></nav></article></main>
+<aside class="toc" id="toc"></aside>
+</div>
+<div class="backdrop"></div>
+<footer class="site-footer">
+  <p>navigation study — robot navigation planning algorithms · C++ / Python dual implementation</p>
+  <p>Built as a static site · <a href="../../ko/index.html">한국어</a> · <a href="../../en/index.html">English</a></p>
+</footer>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script" async></script>
+</body></html>

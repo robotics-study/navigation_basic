@@ -1,0 +1,45 @@
+algorithm: abit_star
+category: global_planning
+params:
+  - name: batch_size
+    type: int
+    default: 200
+    min: 1
+    max: 100000
+    description: 배치당 새로 뿌리는 (informed) 샘플 수. (Strub & Gammell 2020, BIT* 계승)
+  - name: max_batches
+    type: int
+    default: 15
+    min: 1
+    max: 10000
+    description: 최대 배치 수 (anytime; 소진 시 현재 best 반환).
+  - name: gamma
+    type: float
+    default: 30.0
+    min: 0.01
+    max: 1000.0
+    description: RGG 연결 반경 계수 γ. r_n = γ·(log n / n)^(1/2). (Karaman & Frazzoli 2011)
+  - name: inflation_factor
+    type: float
+    default: 10.0
+    min: 1.0
+    max: 1000000.0
+    description: 초기 heuristic 부풀림 계수 ε_infl (≥1). 클수록 초반 exploitation 우선 → 빠른 첫 해. (Strub & Gammell 2020; ARA* 스케줄 Likhachev et al. 2003)
+  - name: inflation_final
+    type: float
+    default: 1.0
+    min: 1.0
+    max: 1000000.0
+    description: 마지막 배치에서 수렴시킬 ε_infl 값 (배치마다 inflation_factor→inflation_final 로 단조 감소; 1.0 이면 최적성 완전 회복).
+  - name: truncation_factor
+    type: float
+    default: 2.0
+    min: 1.0
+    max: 1000000.0
+    description: 해 개선 truncation 계수 ε_trunc (≥1). 현재 해를 ε_trunc 배 이상 못 줄이는 간선 처리를 조기 종료해 배치당 계산량 절감. 배치마다 truncation_factor→1.0 으로 단조 감소. (Strub & Gammell 2020)
+  - name: seed
+    type: int
+    default: 1
+    min: 0
+    max: 2147483647
+    description: 난수 시드 (재현성).

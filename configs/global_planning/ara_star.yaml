@@ -1,0 +1,35 @@
+algorithm: ara_star
+category: global_planning
+params:
+  - name: eps_start
+    type: float
+    default: 2.5
+    min: 1.0
+    max: 10.0
+    description: >-
+      최초 반복의 heuristic 가중치 ε0 (f = g + ε·h). 클수록 첫 해를 빨리 얻지만
+      준최적. 이후 ε 를 줄여가며 개선한다. (Likhachev, Gordon & Thrun 2003)
+  - name: eps_final
+    type: float
+    default: 1.0
+    min: 1.0
+    max: 10.0
+    description: >-
+      마지막 반복의 ε. 1.0 이면 admissible heuristic 으로 최적해를 반환한다.
+      eps_start 이하여야 anytime 개선이 일어난다.
+  - name: eps_step
+    type: float
+    default: 0.5
+    min: 0.01
+    max: 10.0
+    description: >-
+      반복마다 ε 를 줄이는 감소량 (ε ← max(eps_final, ε − eps_step)). 작을수록
+      해가 촘촘하게 개선되지만 반복 횟수가 늘어난다.
+  - name: max_expansions
+    type: int
+    default: 2000000
+    min: 1
+    max: 100000000
+    description: >-
+      전체 반복에 걸친 node 확장 누적 상한 (무한 루프/발산 안전장치). 도달하면
+      현재까지의 최선 해로 종료한다.

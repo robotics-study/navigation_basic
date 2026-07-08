@@ -2,6 +2,7 @@
 
 #include <map>
 #include <random>
+#include <string>
 #include <vector>
 
 #include "navigation/core/capabilities.hpp"
@@ -71,6 +72,13 @@ std::vector<std::vector<int>> radius_neighbors(const SamplingSpace<Point>& space
 // (PRM* / FMT* / BIT*): Karaman & Frazzoli (2011), Janson et al. (2015). Returns
 // inf for n <= 1.
 double rgg_radius(double gamma, int n);
+
+// Near-radius selector for the RRT* family (RRT* / Informed RRT* / Fast-RRT).
+// mode == "shrinking" returns the shrinking rgg_radius(gamma, n) so the near-set
+// contracts with tree size as in canonical RRT* (Karaman & Frazzoli 2011); any
+// other mode ("fixed") keeps the constant fixed_radius so default runs are
+// unchanged. Centralised so all three planners share one fixed/shrinking switch.
+double near_radius(const std::string& mode, double fixed_radius, double gamma, int n);
 
 // Batch-planner finish metrics (PRM / PRM* / FMT* / BIT*): same as the RRT-family
 // finish minus the iterations field, since these planners do not iterate.

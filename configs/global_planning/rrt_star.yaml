@@ -30,7 +30,20 @@ params:
     default: 1.5
     min: 0.01
     max: 100.0
-    description: choose-parent / rewire 근방 반경 (meters). (Karaman & Frazzoli 2011)
+    description: choose-parent / rewire 근방 반경 (meters). radius_mode=fixed 일 때 사용. (Karaman & Frazzoli 2011)
+  - name: radius_mode
+    type: enum
+    default: fixed
+    choices: [fixed, shrinking]
+    description: >-
+      근방 반경 모드. fixed 는 상수 neighbor_radius, shrinking 은 트리 크기에 따라
+      줄어드는 rₙ=γ(log n/n)^(1/d) 를 쓴다. (Karaman & Frazzoli 2011)
+  - name: rgg_gamma
+    type: float
+    default: 2.0
+    min: 0.01
+    max: 100.0
+    description: shrinking 반경의 γ 계수. radius_mode=shrinking 일 때만 사용. (Karaman & Frazzoli 2011)
   - name: seed
     type: int
     default: 1

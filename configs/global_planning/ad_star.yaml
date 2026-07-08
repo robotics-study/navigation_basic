@@ -1,0 +1,46 @@
+algorithm: ad_star
+category: global_planning
+params:
+  - name: eps_start
+    type: float
+    default: 2.5
+    min: 1.0
+    max: 10.0
+    description: >-
+      최초 개선의 heuristic 가중치 ε0. over-consistent 정점의 key 에만 ε 를 곱해
+      (under-consistent 는 논문대로 미적용) 첫 해를 빠르게 얻는다. 클수록 첫 해가
+      빠르지만 준최적. (Likhachev, Ferguson, Gordon, Stentz & Thrun 2005)
+  - name: eps_final
+    type: float
+    default: 1.0
+    min: 1.0
+    max: 10.0
+    description: >-
+      개선이 수렴하는 목표 ε. 1.0 이면 각 belief 에 대해 최적해로 수렴한다. 로봇은
+      ε 가 이 값에 도달(현재 belief 최적)했을 때만 한 스텝 이동한다. eps_start 이하여야
+      anytime 개선이 일어난다.
+  - name: eps_step
+    type: float
+    default: 0.5
+    min: 0.01
+    max: 10.0
+    description: >-
+      개선마다 ε 를 줄이는 감소량 (ε ← max(eps_final, ε − eps_step)). 작을수록
+      촘촘하게 개선되지만 ComputeOrImprovePath 반복이 늘어난다.
+  - name: sensor_radius
+    type: int
+    default: 3
+    min: 1
+    max: 50
+    description: >-
+      로봇 센서의 반경 (단위: cell). 매 스텝 로봇 셀 기준 Euclidean disk
+      (dr² + dc² ≤ r²) 안의 셀에 대해 실제 점유를 감지해 belief 를 갱신한다. 클수록
+      장애물을 멀리서 미리 발견해 재계획이 줄어든다. (Koenig & Likhachev 2002)
+  - name: max_expansions
+    type: int
+    default: 2000000
+    min: 1
+    max: 100000000
+    description: >-
+      전체 move → sense → replan 시뮬레이션에 걸친 node 확장 누적 상한
+      (무한 루프/발산 안전장치). 도달하면 현재까지의 최선 궤적으로 종료한다.
