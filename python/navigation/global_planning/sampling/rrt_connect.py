@@ -52,7 +52,12 @@ class RRTConnect(_SamplingPlanner):
             new_idx = self._extend(space, ta, q_rand, step_size, recorder)
             if new_idx is not None:
                 tb_idx = self._connect(space, tb, ta.points[new_idx], step_size, goal_tol, recorder)
-                if tb_idx is not None:
+                # CONNECT 는 tb 를 q_new 의 goal_tol 안까지만 당기므로 접합 두 노드 사이에
+                # 최대 goal_tol 구간이 남는다. 이 bridge 를 명시적으로 충돌 검사해야 얇은
+                # 벽을 관통하는 경로가 성공으로 새어나가지 않는다 (Kuffner & LaValle 2000).
+                if tb_idx is not None and space.is_motion_valid(
+                    ta.points[new_idx], tb.points[tb_idx]
+                ):
                     bridge = ta.path_to(new_idx) + list(reversed(tb.path_to(tb_idx)))
                     # bridge runs root(ta)->...->root(tb); reverse it when goal is the
                     # extending tree so the returned path always begins at start.

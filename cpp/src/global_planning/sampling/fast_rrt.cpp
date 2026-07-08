@@ -5,6 +5,7 @@
 #include <limits>
 #include <numbers>
 #include <random>
+#include <string>
 
 #include "navigation/global_planning/sampling/sampling_common.hpp"
 
@@ -20,21 +21,26 @@ bool within_reached(const Tree& tree, const SamplingSpace<Point>& space, const P
   return false;
 }
 
-// Fast-Optimal shortcut pruning: drop any waypoint whose bypass segment is
-// collision-free (triangle inequality shortens the path).
+// Fast-Optimal shortcut pruning: single greedy pass that, from each kept
+// waypoint, jumps to the farthest later waypoint reachable by a collision-free
+// straight segment. This must stay byte-for-byte equivalent to the Python
+// FastRRT._shortcut so the cross-language benchmark compares the same shortcut
+// result on partially occluded paths; the identical i/j scan order and
+// is_motion_valid call sequence keep both languages on the same output.
 std::vector<Point> shortcut_prune(const SamplingSpace<Point>& space, std::vector<Point> path) {
-  bool changed = true;
-  while (changed && path.size() > 2) {
-    changed = false;
-    for (size_t i = 1; i + 1 < path.size(); ++i) {
-      if (space.is_motion_valid(path[i - 1], path[i + 1])) {
-        path.erase(path.begin() + static_cast<long>(i));
-        changed = true;
-        break;
-      }
+  if (path.size() <= 2) return path;
+  std::vector<Point> out;
+  out.push_back(path[0]);
+  size_t i = 0;
+  while (i < path.size() - 1) {
+    size_t j = path.size() - 1;
+    while (j > i + 1 && !space.is_motion_valid(path[i], path[j])) {
+      --j;
     }
+    out.push_back(path[j]);
+    i = j;
   }
-  return path;
+  return out;
 }
 
 }  // namespace
@@ -46,6 +52,8 @@ core::PlanResult<Point> FastRrtPlanner::plan(SamplingSpace<Point>& space, const 
   const double goal_bias = params_.get_float("goal_bias");
   const double goal_tolerance = params_.get_float("goal_tolerance");
   const double neighbor_radius = params_.get_float("neighbor_radius");
+  const std::string radius_mode = params_.get_string("radius_mode");
+  const double rgg_gamma = params_.get_float("rgg_gamma");
   const double reached_radius = params_.get_float("reached_radius");
   const int steering_attempts = params_.get_int("steering_attempts");
   std::mt19937 rng(static_cast<unsigned>(params_.get_int("seed")));
@@ -97,7 +105,11 @@ core::PlanResult<Point> FastRrtPlanner::plan(SamplingSpace<Point>& space, const 
     }
     if (!extended) continue;
 
-    std::vector<int> nbrs = near(tree, space, q_new, neighbor_radius);
+    // shrinking 모드는 트리 크기 n 에 따라 근방 반경을 줄인다 (Karaman & Frazzoli 2011);
+    // fixed(기본)는 상수 neighbor_radius 를 그대로 써 기존 동작을 보존한다.
+    double radius = near_radius(radius_mode, neighbor_radius, rgg_gamma,
+                               static_cast<int>(tree.nodes.size()));
+    std::vector<int> nbrs = near(tree, space, q_new, radius);
     double new_cost = 0.0;
     int parent = choose_parent(tree, space, q_new, nbrs, ni, new_cost, recorder);
     int ci = tree.add(q_new, parent, new_cost);

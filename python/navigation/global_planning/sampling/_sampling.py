@@ -133,6 +133,18 @@ def rgg_radius(gamma: float, n: int) -> float:
     return gamma * float(np.sqrt(np.log(n) / n))
 
 
+def near_radius(mode: str, fixed_radius: float, gamma: float, n: int) -> float:
+    """Near-radius selector for the RRT* family (RRT* / Informed RRT* / Fast-RRT).
+
+    ``"shrinking"`` contracts the near-set with tree size via ``rgg_radius`` as in
+    canonical RRT* (Karaman & Frazzoli 2011); any other declared mode (``"fixed"``)
+    keeps the constant ``fixed_radius`` so default runs are unchanged.
+    """
+    if mode == "shrinking":
+        return rgg_radius(gamma, n)
+    return fixed_radius
+
+
 def informed_sample(
     space: SamplingSpace[Point],
     start: Point,

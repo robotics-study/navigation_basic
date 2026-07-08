@@ -7,21 +7,25 @@
 
 namespace navigation::global_planning {
 
-// Anya (Harabor, Grastien, Öz & Aksakalli 2016, "Optimal Any-Angle Pathfinding
-// In Practice", JAIR 56): the provably Euclidean-shortest any-angle planner.
-// Anya searches over (root, interval) nodes — an interval is a contiguous run of
-// same-row points visible from the root — and expands by projecting the interval
-// through the grid to enumerate observable successors. Unlike Theta* (any-angle
-// but not optimal), it returns the true shortest any-angle path.
+// Anya: optimal Euclidean any-angle pathfinding via interval search (Harabor,
+// Grastien, Öz & Aksakalli, JAIR 56, 2016). Unlike Theta*/Visibility A* (which pin
+// turning points to cell CENTRES and are only any-angle approximations), Anya
+// searches over (root, interval) nodes whose turning points are grid CORNERS
+// (vertices). A shortest Euclidean path in a blocked-cell domain is a taut string
+// that bends only at convex obstacle corners, so rooting turns exactly there lets
+// Anya return the TRUE continuous Euclidean shortest any-angle path, not a
+// cell-centre approximation.
 //
-// Adapted to this repository's cell-centre vertex model (turning points are cell
-// centres, as in Theta*, so the path is a list<Cell> of LOS-clear straight
-// legs): roots are cell centres settled in best-first order (A* with the
-// admissible+consistent Euclidean heuristic), and a root's successors are the
-// LOS-visible free cells grouped, per grid row, into maximal column intervals.
-// Relaxing the whole visible set settles the cell-centre visibility-graph
-// optimum, which is therefore always <= the Theta* cost. w > 1 trades optimality
-// for speed (Pohl 1970).
+// A search node is a corner root plus the visibility intervals it projects across
+// the grid; expanding a root sweeps its visibility row by row (cone successors)
+// and along its own row (flat successors), reaching successor obstacle corners.
+// g(root) is the accumulated start->root Euclidean distance; the frontier is
+// ordered by f = g(root) + ||root - goal|| (admissible straight-line bound). Path
+// cost is Euclidean on cell-index deltas, matching the Theta*/Visibility model and
+// identical across the Python mirror. Occupancy is observed only via the
+// LineOfSightSpace capability's neighbors() (the reachable free component); the
+// corner-level line-of-sight / projection is computed here (the capability's
+// line_of_sight answers only cell-centre pairs, which cannot express corner turns).
 class AnyaPlanner final : public core::LineOfSightPlanner {
  public:
   explicit AnyaPlanner(core::ParamSet params)

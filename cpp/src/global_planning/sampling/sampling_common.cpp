@@ -147,6 +147,13 @@ double rgg_radius(double gamma, int n) {
   return gamma * std::sqrt(std::log(dn) / dn);
 }
 
+double near_radius(const std::string& mode, double fixed_radius, double gamma, int n) {
+  // "shrinking" contracts the near-set with tree size (Karaman & Frazzoli 2011);
+  // every other declared mode keeps the constant so default runs stay unchanged.
+  if (mode == "shrinking") return rgg_radius(gamma, n);
+  return fixed_radius;
+}
+
 void emit_finished_batch(TraceRecorder* recorder, bool success, double cost, int expanded_nodes,
                          int samples, int tree_size, double runtime_sec) {
   if (!recorder) return;

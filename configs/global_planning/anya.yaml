@@ -1,12 +1,12 @@
 algorithm: anya
 category: global_planning
 params:
-  - name: heuristic_weight
+  - name: vertex_epsilon
     type: float
-    default: 1.0
-    min: 1.0
-    max: 5.0
+    default: 1.0e-9
+    min: 1.0e-12
+    max: 1.0e-3
     description: >-
-      f = g + w*h 의 가중치 (h 는 유클리드 직선거리). 1.0 이면 최적 any-angle (Anya),
-      1.0 초과면 weighted (더 빠르지만 준최적 — 최적성 보장 상실).
-      (Harabor, Grastien, Öz & Aksakalli 2016; weighted: Pohl 1970)
+      grid vertex/collinearity 판정 및 pinch(코너 관통) 검사에 쓰는 float 허용오차.
+      Anya 는 optimal Euclidean any-angle (interval-based, Harabor et al. 2016) 로
+      동작 튜닝 파라미터가 없다 — 이 값은 순수 수치 안정용이며 경로 최적성에 영향을 주지 않는다.
