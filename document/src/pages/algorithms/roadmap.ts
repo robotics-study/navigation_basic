@@ -116,6 +116,15 @@ export const ALGO_BLURBS: AlgoBlurb[] = [
         },
     },
     {
+        slug: "prm_star",
+        blurb: {
+            en: "PRM whose connection radius shrinks as γ(log n/n)^(1/d): Θ(log n) " +
+                "neighbors per node, and the roadmap path converges to the true optimum.",
+            ko: "연결 반경이 γ(log n/n)^(1/d)로 줄어드는 PRM. 노드마다 Θ(log n)개의 " +
+                "이웃을 유지해, roadmap 경로가 참 최적으로 수렴한다.",
+        },
+    },
+    {
         slug: "astar",
         blurb: {
             en: "Dijkstra plus a compass: order the frontier by g + h and an admissible " +
