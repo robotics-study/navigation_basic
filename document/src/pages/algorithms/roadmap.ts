@@ -107,6 +107,15 @@ export const ALGO_BLURBS: AlgoBlurb[] = [
         },
     },
     {
+        slug: "prm",
+        blurb: {
+            en: "Throw random points into free space, wire the ones that can see each " +
+                "other, and answer start–goal queries with graph search over the roadmap.",
+            ko: "free 공간에 무작위 점을 뿌리고 서로 보이는 점끼리 이어, roadmap 위 " +
+                "그래프 탐색으로 시작–목표 질의에 답한다.",
+        },
+    },
+    {
         slug: "astar",
         blurb: {
             en: "Dijkstra plus a compass: order the frontier by g + h and an admissible " +

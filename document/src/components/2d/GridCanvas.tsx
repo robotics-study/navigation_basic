@@ -79,6 +79,10 @@ const GridCanvas = ({
         () => showTree && timeline ? timeline.edges.filter((e) => e.step <= step) : [],
         [showTree, timeline, step],
     )
+    const samplesVisible = useMemo(
+        () => timeline ? timeline.samples.filter((s) => s.step <= step) : [],
+        [timeline, step],
+    )
     // anytime planner는 개선된 경로를 여러 번 발표한다 — 현재 step 까지의 최신 경로를 그린다.
     const visiblePath = useMemo(() => {
         if (!timeline) return null
@@ -190,6 +194,12 @@ const GridCanvas = ({
                 {shadowCells?.map((c, i) => (
                     <Rect key={`sh${i}`} x={c[1] * cell} y={c[0] * cell}
                           width={cell} height={cell} fill={colors.muted} opacity={0.22}/>
+                ))}
+                {/* 표본 (sampling planner) — roadmap/tree 정점 후보 점 */}
+                {samplesVisible.map((s, i) => (
+                    <Circle key={`sm${i}`} x={center(s.cell)[0]} y={center(s.cell)[1]}
+                            radius={Math.max(1.2, cell * 0.07)} fill={colors.muted}
+                            opacity={0.55}/>
                 ))}
                 {/* 탐색 완료(CLOSED) — 연속 모드에서는 pose 점, grid 모드에서는 셀 */}
                 {expandedVisible.map((e, i) => continuous

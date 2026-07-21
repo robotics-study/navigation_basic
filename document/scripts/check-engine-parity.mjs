@@ -60,6 +60,9 @@ const RUNNERS = {
         {map: m, start: s, goal: g, heuristicWeight: p.heuristic_weight ?? 1}),
     anya: (m, s, g, p) => engines.runAnya(
         {map: m, start: s, goal: g, vertexEpsilon: p.vertex_epsilon ?? 1e-9}),
+    prm: (m, s, g, p) => engines.runPRM(
+        {map: m, start: s, goal: g, numSamples: p.num_samples ?? 250,
+         connectionRadius: p.connection_radius ?? 2, seed: p.seed ?? 1}),
     // 연속 SE(2): start 는 trace 경로의 첫 pose, goal 은 시나리오 pose (theta 기본 0).
     hybrid_astar: (m, s, g, p) => engines.runHybridAStar({
         map: m, start: s, goal: [9.25, 9.25, 0],
@@ -85,6 +88,8 @@ const CHECKS = [
     {algo: "jps", maps: ["maze01", "open01"], exact: true},
     {algo: "visibility_astar", maps: ["maze01", "open01"], exact: true},
     {algo: "anya", maps: ["maze01", "open01"], exact: true},
+    // sampling 계열: numpy PCG64 RNG를 미러해 표본열까지 동일 → exact.
+    {algo: "prm", maps: ["maze01", "open01"], exact: true},
     // sin/cos 가 libm 구현마다 1 ULP 다를 수 있어 비용은 허용 오차로만 비교한다.
     {algo: "hybrid_astar", maps: ["open01", "maze01"], exact: false, costTol: 0.05},
 ];

@@ -199,7 +199,21 @@ const data: IAlgoData[] = [
         ],
     },
     // ---- Sampling-based ----
-    {slug: "prm", title: {en: "PRM", ko: "PRM"}, category: "sampling"},
+    {
+        slug: "prm",
+        title: {en: "PRM", ko: "PRM"},
+        category: "sampling",
+        supportedExample: {python: true, "c++": true},
+        contents: lazy(() => import("./global/sampling/Prm")),
+        sections: [
+            {en: "Sample, Connect, Query", ko: "뿌리고, 잇고, 묻는다"},
+            {en: "Properties and Complexity", ko: "성질과 복잡도"},
+            {en: "The Algorithm", ko: "알고리즘"},
+            {en: "Demo", ko: "Demo"},
+            {en: "Implementation", ko: "Implementation"},
+            {en: "References", ko: "References"},
+        ],
+    },
     {slug: "prm_star", title: {en: "PRM*", ko: "PRM*"}, category: "sampling"},
     {slug: "rrt", title: {en: "RRT", ko: "RRT"}, category: "sampling"},
     {slug: "rrt_connect", title: {en: "RRT-Connect", ko: "RRT-Connect"}, category: "sampling"},
