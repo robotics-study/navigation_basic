@@ -66,8 +66,12 @@ export function pathSampler(states: number[][]): PathSampler {
         const u = seg > 0 ? (target - cum[i - 1]) / seg : 0
         const a = states[i - 1]
         const b = states[i]
-        const ta = a[2] ?? 0
-        let d = (b[2] ?? 0) - ta
+        // θ가 없는 경로(SST처럼 (x, y)만 기록)는 전진 전용이므로 구간 진행 방향이
+        // 곧 heading이다.
+        const segTheta = Math.atan2(b[1] - a[1], b[0] - a[0])
+        const ta = a.length > 2 ? a[2] : segTheta
+        const tb = b.length > 2 ? b[2] : segTheta
+        let d = tb - ta
         d -= 2 * Math.PI * Math.round(d / (2 * Math.PI))
         return [a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u, ta + d * u]
     }
