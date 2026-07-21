@@ -78,6 +78,24 @@ const RUNNERS = {
          neighborRadius: p.neighbor_radius ?? 1.5,
          radiusMode: p.radius_mode ?? "fixed", rggGamma: p.rgg_gamma ?? 2,
          seed: p.seed ?? 1}),
+    informed_rrt_star: (m, s, g, p) => engines.runInformedRRTStar(
+        {map: m, start: s, goal: g, maxIterations: p.max_iterations ?? 8000,
+         stepSize: p.step_size ?? 0.5, goalBias: p.goal_bias ?? 0.05,
+         goalTolerance: p.goal_tolerance ?? 0.3,
+         neighborRadius: p.neighbor_radius ?? 1.5,
+         radiusMode: p.radius_mode ?? "fixed", rggGamma: p.rgg_gamma ?? 2,
+         seed: p.seed ?? 1}),
+    fast_rrt: (m, s, g, p) => engines.runFastRRT(
+        {map: m, start: s, goal: g, maxIterations: p.max_iterations ?? 650,
+         stepSize: p.step_size ?? 0.5, goalBias: p.goal_bias ?? 0.05,
+         goalTolerance: p.goal_tolerance ?? 0.3,
+         neighborRadius: p.neighbor_radius ?? 1.5,
+         radiusMode: p.radius_mode ?? "fixed", rggGamma: p.rgg_gamma ?? 2,
+         reachedRadius: p.reached_radius ?? 0.4, steeringAttempts: p.steering_attempts ?? 10,
+         seed: p.seed ?? 1}),
+    fmt_star: (m, s, g, p) => engines.runFMTStar(
+        {map: m, start: s, goal: g, numSamples: p.num_samples ?? 1500,
+         gamma: p.gamma ?? 30, seed: p.seed ?? 1}),
     prm_star: (m, s, g, p) => engines.runPRMStar(
         {map: m, start: s, goal: g, numSamples: p.num_samples ?? 250,
          gamma: p.gamma ?? 30, seed: p.seed ?? 1}),
@@ -112,6 +130,9 @@ const CHECKS = [
     {algo: "rrt", maps: ["maze01", "open01"], exact: true},
     {algo: "rrt_connect", maps: ["maze01", "open01"], exact: true},
     {algo: "rrt_star", maps: ["maze01", "open01"], exact: true},
+    {algo: "informed_rrt_star", maps: ["maze01", "open01"], exact: true},
+    {algo: "fast_rrt", maps: ["maze01", "open01"], exact: true},
+    {algo: "fmt_star", maps: ["maze01", "open01"], exact: true},
     // sin/cos 가 libm 구현마다 1 ULP 다를 수 있어 비용은 허용 오차로만 비교한다.
     {algo: "hybrid_astar", maps: ["open01", "maze01"], exact: false, costTol: 0.05},
 ];

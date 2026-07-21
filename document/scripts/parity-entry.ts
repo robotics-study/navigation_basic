@@ -11,5 +11,8 @@ export {runAnya} from "../src/libs/algorithms/anya";
 export {runPRM, runPRMStar} from "../src/libs/algorithms/prm";
 export {runRRT, runRRTConnect} from "../src/libs/algorithms/rrt";
 export {runRRTStar} from "../src/libs/algorithms/rrt_star";
+export {runInformedRRTStar} from "../src/libs/algorithms/informed_rrt_star";
+export {runFastRRT} from "../src/libs/algorithms/fast_rrt";
+export {runFMTStar} from "../src/libs/algorithms/fmt_star";
 export {runHybridAStar} from "../src/libs/algorithms/hybrid_astar";
 export {parseGridMap} from "../src/libs/grid";
