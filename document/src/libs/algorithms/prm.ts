@@ -2,8 +2,9 @@ import {GridMap} from "../grid";
 import {TraceEvent} from "../trace/types";
 import {Point, SamplingGrid} from "./sampling_space";
 
-// 브라우저 라이브 데모용 PRM (Kavraki, Švestka, Latombe & Overmars 1996). 저장소
-// 구현을 그대로 미러한다: free 표본 → 고정 반경 연결 → roadmap 위 Dijkstra.
+// 브라우저 라이브 데모용 PRM / PRM* (Kavraki et al. 1996; Karaman & Frazzoli
+// 2011). 저장소 구현을 그대로 미러한다: free 표본 → 반경 연결 → roadmap 위
+// Dijkstra. 두 알고리즘은 연결 반경 정책만 다르다 (고정 r vs r_n = γ·√(log n/n)).
 // 표본은 map RNG(numpy PCG64 미러)에서 나오므로 같은 seed 면 python demo와
 // 표본·간선·확장 수까지 일치한다.
 export interface PRMOptions {
@@ -15,17 +16,48 @@ export interface PRMOptions {
     seed: number;
 }
 
-export function runPRM(opts: PRMOptions): TraceEvent[] {
-    const {map, start, goal, numSamples, connectionRadius: radius, seed} = opts
+export interface PRMStarOptions {
+    map: GridMap;
+    start: Point;
+    goal: Point;
+    numSamples: number;
+    gamma: number;
+    seed: number;
+}
+
+// PRM*의 RGG 연결 반경: r_n = γ·(log n / n)^(1/d), d = 2.
+export const rggRadius = (gamma: number, n: number): number =>
+    n <= 1 ? Infinity : gamma * Math.sqrt(Math.log(n) / n)
+
+export const runPRM = (opts: PRMOptions): TraceEvent[] =>
+    runRoadmap(opts.map, opts.start, opts.goal, opts.numSamples, opts.seed, {
+        algorithm: "prm",
+        params: {num_samples: opts.numSamples, connection_radius: opts.connectionRadius,
+                 seed: opts.seed},
+        radiusOf: () => opts.connectionRadius,
+    })
+
+export const runPRMStar = (opts: PRMStarOptions): TraceEvent[] =>
+    runRoadmap(opts.map, opts.start, opts.goal, opts.numSamples, opts.seed, {
+        algorithm: "prm_star",
+        params: {num_samples: opts.numSamples, gamma: opts.gamma, seed: opts.seed},
+        radiusOf: (n) => rggRadius(opts.gamma, n),
+    })
+
+function runRoadmap(
+    map: GridMap, start: Point, goal: Point, numSamples: number, seed: number,
+    run: {
+        algorithm: string;
+        params: Record<string, unknown>;
+        // 최종 노드 수(시작/목표 포함)에서 정한 연결 반경 — PRM은 상수를 돌려준다.
+        radiusOf: (n: number) => number;
+    },
+): TraceEvent[] {
     const space = new SamplingGrid(map, seed)
     const events: TraceEvent[] = []
     let seq = 0
     const emit = (ev: Omit<TraceEvent, "seq">) => events.push({seq: seq++, ...ev})
-    emit({
-        event: "planning_started",
-        algorithm: "prm",
-        params: {num_samples: numSamples, connection_radius: radius, seed},
-    })
+    emit({event: "planning_started", algorithm: run.algorithm, params: run.params})
 
     const nodes: Point[] = [start, goal]
     const adj: Array<Array<[number, number]>> = [[], []]
@@ -46,7 +78,8 @@ export function runPRM(opts: PRMOptions): TraceEvent[] {
         emit({event: "sample_drawn", state: [q[0], q[1]]})
     }
 
-    // 고정 반경 연결 — 각 노드를 앞선 노드들과만 이어 무향 간선을 한 번씩 만든다.
+    // 반경 연결 — 각 노드를 앞선 노드들과만 이어 무향 간선을 한 번씩 만든다.
+    const radius = run.radiusOf(nodes.length)
     for (let idx = 1; idx < nodes.length; idx++) {
         const node = nodes[idx]
         for (let j = 0; j < idx; j++) {
