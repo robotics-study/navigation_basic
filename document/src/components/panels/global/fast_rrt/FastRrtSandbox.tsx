@@ -26,7 +26,7 @@ const FastRrtScene = ({panel = 340}: {panel?: number}) => {
     const [start, setStart] = useState<Point>(GAP_START)
     const [goal, setGoal] = useState<Point>(GAP_GOAL)
     const [budget, setBudget] = useState(800)
-    const [seed, setSeed] = useState(1)
+    const [seed, setSeed] = useState(2)
     const [showRrt, setShowRrt] = useState(true)
 
     const timeline = useMemo(
