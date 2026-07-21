@@ -96,6 +96,17 @@ const RUNNERS = {
     fmt_star: (m, s, g, p) => engines.runFMTStar(
         {map: m, start: s, goal: g, numSamples: p.num_samples ?? 1500,
          gamma: p.gamma ?? 30, seed: p.seed ?? 1}),
+    bit_star: (m, s, g, p) => engines.runBITStar(
+        {map: m, start: s, goal: g, batchSize: p.batch_size ?? 200,
+         maxBatches: p.max_batches ?? 15, gamma: p.gamma ?? 30, seed: p.seed ?? 1}),
+    abit_star: (m, s, g, p) => engines.runABITStar(
+        {map: m, start: s, goal: g, batchSize: p.batch_size ?? 200,
+         maxBatches: p.max_batches ?? 15, gamma: p.gamma ?? 30,
+         inflationFactor: p.inflation_factor ?? 10, inflationFinal: p.inflation_final ?? 1,
+         truncationFactor: p.truncation_factor ?? 2, seed: p.seed ?? 1}),
+    ait_star: (m, s, g, p) => engines.runAITStar(
+        {map: m, start: s, goal: g, batchSize: p.batch_size ?? 200,
+         maxBatches: p.max_batches ?? 15, gamma: p.gamma ?? 30, seed: p.seed ?? 1}),
     prm_star: (m, s, g, p) => engines.runPRMStar(
         {map: m, start: s, goal: g, numSamples: p.num_samples ?? 250,
          gamma: p.gamma ?? 30, seed: p.seed ?? 1}),
@@ -133,6 +144,9 @@ const CHECKS = [
     {algo: "informed_rrt_star", maps: ["maze01", "open01"], exact: true},
     {algo: "fast_rrt", maps: ["maze01", "open01"], exact: true},
     {algo: "fmt_star", maps: ["maze01", "open01"], exact: true},
+    {algo: "bit_star", maps: ["maze01", "open01"], exact: true},
+    {algo: "abit_star", maps: ["maze01", "open01"], exact: true},
+    {algo: "ait_star", maps: ["maze01", "open01"], exact: true},
     // sin/cos 가 libm 구현마다 1 ULP 다를 수 있어 비용은 허용 오차로만 비교한다.
     {algo: "hybrid_astar", maps: ["open01", "maze01"], exact: false, costTol: 0.05},
 ];
