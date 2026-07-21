@@ -72,11 +72,14 @@ def export_map(name: str) -> None:
     ]
     out = DATA_DIR / "maps" / f"{name}.json"
     out.parent.mkdir(parents=True, exist_ok=True)
+    origin = meta.get("origin", [0.0, 0.0, 0.0])
     out.write_text(
         '{\n'
         f'  "name": "{name}",\n'
         f'  "width": {width},\n'
         f'  "height": {height},\n'
+        f'  "resolution": {meta["resolution"]},\n'
+        f'  "origin": [{origin[0]}, {origin[1]}],\n'
         '  "rows": [\n    '
         + ",\n    ".join(f'"{row}"' for row in rows)
         + "\n  ]\n}\n"
@@ -129,12 +132,13 @@ def export_traces(algo: str, map_name: str) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="export web data assets for document/")
-    parser.add_argument("--algos", required=True, help="comma-separated algorithm slugs")
+    parser.add_argument("--algos", default="", help="comma-separated algorithm slugs (empty: maps only)")
     parser.add_argument("--maps", required=True, help="comma-separated grid map names")
     args = parser.parse_args()
+    algos = [a for a in args.algos.split(",") if a]
     for map_name in args.maps.split(","):
         export_map(map_name)
-        for algo in args.algos.split(","):
+        for algo in algos:
             export_traces(algo, map_name)
 
 

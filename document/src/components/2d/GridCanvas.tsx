@@ -1,7 +1,7 @@
 import {useMemo, useRef} from "react";
-import {Circle, Layer, Line, Rect, Stage} from "react-konva";
+import {Circle, Group, Layer, Line, Rect, Stage} from "react-konva";
 import Konva from "konva";
-import {GridMap} from "../../libs/grid";
+import {GridMap, worldToCellUnits} from "../../libs/grid";
 import {Cell, GridTimeline} from "../../libs/trace/timeline";
 import {useCanvasColors} from "../../libs/useTheme";
 
@@ -22,6 +22,10 @@ interface GridCanvasProps {
     overlayPath?: Cell[];
     // 비교용 배경 셀 집합 (muted 반투명) — 다른 알고리즘의 확장 영역 대조 등에 쓴다.
     shadowCells?: Cell[];
+    // 연속 상태(SE(2)) planner 용 차량 표시 — carPose 는 현재(주행 중) pose,
+    // goalPose 는 요구 heading 을 보여 주는 점선 외곽선. 있으면 원 마커를 대체한다.
+    carPose?: [number, number, number];
+    goalPose?: [number, number, number];
     // sandbox 상호작용 — 핸들러가 있을 때만 활성화된다.
     onPaintCell?: (row: number, col: number, occupied: boolean) => void;
     onMoveStart?: (cell: Cell) => void;
@@ -30,7 +34,7 @@ interface GridCanvasProps {
 
 const GridCanvas = ({
                         map, panel, timeline, step = Infinity, start, goal,
-                        showTree = false, overlayPath, shadowCells,
+                        showTree = false, overlayPath, shadowCells, carPose, goalPose,
                         onPaintCell, onMoveStart, onMoveGoal,
                     }: GridCanvasProps) => {
     const colors = useCanvasColors();
@@ -42,7 +46,7 @@ const GridCanvas = ({
     const firstSeen = useMemo(() => {
         const cand = new Map<number, number>()
         const exp = new Map<number, number>()
-        if (timeline) {
+        if (timeline && !timeline.continuous) {
             for (const c of timeline.candidates) {
                 const key = c.cell[0] * map.width + c.cell[1]
                 if (!cand.has(key)) cand.set(key, c.step)
@@ -111,7 +115,33 @@ const GridCanvas = ({
         onPaintCell(c[0], c[1], paintValue.current)
     }
 
-    const center = (c: Cell): [number, number] => [(c[1] + 0.5) * cell, (c[0] + 0.5) * cell]
+    // 연속 상태 planner(Hybrid A* 등): cell 필드가 [x, y] world 좌표다.
+    const continuous = timeline?.continuous ?? false
+    const center = (c: Cell): [number, number] => {
+        if (continuous) {
+            const [u, v] = worldToCellUnits(map, c[0], c[1])
+            return [u * cell, v * cell]
+        }
+        return [(c[1] + 0.5) * cell, (c[0] + 0.5) * cell]
+    }
+
+    // 차량: heading 이 있는 pose 를 몸체 사각형 + 앞유리 선으로 그린다. world θ와
+    // canvas 회전은 y축 반전 때문에 부호가 반대다.
+    const car = (pose: [number, number, number], opts: {fill?: string; stroke: string; dash?: number[]}) => {
+        const [x, y] = center([pose[0], pose[1]])
+        const len = cell * 1.35
+        const wid = cell * 0.78
+        const sw = Math.max(1.2, cell * 0.08)
+        return (
+            <Group x={x} y={y} rotation={-pose[2] * 180 / Math.PI} listening={false}>
+                <Rect x={-len / 2} y={-wid / 2} width={len} height={wid}
+                      cornerRadius={wid * 0.28} fill={opts.fill}
+                      stroke={opts.stroke} strokeWidth={sw} dash={opts.dash}/>
+                <Line points={[len * 0.14, -wid * 0.3, len * 0.14, wid * 0.3]}
+                      stroke={opts.stroke} strokeWidth={sw} dash={opts.dash} lineCap="round"/>
+            </Group>
+        )
+    }
 
     const endpoint = (c: Cell, fill: string, onMove?: (cell: Cell) => void) => {
         const [x, y] = center(c)
@@ -158,11 +188,13 @@ const GridCanvas = ({
                     <Rect key={`sh${i}`} x={c[1] * cell} y={c[0] * cell}
                           width={cell} height={cell} fill={colors.muted} opacity={0.22}/>
                 ))}
-                {/* 탐색 완료(CLOSED) 셀 */}
-                {expandedVisible.map((e, i) => (
-                    <Rect key={`e${i}`} x={e.cell[1] * cell} y={e.cell[0] * cell}
-                          width={cell} height={cell} fill={colors.accent} opacity={0.24}/>
-                ))}
+                {/* 탐색 완료(CLOSED) — 연속 모드에서는 pose 점, grid 모드에서는 셀 */}
+                {expandedVisible.map((e, i) => continuous
+                    ? <Circle key={`e${i}`} x={center(e.cell)[0]} y={center(e.cell)[1]}
+                              radius={Math.max(1.5, cell * 0.1)} fill={colors.accent}
+                              opacity={0.5}/>
+                    : <Rect key={`e${i}`} x={e.cell[1] * cell} y={e.cell[0] * cell}
+                            width={cell} height={cell} fill={colors.accent} opacity={0.24}/>)}
                 {/* frontier(OPEN) 셀 — 발견됐지만 아직 확장 전 */}
                 {frontierVisible.map((c, i) => (
                     <Rect key={`f${i}`} x={c[1] * cell} y={c[0] * cell}
@@ -218,9 +250,11 @@ const GridCanvas = ({
                             radius={cell * 0.32} fill={colors.accent2}
                             stroke={colors.bg} strokeWidth={Math.max(1, cell * 0.06)}/>
                 )}
-                {/* 시작/목표 */}
-                {start && endpoint(start, colors.accent, onMoveStart)}
-                {goal && endpoint(goal, PATH_COLOR, onMoveGoal)}
+                {/* 시작/목표 — 차량 pose 가 주어지면 원 마커 대신 차로 그린다 */}
+                {start && !carPose && endpoint(start, colors.accent, onMoveStart)}
+                {goal && !goalPose && endpoint(goal, PATH_COLOR, onMoveGoal)}
+                {goalPose && car(goalPose, {stroke: PATH_COLOR, dash: [cell * 0.3, cell * 0.24]})}
+                {carPose && car(carPose, {fill: colors.accent2, stroke: colors.bg})}
             </Layer>
         </Stage>
     )
