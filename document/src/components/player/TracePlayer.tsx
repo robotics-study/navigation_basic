@@ -22,6 +22,8 @@ interface TracePlayerProps {
     // SE(2) 차량 planner 전용: 로봇을 차로 그리고 경로를 주행한다. sampling 계열의
     // 연속 timeline 에서는 꺼져 있어야 한다.
     vehicle?: boolean;
+    // 차 몸체 길이 (셀 단위) — 점 로봇 planner는 작게.
+    carLength?: number;
     panel?: number;
     showTree?: boolean;
     overlayPath?: Cell[];
@@ -52,6 +54,7 @@ const Btn = ({onClick, label, children, active}: {
 
 const TracePlayer = ({
                          map, timeline, start, goal, startPose, goalPose, vehicle = false,
+                         carLength,
                          panel = 340, showTree, overlayPath, truePath,
                          shadowCells, autoPlay = true,
                          onPaintCell, onMoveStart, onMoveGoal, onReset, footer,
@@ -151,7 +154,7 @@ const TracePlayer = ({
             <GridCanvas map={map} panel={panel} timeline={timeline} step={step}
                         start={start} goal={goal} showTree={showTree} overlayPath={overlayPath}
                         truePath={truePath} shadowCells={shadowCells}
-                        carPose={carPose} goalPose={goalCarPose}
+                        carPose={carPose} goalPose={goalCarPose} carLength={carLength}
                         onPaintCell={onPaintCell} onMoveStart={onMoveStart} onMoveGoal={onMoveGoal}/>
 
             <div className="flex items-center gap-1.5 text-xs text-muted w-full" style={{maxWidth: panel}}>

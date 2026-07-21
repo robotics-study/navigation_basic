@@ -324,7 +324,7 @@ repeat max_iterations times:
                 </p>}
             />
             <SstSandbox/>
-            <TraceReplay vehicle algo="sst" maps={["maze01", "open01"]} label={t(
+            <TraceReplay vehicle carLength={0.8} algo="sst" maps={["maze01", "open01"]} label={t(
                 "Real traces from the repository's SST demo — random controls propagate forward into arcs, and witness pruning keeps the active tree sparse",
                 "저장소 SST demo의 실제 trace. 랜덤 control이 호로 정방향 전파되고, witness 가지치기가 active 트리를 희소하게 유지한다",
             )}/>

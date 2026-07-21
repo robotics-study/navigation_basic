@@ -66,7 +66,7 @@ const SstScene = ({panel = 340}: {panel?: number}) => {
 
     return (
         <TracePlayer
-            vehicle
+            vehicle carLength={0.8}
             map={map} timeline={timeline} panel={panel}
             start={[start[0], start[1]]} goal={[goal[0], goal[1]]}
             showTree
