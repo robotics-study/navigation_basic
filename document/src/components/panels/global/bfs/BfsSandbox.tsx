@@ -6,15 +6,15 @@ import {buildGridTimeline, Cell} from "../../../../libs/trace/timeline";
 import {GridMap} from "../../../../libs/grid";
 import {useTr} from "../../../../libs/i18n";
 import cn from "../../../../libs/cn";
-import {pocketMap, SANDBOX_GOAL, SANDBOX_START} from "../astar/presets";
+import {roomsMap, ROOMS_GOAL, ROOMS_START} from "./presets";
 
 // 라이브 BFS sandbox — FIFO frontier가 hop 동심원으로 번지는 것을 본다.
 // 벽을 그리고 시작/목표를 끌면 즉시 재탐색한다.
 const BfsScene = ({panel = 340}: {panel?: number}) => {
     const t = useTr()
-    const [map, setMap] = useState<GridMap>(pocketMap)
-    const [start, setStart] = useState<Cell>(SANDBOX_START)
-    const [goal, setGoal] = useState<Cell>(SANDBOX_GOAL)
+    const [map, setMap] = useState<GridMap>(roomsMap)
+    const [start, setStart] = useState<Cell>(ROOMS_START)
+    const [goal, setGoal] = useState<Cell>(ROOMS_GOAL)
     const [connectivity, setConnectivity] = useState<4 | 8>(8)
 
     const timeline = useMemo(

@@ -53,6 +53,24 @@ export const ALGO_BLURBS: AlgoBlurb[] = [
         },
     },
     {
+        slug: "theta_star",
+        blurb: {
+            en: "Any-angle planning: try a straight line-of-sight shortcut to the " +
+                "grandparent at every relaxation, and zigzags collapse into taut segments.",
+            ko: "Any-angle planning. relaxation 마다 조부모로의 직선 지름길을 시험하면 " +
+                "지그재그가 팽팽한 직선 구간으로 접힌다.",
+        },
+    },
+    {
+        slug: "lazy_theta_star",
+        blurb: {
+            en: "Theta* with the expensive check deferred: assume line of sight at " +
+                "generation, verify once per expansion, repair if the view was blocked.",
+            ko: "비싼 검사를 미룬 Theta*. 생성 때는 line of sight 를 가정하고, 확장마다 " +
+                "한 번 확인하고, 막혀 있었으면 수리한다.",
+        },
+    },
+    {
         slug: "astar",
         blurb: {
             en: "Dijkstra plus a compass: order the frontier by g + h and an admissible " +

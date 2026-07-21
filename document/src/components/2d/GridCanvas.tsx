@@ -18,6 +18,8 @@ interface GridCanvasProps {
     start?: Cell;
     goal?: Cell;
     showTree?: boolean;
+    // 비교용 보조 경로 (점선, muted) — any-angle vs grid 경로 대조 등에 쓴다.
+    overlayPath?: Cell[];
     // sandbox 상호작용 — 핸들러가 있을 때만 활성화된다.
     onPaintCell?: (row: number, col: number, occupied: boolean) => void;
     onMoveStart?: (cell: Cell) => void;
@@ -26,7 +28,7 @@ interface GridCanvasProps {
 
 const GridCanvas = ({
                         map, panel, timeline, step = Infinity, start, goal,
-                        showTree = false, onPaintCell, onMoveStart, onMoveGoal,
+                        showTree = false, overlayPath, onPaintCell, onMoveStart, onMoveGoal,
                     }: GridCanvasProps) => {
     const colors = useCanvasColors();
     const cell = panel / Math.max(map.width, map.height);
@@ -183,6 +185,13 @@ const GridCanvas = ({
                     <Line key={`t${i}`} points={[...center(e.from), ...center(e.to)]}
                           stroke={colors.accent} strokeWidth={1} opacity={0.5}/>
                 ))}
+                {/* 비교용 보조 경로 (점선) */}
+                {overlayPath && overlayPath.length > 1 && (
+                    <Line points={overlayPath.flatMap((c) => center(c))}
+                          stroke={colors.muted} strokeWidth={Math.max(1.6, cell * 0.16)}
+                          dash={[cell * 0.5, cell * 0.4]} lineCap="round" lineJoin="round"
+                          opacity={0.85}/>
+                )}
                 {/* 발표된 최신 경로 */}
                 {visiblePath && (
                     <Line points={visiblePath.flatMap((c) => center(c))}
