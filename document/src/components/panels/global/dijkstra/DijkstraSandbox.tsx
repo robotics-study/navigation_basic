@@ -11,7 +11,7 @@ import cn from "../../../../libs/cn";
 import {hopcostMap, HOPCOST_GOAL, HOPCOST_START} from "../astar/presets";
 
 // 라이브 Dijkstra sandbox — 같은 문제를 BFS(FIFO)와 Dijkstra(priority queue)로 풀어
-// 비교한다. 8-connected 에서 hop-최단과 비용-최단이 갈라지는 것이 핵심 볼거리다.
+// 비교한다. 8-connected에서 hop-최단과 비용-최단이 갈라지는 것이 핵심 볼거리다.
 type Mode = "bfs" | "dijkstra";
 
 const DijkstraScene = ({panel = 340}: {panel?: number}) => {
@@ -21,7 +21,7 @@ const DijkstraScene = ({panel = 340}: {panel?: number}) => {
     const [goal, setGoal] = useState<Cell>(HOPCOST_GOAL)
     const [mode, setMode] = useState<Mode>("dijkstra")
 
-    // 두 엔진을 항상 같이 돌려 footer 에서 비용을 비교한다 (애니메이션은 선택 모드만).
+    // 두 엔진을 항상 같이 돌려 footer에서 비용을 비교한다 (애니메이션은 선택 모드만).
     const timelines = useMemo(() => ({
         bfs: buildGridTimeline(runBFS({map, start, goal, connectivity: 8})),
         dijkstra: buildGridTimeline(runAStar({map, start, goal, heuristicWeight: 0, connectivity: 8})),
@@ -85,7 +85,7 @@ const DijkstraSandbox = () => {
     return <CanvasFigure
         label={t(
             "Live comparison on one problem: swap the FIFO queue for a priority queue and the fewest-edge path gives way to the cheapest path",
-            "같은 문제의 라이브 비교. FIFO 큐를 priority queue 로 바꾸는 순간, edge 수 최소 경로가 비용 최소 경로로 바뀐다",
+            "같은 문제의 라이브 비교. FIFO 큐를 priority queue로 바꾸는 순간, edge 수 최소 경로가 비용 최소 경로로 바뀐다",
         )}
         tight bodyClassName="w-fit" className="w-full"
         modal={<DijkstraScene panel={Math.min(modalCanvasSize(1).width, 640)}/>}

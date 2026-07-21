@@ -108,7 +108,7 @@ const Sidebar = ({open: mobileOpen, onNavigate}: { open?: boolean; onNavigate?: 
                                                 </a>
                                                 : <div className="sb-sub">{pick(lang, cat.title)}</div>)}
                                             <div className={cn(multiCat && "sb-cat-body")}>
-                                                {/* 펼침 상태에서는 레지스트리(학습) 순서를 유지한 채 미집필을 dim 으로 끼워 넣는다 */}
+                                                {/* 펼침 상태에서는 레지스트리(학습) 순서를 유지한 채 미집필을 dim으로 끼워 넣는다 */}
                                                 {(showPlanned ? catItems : written).map((a) => a.contents
                                                     ? (
                                                         <a key={a.slug}

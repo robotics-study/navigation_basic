@@ -1,11 +1,11 @@
 import {lazy} from "react";
 import {IAlgoData} from "../../../types/global";
 
-// 알고리즘 메타데이터는 여기서만 관리한다. 콘텐츠 모듈은 lazy import 로 분리해
+// 알고리즘 메타데이터는 여기서만 관리한다. 콘텐츠 모듈은 lazy import로 분리해
 // 홈/목록 화면에서는 불러오지 않는다 (초기 번들 축소).
-// sections 의 en/ko 문자열은 각 언어로 렌더된 본문 h2 헤딩과 정확히 일치해야
+// sections의 en/ko 문자열은 각 언어로 렌더된 본문 h2 헤딩과 정확히 일치해야
 // 사이드바/TOC/검색 앵커(slug)가 맞는다.
-// 배열 순서가 사이드바·pager 의 진행 순서다 (학습 난이도 순).
+// 배열 순서가 사이드바·pager의 진행 순서다 (학습 난이도 순).
 const data: IAlgoData[] = [
     // ---- Graph search ----
     {
@@ -18,7 +18,7 @@ const data: IAlgoData[] = [
             {en: "The Idea", ko: "아이디어"},
             {en: "Properties and Complexity", ko: "성질과 복잡도"},
             {en: "The Algorithm", ko: "알고리즘"},
-            {en: "When Hops Lie", ko: "최소 hop 이 최단이 아닐 때"},
+            {en: "When Hops Lie", ko: "최소 hop이 최단이 아닐 때"},
             {en: "Demo", ko: "Demo"},
             {en: "Implementation", ko: "Implementation"},
             {en: "References", ko: "References"},

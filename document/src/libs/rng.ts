@@ -1,4 +1,4 @@
-// 시드 고정 PRNG (mulberry32). 소개 figure 의 샘플 배치가 렌더마다 튀지 않게 하고,
+// 시드 고정 PRNG (mulberry32). 소개 figure의 샘플 배치가 렌더마다 튀지 않게 하고,
 // "resample" 버튼은 시드만 바꾼다.
 export function mulberry32(seed: number): () => number {
     let a = seed >>> 0

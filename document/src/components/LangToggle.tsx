@@ -2,7 +2,7 @@ import {useLang} from "../libs/i18n";
 import cn from "../libs/cn";
 
 // nav_study 헤더의 언어 토글을 그대로 이식 — 글로브 아이콘 + KO / EN 세그먼트.
-// 정적 사이트는 언어별 URL 로 이동하지만, SPA 라 <a> 대신 <button> 으로 컨텍스트만 바꾼다.
+// 정적 사이트는 언어별 URL로 이동하지만, SPA라 <a> 대신 <button>으로 컨텍스트만 바꾼다.
 const LangToggle = () => {
     const {lang, setLang} = useLang()
 

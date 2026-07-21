@@ -2,7 +2,7 @@ import {useEffect, useMemo, useState} from "react";
 
 export type Theme = "light" | "dark";
 
-// 캔버스(Konva/Babylon)는 CSS 변수를 못 읽으므로 현재 테마를 JS 로 직접 판정한다.
+// 캔버스(Konva/Babylon)는 CSS 변수를 못 읽으므로 현재 테마를 JS로 직접 판정한다.
 // 우선순위: 명시적 data-theme 속성 > 시스템 prefers-color-scheme.
 function resolveTheme(): Theme {
     const attr = document.documentElement.getAttribute("data-theme");
@@ -16,7 +16,7 @@ export function useTheme(): Theme {
         const update = () => setTheme(resolveTheme());
         const media = window.matchMedia("(prefers-color-scheme: dark)");
         media.addEventListener("change", update);
-        // 향후 테마 토글이 data-theme 를 바꿀 때도 즉시 반영한다.
+        // 향후 테마 토글이 data-theme를 바꿀 때도 즉시 반영한다.
         const observer = new MutationObserver(update);
         observer.observe(document.documentElement, {attributes: true, attributeFilter: ["data-theme"]});
         return () => {

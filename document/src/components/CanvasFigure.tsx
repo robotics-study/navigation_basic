@@ -6,7 +6,7 @@ interface CanvasFigureProps {
     label: string;
     // 인라인 썸네일로 렌더할 캔버스.
     children: ReactNode;
-    // 모달용 확대 캔버스. 생략하면 children 을 큰 컨테이너에 그대로 재사용한다.
+    // 모달용 확대 캔버스. 생략하면 children을 큰 컨테이너에 그대로 재사용한다.
     modal?: ReactNode;
     // 외곽 래퍼(레이아웃 폭 등).
     className?: string;

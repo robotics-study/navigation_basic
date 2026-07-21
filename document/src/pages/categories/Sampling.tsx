@@ -14,7 +14,7 @@ const Sampling = () => {
                     structure. It sounds too crude to work. It works astonishingly well.
                 </p>}
                 ko={<p>
-                    Sampling 기반 planning 은 공간을 덮는 것을 포기하고 <em>찔러 보는</em> 것으로
+                    Sampling 기반 planning은 공간을 덮는 것을 포기하고 <em>찔러 보는</em> 것으로
                     타협한다. 무작위 상태를 뽑고, 충돌 없는 것만 남기고, 시작과 목표가 같은 연결
                     구조 안에 들어올 때까지 이어 붙인다. 너무 조잡해서 안 될 것 같지만, 놀랍도록
                     잘 된다.
@@ -33,12 +33,12 @@ const Sampling = () => {
                     not with how big the space is.
                 </p>}
                 ko={<p>
-                    격자는 차원 때문에 죽는다. 적당한 해상도의 2D 격자는 수천 셀이지만, 같은
+                    격자는 차원이 늘면 버티지 못한다. 적당한 해상도의 2D 격자는 수천 셀이지만, 같은
                     아이디어를 7-DOF 팔에 쓰면 <InlineMath math="10^{14}"/> 개가 넘는다. 게다가
                     격자를 만드는 것 자체가 모든 셀의 충돌 검사를 뜻하는데, 그 대부분은 탐색이
-                    건드리지도 않는다. sampling 은 거래를 뒤집는다. 공간을 열거하지 않고, 실제로
+                    건드리지도 않는다. sampling은 접근을 뒤집는다. 공간을 열거하지 않고, 실제로
                     뽑은 상태와 그 사이의 짧은 이동만 충돌 검사한다. 비용은 공간의 크기가 아니라
-                    planner 가 <em>봐야 하는</em> 양에 비례한다.
+                    planner가 <em>봐야 하는</em> 양에 비례한다.
                 </p>}
             />
 
@@ -65,7 +65,7 @@ const Sampling = () => {
                 </>}
                 ko={<>
                     <p>
-                        이 카테고리의 모든 planner 는 다섯 개의 primitive(저장소의{" "}
+                        이 카테고리의 모든 planner는 다섯 개의 primitive(저장소의{" "}
                         <code>SamplingSpace</code> capability)로 조립된다:
                     </p>
                     <ul>
@@ -79,13 +79,13 @@ const Sampling = () => {
                             움직인다.</li>
                     </ul>
                     <p>
-                        공간을 바꿔도 planner 는 그대로다. 같은 RRT* 코드가 2D 점 로봇을 계획하고,
+                        공간을 바꿔도 planner는 그대로다. 같은 RRT* 코드가 2D 점 로봇을 계획하고,
                         원리적으로는 7D 팔도 계획한다.
                     </p>
                 </>}
             />
 
-            <h2>{t("Trees and Roadmaps", "Tree 와 Roadmap")}</h2>
+            <h2>{t("Trees and Roadmaps", "Tree와 Roadmap")}</h2>
             <T
                 en={<ul>
                     <li>
@@ -103,14 +103,14 @@ const Sampling = () => {
                 </ul>}
                 ko={<ul>
                     <li>
-                        <strong>Tree (RRT 계열)</strong> 는 시작점에서 자란다. 샘플을 뽑고, 가장
+                        <strong>Tree (RRT 계열)</strong>는 시작점에서 자란다. 샘플을 뽑고, 가장
                         가까운 트리 노드를 찾고, 샘플 쪽으로 steer 하고, 유효하면 간선을 더한다.
                         트리는 자연스럽게 미탐험 공간으로 퍼진다(Voronoi bias). 단일 질의에 좋고,
                         동역학이 들어오면 사실상 유일한 선택지다.
                     </li>
                     <li>
-                        <strong>Roadmap (PRM 계열)</strong> 은 공간 전체를 미리 샘플링해 이웃을
-                        그래프로 잇고, 질의는 graph search 로 답한다. 구축 비용이 여러 질의에
+                        <strong>Roadmap (PRM 계열)</strong>은 공간 전체를 미리 샘플링해 이웃을
+                        그래프로 잇고, 질의는 graph search로 답한다. 구축 비용이 여러 질의에
                         분할 상환된다. 한 환경에서 오래 사는 로봇에 좋다.
                     </li>
                 </ul>}
@@ -131,11 +131,11 @@ const Sampling = () => {
                     fast by focusing samples where an improvement can possibly lie.
                 </p>}
                 ko={<p>
-                    보장은 graph search 보다 무르고, 이 카테고리의 역사는 그것을 조여 온 역사다.
-                    기본 RRT/PRM 은 <em>확률적 완전</em>이다. 해가 존재하면 샘플이 늘수록 찾을
-                    확률이 1 에 다가간다. RRT*(Karaman &amp; Frazzoli, 2011)는 <em>점근 최적성</em>
+                    보장은 graph search보다 약하고, 이 카테고리의 역사는 그것을 조여 온 역사다.
+                    기본 RRT/PRM은 <em>확률적 완전</em>이다. 해가 존재하면 샘플이 늘수록 찾을
+                    확률이 1에 다가간다. RRT*(Karaman &amp; Frazzoli, 2011)는 <em>점근 최적성</em>
                     을 더했다. 샘플이 늘수록 반환 경로가 최적으로 수렴하며, 샘플마다의 rewiring
-                    작업이 그 대가다. informed·batch 변형(Informed RRT*, BIT* 와 후속들)은 개선이
+                    작업이 그 대가다. informed·batch 변형(Informed RRT*, BIT*와 후속들)은 개선이
                     있을 수 있는 곳에만 샘플을 집중시켜 그 수렴을 빠르게 만들었다.
                 </p>}
             />
@@ -156,11 +156,11 @@ const Sampling = () => {
                 ko={<ul>
                     <li><strong>Feasibility 우선</strong>: RRT(트리 하나), RRT-Connect(양끝에서
                         둘), Fast-RRT(성장에 bias), PRM(roadmap 구축).</li>
-                    <li><strong>최적성</strong>: RRT* 와 PRM*(점근 최적성이 보존되는 반경으로
+                    <li><strong>최적성</strong>: RRT*와 PRM*(점근 최적성이 보존되는 반경으로
                         rewire/연결).</li>
                     <li><strong>Informed &amp; batch</strong>: Informed RRT*(해를 개선할 수 있는
-                        타원체만 샘플링), FMT*(batch 위를 행진), BIT*, ABIT*, AIT*, EIT*,
-                        FCIT*(batch 와 heuristic 순서의 간선 처리).</li>
+                        타원체만 샘플링), FMT*(batch 단위 전파), BIT*, ABIT*, AIT*, EIT*,
+                        FCIT*(batch와 heuristic 순서의 간선 처리).</li>
                     <li><strong>Kinodynamic</strong>: Kinodynamic RRT*, LQR-RRT*, SST(정확한 steer
                         가 어렵거나 불가능한 동역학 위에서 직접 계획).</li>
                 </ul>}

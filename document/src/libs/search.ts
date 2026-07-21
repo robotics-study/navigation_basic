@@ -9,7 +9,7 @@ import {Lang, pick} from "./i18n";
 export interface SearchEntry {
     title: string
     crumb: string
-    // 알고리즘 페이지 대상. section 과 둘 중 하나만 있다.
+    // 알고리즘 페이지 대상. section과 둘 중 하나만 있다.
     slug?: string
     // 대분류 소개 페이지 대상.
     section?: AlgoSection
@@ -20,7 +20,7 @@ export interface SearchEntry {
 }
 
 // 알고리즘·대분류 소개 메타데이터(제목 + 섹션)로 정적 검색 인덱스를 구성한다.
-// SPA 라 빌드 대신 런타임에 언어별로 한 번 만든다.
+// SPA라 빌드 대신 런타임에 언어별로 한 번 만든다.
 function buildIndex(lang: Lang): SearchEntry[] {
     const entries: SearchEntry[] = []
     for (const intro of sectionIntros) {

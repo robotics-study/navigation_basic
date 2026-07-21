@@ -11,7 +11,7 @@ const Footer = () => (
                 <a href={REPO_URL} target="_blank" rel="noopener noreferrer">robotics-study/navigation</a>
             </p>}
             ko={<p>
-                로봇 navigation 알고리즘을 공부하며 만든 노트 — C++ / Python 독립 이중 구현 ·{" "}
+                로봇 navigation 알고리즘을 공부하며 만든 노트 · C++ / Python 독립 이중 구현 ·{" "}
                 <a href={REPO_URL} target="_blank" rel="noopener noreferrer">robotics-study/navigation</a>
             </p>}
         />

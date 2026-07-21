@@ -126,7 +126,7 @@ const DiscretizeVsSample = () => {
     return <CanvasFigure
         label={t(
             "The same world seen by the two families: a grid overlays everything, a sampler only touches what it draws",
-            "같은 세계를 보는 두 계열의 방식. grid 는 전부를 덮고, sampler 는 뽑은 것만 만진다",
+            "같은 세계를 보는 두 계열의 방식. grid는 전부를 덮고, sampler는 뽑은 것만 만진다",
         )}
         tight bodyClassName="w-fit" className="w-full"
         modal={<Scene/>}

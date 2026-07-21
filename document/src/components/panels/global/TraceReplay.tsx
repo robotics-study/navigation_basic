@@ -7,7 +7,7 @@ import {GridMap} from "../../../libs/grid";
 import {useTr} from "../../../libs/i18n";
 import cn from "../../../libs/cn";
 
-// 저장소의 실제 데모가 방출한 trace 를 재생하는 공용 패널. 어떤 알고리즘이든
+// 저장소의 실제 데모가 방출한 trace를 재생하는 공용 패널. 어떤 알고리즘이든
 // spec/trace_schema.json 이벤트 계약만 지키면 이 하나로 재생된다.
 // C++/Python 데모는 동일한 이벤트 열을 방출하므로 웹에는 한 벌(py)만 싣는다.
 interface Loaded {
@@ -44,7 +44,7 @@ const ReplayScene = ({algo, maps, panel = 340}: {algo: string; maps: string[]; p
         return () => { cancelled = true }
     }, [algo, mapName])
 
-    // trace 에는 시작/목표가 명시 이벤트로 없다 — 첫 확장 노드가 시작, 경로 끝이 목표다.
+    // trace에는 시작/목표가 명시 이벤트로 없다 — 첫 확장 노드가 시작, 경로 끝이 목표다.
     const start = useMemo<Cell | undefined>(
         () => loaded?.timeline.expanded[0]?.cell, [loaded])
     const goal = useMemo<Cell | undefined>(

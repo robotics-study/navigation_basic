@@ -9,7 +9,7 @@ import cn from "../../../../libs/cn";
 import {pocketMap, SANDBOX_GOAL, SANDBOX_START} from "./presets";
 
 // 라이브 A* sandbox — 브라우저에서 직접 탐색을 실행한다. 벽을 그리고 시작/목표를 끌면
-// 즉시 재탐색하고, heuristic 가중치를 바꾸면 Dijkstra ↔ A* ↔ weighted A* 의 탐색량
+// 즉시 재탐색하고, heuristic 가중치를 바꾸면 Dijkstra ↔ A* ↔ weighted A*의 탐색량
 // 차이가 바로 보인다.
 const WEIGHTS: Array<{w: number; label: string}> = [
     {w: 0, label: "w = 0 · Dijkstra"},
@@ -92,7 +92,7 @@ const AStarSandbox = () => {
     return <CanvasFigure
         label={t(
             "Live A* sandbox: f = g + w·h. Compare how many cells Dijkstra (w = 0), A* (w = 1), and greedy (w > 1) expand on the same problem",
-            "라이브 A* sandbox: f = g + w·h. 같은 문제에서 Dijkstra (w = 0), A* (w = 1), greedy (w > 1) 가 몇 칸을 확장하는지 비교해 보라",
+            "라이브 A* sandbox: f = g + w·h. 같은 문제에서 Dijkstra (w = 0), A* (w = 1), greedy (w > 1)가 몇 칸을 확장하는지 비교해 보라",
         )}
         tight
         bodyClassName="w-fit"

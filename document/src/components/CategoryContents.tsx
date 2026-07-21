@@ -5,7 +5,7 @@ import {CATEGORIES, SECTIONS, sectionOf} from "../pages/algorithms/roadmap";
 import {useAlgoNav} from "../libs/nav";
 import {useLang, useTr, pick} from "../libs/i18n";
 
-// 중분류(카테고리) 소개 페이지 래퍼. pager 의 이전은 소속 대분류의 소개,
+// 중분류(카테고리) 소개 페이지 래퍼. pager의 이전은 소속 대분류의 소개,
 // 다음은 이 카테고리의 첫 집필 알고리즘이다 (없으면 숨김).
 const CategoryContents = ({intro}: {intro: ICategoryIntro}) => {
     const {go, goSection} = useAlgoNav()

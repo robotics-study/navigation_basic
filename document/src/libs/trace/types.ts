@@ -1,4 +1,4 @@
-// spec/trace_schema.json 의 TypeScript 대응. C++/Python 데모가 방출한 trace 와
+// spec/trace_schema.json의 TypeScript 대응. C++/Python 데모가 방출한 trace와
 // 브라우저 라이브 엔진이 만드는 이벤트가 같은 타입을 공유한다 — 패널/플레이어 코드는 하나다.
 export type TraceEventType =
     | "planning_started"

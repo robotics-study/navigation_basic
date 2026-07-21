@@ -13,7 +13,7 @@ export const ALGO_BLURBS: AlgoBlurb[] = [
             en: "Search in waves with a FIFO queue: the fewest-edge path on any graph, " +
                 "and the seed every other planner in this section grows from.",
             ko: "FIFO 큐로 파도처럼 훑는 탐색. 어떤 그래프에서든 최소 edge 경로를 찾고, " +
-                "이 섹션의 모든 planner 가 여기서 자라난다.",
+                "이 섹션의 모든 planner가 여기서 자라난다.",
         },
     },
     {
@@ -21,7 +21,7 @@ export const ALGO_BLURBS: AlgoBlurb[] = [
         blurb: {
             en: "Swap BFS's FIFO for a priority queue on g and fewest-edge becomes " +
                 "cheapest-cost: optimal for any non-negative edge costs.",
-            ko: "BFS 의 FIFO 를 g 기준 priority queue 로 바꾸면 최소 edge 가 최소 비용이 " +
+            ko: "BFS의 FIFO를 g 기준 priority queue로 바꾸면 최소 edge가 최소 비용이 " +
                 "된다. 음수 아닌 모든 edge 비용에서 최적.",
         },
     },
@@ -30,13 +30,13 @@ export const ALGO_BLURBS: AlgoBlurb[] = [
         blurb: {
             en: "Dijkstra plus a compass: order the frontier by g + h and an admissible " +
                 "heuristic finds the same optimal path while expanding far fewer nodes.",
-            ko: "Dijkstra에 나침반을 더한 탐색. frontier 를 g + h 로 정렬하면, admissible " +
+            ko: "Dijkstra에 나침반을 더한 탐색. frontier를 g + h로 정렬하면, admissible " +
                 "heuristic 만으로 같은 최적 경로를 훨씬 적은 노드 확장으로 찾는다.",
         },
     },
 ];
 
-// 중분류 — 알고리즘 계열. 페이지 eyebrow·홈 sub-heading·사이드바 sub-label 이 공유한다.
+// 중분류 — 알고리즘 계열. 페이지 eyebrow·홈 sub-heading·사이드바 sub-label이 공유한다.
 export const CATEGORIES: Array<{
     key: AlgoCategory;
     title: Localized<string>;

@@ -2,8 +2,8 @@ import {ReactNode, useEffect, useState} from "react";
 import cn from "../libs/cn";
 import CodeHighlight, {CodeLang} from "./CodeHighlight";
 
-// 저장소의 실제 소스를 언어 토글로 보여 주는 코드 패널. 코드 문자열은 vite 의 ?raw
-// import 로 저장소 파일에서 직접 가져오므로 문서와 구현이 어긋나지 않는다.
+// 저장소의 실제 소스를 언어 토글로 보여 주는 코드 패널. 코드 문자열은 vite의 ?raw
+// import로 저장소 파일에서 직접 가져오므로 문서와 구현이 어긋나지 않는다.
 export interface CodeFile {
     name: string;    // 표시용 파일 경로 (repo 상대)
     code: string;

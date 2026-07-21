@@ -6,7 +6,7 @@ import {useTr} from "../../../libs/i18n";
 import cn from "../../../libs/cn";
 import {mulberry32} from "../../../libs/rng";
 
-// Tree(RRT) 와 Roadmap(PRM) 의 구조 차이를 성장 애니메이션으로 보여 준다.
+// Tree(RRT)와 Roadmap(PRM)의 구조 차이를 성장 애니메이션으로 보여 준다.
 // 둘 다 같은 장애물·같은 시드에서 자란다.
 const W = 300;
 const OBSTACLES = [
@@ -95,7 +95,7 @@ const Scene = () => {
 
     const built = useMemo(() => build(mode, seed), [mode, seed])
 
-    // 성장 애니메이션: edge 를 순서대로 늘린다.
+    // 성장 애니메이션: edge를 순서대로 늘린다.
     useEffect(() => {
         setFrame(0)
         timer.current = window.setInterval(() => {
@@ -164,7 +164,7 @@ const RrtVsPrm = () => {
     return <CanvasFigure
         label={t(
             "Two ways to wire random samples: a tree grows outward from the start (single query), a roadmap connects everything to its neighbors (many queries)",
-            "무작위 샘플을 잇는 두 방식. tree 는 시작점에서 바깥으로 자라고(단일 질의), roadmap 은 모든 샘플을 이웃과 잇는다(다중 질의)",
+            "무작위 샘플을 잇는 두 방식. tree는 시작점에서 바깥으로 자라고(단일 질의), roadmap은 모든 샘플을 이웃과 잇는다(다중 질의)",
         )}
         tight bodyClassName="w-fit" className="w-full"
         modal={<Scene/>}

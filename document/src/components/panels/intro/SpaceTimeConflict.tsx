@@ -6,12 +6,12 @@ import {PATH_COLOR} from "../../2d/GridCanvas";
 import {useTr} from "../../../libs/i18n";
 import cn from "../../../libs/cn";
 
-// MAPF 의 핵심 그림: 각자 최단인 두 경로가 같은 시각·같은 셀에서 만난다(vertex conflict).
-// 시간 슬라이더로 재생하고, CBS 풍의 해결(한 agent 가 한 스텝 대기) 토글을 제공한다.
+// MAPF의 핵심 그림: 각자 최단인 두 경로가 같은 시각·같은 셀에서 만난다(vertex conflict).
+// 시간 슬라이더로 재생하고, CBS 풍의 해결(한 agent가 한 스텝 대기) 토글을 제공한다.
 const N = 7;
 const PANEL = 300;
 
-// agent A: 좌→우, agent B: 상→하. 해결 모드에서 B 는 한 스텝 기다린다.
+// agent A: 좌→우, agent B: 상→하. 해결 모드에서 B는 한 스텝 기다린다.
 const pathA: Array<[number, number]> = [[3, 0], [3, 1], [3, 2], [3, 3], [3, 4], [3, 5], [3, 6]];
 const pathB: Array<[number, number]> = [[0, 3], [1, 3], [2, 3], [3, 3], [4, 3], [5, 3], [6, 3]];
 const pathBWait: Array<[number, number]> = [[0, 3], [1, 3], [2, 3], [2, 3], [3, 3], [4, 3], [5, 3], [6, 3]];
@@ -81,9 +81,9 @@ const Scene = () => {
             <div className="text-xs text-muted text-center">
                 {resolved
                     ? t("red agent waits one step — one constraint removes the conflict",
-                        "빨간 agent 가 한 스텝 기다린다. 제약 하나가 conflict 를 없앤다")
+                        "빨간 agent가 한 스텝 기다린다. 제약 하나가 conflict를 없앤다")
                     : t("both paths are individually optimal, and they meet at t = 3",
-                        "두 경로는 각자 최적이지만 t = 3 에서 만난다")}
+                        "두 경로는 각자 최적이지만 t = 3에서 만난다")}
             </div>
         </div>
     )
@@ -94,7 +94,7 @@ const SpaceTimeConflict = () => {
     return <CanvasFigure
         label={t(
             "Two individually optimal paths, one shared cell: scrub time to find the vertex conflict, then resolve it with a single wait constraint",
-            "각자 최적인 두 경로와 하나의 공유 셀. 시간을 움직여 vertex conflict 를 찾고, 대기 제약 하나로 해결해 보라",
+            "각자 최적인 두 경로와 하나의 공유 셀. 시간을 움직여 vertex conflict를 찾고, 대기 제약 하나로 해결해 보라",
         )}
         tight bodyClassName="w-fit" className="w-full"
         modal={<Scene/>}
