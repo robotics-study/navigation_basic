@@ -9,7 +9,7 @@ import {PATH_COLOR} from "../../../2d/GridCanvas";
 import cn from "../../../../libs/cn";
 import {rubbleMap, RUBBLE_GOAL, RUBBLE_START} from "../theta_star/presets";
 
-// 라이브 Lazy Theta* sandbox. 잔해 지형에서 Theta* 와 Lazy 를 같이 돌려, 경로 비용은
+// 라이브 Lazy Theta* sandbox. 잔해 지형에서 Theta*와 Lazy를 같이 돌려, 경로 비용은
 // 사실상 같은데 LOS 검사 횟수가 크게 줄어드는 것을 수치로 비교한다.
 type Mode = "theta" | "lazy";
 
@@ -89,7 +89,7 @@ const LazyThetaSandbox = () => {
     return <CanvasFigure
         label={t(
             "Live comparison in rubble: nearly identical any-angle paths, but Lazy Theta* runs one line-of-sight check per expansion instead of one per edge",
-            "잔해 지형의 라이브 비교. 경로는 사실상 같지만 Lazy Theta* 는 LOS 검사를 edge 마다가 아니라 확장마다 한 번만 한다",
+            "잔해 지형의 라이브 비교. 경로는 사실상 같지만 Lazy Theta*는 LOS 검사를 edge 마다가 아니라 확장마다 한 번만 한다",
         )}
         tight bodyClassName="w-fit" className="w-full"
         modal={<LazyScene panel={Math.min(modalCanvasSize(1).width, 640)}/>}

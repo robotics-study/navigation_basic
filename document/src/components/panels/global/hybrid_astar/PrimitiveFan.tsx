@@ -6,7 +6,7 @@ import {integrate, Pose} from "../../../../libs/algorithms/hybrid_astar";
 import {useTr} from "../../../../libs/i18n";
 import cn from "../../../../libs/cn";
 
-// Hybrid A*의 successor 를 그대로 보여 주는 figure: 한 pose 에서 뻗는 일정 곡률
+// Hybrid A*의 successor를 그대로 보여 주는 figure: 한 pose에서 뻗는 일정 곡률
 // motion primitive 부채꼴. 조향 수·회전 반경·후진을 바꿔 가며 탐색 가지가 어떻게
 // 생기는지 본다.
 const PANEL = 320;
@@ -23,7 +23,7 @@ const Scene = () => {
     const kappaMax = 1 / radius
     const span = (2 * kappaMax) / (numSteering - 1)
     const arcLen = 2.4
-    // 후진 arc 는 origin 아래로 뻗으므로, 후진이 켜지면 origin 을 올려 잘림을 막는다.
+    // 후진 arc는 origin 아래로 뻗으므로, 후진이 켜지면 origin을 올려 잘림을 막는다.
     const originY = PANEL - (reverse ? 34 + arcLen * 0.6 * SCALE : 34)
     const toPx = (p: Pose): [number, number] => [
         PANEL / 2 + p[0] * SCALE,

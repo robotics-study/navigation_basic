@@ -3,7 +3,7 @@ import {TraceEvent} from "../trace/types";
 import {Cell} from "../trace/timeline";
 
 // 브라우저 라이브 데모용 JPS. 저장소 구현(no-corner-cutting 변형, Harabor & Grastien
-// 2011)을 연산·tie-break·방향 순서까지 미러해 python demo 와 확장 수가 일치한다.
+// 2011)을 연산·tie-break·방향 순서까지 미러해 python demo와 확장 수가 일치한다.
 export interface JPSOptions {
     map: GridMap;
     start: Cell;
@@ -36,7 +36,7 @@ export function runJPS({map, start, goal}: JPSOptions): TraceEvent[] {
     const blocked = (r: number, c: number) => !inBounds(map, r, c) || map.occupied[r * W + c]
     const free = (r: number, c: number) => !blocked(r, c)
 
-    // (r,c)에서 (dr,dc) 방향으로 합법적인 한 칸씩 전진하며 첫 jump point 를 찾는다.
+    // (r,c)에서 (dr,dc) 방향으로 합법적인 한 칸씩 전진하며 첫 jump point를 찾는다.
     const scan = (r: number, c: number, dr: number, dc: number): Cell | null => {
         const diagonal = dr !== 0 && dc !== 0
         for (;;) {
@@ -54,13 +54,13 @@ export function runJPS({map, start, goal}: JPSOptions): TraceEvent[] {
                         || (free(r, c + 1) && blocked(r - dr, c + 1))) return [r, c]
                 }
             } else if (scan(r, c, dr, 0) !== null || scan(r, c, 0, dc) !== null) {
-                // 직교 스캔이 jump point 를 찾는 대각 칸은 그 자체가 jump point 다.
+                // 직교 스캔이 jump point를 찾는 대각 칸은 그 자체가 jump point다.
                 return [r, c]
             }
         }
     }
 
-    // u 에 도달한 방향에 따라 뛰어 볼 방향들 (시작은 전방향).
+    // u에 도달한 방향에 따라 뛰어 볼 방향들 (시작은 전방향).
     const successorDirs = (u: Cell, par: Cell | undefined): Array<[number, number]> => {
         if (!par) return DIRS_8
         const [r, c] = u
@@ -128,7 +128,7 @@ export function runJPS({map, start, goal}: JPSOptions): TraceEvent[] {
     }
 
     if (found) {
-        // jump point 사이의 직선/대각 중간 셀을 채워 전체 경로로 만든다 (A* 와 동일 형식).
+        // jump point 사이의 직선/대각 중간 셀을 채워 전체 경로로 만든다 (A*와 동일 형식).
         const jumps: Cell[] = [goal]
         let node = goal
         while (node[0] !== start[0] || node[1] !== start[1]) {

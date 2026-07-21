@@ -12,8 +12,8 @@ import {
     trapMap, TRAP_GOAL, TRAP_START,
 } from "../dstar_lite/presets";
 
-// 라이브 AD* sandbox. D* Lite 와 같은 미지 지도 설정에서, ε 팽창 덕에 "첫 해"가 얼마나
-// 빨리 나오는지가 핵심 수치다 (D* Lite 는 처음부터 belief-최적을 계산한다).
+// 라이브 AD* sandbox. D* Lite와 같은 미지 지도 설정에서, ε 팽창 덕에 "첫 해"가 얼마나
+// 빨리 나오는지가 핵심 수치다 (D* Lite는 처음부터 belief-최적을 계산한다).
 const EPS_STARTS = [1.5, 2.5, 4];
 type Preset = "scattered" | "trap";
 const PRESETS: Record<Preset, {map: () => GridMap; start: Cell; goal: Cell}> = {
@@ -127,7 +127,7 @@ const AdStarSandbox = () => {
     return <CanvasFigure
         label={t(
             "Live AD*: same unknown-map drive as D* Lite, but the first usable plan arrives after far fewer expansions thanks to ε-inflation, and each discovery re-inflates then tightens again",
-            "라이브 AD*. D* Lite 와 같은 미지 지도 주행이지만 ε 팽창 덕에 첫 계획이 훨씬 적은 확장으로 나오고, 발견이 있을 때마다 ε을 다시 올렸다 도로 조인다",
+            "라이브 AD*. D* Lite와 같은 미지 지도 주행이지만 ε 팽창 덕에 첫 계획이 훨씬 적은 확장으로 나오고, 발견이 있을 때마다 ε을 다시 올렸다 도로 조인다",
         )}
         tight bodyClassName="w-fit" className="w-full"
         modal={<AdScene panel={Math.min(modalCanvasSize(1).width, 640)}/>}

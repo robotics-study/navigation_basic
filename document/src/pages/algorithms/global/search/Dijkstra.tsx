@@ -212,7 +212,7 @@ return failure`}/>
                         <p>
                             <strong>가정.</strong> 간선 비용 <InlineMath math="\ge 0"/>. 꺼낸 순서에
                             대한 귀납으로, settle 된 모든 <InlineMath math="u"/>는 이미{" "}
-                            <InlineMath math="g(u) = \delta(s, u)"/> 다. 귀류법으로{" "}
+                            <InlineMath math="g(u) = \delta(s, u)"/>다. 귀류법으로{" "}
                             <InlineMath math="n"/>이 <InlineMath math="g(n) > \delta(s, n)"/>으로
                             꺼내졌다고 하자.
                         </p>
@@ -241,7 +241,7 @@ return failure`}/>
                 </p>}
                 ko={<p>
                     sandbox는 같은 문제를 BFS와 Dijkstra로 푼다. 대각 스텝이{" "}
-                    <InlineMath math="\sqrt{2}"/> 비용을 갖도록 8-connected 다. 큐 종류를 바꿔 가며
+                    <InlineMath math="\sqrt{2}"/> 비용을 갖도록 8-connected다. 큐 종류를 바꿔 가며
                     두 가지를 보라. frontier가 hop 동심원에서 비용 등고선으로 바뀌는 것, 그리고
                     보고되는 path cost가 내려가는 것. 최소 edge 경로는 최소 비용 경로가 아니다.
                 </p>}

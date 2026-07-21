@@ -88,7 +88,7 @@ const Astar = () => {
                     <BlockMath math="f(n) \;=\; \underbrace{g(n)}_{\text{시작점부터의 비용}} \;+\; \underbrace{h(n)}_{\text{목표까지의 추정 비용}}"/>
                     <p>
                         A*는 frontier를 <InlineMath math="g"/> 대신 <InlineMath math="f"/>로
-                        정렬한 Dijkstra 다. 양 극단을 보면 감이 온다. <InlineMath math="h \equiv 0"/>
+                        정렬한 Dijkstra다. 양 극단을 보면 감이 온다. <InlineMath math="h \equiv 0"/>
                         이면 정렬이 Dijkstra로 퇴화한다. 완벽한 추정치 <InlineMath math="h = h^*"/>
                         (실제 남은 비용)라면 최적 경로 위의 모든 노드가 같은 <InlineMath math="f"/>
                         값을 가져, 탐색은 다른 곳을 거의 확장하지 않고 목표까지 곧장 걸어간다. 실전의
@@ -127,7 +127,7 @@ const Astar = () => {
                             확장할 수 없다 (Dechter &amp; Pearl, 1985).</li>
                         <li><strong>비용</strong>: 최악의 경우 시간·메모리 모두 분기 계수{" "}
                             <InlineMath math="b"/>와 해 깊이 <InlineMath math="d"/>에 대해{" "}
-                            <InlineMath math="O(b^d)"/> 다. heuristic은 상수를 크게 줄이지만 점근
+                            <InlineMath math="O(b^d)"/>다. heuristic은 상수를 크게 줄이지만 점근
                             차수는 못 줄이고, 보통 메모리가 먼저 바닥난다. 이 한계가 뒤 페이지에서
                             다루는 반복·증분 변형(ARA*, D* Lite)의 동기다.</li>
                     </ul>
@@ -146,7 +146,7 @@ const Astar = () => {
                 ko={<p>
                     A*는 두 가지 자료구조를 유지한다. 발견됐지만 아직 확장되지 않은 노드를{" "}
                     <InlineMath math="f"/> 순으로 담는 우선순위 큐 <strong>OPEN</strong>과,
-                    이미 확장된 노드의 집합 <strong>CLOSED</strong> 다. 각 노드는 지금까지 알려진
+                    이미 확장된 노드의 집합 <strong>CLOSED</strong>다. 각 노드는 지금까지 알려진
                     최선의 <InlineMath math="g"/> 값과 부모를 기억하고, 최종 경로는 부모를
                     거슬러 올라가 복원한다.
                 </p>}
@@ -182,7 +182,7 @@ return failure`}/>
                 </ol>}
                 ko={<ol>
                     <li>시작 노드를 OPEN에 넣는다. <InlineMath math="g"/>가 0이라 우선순위는
-                        순수 추정치 <InlineMath math="f = h(\text{start})"/> 다.</li>
+                        순수 추정치 <InlineMath math="f = h(\text{start})"/>다.</li>
                     <li><InlineMath math="f"/>가 가장 작은, 즉 전체 경로 전망이 가장 좋은 노드를
                         꺼내 CLOSED로 옮긴다. 다시는 확장되지 않는다 (consistent{" "}
                         <InlineMath math="h"/>에서는 이 시점의 <InlineMath math="g"/>가 이미
@@ -276,7 +276,7 @@ return failure`}/>
                         </li>
                     </ul>
                     <p>
-                        grid 에서의 표준 선택지는 각자의 이동 모델에 대해 모두 admissible 하다:
+                        grid에서의 표준 선택지는 각자의 이동 모델에 대해 모두 admissible 하다:
                         4-connected 이동에는 Manhattan 거리, 8-connected 이동에는 <em>octile</em>{" "}
                         거리, any-angle 이동에는 (느슨하지만 안전한) Euclidean 거리:
                     </p>
@@ -304,7 +304,7 @@ return failure`}/>
                     them if you want the details.
                 </p>}
                 ko={<p>
-                    admissible heuristic 이라면, A*가 목표를 OPEN에서 처음 꺼내는 순간 찾은 경로는
+                    admissible heuristic이라면, A*가 목표를 OPEN에서 처음 꺼내는 순간 찾은 경로는
                     최적이다. 직관은 이렇다. 더 싼 경로가 있었다면 그 경로 위 어딘가의 노드가 그 경로
                     비용 이하의 <InlineMath math="f"/> 값으로 OPEN에 남아 있었을 테니, 목표보다
                     먼저 꺼내졌을 것이다. 형식적 서술은 아래에 접어 두었으니, 자세히 보고 싶으면
@@ -341,7 +341,7 @@ return failure`}/>
                             최적 경로 <InlineMath math="\sigma"/>를 잡으면 그 노드 중 하나는 항상
                             OPEN에 있다. 그중 첫 노드를 <InlineMath math="n"/>이라 하면{" "}
                             <InlineMath math="n"/> 앞은 전부 최적으로 settle 되어{" "}
-                            <InlineMath math="g(n) = g^*(n)"/> 이고:
+                            <InlineMath math="g(n) = g^*(n)"/>이고:
                         </p>
                         <BlockMath math="f(n) = g^*(n) + h(n) \;\overset{\text{admissible}}{\le}\; g^*(n) + h^*(n) \;=\; C^* \;<\; g(\text{goal}) = f(\text{goal})"/>
                         <p>
@@ -440,7 +440,7 @@ return failure`}/>
                     이 저장소의 A* 구현은 의도적으로 얇다. Dijkstra와 A*는 하나의 best-first
                     루프(lazy priority queue, edge relaxation, trace 방출)를 공유하고, A*는
                     heuristic을 켜고 parameter에서 가중치 <InlineMath math="w"/>를 공급하는
-                    subclass 다. 아래 코드는 발췌가 아니라 실제 소스 그대로다.
+                    subclass다. 아래 코드는 발췌가 아니라 실제 소스 그대로다.
                 </p>}
             />
             <CodeTabs

@@ -74,7 +74,7 @@ const Sampling = () => {
                         <li><code>is_motion_valid(a, b)</code>: 두 상태 사이의 직선 이동은 충돌이
                             없는가?</li>
                         <li><code>distance(a, b)</code>: 두 상태는 얼마나 떨어져 있는가?</li>
-                        <li><code>steer(a, b, η)</code>: <InlineMath math="a"/> 에서{" "}
+                        <li><code>steer(a, b, η)</code>: <InlineMath math="a"/>에서{" "}
                             <InlineMath math="b"/> 쪽으로 최대 <InlineMath math="\eta"/> 만큼
                             움직인다.</li>
                     </ul>

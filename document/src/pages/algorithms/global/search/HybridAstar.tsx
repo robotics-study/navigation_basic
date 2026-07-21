@@ -24,12 +24,12 @@ const HybridAstar = () => {
                     space — every edge it considers is an arc the car can actually drive.
                 </p>}
                 ko={<p>
-                    지금까지의 planner 는 "어느 셀인가"에 답한다. 그런데 자동차는 셀 사이를
-                    순간이동하지 못한다. heading 이 있고, 최소 회전 반경이 있고, 조향각이 있다.
+                    지금까지의 planner는 "어느 셀인가"에 답한다. 그런데 자동차는 셀 사이를
+                    순간이동하지 못한다. heading이 있고, 최소 회전 반경이 있고, 조향각이 있다.
                     90° 격자 모서리는 애초에 만들 수 없는 동작이다. Hybrid A*(Dolgov, Thrun,
-                    Montemerlo &amp; Diebel, 2008)는 Stanford 의 DARPA Urban Challenge 출전작을
+                    Montemerlo &amp; Diebel, 2008)는 Stanford의 DARPA Urban Challenge 출전작을
                     위해 만들어졌고, 탐색 자체를 차량의 연속 pose 공간으로 옮긴다. 고려하는 모든
-                    edge 가 차가 실제로 달릴 수 있는 arc 다.
+                    edge가 차가 실제로 달릴 수 있는 arc다.
                 </p>}
             />
 
@@ -56,17 +56,17 @@ const HybridAstar = () => {
                 ko={<>
                     <p>
                         상태가 연속 pose <InlineMath math="(x, y, \theta) \in SE(2)"/>가 되고,
-                        successor 는 <strong>motion primitive</strong> 다. 조향각마다 하나씩,
+                        successor는 <strong>motion primitive</strong>다. 조향각마다 하나씩,
                         최소 회전 반경이 한계 짓는 고정 길이의 일정 곡률 arc 들이고, 원하면
                         후진으로도 뒤집는다. arc 적분은 정확하다:
                     </p>
                     <BlockMath math="\theta' = \theta + \kappa \ell, \qquad x' = x + \tfrac{\sin\theta' - \sin\theta}{\kappa}, \qquad y' = y - \tfrac{\cos\theta' - \cos\theta}{\kappa}"/>
                     <p>
-                        연속 공간에서는 A*의 closed set 이 무력해진다. 어떤 두 pose 도 정확히
-                        겹치지 않기 때문이다. 이름의 <em>hybrid</em> 가 그 해법이다. 비용과 pose
-                        는 연속으로 두되, closed set 과 g-테이블은 이산화된 bin{" "}
+                        연속 공간에서는 A*의 closed set이 무력해진다. 어떤 두 pose도 정확히
+                        겹치지 않기 때문이다. 이름의 <em>hybrid</em>가 그 해법이다. 비용과 pose
+                        는 연속으로 두되, closed set과 g-테이블은 이산화된 bin{" "}
                         <InlineMath math="(\lfloor x \rfloor, \lfloor y \rfloor, \lfloor \theta \rfloor)"/>
-                        을 키로 쓰고, 각 bin 은 자기에게 도달한 최선의 연속 pose 를 기억한다.
+                        을 키로 쓰고, 각 bin은 자기에게 도달한 최선의 연속 pose를 기억한다.
                         탐색은 유한해지고, 경로는 매끄럽다.
                     </p>
                 </>}
@@ -91,13 +91,13 @@ const HybridAstar = () => {
                 </ul>}
                 ko={<ul>
                     <li><strong>구성상 기구학적으로 주행 가능하다.</strong> 모든 경로 구간이 회전
-                        반경을 지키고, goal 은 heading 을 가지며 위치·heading 허용 오차 안에서
+                        반경을 지키고, goal은 heading을 가지며 위치·heading 허용 오차 안에서
                         도달한다.</li>
                     <li><strong>Resolution-complete, resolution-suboptimal</strong>: 보장은 연속
                         최적이 아니라 bin 해상도와 primitive 집합에 상대적이다.</li>
                     <li><strong>이 구현은 Dolgov et al. 의 정직한 코어다.</strong> admissible 한
-                        Euclidean heuristic 을 쓰고 Reeds–Shepp analytic expansion 은 없다.
-                        논문의 non-holonomic heuristic 과 shot-to-goal 은 같은 탐색을 가속할 뿐
+                        Euclidean heuristic을 쓰고 Reeds–Shepp analytic expansion은 없다.
+                        논문의 non-holonomic heuristic과 shot-to-goal은 같은 탐색을 가속할 뿐
                         성격을 바꾸지 않는다.</li>
                     <li><strong>비용</strong>: 상태 공간이 3차원
                         (<InlineMath math="x \times y \times \theta"/>)이라 같은 맵의 2D grid
@@ -112,7 +112,7 @@ const HybridAstar = () => {
                     sub-samples each arc densely enough that consecutive footprint discs overlap:
                 </p>}
                 ko={<p>
-                    bin 위의 A* 에 연속 pose 가 함께 실려 다닌다. 충돌 검사는 각 arc 를 footprint
+                    bin 위의 A*에 연속 pose가 함께 실려 다닌다. 충돌 검사는 각 arc를 footprint
                     disc 들이 겹칠 만큼 촘촘히 나눠 본다:
                 </p>}
             />
@@ -143,15 +143,15 @@ while OPEN is not empty:
                         endpoint pose.</li>
                 </ol>}
                 ko={<ol>
-                    <li>bin 의 중심이 아니라 <em>최선의 연속 pose</em> 를 확장한다. arc 들이 bin
+                    <li>bin의 중심이 아니라 <em>최선의 연속 pose</em>를 확장한다. arc 들이 bin
                         을 넘나들며 이어져도 주행 가능함을 지키는 장치다.</li>
-                    <li>허용 오차 있는 goal 검사. 정확한 연속 pose 는 measure-zero 라 "위치와
-                        heading 이 충분히 가깝다"가 옳은 개념이다.</li>
-                    <li>부표본 간격을 footprint 반지름에 묶어 disc 들이 겹치게 한다. arc 가 표본
+                    <li>허용 오차 있는 goal 검사. 정확한 연속 pose는 measure-zero라 "위치와
+                        heading이 충분히 가깝다"가 옳은 개념이다.</li>
+                    <li>부표본 간격을 footprint 반지름에 묶어 disc 들이 겹치게 한다. arc가 표본
                         사이의 얇은 벽을 뚫고 지나갈 수 없다.</li>
-                    <li>비용이 행동을 빚는다. 후진에 벌점, 조향에 벌점. planner 는 가능하면 곧게
+                    <li>비용이 행동을 빚는다. 후진에 벌점, 조향에 벌점. planner는 가능하면 곧게
                         전진하는 쪽을 고른다.</li>
-                    <li>더 싼 경로만 bin 을 차지할 수 있고, bin 은 그 경로의 끝 pose 를 넘겨받는다.</li>
+                    <li>더 싼 경로만 bin을 차지할 수 있고, bin은 그 경로의 끝 pose를 넘겨받는다.</li>
                 </ol>}
             />
 
@@ -167,10 +167,10 @@ while OPEN is not empty:
                 </p>}
                 ko={<p>
                     먼저 primitive 부채꼴. 문자 그대로 pose 하나의 successor 집합이고, 회전
-                    반경을 조이면 부채가 좁아진다. 다음은 주차 sandbox 다. goal 이 베이에{" "}
-                    <em>위를 향한 채</em> 들어가기를 요구하는데, 셀 planner 로는 이 제약을 표현할
+                    반경을 조이면 부채가 좁아진다. 다음은 주차 sandbox다. goal이 베이에{" "}
+                    <em>위를 향한 채</em> 들어가기를 요구하는데, 셀 planner로는 이 제약을 표현할
                     방법조차 없다. 후진을 끄거나 반경을 조이면 진입 궤적이 달라지고, 진입로를
-                    막으면 기동이 우회한다. 아래 replay 는 벤치마크 맵에서의 저장소 demo 다.
+                    막으면 기동이 우회한다. 아래 replay는 벤치마크 맵에서의 저장소 demo다.
                     연속 공간의 arc 트리가 그대로 보인다.
                 </p>}
             />
@@ -178,7 +178,7 @@ while OPEN is not empty:
             <HybridSandbox/>
             <TraceReplay algo="hybrid_astar" maps={["open01", "maze01"]} label={t(
                 "Real traces from the repository's Hybrid A* demo — pose dots and arc chords instead of cells",
-                "저장소 Hybrid A* demo 의 실제 trace. 셀 대신 pose 점과 arc 현이 그려진다",
+                "저장소 Hybrid A* demo의 실제 trace. 셀 대신 pose 점과 arc 현이 그려진다",
             )}/>
 
             <h2>Implementation</h2>
@@ -189,7 +189,7 @@ while OPEN is not empty:
                     Embedded below in full.
                 </p>}
                 ko={<p>
-                    구현은 자체 차량 모델(primitive)을 갖고 모든 것을 pose bin 으로 키잉한다.
+                    구현은 자체 차량 모델(primitive)을 갖고 모든 것을 pose bin으로 키잉한다.
                     맵은 footprint 충돌 질의에만 답한다. 전체를 아래에 embed 했다.
                 </p>}
             />

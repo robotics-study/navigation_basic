@@ -29,7 +29,7 @@ const Sidebar = ({open: mobileOpen, onNavigate}: { open?: boolean; onNavigate?: 
     // 홈에서는 첫 대분류를 펼쳐 목차 역할을 하게 한다.
     const defaultOpen = currentSection ?? SECTIONS[0].key
     const [opened, setOpened] = useState<Set<AlgoSection>>(() => new Set([defaultOpen]))
-    // "+ n more soon" 을 눌러 펼친 카테고리들.
+    // "+ n more soon"을 눌러 펼친 카테고리들.
     const [plannedShown, setPlannedShown] = useState<Set<AlgoCategory>>(() => new Set())
 
     // 검색/카드 등 외부 경로로 페이지가 바뀌면 그 대분류를 펼친다 (사용자 토글은 유지).

@@ -5,7 +5,7 @@ import {useCanvasColors} from "../../../../libs/useTheme";
 import {PATH_COLOR} from "../../../2d/GridCanvas";
 import {useTr} from "../../../../libs/i18n";
 
-// "왜 goal 에서 뒤로 탐색하는가"를 보여 주는 figure. g 는 goal 까지의 비용장이라
+// "왜 goal에서 뒤로 탐색하는가"를 보여 주는 figure. g는 goal 까지의 비용장이라
 // 로봇이 어디로 움직여도 그대로 유효하다. 로봇(청록 원)을 끌어 보면 비용장은 변하지
 // 않고, 로봇은 어느 위치에서든 내리막(gradient)을 따라가면 된다.
 const N = 13;
@@ -25,7 +25,7 @@ const Scene = () => {
     const cell = PANEL / N
     const maxD = octile(N - 1, 0, GOAL[0], GOAL[1])
 
-    // 로봇 위치에서 goal 까지 내리막을 따라가는 경로 (비용장 위의 greedy descent).
+    // 로봇 위치에서 goal까지 내리막을 따라가는 경로 (비용장 위의 greedy descent).
     const descent: Array<[number, number]> = []
     let cur = robot
     let guard = 0
@@ -52,7 +52,7 @@ const Scene = () => {
             <Stage width={PANEL} height={PANEL}
                    className="bg-surface border border-border rounded-lg overflow-hidden">
                 <Layer>
-                    {/* goal 기준 비용장 g — 어두울수록 goal 에서 멀다 */}
+                    {/* goal 기준 비용장 g — 어두울수록 goal에서 멀다 */}
                     {Array.from({length: N * N}, (_, i) => {
                         const r = Math.floor(i / N)
                         const c = i % N
@@ -80,7 +80,7 @@ const Scene = () => {
             </Stage>
             <div className="text-xs text-muted text-center">
                 {t("drag the robot — the cost-to-goal field g stays valid wherever it moves",
-                    "로봇을 끌어 보라. goal 기준 비용장 g 는 로봇이 어디로 가든 그대로 유효하다")}
+                    "로봇을 끌어 보라. goal 기준 비용장 g는 로봇이 어디로 가든 그대로 유효하다")}
             </div>
         </div>
     )
@@ -91,7 +91,7 @@ const BackwardField = () => {
     return <CanvasFigure
         label={t(
             "Why D* Lite searches backward: g measures cost-to-goal, so the moving robot never invalidates it — only newly discovered walls do",
-            "D* Lite 가 backward 로 탐색하는 이유. g 는 goal 까지의 비용이라 로봇의 이동은 그것을 무효화하지 않는다. 무효화하는 것은 새로 발견된 벽뿐이다",
+            "D* Lite가 backward로 탐색하는 이유. g는 goal 까지의 비용이라 로봇의 이동은 그것을 무효화하지 않는다. 무효화하는 것은 새로 발견된 벽뿐이다",
         )}
         tight bodyClassName="w-fit" className="w-full"
         modal={<Scene/>}

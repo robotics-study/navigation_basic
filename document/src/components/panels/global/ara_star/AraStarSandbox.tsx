@@ -11,7 +11,7 @@ import cn from "../../../../libs/cn";
 import {greedyTrapMap, GREEDY_GOAL, GREEDY_START} from "./presets";
 
 // 라이브 ARA* sandbox. 재생하면 ε 반복마다 경로가 발표되고(빨간 경로가 점점 짧아진다),
-// footer 는 반복별 (ε, 확장 수, 비용)과 "매번 weighted A* 재실행" 대비 절약을 보여 준다.
+// footer는 반복별 (ε, 확장 수, 비용)과 "매번 weighted A* 재실행" 대비 절약을 보여 준다.
 const EPS_STARTS = [1.5, 2.5, 4];
 
 const AraScene = ({panel = 340}: {panel?: number}) => {
@@ -27,7 +27,7 @@ const AraScene = ({panel = 340}: {panel?: number}) => {
     )
     const timeline = useMemo(() => buildGridTimeline(run.events), [run])
 
-    // 비교 기준: 같은 ε 스케줄로 weighted A* 를 매번 처음부터 돌렸을 때의 총 확장 수.
+    // 비교 기준: 같은 ε 스케줄로 weighted A*를 매번 처음부터 돌렸을 때의 총 확장 수.
     const naiveExpanded = useMemo(() => {
         let total = 0
         for (const it of run.iterations) {

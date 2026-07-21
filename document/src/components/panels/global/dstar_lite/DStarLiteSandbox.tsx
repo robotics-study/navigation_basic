@@ -13,8 +13,8 @@ import {
 } from "./presets";
 
 // 라이브 D* Lite sandbox. 사용자가 그리는 벽은 "실제 지도"이고 로봇은 그것을 모른 채
-// 출발한다. 핵심 수치는 하나다: D* Lite 의 수리 비용 vs 재계획 때마다 A* 를 처음부터
-// 다시 돌렸을 때의 비용. scattered 는 수리가 압도하는 일반 지형, trap 은 발견 하나가
+// 출발한다. 핵심 수치는 하나다: D* Lite의 수리 비용 vs 재계획 때마다 A*를 처음부터
+// 다시 돌렸을 때의 비용. scattered는 수리가 압도하는 일반 지형, trap은 발견 하나가
 // 탐색 대부분을 무효화하는 최악 지형이다.
 const RADII = [1, 3, 5];
 type Preset = "scattered" | "trap";
@@ -44,7 +44,7 @@ const DStarLiteScene = ({panel = 340}: {panel?: number}) => {
     )
     const timeline = useMemo(() => buildGridTimeline(run.events), [run])
 
-    // 비교 기준: 같은 belief 변화 시점마다 A* 를 처음부터 다시 돌렸다면 확장했을 노드 수.
+    // 비교 기준: 같은 belief 변화 시점마다 A*를 처음부터 다시 돌렸다면 확장했을 노드 수.
     const naiveExpanded = useMemo(() => {
         let total = 0
         const beliefRun = (blocked: Set<number>, from: Cell) => {

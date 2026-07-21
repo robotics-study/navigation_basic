@@ -8,7 +8,7 @@ import {lineOfSight} from "../../../../libs/algorithms/theta_star";
 import {Cell} from "../../../../libs/trace/timeline";
 import {useTr} from "../../../../libs/i18n";
 
-// line-of-sight 검사 자체를 보여 주는 figure. 두 끝점을 끌면 supercover 가 지나는
+// line-of-sight 검사 자체를 보여 주는 figure. 두 끝점을 끌면 supercover가 지나는
 // 셀들이 칠해지고, 벽(클릭 토글)에 막히면 선이 빨갛게 바뀐다.
 const N = 11;
 const PANEL = 300;
@@ -25,7 +25,7 @@ const Scene = () => {
     walls.forEach((i) => { map.occupied[i] = true })
     const visible = lineOfSight(map, a, b)
 
-    // supercover 가 지나는 셀: 전 셀에 대해 "그 셀 하나만 막았을 때 LOS 가 깨지는가"로
+    // supercover가 지나는 셀: 전 셀에 대해 "그 셀 하나만 막았을 때 LOS가 깨지는가"로
     // 계산하면 구현 중복 없이 정확히 같은 규칙을 따른다 (교육용 규모라 비용 무시 가능).
     const crossed: number[] = []
     for (let i = 0; i < N * N; i++) {
@@ -93,7 +93,7 @@ const Scene = () => {
             <div className="text-xs text-muted text-center">
                 {visible
                     ? t("line of sight: clear — highlighted cells are what the supercover checks",
-                        "line of sight: 통과. 칠해진 셀들이 supercover 가 검사하는 셀이다")
+                        "line of sight: 통과. 칠해진 셀들이 supercover가 검사하는 셀이다")
                     : t("line of sight: blocked", "line of sight: 차단됨")}
                 {" · "}
                 {t("drag the endpoints, click cells to toggle walls",
@@ -108,7 +108,7 @@ const SupercoverLos = () => {
     return <CanvasFigure
         label={t(
             "The line-of-sight primitive Theta* is built on: a supercover walk visits every cell the segment crosses, and an exact corner needs both orthogonal cells free",
-            "Theta* 의 토대인 line-of-sight primitive. supercover 순회가 선분이 지나는 모든 셀을 방문하고, 정확한 corner 통과에는 양쪽 직교 셀이 모두 비어 있어야 한다",
+            "Theta*의 토대인 line-of-sight primitive. supercover 순회가 선분이 지나는 모든 셀을 방문하고, 정확한 corner 통과에는 양쪽 직교 셀이 모두 비어 있어야 한다",
         )}
         tight bodyClassName="w-fit" className="w-full"
         modal={<Scene/>}

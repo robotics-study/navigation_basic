@@ -210,7 +210,7 @@ return failure`}/>
                     directly from the repository.
                 </p>}
                 ko={<p>
-                    BFS는 이 섹션에서 유일하게 공유 best-first 코어를 쓰지 않는 planner 다. FIFO
+                    BFS는 이 섹션에서 유일하게 공유 best-first 코어를 쓰지 않는 planner다. FIFO
                     큐에는 우선순위 정렬이 필요 없기 때문이다. 아래 코드는 저장소 소스를 그대로
                     embed 한 것이다.
                 </p>}

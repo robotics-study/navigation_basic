@@ -58,7 +58,7 @@ const MultiAgent = () => {
                     탐색 공간을 곧이곧대로 잡으면 <em>joint</em> 공간이 된다. 상태가 모든 agent 위치의 튜플이라
                     크기가 대략 <InlineMath math="|V|^k"/>다. A*가 밀리초에 끝내는 20×20
                     격자도 agent 열 대면 ~<InlineMath math="10^{26}"/> 상태 공간이 된다. 최적 MAPF는
-                    NP-hard 다. 실용적인 알고리즘은 전부 이 joint 공간을 순진하게 탐색하지{" "}
+                    NP-hard다. 실용적인 알고리즘은 전부 이 joint 공간을 순진하게 탐색하지{" "}
                     <em>않기</em> 위한 전략이며, 해 품질·완전성·agent 간 결합을 얼마나 고려할지를
                     맞바꾼다.
                 </p>}

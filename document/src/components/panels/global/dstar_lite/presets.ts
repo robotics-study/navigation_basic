@@ -20,7 +20,7 @@ export function trapMap(): GridMap {
 }
 
 // 흩어진 소형 장애물 — 발견 하나가 국소 수리로 끝나는 일반적인 상황. 이런 지형에서
-// incremental 수리가 매번 A* 재실행을 크게 이긴다 (trap 은 반대의 최악 케이스).
+// incremental 수리가 매번 A* 재실행을 크게 이긴다 (trap은 반대의 최악 케이스).
 export const SCATTER_N = 24;
 export const SCATTER_START: Cell = [21, 2];
 export const SCATTER_GOAL: Cell = [2, 21];

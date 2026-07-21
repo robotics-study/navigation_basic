@@ -28,4 +28,6 @@ export interface TraceEvent {
     params?: Record<string, unknown>;
     success?: boolean;
     metrics?: Record<string, number>;
+    // 알고리즘별 부가 정보 (예: visibility A*의 interval run) — 렌더러는 몰라도 된다.
+    data?: Record<string, unknown>;
 }

@@ -9,7 +9,7 @@ import {useTr} from "../../../../libs/i18n";
 import cn from "../../../../libs/cn";
 
 // JPS 전용: 넓은 홀에 짧은 벽 토막 몇 개. 대칭 경로가 지천으로 깔린 지형이라
-// A* 는 수백 칸을 확장하고 JPS 는 jump point 몇 개만 짚는다.
+// A*는 수백 칸을 확장하고 JPS는 jump point 몇 개만 짚는다.
 export const HALL_N = 24;
 export const HALL_START: Cell = [21, 2];
 export const HALL_GOAL: Cell = [2, 21];
@@ -84,7 +84,7 @@ const JpsScene = ({panel = 340}: {panel?: number}) => {
                     </div>
                     <div className="text-xs text-muted text-center">
                         {t("straight tree edges are jumps · drag walls and endpoints",
-                            "곧게 뻗은 트리 선이 jump 다. 벽과 끝점을 끌어 보라")}
+                            "곧게 뻗은 트리 선이 jump다. 벽과 끝점을 끌어 보라")}
                     </div>
                 </div>
             }
@@ -97,7 +97,7 @@ const JpsSandbox = () => {
     return <CanvasFigure
         label={t(
             "Live JPS in an open hall: the gray shadow is everything A* would expand; JPS touches only the handful of jump points its long scans return",
-            "홀에서의 라이브 JPS. 회색 그림자가 A* 라면 확장했을 전부이고, JPS 는 긴 스캔이 돌려주는 소수의 jump point 만 짚는다",
+            "홀에서의 라이브 JPS. 회색 그림자가 A* 라면 확장했을 전부이고, JPS는 긴 스캔이 돌려주는 소수의 jump point만 짚는다",
         )}
         tight bodyClassName="w-fit" className="w-full"
         modal={<JpsScene panel={Math.min(modalCanvasSize(1).width, 640)}/>}

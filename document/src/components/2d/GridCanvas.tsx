@@ -22,8 +22,8 @@ interface GridCanvasProps {
     overlayPath?: Cell[];
     // 비교용 배경 셀 집합 (muted 반투명) — 다른 알고리즘의 확장 영역 대조 등에 쓴다.
     shadowCells?: Cell[];
-    // 연속 상태(SE(2)) planner 용 차량 표시 — carPose 는 현재(주행 중) pose,
-    // goalPose 는 요구 heading 을 보여 주는 점선 외곽선. 있으면 원 마커를 대체한다.
+    // 연속 상태(SE(2)) planner 용 차량 표시 — carPose는 현재(주행 중) pose,
+    // goalPose는 요구 heading을 보여 주는 점선 외곽선. 있으면 원 마커를 대체한다.
     carPose?: [number, number, number];
     goalPose?: [number, number, number];
     // sandbox 상호작용 — 핸들러가 있을 때만 활성화된다.
@@ -76,7 +76,7 @@ const GridCanvas = ({
         () => showTree && timeline ? timeline.edges.filter((e) => e.step <= step) : [],
         [showTree, timeline, step],
     )
-    // anytime planner 는 개선된 경로를 여러 번 발표한다 — 현재 step 까지의 최신 경로를 그린다.
+    // anytime planner는 개선된 경로를 여러 번 발표한다 — 현재 step 까지의 최신 경로를 그린다.
     const visiblePath = useMemo(() => {
         if (!timeline) return null
         let latest: Cell[] | null = null
@@ -125,7 +125,7 @@ const GridCanvas = ({
         return [(c[1] + 0.5) * cell, (c[0] + 0.5) * cell]
     }
 
-    // 차량: heading 이 있는 pose 를 몸체 사각형 + 앞유리 선으로 그린다. world θ와
+    // 차량: heading이 있는 pose를 몸체 사각형 + 앞유리 선으로 그린다. world θ와
     // canvas 회전은 y축 반전 때문에 부호가 반대다.
     const car = (pose: [number, number, number], opts: {fill?: string; stroke: string; dash?: number[]}) => {
         const [x, y] = center([pose[0], pose[1]])
@@ -200,7 +200,7 @@ const GridCanvas = ({
                     <Rect key={`f${i}`} x={c[1] * cell} y={c[0] * cell}
                           width={cell} height={cell} fill={colors.accent} opacity={0.10}/>
                 ))}
-                {/* 벽 — 실행형 재생에서는 미발견 벽을 ghost 로만 표시 */}
+                {/* 벽 — 실행형 재생에서는 미발견 벽을 ghost로만 표시 */}
                 {map.occupied.map((occ, i) => occ && (
                     <Rect key={`w${i}`} x={(i % map.width) * cell} y={Math.floor(i / map.width) * cell}
                           width={cell} height={cell} fill={colors.text}
@@ -250,7 +250,7 @@ const GridCanvas = ({
                             radius={cell * 0.32} fill={colors.accent2}
                             stroke={colors.bg} strokeWidth={Math.max(1, cell * 0.06)}/>
                 )}
-                {/* 시작/목표 — 차량 pose 가 주어지면 원 마커 대신 차로 그린다 */}
+                {/* 시작/목표 — 차량 pose가 주어지면 원 마커 대신 차로 그린다 */}
                 {start && !carPose && endpoint(start, colors.accent, onMoveStart)}
                 {goal && !goalPose && endpoint(goal, PATH_COLOR, onMoveGoal)}
                 {goalPose && car(goalPose, {stroke: PATH_COLOR, dash: [cell * 0.3, cell * 0.24]})}

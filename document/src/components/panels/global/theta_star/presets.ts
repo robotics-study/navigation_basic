@@ -3,7 +3,7 @@ import {Cell} from "../../../../libs/trace/timeline";
 import {mulberry32} from "../../../../libs/rng";
 
 // Theta* 전용: 넓은 마당에 기둥 몇 개. grid 경로는 45°에 갇혀 지그재그가 되고,
-// any-angle 은 기둥 모서리만 스치는 긴 직선을 긋는다 — 두 경로의 차이가 가장 잘 보이는 지형.
+// any-angle은 기둥 모서리만 스치는 긴 직선을 긋는다 — 두 경로의 차이가 가장 잘 보이는 지형.
 export const PILLAR_N = 22;
 export const PILLAR_START: Cell = [19, 2];
 export const PILLAR_GOAL: Cell = [2, 19];
@@ -21,7 +21,7 @@ export function pillarsMap(): GridMap {
     return map
 }
 
-// Lazy Theta* 전용: 잘게 흩어진 잔해. LOS 검사 대상 edge 가 많아져 "edge 마다 검사"와
+// Lazy Theta* 전용: 잘게 흩어진 잔해. LOS 검사 대상 edge가 많아져 "edge마다 검사"와
 // "확장마다 한 번"의 횟수 차이가 크게 벌어진다.
 export const RUBBLE_N = 22;
 export const RUBBLE_START: Cell = [19, 2];
