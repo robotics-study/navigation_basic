@@ -138,6 +138,11 @@ const FastRrt = () => {
                         explores, not the RRT* rewiring that carries the asymptotic
                         guarantee. Fast-Sampling and Random Steering are heuristics that cut
                         search-time variance, especially through narrow passages.</li>
+                    <li><strong>Divergence from the paper</strong>: Wu et al. re-initialise a
+                        plain RRT per outer iteration and their Fast-Optimal <em>fuses
+                        multiple paths</em> at crossing points; this repository keeps one
+                        persistent RRT* tree and replaces the fusion with a single-path
+                        triangle-inequality shortcut — same intent, simpler mechanism.</li>
                     <li><strong>Anytime</strong>: the incumbent is the cheapest shortcut path
                         seen so far and only improves; the loop always runs its full
                         budget.</li>
@@ -160,6 +165,10 @@ const FastRrt = () => {
                         점근 보장을 지는 RRT* rewire는 건드리지 않는다. Fast-Sampling 과
                         Random Steering은 search-time variance를 줄이는 휴리스틱이고,
                         특히 좁은 통로에서 효과가 크다.</li>
+                    <li><strong>논문과의 편차</strong>: Wu et al.은 외곽 루프마다 plain RRT를
+                        재초기화하고 Fast-Optimal이 <em>여러 경로를 교차점에서 융합</em>하지만,
+                        이 저장소는 지속되는 RRT* 트리 하나에 단일 경로 삼각부등식 shortcut을
+                        얹는다. 의도는 같고 기전은 더 단순하다.</li>
                     <li><strong>Anytime</strong>: 현직 해는 지금까지 본 가장 싼 지름길
                         경로이고 개선만 된다. 루프는 언제나 예산을 다 쓴다.</li>
                     <li>RRT처럼 <strong>확률적 완전</strong>. goal biased draw는 항상

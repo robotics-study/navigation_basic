@@ -173,6 +173,8 @@ def informed_sample(
     ux, uy = rad * math.cos(ang) * r1, rad * math.sin(ang) * r2
     x = cx + math.cos(theta) * ux - math.sin(theta) * uy
     y = cy + math.sin(theta) * ux + math.cos(theta) * uy
+    # 타원이 맵 경계를 벗어나도 클립하지 않는다 — 범위 밖 표본은 downstream 검사가
+    # 버리므로 정확성에는 무관하고 표본 몇 개의 효율만 잃는다.
     return (x, y)
 
 

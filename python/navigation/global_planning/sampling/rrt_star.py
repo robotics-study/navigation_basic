@@ -67,6 +67,9 @@ class RRTStar(_SamplingPlanner):
             rewire(space, tree, new_idx, q_new, neighborhood, recorder)
 
             if space.distance(q_new, goal) <= goal_tol and space.is_motion_valid(q_new, goal):
+                # best_cost 는 채택 시점 스냅샷이다: 이후 rewire 로 현직 goal-parent 의
+                # 체인이 더 싸져도 여기 비교값은 갱신되지 않아, 드물게 근소하게 나쁜
+                # 부모가 유지될 수 있다. 최종 보고 비용은 path_length 재계산이라 정확하다.
                 cand_cost = tree.cost[new_idx] + space.distance(q_new, goal)
                 if cand_cost < best_cost:
                     best_cost = cand_cost
