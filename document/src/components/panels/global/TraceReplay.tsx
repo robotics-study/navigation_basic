@@ -20,9 +20,16 @@ interface TraceReplayProps {
     maps: string[];
     // CanvasFigure 캡션 (호출부에서 번역해 넘긴다).
     label: string;
+    // 참 기하 경로 재계산 (Anya처럼 turning point가 셀 중심이 아닌 planner용).
+    // trace의 path는 셀로 스냅되어 스냅 꼭짓점 사이 직선이 장애물을 시각적으로
+    // 가로지를 수 있다 — 동일 입력으로 라이브 엔진을 돌려 실제 기하를 그린다.
+    truePathOf?: (map: GridMap, start: Cell, goal: Cell,
+                  params: Record<string, unknown> | undefined) => Cell[];
 }
 
-const ReplayScene = ({algo, maps, panel = 340}: {algo: string; maps: string[]; panel?: number}) => {
+const ReplayScene = ({algo, maps, truePathOf, panel = 340}: {
+    algo: string; maps: string[]; truePathOf?: TraceReplayProps["truePathOf"]; panel?: number;
+}) => {
     const t = useTr()
     const [mapName, setMapName] = useState(maps[0])
     const [loaded, setLoaded] = useState<Loaded | null>(null)
@@ -52,6 +59,11 @@ const ReplayScene = ({algo, maps, panel = 340}: {algo: string; maps: string[]; p
             ? loaded.timeline.path[loaded.timeline.path.length - 1]
             : undefined,
         [loaded])
+    const truePath = useMemo<Cell[] | undefined>(
+        () => loaded && start && goal && truePathOf
+            ? truePathOf(loaded.map, start, goal, loaded.timeline.params)
+            : undefined,
+        [loaded, start, goal, truePathOf])
 
     const selector = (
         <div className="flex items-center justify-center gap-1.5 text-xs text-muted flex-wrap">
@@ -79,18 +91,20 @@ const ReplayScene = ({algo, maps, panel = 340}: {algo: string; maps: string[]; p
         </div>
     }
     return <TracePlayer map={loaded.map} timeline={loaded.timeline}
-                        start={start} goal={goal} panel={panel} footer={selector}/>
+                        start={start} goal={goal} truePath={truePath}
+                        panel={panel} footer={selector}/>
 }
 
-const TraceReplay = ({algo, maps, label}: TraceReplayProps) => {
+const TraceReplay = ({algo, maps, label, truePathOf}: TraceReplayProps) => {
     return <CanvasFigure
         label={label}
         tight
         bodyClassName="w-fit"
         className="w-full"
-        modal={<ReplayScene algo={algo} maps={maps} panel={Math.min(modalCanvasSize(1).width, 640)}/>}
+        modal={<ReplayScene algo={algo} maps={maps} truePathOf={truePathOf}
+                            panel={Math.min(modalCanvasSize(1).width, 640)}/>}
     >
-        <ReplayScene algo={algo} maps={maps}/>
+        <ReplayScene algo={algo} maps={maps} truePathOf={truePathOf}/>
     </CanvasFigure>
 }
 

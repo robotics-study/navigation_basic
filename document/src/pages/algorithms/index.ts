@@ -120,7 +120,21 @@ const data: IAlgoData[] = [
             {en: "References", ko: "References"},
         ],
     },
-    {slug: "anya", title: {en: "Anya", ko: "Anya"}, category: "search"},
+    {
+        slug: "anya",
+        title: {en: "Anya", ko: "Anya"},
+        category: "search",
+        supportedExample: {python: true, "c++": true},
+        contents: lazy(() => import("./global/search/Anya")),
+        sections: [
+            {en: "Turning at Corners", ko: "모서리에서 꺾는다"},
+            {en: "Properties and Complexity", ko: "성질과 복잡도"},
+            {en: "The Algorithm", ko: "알고리즘"},
+            {en: "Demo", ko: "Demo"},
+            {en: "Implementation", ko: "Implementation"},
+            {en: "References", ko: "References"},
+        ],
+    },
     {
         slug: "dstar_lite",
         title: {en: "D* Lite", ko: "D* Lite"},

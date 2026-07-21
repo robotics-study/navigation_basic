@@ -7,5 +7,6 @@ export {runADStar} from "../src/libs/algorithms/ad_star";
 export {runThetaStar, runLazyThetaStar} from "../src/libs/algorithms/theta_star";
 export {runJPS} from "../src/libs/algorithms/jps";
 export {runVisibilityAStar} from "../src/libs/algorithms/visibility_astar";
+export {runAnya} from "../src/libs/algorithms/anya";
 export {runHybridAStar} from "../src/libs/algorithms/hybrid_astar";
 export {parseGridMap} from "../src/libs/grid";
