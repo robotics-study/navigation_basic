@@ -1,6 +1,6 @@
 import {ReactNode, useEffect, useMemo, useRef, useState} from "react";
 import {GridMap} from "../../libs/grid";
-import {Cell, GridTimeline} from "../../libs/trace/timeline";
+import {Cell, GridTimeline, pathSampler} from "../../libs/trace/timeline";
 import GridCanvas, {PATH_COLOR} from "../2d/GridCanvas";
 import {useTr} from "../../libs/i18n";
 import cn from "../../libs/cn";
@@ -8,12 +8,17 @@ import cn from "../../libs/cn";
 // 타임라인 전체를 도는 목표 시간. 이벤트 수와 무관하게 체감 속도를 맞춘다 (고정 배속).
 const BASE_DURATION_MS = 3000;
 const TICK_MS = 30;
+// 연속(SE(2)) planner: 탐색이 끝나면 찾은 경로를 차량이 주행해 보인다.
+const DRIVE_MS = 2600;
 
 interface TracePlayerProps {
     map: GridMap;
     timeline: GridTimeline;
     start?: Cell;
     goal?: Cell;
+    // 연속 상태 planner 용 시작/목표 pose (θ 포함). 없으면 경로 양끝에서 유도한다.
+    startPose?: [number, number, number];
+    goalPose?: [number, number, number];
     panel?: number;
     showTree?: boolean;
     overlayPath?: Cell[];
@@ -40,7 +45,8 @@ const Btn = ({onClick, label, children, active}: {
 )
 
 const TracePlayer = ({
-                         map, timeline, start, goal, panel = 340, showTree, overlayPath,
+                         map, timeline, start, goal, startPose, goalPose,
+                         panel = 340, showTree, overlayPath,
                          shadowCells, autoPlay = true,
                          onPaintCell, onMoveStart, onMoveGoal, footer,
                      }: TracePlayerProps) => {
@@ -85,6 +91,37 @@ const TracePlayer = ({
     }, [timeline, step])
     const pathShown = visiblePath !== null
 
+    // 연속 planner: 탐색 재생이 끝나면 찾은 경로를 차량이 주행한다.
+    const sampler = useMemo(
+        () => timeline.continuous && timeline.pathStates.length > 1
+            ? pathSampler(timeline.pathStates)
+            : null,
+        [timeline],
+    )
+    const [drive, setDrive] = useState(0)
+    useEffect(() => {
+        setDrive(0)
+        if (!sampler || !finished) return
+        let raf = 0
+        const t0 = performance.now()
+        const tick = (now: number) => {
+            const p = Math.min(1, (now - t0) / DRIVE_MS)
+            setDrive(p)
+            if (p < 1) raf = requestAnimationFrame(tick)
+        }
+        raf = requestAnimationFrame(tick)
+        return () => cancelAnimationFrame(raf)
+    }, [sampler, finished])
+
+    const carPose = useMemo<[number, number, number] | undefined>(() => {
+        if (!timeline.continuous) return undefined
+        if (sampler && finished) return sampler.at(drive * sampler.length)
+        return startPose ?? (sampler ? sampler.at(0) : undefined)
+    }, [timeline, sampler, finished, drive, startPose])
+    const goalCarPose = timeline.continuous
+        ? goalPose ?? (sampler ? sampler.at(sampler.length) : undefined)
+        : undefined
+
     const replay = () => {
         setStep(0)
         setPlaying(true)
@@ -94,7 +131,7 @@ const TracePlayer = ({
         <div className="flex flex-col gap-2 items-center">
             <GridCanvas map={map} panel={panel} timeline={timeline} step={step}
                         start={start} goal={goal} showTree={showTree} overlayPath={overlayPath}
-                        shadowCells={shadowCells}
+                        shadowCells={shadowCells} carPose={carPose} goalPose={goalCarPose}
                         onPaintCell={onPaintCell} onMoveStart={onMoveStart} onMoveGoal={onMoveGoal}/>
 
             <div className="flex items-center gap-1.5 text-xs text-muted w-full" style={{maxWidth: panel}}>

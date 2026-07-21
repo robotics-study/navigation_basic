@@ -80,6 +80,15 @@ export const ALGO_BLURBS: AlgoBlurb[] = [
         },
     },
     {
+        slug: "hybrid_astar",
+        blurb: {
+            en: "Search the car's own pose space: constant-curvature arc primitives, a " +
+                "binned closed set, and paths a real vehicle can actually drive.",
+            ko: "차량의 pose 공간을 직접 탐색한다. 일정 곡률 arc primitive 와 bin " +
+                "closed set 으로, 실제 차량이 달릴 수 있는 경로를 찾는다.",
+        },
+    },
+    {
         slug: "astar",
         blurb: {
             en: "Dijkstra plus a compass: order the frontier by g + h and an admissible " +
