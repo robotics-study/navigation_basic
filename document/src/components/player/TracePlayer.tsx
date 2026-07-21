@@ -86,6 +86,19 @@ const TracePlayer = ({
         () => timeline.expanded.filter((e) => e.step <= step).length,
         [timeline, step],
     )
+    const sampleCount = useMemo(
+        () => timeline.samples.filter((s) => s.step <= step).length,
+        [timeline, step],
+    )
+    // 트리 노드 수 = 서로 다른 자식 정점 수 + 뿌리 (rewire 중복 간선은 세지 않는다).
+    const treeCount = useMemo(() => {
+        const children = new Set<string>()
+        for (const e of timeline.edges) {
+            if (e.step > step) break
+            children.add(`${e.to[0]},${e.to[1]}`)
+        }
+        return children.size + 1
+    }, [timeline, step])
     const finished = step >= timeline.steps
     // anytime planner 대응: 현재 step까지 발표된 최신 경로의 비용을 보여 준다.
     const visiblePath = useMemo(() => {
@@ -173,8 +186,18 @@ const TracePlayer = ({
             </div>
 
             <div className="text-xs text-muted text-center tabular-nums">
-                {t("expanded", "확장한 노드")}{" "}
-                <span className="font-semibold" style={{color: "var(--accent)"}}>{expandedCount}</span>
+                {/* RRT 계열은 node_expanded 없이 자라므로 표본·트리 수를 대신 보여 준다 */}
+                {timeline.expanded.length === 0 && timeline.samples.length > 0
+                    ? <>
+                        {t("samples", "표본")}{" "}
+                        <span className="font-semibold" style={{color: "var(--accent)"}}>{sampleCount}</span>
+                        {" · "}{t("tree", "트리")}{" "}
+                        <span className="font-semibold">{treeCount}</span>
+                    </>
+                    : <>
+                        {t("expanded", "확장한 노드")}{" "}
+                        <span className="font-semibold" style={{color: "var(--accent)"}}>{expandedCount}</span>
+                    </>}
                 {pathShown && <>
                     {" · "}{t("path cost", "경로 비용")}{" "}
                     <span className="font-semibold" style={{color: PATH_COLOR}}>
