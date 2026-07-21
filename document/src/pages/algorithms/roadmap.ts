@@ -36,7 +36,7 @@ export const CATEGORIES: Array<{
     },
     {
         key: "sampling",
-        title: {en: "Sampling-Based Planning", ko: "Sampling-Based Planning"},
+        title: {en: "Sampling", ko: "Sampling"},
         desc: {
             en: "Planning in continuous space by random sampling: RRT and PRM families, " +
                 "and asymptotically optimal batch planners.",
@@ -54,7 +54,7 @@ export const CATEGORIES: Array<{
     },
     {
         key: "multi",
-        title: {en: "Multi-Agent Planning", ko: "Multi-Agent Planning"},
+        title: {en: "Multi-Agent", ko: "Multi-Agent"},
         desc: {
             en: "Coordinating many robots without collisions: prioritized, joint-space, and conflict-based search.",
             ko: "여러 로봇을 충돌 없이 조율하는 계획: prioritized, joint-space, conflict-based search.",

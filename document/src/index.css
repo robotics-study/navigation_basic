@@ -426,6 +426,66 @@
     font-size: .58rem;
 }
 
+/* 카테고리 disclosure — 알고리즘이 카테고리당 십수 개라 접지 않으면 네비가 감당이 안 된다 */
+.sidebar .sb-group {
+    margin-top: 12px;
+}
+
+.sidebar .sb-head {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    padding: 5px 8px;
+    border-radius: 8px;
+    font-size: .74rem;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--muted);
+    font-weight: 700;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    text-align: left;
+}
+
+.sidebar .sb-head:hover {
+    color: var(--text);
+    background: var(--surface-2);
+}
+
+.sidebar .sb-head .sb-count {
+    margin-left: auto;
+    font-weight: 600;
+    opacity: .7;
+    letter-spacing: 0;
+    font-variant-numeric: tabular-nums;
+}
+
+.sidebar .sb-head .sb-chev {
+    flex: none;
+    transition: transform .18s;
+}
+
+.sidebar .sb-group.open .sb-head .sb-chev {
+    transform: rotate(90deg);
+}
+
+.sidebar .sb-body {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows .22s ease;
+}
+
+.sidebar .sb-group.open .sb-body {
+    grid-template-rows: 1fr;
+}
+
+.sidebar .sb-body > div {
+    overflow: hidden;
+}
+
 .content {
     padding: 40px 48px 90px;
     min-width: 0;
