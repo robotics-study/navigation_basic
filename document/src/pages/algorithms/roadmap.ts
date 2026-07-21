@@ -152,6 +152,35 @@ export const ALGO_BLURBS: AlgoBlurb[] = [
         },
     },
     {
+        slug: "informed_rrt_star",
+        blurb: {
+            en: "RRT* that stops wasting samples: once a path exists, draw only from the " +
+                "ellipse of states that could still beat it, and the cost converges far faster.",
+            ko: "표본을 낭비하지 않는 RRT*. 경로가 하나 생기면 그것을 아직 이길 수 있는 " +
+                "상태들의 타원 안에서만 표본을 뽑아, 비용이 훨씬 빨리 수렴한다.",
+        },
+    },
+    {
+        slug: "fast_rrt",
+        blurb: {
+            en: "RRT* with three accelerators: sample only where the tree hasn't reached, " +
+                "rescue a blocked extension with a random probe, and shortcut every path taut.",
+            ko: "가속기 셋을 단 RRT*. 트리가 닿지 않은 곳만 표본으로 뽑고, 막힌 확장은 " +
+                "무작위 탐침으로 살리며, 모든 경로를 지름길로 팽팽하게 당긴다.",
+        },
+    },
+    {
+        slug: "fmt_star",
+        blurb: {
+            en: "PRM*'s batch and shrinking radius, marched like Dijkstra: one " +
+                "cost-ordered wave builds the tree, collision-checking a single lazy " +
+                "edge per node instead of every neighbor.",
+            ko: "PRM*의 배치와 줄어드는 반경을 Dijkstra처럼 행진한다. cost 순 파면 " +
+                "한 번이 트리를 세우되, 이웃마다가 아니라 노드마다 lazy 간선 하나만 " +
+                "충돌 검사한다.",
+        },
+    },
+    {
         slug: "astar",
         blurb: {
             en: "Dijkstra plus a compass: order the frontier by g + h and an admissible " +
