@@ -7,7 +7,7 @@
 
 namespace navigation::global_planning {
 
-// FCIT* — Fully Connected Informed Trees (Wilson, Strub & Gammell 2025, ICRA).
+// FCIT* — Fully Connected Informed Trees (Wilson, Thomason, Kingston, Kavraki & Gammell 2025, ICRA).
 // Instead of restricting the candidate graph to a shrinking radius-neighbour RGG
 // (as BIT*/AIT*/EIT* do to bound edge count), FCIT* searches the FULLY CONNECTED
 // graph over the current informed batch — every accumulated sample pairs with
