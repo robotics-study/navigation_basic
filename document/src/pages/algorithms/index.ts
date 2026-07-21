@@ -1,0 +1,97 @@
+import {lazy} from "react";
+import {IAlgoData} from "../../../types/global";
+
+// 알고리즘 메타데이터는 여기서만 관리한다. 콘텐츠 모듈은 lazy import 로 분리해
+// 홈/목록 화면에서는 불러오지 않는다 (초기 번들 축소).
+// sections 의 en/ko 문자열은 각 언어로 렌더된 본문 h2 헤딩과 정확히 일치해야
+// 사이드바/TOC/검색 앵커(slug)가 맞는다.
+// 배열 순서가 사이드바·pager 의 진행 순서다 (학습 난이도 순).
+const data: IAlgoData[] = [
+    // ---- Graph search ----
+    {
+        slug: "bfs",
+        title: {en: "BFS", ko: "BFS"},
+        category: "search",
+        supportedExample: {python: true, "c++": true},
+        contents: lazy(() => import("./global/search/Bfs")),
+        sections: [
+            {en: "The Idea", ko: "아이디어"},
+            {en: "Properties and Complexity", ko: "성질과 복잡도"},
+            {en: "The Algorithm", ko: "알고리즘"},
+            {en: "When Hops Lie", ko: "최소 hop 이 최단이 아닐 때"},
+            {en: "Demo", ko: "Demo"},
+            {en: "Implementation", ko: "Implementation"},
+            {en: "References", ko: "References"},
+        ],
+    },
+    {
+        slug: "dijkstra",
+        title: {en: "Dijkstra", ko: "Dijkstra"},
+        category: "search",
+        supportedExample: {python: true, "c++": true},
+        contents: lazy(() => import("./global/search/Dijkstra")),
+        sections: [
+            {en: "From BFS to Dijkstra", ko: "BFS에서 Dijkstra로"},
+            {en: "Properties and Complexity", ko: "성질과 복잡도"},
+            {en: "The Algorithm", ko: "알고리즘"},
+            {en: "Why Greedy Works", ko: "Greedy가 왜 통하는가"},
+            {en: "Demo", ko: "Demo"},
+            {en: "Implementation", ko: "Implementation"},
+            {en: "References", ko: "References"},
+        ],
+    },
+    {
+        slug: "astar",
+        title: {en: "A*", ko: "A*"},
+        category: "search",
+        supportedExample: {python: true, "c++": true},
+        contents: lazy(() => import("./global/search/Astar")),
+        sections: [
+            {en: "From Dijkstra to A*", ko: "Dijkstra에서 A*로"},
+            {en: "Properties and Complexity", ko: "성질과 복잡도"},
+            {en: "The Algorithm", ko: "알고리즘"},
+            {en: "Heuristics", ko: "Heuristic"},
+            {en: "Why A* Is Optimal", ko: "A*는 왜 최적인가"},
+            {en: "Demo", ko: "Demo"},
+            {en: "Implementation", ko: "Implementation"},
+            {en: "References", ko: "References"},
+        ],
+    },
+    {slug: "dstar_lite", title: {en: "D* Lite", ko: "D* Lite"}, category: "search"},
+    {slug: "ara_star", title: {en: "ARA*", ko: "ARA*"}, category: "search"},
+    {slug: "ad_star", title: {en: "AD*", ko: "AD*"}, category: "search"},
+    {slug: "theta_star", title: {en: "Theta*", ko: "Theta*"}, category: "search"},
+    {slug: "lazy_theta_star", title: {en: "Lazy Theta*", ko: "Lazy Theta*"}, category: "search"},
+    {slug: "hybrid_astar", title: {en: "Hybrid A*", ko: "Hybrid A*"}, category: "search"},
+    {slug: "jps", title: {en: "Jump Point Search", ko: "Jump Point Search"}, category: "search"},
+    {slug: "visibility_astar", title: {en: "Visibility A*", ko: "Visibility A*"}, category: "search"},
+    {slug: "anya", title: {en: "Anya", ko: "Anya"}, category: "search"},
+    // ---- Sampling-based ----
+    {slug: "prm", title: {en: "PRM", ko: "PRM"}, category: "sampling"},
+    {slug: "prm_star", title: {en: "PRM*", ko: "PRM*"}, category: "sampling"},
+    {slug: "rrt", title: {en: "RRT", ko: "RRT"}, category: "sampling"},
+    {slug: "rrt_connect", title: {en: "RRT-Connect", ko: "RRT-Connect"}, category: "sampling"},
+    {slug: "rrt_star", title: {en: "RRT*", ko: "RRT*"}, category: "sampling"},
+    {slug: "informed_rrt_star", title: {en: "Informed RRT*", ko: "Informed RRT*"}, category: "sampling"},
+    {slug: "fast_rrt", title: {en: "Fast-RRT", ko: "Fast-RRT"}, category: "sampling"},
+    {slug: "kinodynamic_rrt_star", title: {en: "Kinodynamic RRT*", ko: "Kinodynamic RRT*"}, category: "sampling"},
+    {slug: "lqr_rrt_star", title: {en: "LQR-RRT*", ko: "LQR-RRT*"}, category: "sampling"},
+    {slug: "fmt_star", title: {en: "FMT*", ko: "FMT*"}, category: "sampling"},
+    {slug: "bit_star", title: {en: "BIT*", ko: "BIT*"}, category: "sampling"},
+    {slug: "abit_star", title: {en: "ABIT*", ko: "ABIT*"}, category: "sampling"},
+    {slug: "ait_star", title: {en: "AIT*", ko: "AIT*"}, category: "sampling"},
+    {slug: "eit_star", title: {en: "EIT*", ko: "EIT*"}, category: "sampling"},
+    {slug: "fcit_star", title: {en: "FCIT*", ko: "FCIT*"}, category: "sampling"},
+    {slug: "sst", title: {en: "SST", ko: "SST"}, category: "sampling"},
+    // ---- Local planning (구현 예정) ----
+    {slug: "dwa", title: {en: "DWA", ko: "DWA"}, category: "local"},
+    {slug: "pure_pursuit", title: {en: "Pure Pursuit", ko: "Pure Pursuit"}, category: "local"},
+    {slug: "vfh", title: {en: "VFH", ko: "VFH"}, category: "local"},
+    {slug: "mpc", title: {en: "MPC", ko: "MPC"}, category: "local"},
+    // ---- Multi-agent (구현 예정) ----
+    {slug: "prioritized_astar", title: {en: "Prioritized A*", ko: "Prioritized A*"}, category: "multi"},
+    {slug: "joint_astar", title: {en: "Joint-space A*", ko: "Joint-space A*"}, category: "multi"},
+    {slug: "cbs", title: {en: "CBS", ko: "CBS"}, category: "multi"},
+]
+
+export default data

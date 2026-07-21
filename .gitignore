@@ -17,6 +17,9 @@ dist/
 # 실행 산출물 (trace, 벤치 리포트, 애니메이션)
 out/
 
+# Web docs (document/)
+node_modules/
+
 # 에디터 / OS
 .idea/
 .vscode/
