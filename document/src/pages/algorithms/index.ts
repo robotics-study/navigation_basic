@@ -136,7 +136,21 @@ const data: IAlgoData[] = [
         ],
     },
     {slug: "hybrid_astar", title: {en: "Hybrid A*", ko: "Hybrid A*"}, category: "search"},
-    {slug: "jps", title: {en: "Jump Point Search", ko: "Jump Point Search"}, category: "search"},
+    {
+        slug: "jps",
+        title: {en: "Jump Point Search", ko: "Jump Point Search"},
+        category: "search",
+        supportedExample: {python: true, "c++": true},
+        contents: lazy(() => import("./global/search/Jps")),
+        sections: [
+            {en: "Symmetry Is the Enemy", ko: "대칭이 적이다"},
+            {en: "Properties and Complexity", ko: "성질과 복잡도"},
+            {en: "The Algorithm", ko: "알고리즘"},
+            {en: "Demo", ko: "Demo"},
+            {en: "Implementation", ko: "Implementation"},
+            {en: "References", ko: "References"},
+        ],
+    },
     {slug: "visibility_astar", title: {en: "Visibility A*", ko: "Visibility A*"}, category: "search"},
     {slug: "anya", title: {en: "Anya", ko: "Anya"}, category: "search"},
     // ---- Sampling-based ----

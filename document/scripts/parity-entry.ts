@@ -5,4 +5,5 @@ export {runDStarLite} from "../src/libs/algorithms/dstar_lite";
 export {runARAStar} from "../src/libs/algorithms/ara_star";
 export {runADStar} from "../src/libs/algorithms/ad_star";
 export {runThetaStar, runLazyThetaStar} from "../src/libs/algorithms/theta_star";
+export {runJPS} from "../src/libs/algorithms/jps";
 export {parseGridMap} from "../src/libs/grid";

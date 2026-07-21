@@ -17,6 +17,7 @@ interface TracePlayerProps {
     panel?: number;
     showTree?: boolean;
     overlayPath?: Cell[];
+    shadowCells?: Cell[];
     autoPlay?: boolean;
     // sandbox 상호작용 passthrough — 입력이 바뀌면 부모가 timeline을 새로 만든다.
     onPaintCell?: (row: number, col: number, occupied: boolean) => void;
@@ -40,7 +41,8 @@ const Btn = ({onClick, label, children, active}: {
 
 const TracePlayer = ({
                          map, timeline, start, goal, panel = 340, showTree, overlayPath,
-                         autoPlay = true, onPaintCell, onMoveStart, onMoveGoal, footer,
+                         shadowCells, autoPlay = true,
+                         onPaintCell, onMoveStart, onMoveGoal, footer,
                      }: TracePlayerProps) => {
     const t = useTr()
     const [step, setStep] = useState(autoPlay ? 0 : timeline.steps)
@@ -92,6 +94,7 @@ const TracePlayer = ({
         <div className="flex flex-col gap-2 items-center">
             <GridCanvas map={map} panel={panel} timeline={timeline} step={step}
                         start={start} goal={goal} showTree={showTree} overlayPath={overlayPath}
+                        shadowCells={shadowCells}
                         onPaintCell={onPaintCell} onMoveStart={onMoveStart} onMoveGoal={onMoveGoal}/>
 
             <div className="flex items-center gap-1.5 text-xs text-muted w-full" style={{maxWidth: panel}}>
