@@ -166,3 +166,90 @@ export function runRRT(opts: RRTOptions): TraceEvent[] {
     })
     return events
 }
+
+export interface RRTConnectOptions {
+    map: GridMap;
+    start: Point;
+    goal: Point;
+    maxIterations: number;
+    stepSize: number;
+    goalTolerance: number;
+    seed: number;
+}
+
+// RRT-Connect (Kuffner & LaValle 2000): 시작/goal 양쪽에서 트리를 키워, 한쪽이
+// EXTEND 한 새 노드로 다른 쪽이 greedy CONNECT 한다. goal bias 없이 균일 표본만
+// 쓰므로 재현성은 map RNG의 seed가 가진다.
+export function runRRTConnect(opts: RRTConnectOptions): TraceEvent[] {
+    const {map, start, goal, maxIterations, stepSize, goalTolerance, seed} = opts
+    const space = new SamplingGrid(map, seed)
+    const events: TraceEvent[] = []
+    let seq = 0
+    const emit = (ev: Omit<TraceEvent, "seq">) => events.push({seq: seq++, ...ev})
+    emit({
+        event: "planning_started",
+        algorithm: "rrt_connect",
+        params: {max_iterations: maxIterations, step_size: stepSize,
+                 goal_tolerance: goalTolerance, seed},
+    })
+
+    // EXTEND: nearest에서 target 쪽으로 한 스텝. 막히면 null (Trapped).
+    const extend = (tree: Tree, target: Point): number | null => {
+        const nearIdx = tree.nearest(target, space)
+        const qNear = tree.points[nearIdx]
+        const qNew = space.steer(qNear, target, stepSize)
+        if (!space.isMotionValid(qNear, qNew)) return null
+        const stepCost = space.distance(qNear, qNew)
+        const newIdx = tree.add(qNew, nearIdx, tree.cost[nearIdx] + stepCost)
+        emit({event: "edge_added", state: [qNew[0], qNew[1]],
+              parent: [qNear[0], qNear[1]], cost: stepCost})
+        return newIdx
+    }
+    // CONNECT: Reached(goal_tol 이내) 또는 Trapped까지 greedy EXTEND 반복.
+    const connect = (tree: Tree, target: Point): number | null => {
+        for (;;) {
+            const newIdx = extend(tree, target)
+            if (newIdx === null) return null
+            if (space.distance(tree.points[newIdx], target) <= goalTolerance) return newIdx
+        }
+    }
+
+    const treeStart = new Tree(start)
+    const treeGoal = new Tree(goal)
+    let ta = treeStart
+    let tb = treeGoal
+    let path: Point[] = []
+    let iterations = 0
+    for (let it = 0; it < maxIterations; it++) {
+        iterations++
+        const qRand = space.sample()
+        emit({event: "sample_drawn", state: [qRand[0], qRand[1]]})
+        const newIdx = extend(ta, qRand)
+        if (newIdx !== null) {
+            const tbIdx = connect(tb, ta.points[newIdx])
+            // 접합 두 노드 사이 최대 goal_tol 구간(bridge)을 명시적으로 충돌 검사한다.
+            if (tbIdx !== null
+                && space.isMotionValid(ta.points[newIdx], tb.points[tbIdx])) {
+                const bridge = [...ta.pathTo(newIdx), ...tb.pathTo(tbIdx).reverse()]
+                path = ta === treeStart ? bridge : bridge.reverse()
+                emit({event: "path_found", path: path.map((p) => [p[0], p[1]]),
+                      cost: pathLength(space, path)})
+                break
+            }
+        }
+        const tmp = ta
+        ta = tb
+        tb = tmp
+    }
+
+    const success = path.length > 0
+    const cost = success ? pathLength(space, path) : 0
+    const treeSize = treeStart.size + treeGoal.size
+    emit({
+        event: "planning_finished",
+        success,
+        metrics: {path_cost: cost, expanded_nodes: treeSize - 2,
+                  samples: iterations, tree_size: treeSize, iterations},
+    })
+    return events
+}
