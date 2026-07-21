@@ -67,7 +67,27 @@ const GridCanvas = ({
         () => showTree && timeline ? timeline.edges.filter((e) => e.step <= step) : [],
         [showTree, timeline, step],
     )
-    const pathVisible = timeline !== undefined && step >= timeline.pathStep && timeline.path.length > 0
+    // anytime planner 는 개선된 경로를 여러 번 발표한다 — 현재 step 까지의 최신 경로를 그린다.
+    const visiblePath = useMemo(() => {
+        if (!timeline) return null
+        let latest: Cell[] | null = null
+        for (const p of timeline.paths) {
+            if (p.step <= step) latest = p.path
+        }
+        return latest
+    }, [timeline, step])
+
+    // 실행형 planner(D* Lite 등): 로봇이 주행하며 장애물을 발견한다. 이때 실제 맵은
+    // 로봇이 모르는 정보이므로 벽을 흐리게(ghost) 깔고, 발견된 벽만 진하게 그린다.
+    const executed = timeline !== undefined && timeline.robot.length > 0
+    const revealedVisible = useMemo(
+        () => executed ? timeline!.revealed.filter((r) => r.step <= step) : [],
+        [executed, timeline, step],
+    )
+    const robotTrail = useMemo(
+        () => executed ? timeline!.robot.filter((r) => r.step <= step).map((r) => r.cell) : [],
+        [executed, timeline, step],
+    )
 
     // 벽 페인팅: pointer down 시 첫 셀의 반전값을 붓 값으로 삼아 드래그 내내 유지한다.
     const paintValue = useRef<boolean | null>(null)
@@ -138,9 +158,15 @@ const GridCanvas = ({
                     <Rect key={`f${i}`} x={c[1] * cell} y={c[0] * cell}
                           width={cell} height={cell} fill={colors.accent} opacity={0.10}/>
                 ))}
-                {/* 벽 */}
+                {/* 벽 — 실행형 재생에서는 미발견 벽을 ghost 로만 표시 */}
                 {map.occupied.map((occ, i) => occ && (
                     <Rect key={`w${i}`} x={(i % map.width) * cell} y={Math.floor(i / map.width) * cell}
+                          width={cell} height={cell} fill={colors.text}
+                          opacity={executed ? 0.15 : 0.78}/>
+                ))}
+                {/* 로봇이 발견한 벽 */}
+                {revealedVisible.map((r, i) => (
+                    <Rect key={`rv${i}`} x={r.cell[1] * cell} y={r.cell[0] * cell}
                           width={cell} height={cell} fill={colors.text} opacity={0.78}/>
                 ))}
                 {/* grid 선 — 셀이 충분히 클 때만 (작으면 노이즈) */}
@@ -157,11 +183,23 @@ const GridCanvas = ({
                     <Line key={`t${i}`} points={[...center(e.from), ...center(e.to)]}
                           stroke={colors.accent} strokeWidth={1} opacity={0.5}/>
                 ))}
-                {/* 최종 경로 */}
-                {pathVisible && (
-                    <Line points={timeline!.path.flatMap((c) => center(c))}
+                {/* 발표된 최신 경로 */}
+                {visiblePath && (
+                    <Line points={visiblePath.flatMap((c) => center(c))}
                           stroke={PATH_COLOR} strokeWidth={Math.max(2.5, cell * 0.28)}
                           lineCap="round" lineJoin="round"/>
+                )}
+                {/* 로봇 주행 궤적 + 현재 위치 */}
+                {robotTrail.length > 1 && (
+                    <Line points={robotTrail.flatMap((c) => center(c))}
+                          stroke={colors.accent2} strokeWidth={Math.max(2, cell * 0.2)}
+                          lineCap="round" lineJoin="round" opacity={0.9}/>
+                )}
+                {robotTrail.length > 0 && (
+                    <Circle x={center(robotTrail[robotTrail.length - 1])[0]}
+                            y={center(robotTrail[robotTrail.length - 1])[1]}
+                            radius={cell * 0.32} fill={colors.accent2}
+                            stroke={colors.bg} strokeWidth={Math.max(1, cell * 0.06)}/>
                 )}
                 {/* 시작/목표 */}
                 {start && endpoint(start, colors.accent, onMoveStart)}

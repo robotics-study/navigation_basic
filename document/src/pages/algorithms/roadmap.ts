@@ -26,6 +26,33 @@ export const ALGO_BLURBS: AlgoBlurb[] = [
         },
     },
     {
+        slug: "dstar_lite",
+        blurb: {
+            en: "Planning when the map is a guess: drive, sense, and repair only the part " +
+                "of the backward search a discovered wall invalidates.",
+            ko: "지도가 추측일 때의 계획. 주행하고, 감지하고, 발견된 벽이 무효화한 " +
+                "backward 탐색 부분만 수리한다.",
+        },
+    },
+    {
+        slug: "ara_star",
+        blurb: {
+            en: "Anytime A*: publish an ε-bounded path almost instantly, then tighten ε " +
+                "and reuse the search until the answer is optimal.",
+            ko: "Anytime A*. ε-한계가 보장된 경로를 거의 즉시 발표하고, ε을 조이며 " +
+                "탐색을 재사용해 최적까지 간다.",
+        },
+    },
+    {
+        slug: "ad_star",
+        blurb: {
+            en: "ARA* and D* Lite fused: anytime ε-bounded plans while driving an " +
+                "unknown map, repaired incrementally at every discovery.",
+            ko: "ARA*와 D* Lite의 결합. 미지 지도를 주행하며 anytime ε-한계 계획을 " +
+                "발표하고, 발견마다 incremental하게 수리한다.",
+        },
+    },
+    {
         slug: "astar",
         blurb: {
             en: "Dijkstra plus a compass: order the frontier by g + h and an admissible " +
