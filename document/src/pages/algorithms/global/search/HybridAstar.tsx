@@ -1,4 +1,5 @@
 import {T, useTr} from "../../../../libs/i18n";
+import Terms from "../../../../components/math/Terms";
 import {BlockMath, InlineMath} from "../../../../components/math/Tex";
 import Pseudocode from "../../../../components/Pseudocode";
 import CodeTabs from "../../../../components/CodeTabs";
@@ -44,6 +45,12 @@ const HybridAstar = () => {
                         optionally mirrored in reverse. Integrating an arc is exact:
                     </p>
                     <BlockMath math="\theta' = \theta + \kappa \ell, \qquad x' = x + \tfrac{\sin\theta' - \sin\theta}{\kappa}, \qquad y' = y - \tfrac{\cos\theta' - \cos\theta}{\kappa}"/>
+                    <Terms items={[
+                        ["(x, y, \\theta)", <>the current pose: position plus heading — <InlineMath math="\\theta"/> is <strong>the new state dimension</strong> grid planners never had</>],
+                        ["\\kappa", <>curvature of the arc, the steering command; bounded by <InlineMath math="|\\kappa| \\le 1/R_{\\min}"/> (minimum turn radius)</>],
+                        ["\\ell", "signed arc length driven along the primitive (negative = reverse)"],
+                        ["(x', y', \\theta')", <>the pose after driving the arc — the successor state</>],
+                    ]}/>
                     <p>
                         A continuous space would make A*'s closed set useless — no two poses ever
                         repeat exactly. The <em>hybrid</em> in the name is the fix: costs and
@@ -61,6 +68,12 @@ const HybridAstar = () => {
                         후진으로도 뒤집는다. arc 적분은 정확하다:
                     </p>
                     <BlockMath math="\theta' = \theta + \kappa \ell, \qquad x' = x + \tfrac{\sin\theta' - \sin\theta}{\kappa}, \qquad y' = y - \tfrac{\cos\theta' - \cos\theta}{\kappa}"/>
+                    <Terms items={[
+                        ["(x, y, \\theta)", <>현재 pose. 위치에 heading이 더해진 것으로, <InlineMath math="\\theta"/>가 grid planner에는 없던 <strong>새 상태 차원</strong>이다</>],
+                        ["\\kappa", <>arc의 곡률, 즉 조향 명령. <InlineMath math="|\\kappa| \\le 1/R_{\\min}"/> (최소 회전 반경)으로 유계</>],
+                        ["\\ell", "primitive를 따라 달리는 부호 있는 arc 길이 (음수 = 후진)"],
+                        ["(x', y', \\theta')", "arc를 달린 뒤의 pose, 곧 successor 상태"],
+                    ]}/>
                     <p>
                         연속 공간에서는 A*의 closed set이 무력해진다. 어떤 두 pose도 정확히
                         겹치지 않기 때문이다. 이름의 <em>hybrid</em>가 그 해법이다. 비용과 pose

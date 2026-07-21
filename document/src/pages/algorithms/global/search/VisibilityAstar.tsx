@@ -1,5 +1,6 @@
 import {ReactNode} from "react";
 import {T, useTr} from "../../../../libs/i18n";
+import Terms from "../../../../components/math/Terms";
 import {BlockMath, InlineMath} from "../../../../components/math/Tex";
 import Pseudocode from "../../../../components/Pseudocode";
 import CodeTabs from "../../../../components/CodeTabs";
@@ -205,6 +206,12 @@ while OPEN is not empty:
                             LOS-verified).
                         </p>
                         <BlockMath math="(v_i, v_{i+1}) \in E \;\;\forall i \;\Rightarrow\; v_0 \dots v_k \text{ is a path in } G_{\text{vis}} \;\Rightarrow\; \mathrm{opt}(G_{\text{vis}}) \le C_\Theta"/>
+                        <Terms items={[
+                            ["v_0, \\dots, v_k", "the vertices of the Theta* polyline, all cell centres, consecutive pairs mutually visible"],
+                            ["E", <>edge set of the cell-centre visibility graph <InlineMath math="G_{\\text{vis}}"/>: pairs of cells with line of sight, weighted by straight-line distance</>],
+                            ["C_\\Theta", "total cost of the Theta* path"],
+                            ["\\mathrm{opt}(G_{\\text{vis}})", <>cost of the shortest path in <InlineMath math="G_{\\text{vis}}"/> — what Visibility A* returns</>],
+                        ]}/>
                         <p>
                             A* with a consistent heuristic returns{" "}
                             <InlineMath math="\mathrm{opt}(G_{\text{vis}})"/>, hence a cost{" "}
@@ -222,6 +229,12 @@ while OPEN is not empty:
                             LOS 검증을 거친다).
                         </p>
                         <BlockMath math="(v_i, v_{i+1}) \in E \;\;\forall i \;\Rightarrow\; v_0 \dots v_k \text{ 는 } G_{\text{vis}} \text{ 의 경로} \;\Rightarrow\; \mathrm{opt}(G_{\text{vis}}) \le C_\Theta"/>
+                        <Terms items={[
+                            ["v_0, \\dots, v_k", "Theta* 폴리라인의 꼭짓점들. 전부 셀 중심이고, 연속한 쌍은 서로 보인다"],
+                            ["E", <>셀 중심 visibility graph <InlineMath math="G_{\\text{vis}}"/>의 간선 집합. line of sight가 있는 셀 쌍이고 가중치는 직선거리</>],
+                            ["C_\\Theta", "Theta* 경로의 총비용"],
+                            ["\\mathrm{opt}(G_{\\text{vis}})", <><InlineMath math="G_{\\text{vis}}"/> 최단 경로의 비용. Visibility A*가 돌려주는 값</>],
+                        ]}/>
                         <p>
                             consistent heuristic을 쓴 A*는{" "}
                             <InlineMath math="\mathrm{opt}(G_{\text{vis}})"/>를 돌려주므로 비용이{" "}

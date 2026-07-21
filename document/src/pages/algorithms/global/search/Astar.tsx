@@ -1,5 +1,6 @@
 import {ReactNode} from "react";
 import {T, useTr} from "../../../../libs/i18n";
+import Terms from "../../../../components/math/Terms";
 import {BlockMath, InlineMath} from "../../../../components/math/Tex";
 import AStarSandbox from "../../../../components/panels/global/astar/AStarSandbox";
 import TraceReplay from "../../../../components/panels/global/TraceReplay";
@@ -59,6 +60,11 @@ const Astar = () => {
                         would the whole path through this node be":
                     </p>
                     <BlockMath math="f(n) \;=\; \underbrace{g(n)}_{\text{cost from start}} \;+\; \underbrace{h(n)}_{\text{estimated cost to goal}}"/>
+                    <Terms items={[
+                        ["f(n)", <>priority of <InlineMath math="n"/> in the frontier: the estimated total cost of the cheapest start→goal path that passes through <InlineMath math="n"/></>],
+                        ["g(n)", <>actual cost of the cheapest path found <em>so far</em> from the start to <InlineMath math="n"/> (same quantity Dijkstra sorts by)</>],
+                        ["h(n)", <><strong>the new term</strong>: a heuristic estimate of the cost still remaining from <InlineMath math="n"/> to the goal</>],
+                    ]}/>
                     <p>
                         A* is Dijkstra with the frontier ordered by <InlineMath math="f"/> instead
                         of <InlineMath math="g"/>. The two extremes are illuminating. With{" "}
@@ -86,6 +92,11 @@ const Astar = () => {
                         비쌀 것인가"다:
                     </p>
                     <BlockMath math="f(n) \;=\; \underbrace{g(n)}_{\text{시작점부터의 비용}} \;+\; \underbrace{h(n)}_{\text{목표까지의 추정 비용}}"/>
+                    <Terms items={[
+                        ["f(n)", <>frontier에서 <InlineMath math="n"/>의 우선순위. <InlineMath math="n"/>을 지나는 가장 싼 시작→목표 경로의 총비용 추정치</>],
+                        ["g(n)", <>지금까지 찾은 시작→<InlineMath math="n"/> 최소 실비용 (Dijkstra가 정렬하던 바로 그 값)</>],
+                        ["h(n)", <><strong>새로 추가된 항</strong>: <InlineMath math="n"/>에서 목표까지 남은 비용의 heuristic 추정치</>],
+                    ]}/>
                     <p>
                         A*는 frontier를 <InlineMath math="g"/> 대신 <InlineMath math="f"/>로
                         정렬한 Dijkstra다. 양 극단을 보면 감이 온다. <InlineMath math="h \equiv 0"/>
@@ -243,6 +254,11 @@ return failure`}/>
                         any-angle motion:
                     </p>
                     <BlockMath math="h_{\text{octile}}(n) = \max(\Delta r, \Delta c) + (\sqrt{2} - 1)\,\min(\Delta r, \Delta c)"/>
+                    <Terms items={[
+                        ["\\Delta r,\\ \\Delta c", <>row / column distance from <InlineMath math="n"/> to the goal (absolute values)</>],
+                        ["\\max(\\Delta r, \\Delta c)", "number of steps needed on an empty grid: the longer axis dictates it"],
+                        ["(\\sqrt{2}-1)\\min(\\Delta r, \\Delta c)", <>extra charge for the <InlineMath math="\min(\Delta r, \Delta c)"/> steps that must be diagonal: each costs <InlineMath math="\sqrt 2"/> instead of 1</>],
+                    ]}/>
                     <p>
                         Deliberately <em>inflating</em> an admissible heuristic gives{" "}
                         <strong>weighted A*</strong> (Pohl, 1970): order the frontier
@@ -281,6 +297,11 @@ return failure`}/>
                         거리, any-angle 이동에는 (느슨하지만 안전한) Euclidean 거리:
                     </p>
                     <BlockMath math="h_{\text{octile}}(n) = \max(\Delta r, \Delta c) + (\sqrt{2} - 1)\,\min(\Delta r, \Delta c)"/>
+                    <Terms items={[
+                        ["\\Delta r,\\ \\Delta c", <><InlineMath math="n"/>에서 목표까지의 row / column 거리 (절댓값)</>],
+                        ["\\max(\\Delta r, \\Delta c)", "빈 grid에서 필요한 스텝 수. 긴 축이 결정한다"],
+                        ["(\\sqrt{2}-1)\\min(\\Delta r, \\Delta c)", <>대각선이어야 하는 <InlineMath math="\min(\Delta r, \Delta c)"/>개 스텝의 추가 비용. 각각 1 대신 <InlineMath math="\sqrt 2"/>가 든다</>],
+                    ]}/>
                     <p>
                         admissible heuristic을 의도적으로 <em>부풀리면</em>{" "}
                         <strong>weighted A*</strong> (Pohl, 1970)가 된다: frontier 를{" "}
@@ -326,6 +347,12 @@ return failure`}/>
                             optimally, so <InlineMath math="g(n) = g^*(n)"/> and:
                         </p>
                         <BlockMath math="f(n) = g^*(n) + h(n) \;\overset{\text{admissible}}{\le}\; g^*(n) + h^*(n) \;=\; C^* \;<\; g(\text{goal}) = f(\text{goal})"/>
+                        <Terms items={[
+                            ["g^*(n)", <>true optimal cost from the start to <InlineMath math="n"/></>],
+                            ["h^*(n)", <>true optimal remaining cost from <InlineMath math="n"/> to the goal (admissibility says <InlineMath math="h \le h^*"/>)</>],
+                            ["C^*", "cost of the optimal start→goal path"],
+                            ["f,\\ g,\\ h", <>the A* quantities: <InlineMath math="f = g + h"/>, <InlineMath math="g"/> = cheapest path found so far, <InlineMath math="h"/> = heuristic estimate</>],
+                        ]}/>
                         <p>
                             <InlineMath math="\Rightarrow n"/> pops before the goal — contradiction.{" "}
                             <InlineMath math="\blacksquare"/>
@@ -344,6 +371,12 @@ return failure`}/>
                             <InlineMath math="g(n) = g^*(n)"/>이고:
                         </p>
                         <BlockMath math="f(n) = g^*(n) + h(n) \;\overset{\text{admissible}}{\le}\; g^*(n) + h^*(n) \;=\; C^* \;<\; g(\text{goal}) = f(\text{goal})"/>
+                        <Terms items={[
+                            ["g^*(n)", <>시작→<InlineMath math="n"/>의 참 최적 비용</>],
+                            ["h^*(n)", <><InlineMath math="n"/>→목표의 참 최적 잔여 비용 (admissible 이란 <InlineMath math="h \le h^*"/>라는 뜻)</>],
+                            ["C^*", "최적 시작→목표 경로의 비용"],
+                            ["f,\\ g,\\ h", <>A*의 그 양들: <InlineMath math="f = g + h"/>, <InlineMath math="g"/> = 지금까지 찾은 최소 비용, <InlineMath math="h"/> = heuristic 추정치</>],
+                        ]}/>
                         <p>
                             <InlineMath math="\Rightarrow n"/>이 목표보다 먼저 꺼내진다. 모순.{" "}
                             <InlineMath math="\blacksquare"/>
@@ -360,6 +393,11 @@ return failure`}/>
                             any expansion:
                         </p>
                         <BlockMath math="f(n') = g(n) + c(n, n') + h(n') \;\overset{\text{consistency}}{\ge}\; g(n) + h(n) = f(n)"/>
+                        <Terms items={[
+                            ["n,\\ n'", <>an expansion step: <InlineMath math="n"/> is popped and its neighbor <InlineMath math="n'"/> is relaxed through it</>],
+                            ["c(n, n')", "cost of the edge between them"],
+                            ["f(\\cdot)", <>frontier priority <InlineMath math="g + h"/>; the consistency step substitutes <InlineMath math="h(n) \le c(n, n') + h(n')"/></>],
+                        ]}/>
                         <p>
                             <InlineMath math="\Rightarrow f"/> never decreases along explored paths{" "}
                             <InlineMath math="\Rightarrow"/> expansion order is non-decreasing in{" "}
@@ -376,6 +414,11 @@ return failure`}/>
                             그러면 임의의 확장에서:
                         </p>
                         <BlockMath math="f(n') = g(n) + c(n, n') + h(n') \;\overset{\text{consistency}}{\ge}\; g(n) + h(n) = f(n)"/>
+                        <Terms items={[
+                            ["n,\\ n'", <>확장 한 스텝: <InlineMath math="n"/>이 꺼내지고 이웃 <InlineMath math="n'"/>이 그를 거쳐 relax 된다</>],
+                            ["c(n, n')", "두 노드를 잇는 간선의 비용"],
+                            ["f(\\cdot)", <>frontier 우선순위 <InlineMath math="g + h"/>. consistency 스텝은 <InlineMath math="h(n) \le c(n, n') + h(n')"/>를 대입한 것</>],
+                        ]}/>
                         <p>
                             <InlineMath math="\Rightarrow f"/>는 탐색 경로를 따라 감소하지 않는다{" "}
                             <InlineMath math="\Rightarrow"/> 확장 순서는 <InlineMath math="f"/> 비감소{" "}

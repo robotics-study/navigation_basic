@@ -168,6 +168,7 @@ React 18 + Vite + TS + Tailwind SPA. 2D 는 Konva, 3D 는 Babylon(필요 시 도
 
 - **The Algorithm**: 자료구조·루프 요약 문단 → `Pseudocode` 블록(`# 1~n` 스텝 마커) → 바로 아래 "1. ~한다" 번호 목록으로 각 스텝의 무엇/왜 해설 (pop 시점 goal 검사 같은 함정 포함).
 - **증명**: 산문 서술 금지. 가정 → BlockMath 부등식 체인 → 모순/결론의 단계형.
+- **수식 항 설명 필수 (`Terms` 컴포넌트)**: 모든 display 수식(BlockMath) 바로 아래에 `components/math/Terms`로 기호별 설명을 붙인다. **모든 기호를 그 자리에서 정의한다** — 이전 페이지에서 정의한 기호(g, h, rhs 등)도 다시 적어, 독자가 페이지를 왔다 갔다 하지 않게 한다. 해당 알고리즘이 새로 도입한 항은 "새로 추가된 항"으로 명시한다.
 - **Parameters 섹션 금지** — 웹은 알고리즘 설명이지 코드 문서가 아니다. parameter 개념(예: weighted A* 의 w)은 이론 산문에서 다룬다.
 - **Demo**: 간단한 알고리즘은 TS 라이브 엔진(trace 이벤트 계약 공유), 무거운 것은 기록 trace 재생. TraceReplay 는 py trace 한 벌만(`<map>.py.jsonl.gz`, C++/Python 은 동일 이벤트 열), 배속 버튼 없이 고정 2×.
 - **Implementation**: 실제 저장소 소스를 vite `?raw` 로 embed (사본 금지), python/c++ 탭 토글 + 파일별 GitHub 링크.
