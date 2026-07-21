@@ -34,6 +34,7 @@ export interface CanvasColors {
     surface: string;
     bg: string;
     accent: string;
+    accent2: string;
 }
 
 // 캔버스에서 쓸 실제 색을 CSS 변수(단일 진실원본)에서 읽어온다. 테마가 바뀌면 재계산된다.
@@ -49,6 +50,7 @@ export function useCanvasColors(): CanvasColors {
             surface: read("--surface", "#f8fafc"),
             bg: read("--bg", "#ffffff"),
             accent: read("--accent", "#6366f1"),
+            accent2: read("--accent-2", "#06b6d4"),
         };
     }, [theme]);
 }

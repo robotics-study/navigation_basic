@@ -26,6 +26,15 @@ export const ALGO_BLURBS: AlgoBlurb[] = [
         },
     },
     {
+        slug: "dstar_lite",
+        blurb: {
+            en: "Planning when the map is a guess: drive, sense, and repair only the part " +
+                "of the backward search a discovered wall invalidates.",
+            ko: "지도가 추측일 때의 계획. 주행하고, 감지하고, 발견된 벽이 무효화한 " +
+                "backward 탐색 부분만 수리한다.",
+        },
+    },
+    {
         slug: "astar",
         blurb: {
             en: "Dijkstra plus a compass: order the frontier by g + h and an admissible " +

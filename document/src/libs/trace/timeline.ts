@@ -9,6 +9,9 @@ export interface GridTimeline {
     expanded: Array<{step: number; cell: Cell; cost?: number}>;
     edges: Array<{step: number; from: Cell; to: Cell}>;
     candidates: Array<{step: number; cell: Cell}>;
+    // 실행형 planner(D* Lite 등)의 주행·감지 이벤트. 비어 있으면 일반 one-shot 탐색.
+    robot: Array<{step: number; cell: Cell}>;
+    revealed: Array<{step: number; cell: Cell}>;
     path: Cell[];
     pathStep: number;                                       // path_found 시점 (없으면 Infinity)
     params?: Record<string, unknown>;
@@ -25,6 +28,8 @@ export function buildGridTimeline(events: TraceEvent[]): GridTimeline {
         expanded: [],
         edges: [],
         candidates: [],
+        robot: [],
+        revealed: [],
         path: [],
         pathStep: Infinity,
     }
@@ -48,6 +53,16 @@ export function buildGridTimeline(events: TraceEvent[]): GridTimeline {
                 const to = asCell(ev.state)
                 const from = asCell(ev.parent)
                 if (to && from) timeline.edges.push({step, from, to})
+                break
+            }
+            case "robot_moved": {
+                const cell = asCell(ev.state)
+                if (cell) timeline.robot.push({step, cell})
+                break
+            }
+            case "obstacle_revealed": {
+                const cell = asCell(ev.state)
+                if (cell) timeline.revealed.push({step, cell})
                 break
             }
             case "path_found":
