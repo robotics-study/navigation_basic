@@ -107,6 +107,23 @@ const RUNNERS = {
     ait_star: (m, s, g, p) => engines.runAITStar(
         {map: m, start: s, goal: g, batchSize: p.batch_size ?? 200,
          maxBatches: p.max_batches ?? 15, gamma: p.gamma ?? 30, seed: p.seed ?? 1}),
+    eit_star: (m, s, g, p) => engines.runEITStar(
+        {map: m, start: s, goal: g, batchSize: p.batch_size ?? 200,
+         maxBatches: p.max_batches ?? 15, gamma: p.gamma ?? 30,
+         stepSize: p.step_size ?? 0.5, seed: p.seed ?? 1}),
+    fcit_star: (m, s, g, p) => engines.runFCITStar(
+        {map: m, start: s, goal: g, batchSize: p.batch_size ?? 40,
+         maxBatches: p.max_batches ?? 5, seed: p.seed ?? 1}),
+    // SST 경로는 goal_tol 안 waypoint로 끝나므로 시나리오 goal을 하드코딩한다
+    // (hybrid_astar와 같은 이유; 두 맵 시나리오 goal 동일).
+    sst: (m, s, g, p) => engines.runSST(
+        {map: m, start: s, goal: [9.25, 9.25],
+         maxIterations: p.max_iterations ?? 30000, goalBias: p.goal_bias ?? 0.1,
+         goalTolerance: p.goal_tolerance ?? 0.6, deltaBn: p.delta_bn ?? 1.2,
+         deltaS: p.delta_s ?? 0.5, maxVelocity: p.max_velocity ?? 1.5,
+         maxOmega: p.max_omega ?? 1.5, propDurationMin: p.prop_duration_min ?? 0.2,
+         propDurationMax: p.prop_duration_max ?? 0.8, sstStar: p.sst_star ?? false,
+         seed: p.seed ?? 1}),
     prm_star: (m, s, g, p) => engines.runPRMStar(
         {map: m, start: s, goal: g, numSamples: p.num_samples ?? 250,
          gamma: p.gamma ?? 30, seed: p.seed ?? 1}),
@@ -147,6 +164,9 @@ const CHECKS = [
     {algo: "bit_star", maps: ["maze01", "open01"], exact: true},
     {algo: "abit_star", maps: ["maze01", "open01"], exact: true},
     {algo: "ait_star", maps: ["maze01", "open01"], exact: true},
+    {algo: "eit_star", maps: ["maze01", "open01"], exact: true},
+    {algo: "fcit_star", maps: ["maze01", "open01"], exact: true},
+    {algo: "sst", maps: ["maze01", "open01"], exact: true},
     // sin/cos 가 libm 구현마다 1 ULP 다를 수 있어 비용은 허용 오차로만 비교한다.
     {algo: "hybrid_astar", maps: ["open01", "maze01"], exact: false, costTol: 0.05},
 ];
