@@ -27,12 +27,12 @@ const SstScene = ({panel = 340}: {panel?: number}) => {
     const [start, setStart] = useState<Point>(SST_START)
     const [goal, setGoal] = useState<Point>(SST_GOAL)
     const [deltaS, setDeltaS] = useState(0.4)
-    const [seed, setSeed] = useState(2)
+    const [seed, setSeed] = useState(1)
 
     const timeline = useMemo(
         () => buildGridTimeline(runSST({
             map, start, goal, maxIterations: BUDGET, goalBias: 0.1, goalTolerance: 0.8,
-            deltaBn: 1.5, deltaS, maxVelocity: 1.5, maxOmega: 1.5,
+            deltaBn: 1.5, deltaS, maxVelocity: 1.5, maxOmega: 1.5, footprintRadius: 0.4,
             propDurationMin: 0.2, propDurationMax: 0.8, sstStar: false, seed,
         })),
         [map, start, goal, deltaS, seed],
@@ -66,7 +66,7 @@ const SstScene = ({panel = 340}: {panel?: number}) => {
 
     return (
         <TracePlayer
-            vehicle carLength={0.8}
+            vehicle
             map={map} timeline={timeline} panel={panel}
             start={[start[0], start[1]]} goal={[goal[0], goal[1]]}
             showTree

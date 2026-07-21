@@ -1,7 +1,7 @@
 import {GridMap} from "../grid";
 import {TraceEvent} from "../trace/types";
 import {NumpyRandom} from "./numpy_rng";
-import {Point, SamplingGrid} from "./sampling_space";
+import {discCollides, Point, SamplingGrid} from "./sampling_space";
 import {biasedSample, pathLength} from "./rrt";
 
 // 브라우저 라이브 데모용 SST (Li, Littlefield & Bekris 2016). 저장소 구현을 그대로
@@ -23,6 +23,7 @@ export interface SSTOptions {
     maxOmega: number;
     propDurationMin: number;
     propDurationMax: number;
+    footprintRadius: number;
     sstStar: boolean;
     seed: number;
 }
@@ -36,7 +37,7 @@ const SST_STAR_SHRINK = 0.9;
 
 export function runSST(opts: SSTOptions): TraceEvent[] {
     const {map, start, goal, maxIterations, goalBias, goalTolerance, deltaBn, deltaS,
-           maxVelocity, maxOmega, propDurationMin, propDurationMax, sstStar, seed} = opts
+           maxVelocity, maxOmega, propDurationMin, propDurationMax, footprintRadius, sstStar, seed} = opts
     const space = new SamplingGrid(map, seed)
     const rng = new NumpyRandom(seed)
     const events: TraceEvent[] = []
@@ -48,7 +49,7 @@ export function runSST(opts: SSTOptions): TraceEvent[] {
         params: {max_iterations: maxIterations, goal_bias: goalBias, goal_tolerance: goalTolerance,
                  delta_bn: deltaBn, delta_s: deltaS, max_velocity: maxVelocity,
                  max_omega: maxOmega, prop_duration_min: propDurationMin,
-                 prop_duration_max: propDurationMax, sst_star: sstStar, seed},
+                 prop_duration_max: propDurationMax, footprint_radius: footprintRadius, sst_star: sstStar, seed},
     })
 
     // 병렬 배열 트리 — SST는 shared Tree가 모르는 active/witness/가지치기 장부가 필요해
@@ -129,6 +130,9 @@ export function runSST(opts: SSTOptions): TraceEvent[] {
             x += v * Math.cos(theta) * dt
             y += v * Math.sin(theta) * dt
             const p: Point = [x, y]
+            // 웨이포인트 간격(0.2 m)이 footprint 반경 이하라 disc 사슬이 chord를 덮지만,
+            // 얇은 벽 corner-cut은 supercover chord 검사로 함께 막는다.
+            if (discCollides(map, footprintRadius, x, y)) return null
             if (!space.isStateValid(p) || !space.isMotionValid(prev, p)) return null
             waypoints.push(p)
             prev = p

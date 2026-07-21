@@ -122,7 +122,8 @@ const RUNNERS = {
          goalTolerance: p.goal_tolerance ?? 0.6, deltaBn: p.delta_bn ?? 1.2,
          deltaS: p.delta_s ?? 0.5, maxVelocity: p.max_velocity ?? 1.5,
          maxOmega: p.max_omega ?? 1.5, propDurationMin: p.prop_duration_min ?? 0.2,
-         propDurationMax: p.prop_duration_max ?? 0.8, sstStar: p.sst_star ?? false,
+         propDurationMax: p.prop_duration_max ?? 0.8,
+         footprintRadius: p.footprint_radius ?? 0.15, sstStar: p.sst_star ?? false,
          seed: p.seed ?? 1}),
     prm_star: (m, s, g, p) => engines.runPRMStar(
         {map: m, start: s, goal: g, numSamples: p.num_samples ?? 250,
