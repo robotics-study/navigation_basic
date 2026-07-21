@@ -20,5 +20,7 @@ export {runAITStar} from "../src/libs/algorithms/ait_star";
 export {runEITStar} from "../src/libs/algorithms/eit_star";
 export {runFCITStar} from "../src/libs/algorithms/fcit_star";
 export {runSST} from "../src/libs/algorithms/sst";
+export {runKinodynamicRRTStar} from "../src/libs/algorithms/kinodynamic_rrt_star";
+export {runLQRRRTStar} from "../src/libs/algorithms/lqr_rrt_star";
 export {runHybridAStar} from "../src/libs/algorithms/hybrid_astar";
 export {parseGridMap} from "../src/libs/grid";
