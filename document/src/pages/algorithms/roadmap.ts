@@ -244,6 +244,28 @@ export const ALGO_BLURBS: AlgoBlurb[] = [
         },
     },
     {
+        slug: "kinodynamic_rrt_star",
+        blurb: {
+            en: "RRT* for a body with momentum: replace the straight edge and Euclidean " +
+                "metric with the exact trajectory and arrival cost of a fixed-final-state, " +
+                "free-final-time optimal controller, so the tree grows in the dynamics' cost geometry.",
+            ko: "관성을 가진 물체를 위한 RRT*. 직선 간선과 유클리드 척도를 고정 최종상태·" +
+                "자유 최종시간 최적 제어기의 정확한 궤적과 도달 비용으로 갈아 끼워, 트리가 " +
+                "동역학의 비용 기하에서 자라게 한다.",
+        },
+    },
+    {
+        slug: "lqr_rrt_star",
+        blurb: {
+            en: "RRT* whose distance metric and steering are not hand-designed but derived " +
+                "from a Linear-Quadratic Regulator: the metric is the LQR cost-to-go and " +
+                "each edge is the feedback policy rolled forward to a rest waypoint.",
+            ko: "거리 metric과 steering을 손으로 짜지 않고 Linear-Quadratic Regulator에서 " +
+                "끌어내는 RRT*. metric은 LQR cost-to-go이고, 각 간선은 rest waypoint로 " +
+                "정방향으로 굴린 피드백 정책이다.",
+        },
+    },
+    {
         slug: "astar",
         blurb: {
             en: "Dijkstra plus a compass: order the frontier by g + h and an admissible " +

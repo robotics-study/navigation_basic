@@ -1,4 +1,5 @@
 import {GridMap} from "../grid";
+import {discCollides} from "./sampling_space";
 import {TraceEvent} from "../trace/types";
 
 // 브라우저 라이브 데모용 Hybrid A*. 저장소 구현(Dolgov, Thrun, Montemerlo & Diebel
@@ -50,31 +51,6 @@ export const integrate = (p: Pose, kappa: number, length: number): Pose => {
     ]
 }
 
-// 내접원 footprint의 disc-셀 겹침 충돌 검사 — 저장소 OccupancyGrid2D.is_collision 미러.
-const isCollision = (map: GridMap, radius: number, x: number, y: number): boolean => {
-    const res = map.resolution
-    const half = res * 0.5
-    const worldToCell = (wx: number, wy: number): [number, number] => [
-        map.height - 1 - Math.floor((wy - map.originY) / res),
-        Math.floor((wx - map.originX) / res),
-    ]
-    const freeCell = (r: number, c: number) =>
-        r >= 0 && r < map.height && c >= 0 && c < map.width && !map.occupied[r * map.width + c]
-    const [loRow, loCol] = worldToCell(x - radius, y + radius)   // y+r → 작은 row
-    const [hiRow, hiCol] = worldToCell(x + radius, y - radius)
-    const r2 = radius * radius
-    for (let row = loRow; row <= hiRow; row++) {
-        for (let col = loCol; col <= hiCol; col++) {
-            if (freeCell(row, col)) continue
-            const cx = map.originX + (col + 0.5) * res
-            const cy = map.originY + (map.height - 1 - row + 0.5) * res
-            const dx = x - Math.min(Math.max(x, cx - half), cx + half)
-            const dy = y - Math.min(Math.max(y, cy - half), cy + half)
-            if (dx * dx + dy * dy <= r2) return true
-        }
-    }
-    return false
-}
 
 export function runHybridAStar(opts: HybridAStarOptions): TraceEvent[] {
     const {map, start, goal} = opts
@@ -162,7 +138,7 @@ export function runHybridAStar(opts: HybridAStarOptions): TraceEvent[] {
             let blocked = false
             for (let j = 1; j <= nSub; j++) {
                 const s = integrate(p, kappa, length * (j / nSub))
-                if (isCollision(map, opts.footprintRadius, s[0], s[1])) {
+                if (discCollides(map, opts.footprintRadius, s[0], s[1])) {
                     blocked = true
                     break
                 }

@@ -29,6 +29,9 @@ interface GridCanvasProps {
     // goalPose는 요구 heading을 보여 주는 점선 외곽선. 있으면 원 마커를 대체한다.
     carPose?: [number, number, number];
     goalPose?: [number, number, number];
+    // 차 몸체 길이 (셀 단위). 점 로봇 planner(SST 등)는 충돌 검사에 footprint가
+    // 없어 경로가 벽에 붙을 수 있으므로 작게 그린다.
+    carLength?: number;
     // sandbox 상호작용 — 핸들러가 있을 때만 활성화된다.
     onPaintCell?: (row: number, col: number, occupied: boolean) => void;
     onMoveStart?: (cell: Cell) => void;
@@ -38,6 +41,7 @@ interface GridCanvasProps {
 const GridCanvas = ({
                         map, panel, timeline, step = Infinity, start, goal,
                         showTree = false, overlayPath, truePath, shadowCells, carPose, goalPose,
+                        carLength = 1.35,
                         onPaintCell, onMoveStart, onMoveGoal,
                     }: GridCanvasProps) => {
     const colors = useCanvasColors();
@@ -152,8 +156,8 @@ const GridCanvas = ({
     // canvas 회전은 y축 반전 때문에 부호가 반대다.
     const car = (pose: [number, number, number], opts: {fill?: string; stroke: string; dash?: number[]}) => {
         const [x, y] = center([pose[0], pose[1]])
-        const len = cell * 1.35
-        const wid = cell * 0.78
+        const len = cell * carLength
+        const wid = len * 0.58
         const sw = Math.max(1.2, cell * 0.08)
         return (
             <Group x={x} y={y} rotation={-pose[2] * 180 / Math.PI} listening={false}>

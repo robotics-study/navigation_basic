@@ -122,7 +122,23 @@ const RUNNERS = {
          goalTolerance: p.goal_tolerance ?? 0.6, deltaBn: p.delta_bn ?? 1.2,
          deltaS: p.delta_s ?? 0.5, maxVelocity: p.max_velocity ?? 1.5,
          maxOmega: p.max_omega ?? 1.5, propDurationMin: p.prop_duration_min ?? 0.2,
-         propDurationMax: p.prop_duration_max ?? 0.8, sstStar: p.sst_star ?? false,
+         propDurationMax: p.prop_duration_max ?? 0.8,
+         footprintRadius: p.footprint_radius ?? 0.15, sstStar: p.sst_star ?? false,
+         seed: p.seed ?? 1}),
+    kinodynamic_rrt_star: (m, s, g, p) => engines.runKinodynamicRRTStar(
+        {map: m, start: s, goal: g, maxIterations: p.max_iterations ?? 4000,
+         goalBias: p.goal_bias ?? 0.1, goalTolerance: p.goal_tolerance ?? 1.0,
+         neighborRadius: p.neighbor_radius ?? 2.0, controlWeight: p.control_weight ?? 1.0,
+         maxVelocity: p.max_velocity ?? 1.5, seed: p.seed ?? 1}),
+    // LQR-RRT* 경로는 goal rest 상태에 스냅되어 끝나지만 SST/hybrid와 동일하게
+    // 시나리오 goal을 하드코딩한다 (두 맵 시나리오 goal 동일).
+    lqr_rrt_star: (m, s, g, p) => engines.runLQRRRTStar(
+        {map: m, start: s, goal: [9.25, 9.25],
+         maxIterations: p.max_iterations ?? 600, stepSize: p.step_size ?? 1.5,
+         goalBias: p.goal_bias ?? 0.1, goalTolerance: p.goal_tolerance ?? 1.0,
+         neighborRadius: p.neighbor_radius ?? 2.0, qPos: p.q_pos ?? 1.0,
+         qVel: p.q_vel ?? 1.0, rCtrl: p.r_ctrl ?? 1.0, lqrDt: p.lqr_dt ?? 0.2,
+         controlLimit: p.control_limit ?? 10.0, maxVelocity: p.max_velocity ?? 1.5,
          seed: p.seed ?? 1}),
     prm_star: (m, s, g, p) => engines.runPRMStar(
         {map: m, start: s, goal: g, numSamples: p.num_samples ?? 250,
@@ -167,6 +183,8 @@ const CHECKS = [
     {algo: "eit_star", maps: ["maze01", "open01"], exact: true},
     {algo: "fcit_star", maps: ["maze01", "open01"], exact: true},
     {algo: "sst", maps: ["maze01", "open01"], exact: true},
+    {algo: "kinodynamic_rrt_star", maps: ["maze01", "open01"], exact: true},
+    {algo: "lqr_rrt_star", maps: ["maze01", "open01"], exact: true},
     // sin/cos 가 libm 구현마다 1 ULP 다를 수 있어 비용은 허용 오차로만 비교한다.
     {algo: "hybrid_astar", maps: ["open01", "maze01"], exact: false, costTol: 0.05},
 ];

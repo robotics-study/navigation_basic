@@ -3,8 +3,10 @@
 A kinodynamic sampling planner that needs NO steering / boundary-value solver: it
 grows a tree purely by forward-propagating a RANDOM control for a random duration
 (unicycle dynamics) and collision-checking the resulting arc. The planner OWNS its
-dynamics — the map only answers state / motion validity (``SamplingSpace``), so the
-required capability stays {SAMPLING_SPACE} exactly as for the RRT family.
+dynamics; the map answers state / motion validity (``SamplingSpace``) plus an
+inscribed-disc footprint collision test at each propagated pose
+(``SE2CollisionSpace``), so the vehicle body — not just its centre point — clears
+obstacles along the whole arc.
 
 The "stable" + "sparse" behaviour comes from a WITNESS set with sparsification
 radius delta_s: every witness keeps at most one ACTIVE representative — the
@@ -22,9 +24,9 @@ import time
 
 import numpy as np
 
-from navigation.core.capabilities import SamplingSpace
+from navigation.core.capabilities import Capability, SamplingSE2Space
 from navigation.core.trace import TraceRecorder
-from navigation.core.types import PlanResult, PlanStats, Point
+from navigation.core.types import Footprint, PlanResult, PlanStats, Point
 
 from ._sampling import _SamplingPlanner, path_length
 
@@ -47,9 +49,12 @@ class SST(_SamplingPlanner):
     def name(self) -> str:
         return "sst"
 
+    def required_capabilities(self) -> set[Capability]:
+        return {Capability.SAMPLING_SPACE, Capability.SE2_COLLISION_SPACE}
+
     def plan(
         self,
-        space: SamplingSpace[Point],
+        space: "SamplingSE2Space[Point]",
         start: Point,
         goal: Point,
         recorder: TraceRecorder | None = None,
@@ -65,6 +70,8 @@ class SST(_SamplingPlanner):
         prop_min = self.params.get_float("prop_duration_min")
         prop_max = self.params.get_float("prop_duration_max")
         sst_star = self.params.get_bool("sst_star")
+        # 차체는 inscribed disc — 점이 아니라 몸체가 벽을 비켜 가야 한다.
+        footprint = Footprint(self.params.get_float("footprint_radius"))
         rng = np.random.default_rng(self.params.get_int("seed"))
 
         # --- tree (parallel arrays; SST needs active/witness/pruning bookkeeping the
@@ -139,6 +146,10 @@ class SST(_SamplingPlanner):
                 x += v * math.cos(theta) * dt
                 y += v * math.sin(theta) * dt
                 p: Point = (x, y)
+                # 웨이포인트 간격(0.2 m)이 footprint 반경 이하라 disc 사슬이 chord를
+                # 덮지만, 얇은 벽 corner-cut 은 supercover chord 검사로 함께 막는다.
+                if space.is_collision(footprint, (x, y, theta)):
+                    return None
                 if not space.is_state_valid(p) or not space.is_motion_valid(prev, p):
                     return None
                 waypoints.append(p)

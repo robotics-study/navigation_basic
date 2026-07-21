@@ -27,11 +27,12 @@ interface TraceReplayProps {
                   params: Record<string, unknown> | undefined) => Cell[];
     // SE(2) 차량 planner 재생: 로봇을 차로 그리고 경로를 주행한다.
     vehicle?: boolean;
+    carLength?: number;
 }
 
-const ReplayScene = ({algo, maps, truePathOf, vehicle, panel = 340}: {
+const ReplayScene = ({algo, maps, truePathOf, vehicle, carLength, panel = 340}: {
     algo: string; maps: string[]; truePathOf?: TraceReplayProps["truePathOf"];
-    vehicle?: boolean; panel?: number;
+    vehicle?: boolean; carLength?: number; panel?: number;
 }) => {
     const t = useTr()
     const [mapName, setMapName] = useState(maps[0])
@@ -101,20 +102,23 @@ const ReplayScene = ({algo, maps, truePathOf, vehicle, panel = 340}: {
     }
     return <TracePlayer map={loaded.map} timeline={loaded.timeline}
                         start={start} goal={goal} truePath={truePath} vehicle={vehicle}
+                        carLength={carLength}
                         showTree={loaded.timeline.samples.length > 0}
                         panel={panel} footer={selector}/>
 }
 
-const TraceReplay = ({algo, maps, label, truePathOf, vehicle}: TraceReplayProps) => {
+const TraceReplay = ({algo, maps, label, truePathOf, vehicle, carLength}: TraceReplayProps) => {
     return <CanvasFigure
         label={label}
         tight
         bodyClassName="w-fit"
         className="w-full"
         modal={<ReplayScene algo={algo} maps={maps} truePathOf={truePathOf} vehicle={vehicle}
+                            carLength={carLength}
                             panel={Math.min(modalCanvasSize(1).width, 640)}/>}
     >
-        <ReplayScene algo={algo} maps={maps} truePathOf={truePathOf} vehicle={vehicle}/>
+        <ReplayScene algo={algo} maps={maps} truePathOf={truePathOf} vehicle={vehicle}
+                     carLength={carLength}/>
     </CanvasFigure>
 }
 
