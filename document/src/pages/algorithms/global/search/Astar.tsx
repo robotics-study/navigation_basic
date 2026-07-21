@@ -151,17 +151,51 @@ const Astar = () => {
                     거슬러 올라가 복원한다.
                 </p>}
             />
-            <Pseudocode code={`OPEN ← min-heap keyed by f;  g[start] ← 0;  push (h(start), start)
+            <Pseudocode code={`OPEN ← min-heap keyed by f;  g[start] ← 0;  push (h(start), start)   # 1
 while OPEN is not empty:
-    n ← pop_min(OPEN);  move n to CLOSED
-    if n = goal:
+    n ← pop_min(OPEN);  move n to CLOSED                               # 2
+    if n = goal:                                                       # 3
         return reconstruct(parent, goal)
     for each neighbor n' with edge cost c(n, n'):
-        if g[n] + c(n, n') < g[n']:          # relaxation
-            g[n'] ← g[n] + c(n, n');  parent[n'] ← n
+        if g[n] + c(n, n') < g[n']:                                    # 4
+            g[n'] ← g[n] + c(n, n');  parent[n'] ← n                   # 5
             f[n'] ← g[n'] + h(n')
             push (f[n'], n') into OPEN
 return failure`}/>
+            <T
+                en={<ol>
+                    <li>Put the start in OPEN. Its <InlineMath math="g"/> is 0, so its priority is
+                        the pure estimate <InlineMath math="f = h(\text{start})"/>.</li>
+                    <li>Pop the node with the smallest <InlineMath math="f"/> — the most promising
+                        total route — and move it to CLOSED so it is never expanded again (safe
+                        with a consistent <InlineMath math="h"/>: its <InlineMath math="g"/> is
+                        already final).</li>
+                    <li>Check the goal <em>at pop time</em>. Checking when the goal is generated
+                        would return the first path found, not the cheapest — the classic way to
+                        lose optimality.</li>
+                    <li>Compare going through <InlineMath math="n"/> against the best known route
+                        to each neighbor (relaxation). Nothing happens unless this is an
+                        improvement.</li>
+                    <li>Record the better <InlineMath math="g"/> and parent, recompute{" "}
+                        <InlineMath math="f"/>, and push the neighbor again — the stale queue entry
+                        is skipped when it surfaces.</li>
+                </ol>}
+                ko={<ol>
+                    <li>시작 노드를 OPEN 에 넣는다. <InlineMath math="g"/> 가 0 이라 우선순위는
+                        순수 추정치 <InlineMath math="f = h(\text{start})"/> 다.</li>
+                    <li><InlineMath math="f"/> 가 가장 작은, 즉 전체 경로 전망이 가장 좋은 노드를
+                        꺼내 CLOSED 로 옮긴다. 다시는 확장되지 않는다 (consistent{" "}
+                        <InlineMath math="h"/> 에서는 이 시점의 <InlineMath math="g"/> 가 이미
+                        확정이라 안전하다).</li>
+                    <li>goal 검사를 <em>pop 시점에</em> 한다. 목표가 생성될 때 검사하면 가장 싼
+                        경로가 아니라 처음 찾은 경로를 반환한다. 최적성을 잃는 전형적 실수다.</li>
+                    <li>각 이웃에 대해, <InlineMath math="n"/> 을 거쳐 가는 길과 지금까지의 최선을
+                        비교한다 (relaxation). 개선이 아니면 아무 일도 일어나지 않는다.</li>
+                    <li>개선이면 더 나은 <InlineMath math="g"/> 와 부모를 기록하고{" "}
+                        <InlineMath math="f"/> 를 다시 계산해 push 한다. 낡은 큐 항목은 나중에
+                        올라올 때 건너뛴다.</li>
+                </ol>}
+            />
             <T
                 en={<p>
                     One practical detail matters more than it looks: <strong>tie-breaking</strong>.

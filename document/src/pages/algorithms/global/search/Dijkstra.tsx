@@ -119,18 +119,43 @@ const Dijkstra = () => {
                     이웃을 push 한다:
                 </p>}
             />
-            <Pseudocode code={`Q ← min-heap keyed by g;  g[start] ← 0;  push (0, start)
+            <Pseudocode code={`Q ← min-heap keyed by g;  g[start] ← 0;  push (0, start)   # 1
 while Q is not empty:
-    n ← pop_min(Q)
-    if n is settled: continue            # lazy deletion of stale entries
+    n ← pop_min(Q)                                           # 2
+    if n is settled: continue                                # 3
     settle n
-    if n = goal:
+    if n = goal:                                             # 4
         return reconstruct(parent, goal)
     for each neighbor n' with edge cost c(n, n'):
-        if g[n] + c(n, n') < g[n']:      # relaxation
+        if g[n] + c(n, n') < g[n']:                          # 5
             g[n'] ← g[n] + c(n, n');  parent[n'] ← n
-            push (g[n'], n') into Q      # duplicates allowed
+            push (g[n'], n') into Q
 return failure`}/>
+            <T
+                en={<ol>
+                    <li>Put the start in the heap with cost 0.</li>
+                    <li>Pop the cheapest frontier node — by the theorem below, its{" "}
+                        <InlineMath math="g"/> is now the true shortest distance.</li>
+                    <li>Skip stale entries: the same node may sit in the heap several times with
+                        outdated costs (the <em>lazy queue</em> idiom — no decrease-key needed).</li>
+                    <li>Check the goal at pop time; popping it settles it, so the path is
+                        optimal.</li>
+                    <li>Relax every outgoing edge: if going through <InlineMath math="n"/> is
+                        cheaper than the best known route to <InlineMath math="n'"/>, record the
+                        improvement and push <InlineMath math="n'"/> (again).</li>
+                </ol>}
+                ko={<ol>
+                    <li>시작 노드를 비용 0 으로 heap 에 넣는다.</li>
+                    <li>frontier 에서 가장 싼 노드를 꺼낸다. 아래 정리에 의해 이 시점의{" "}
+                        <InlineMath math="g"/> 가 실제 최단 거리다.</li>
+                    <li>낡은 항목은 건너뛴다. 같은 노드가 갱신 전 비용으로 heap 에 여러 번 들어
+                        있을 수 있다 (<em>lazy queue</em> 관용구, decrease-key 불필요).</li>
+                    <li>goal 검사를 pop 시점에 한다. 꺼내지는 순간 settle 되므로 경로는 최적이다.</li>
+                    <li>나가는 간선을 전부 relax 한다. <InlineMath math="n"/> 을 거치는 길이{" "}
+                        <InlineMath math="n'"/> 의 지금까지 최선보다 싸면, 개선을 기록하고{" "}
+                        <InlineMath math="n'"/> 을 (다시) push 한다.</li>
+                </ol>}
+            />
             <T
                 en={<p>
                     The push in the relaxation step is the <em>lazy queue</em> idiom this

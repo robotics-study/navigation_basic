@@ -99,17 +99,36 @@ const Bfs = () => {
                     (부모는 그 순간 고정된다):
                 </p>}
             />
-            <Pseudocode code={`queue ← FIFO [start];  discovered ← {start}
+            <Pseudocode code={`queue ← FIFO [start];  discovered ← {start}   # 1
 while queue is not empty:
-    n ← pop_front(queue)
-    if n = goal:
+    n ← pop_front(queue)                          # 2
+    if n = goal:                                  # 3
         return reconstruct(parent, goal)
     for each neighbor n' of n:
-        if n' not in discovered:
-            discovered ← discovered ∪ {n'}    # parent fixed at first discovery
-            parent[n'] ← n
+        if n' not in discovered:                  # 4
+            discovered ← discovered ∪ {n'};  parent[n'] ← n
             push_back(queue, n')
 return failure`}/>
+            <T
+                en={<ol>
+                    <li>Start with the start node in the queue, marked discovered.</li>
+                    <li>Pop the <em>front</em> — the oldest, hence shallowest, node. This is what
+                        makes the search proceed in hop-rings.</li>
+                    <li>Check the goal; the first time it is popped, its path has the fewest
+                        edges.</li>
+                    <li>Enqueue each neighbor seen for the first time, fixing its parent at that
+                        moment — by the FIFO order, that first discovery is already a fewest-edge
+                        route.</li>
+                </ol>}
+                ko={<ol>
+                    <li>시작 노드를 큐에 넣고 발견 표시한다.</li>
+                    <li>큐의 <em>맨 앞</em>, 즉 가장 오래되고 가장 얕은 노드를 꺼낸다. 탐색이 hop
+                        동심원으로 진행되는 이유다.</li>
+                    <li>goal 인지 확인한다. 처음 꺼내지는 순간의 경로가 최소 edge 경로다.</li>
+                    <li>처음 보는 이웃을 큐 뒤에 넣고 그 순간 부모를 고정한다. FIFO 순서 덕에 그
+                        최초 발견이 이미 최소 edge 경로다.</li>
+                </ol>}
+            />
             <T
                 en={<p>
                     Note what is <em>not</em> here: edge costs never influence the order. The queue
