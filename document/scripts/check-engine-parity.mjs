@@ -56,6 +56,8 @@ const RUNNERS = {
     lazy_theta_star: (m, s, g, p) => engines.runLazyThetaStar(
         {map: m, start: s, goal: g, heuristicWeight: p.heuristic_weight ?? 1}),
     jps: (m, s, g) => engines.runJPS({map: m, start: s, goal: g}),
+    visibility_astar: (m, s, g, p) => engines.runVisibilityAStar(
+        {map: m, start: s, goal: g, heuristicWeight: p.heuristic_weight ?? 1}),
     // 연속 SE(2): start 는 trace 경로의 첫 pose, goal 은 시나리오 pose (theta 기본 0).
     hybrid_astar: (m, s, g, p) => engines.runHybridAStar({
         map: m, start: s, goal: [9.25, 9.25, 0],
@@ -79,6 +81,7 @@ const CHECKS = [
     {algo: "theta_star", maps: ["maze01", "open01"], exact: true},
     {algo: "lazy_theta_star", maps: ["maze01", "open01"], exact: true},
     {algo: "jps", maps: ["maze01", "open01"], exact: true},
+    {algo: "visibility_astar", maps: ["maze01", "open01"], exact: true},
     // sin/cos 가 libm 구현마다 1 ULP 다를 수 있어 비용은 허용 오차로만 비교한다.
     {algo: "hybrid_astar", maps: ["open01", "maze01"], exact: false, costTol: 0.05},
 ];

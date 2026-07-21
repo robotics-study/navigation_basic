@@ -57,7 +57,7 @@ export const ALGO_BLURBS: AlgoBlurb[] = [
         blurb: {
             en: "Any-angle planning: try a straight line-of-sight shortcut to the " +
                 "grandparent at every relaxation, and zigzags collapse into taut segments.",
-            ko: "Any-angle planning. relaxation 마다 조부모로의 직선 지름길을 시험하면 " +
+            ko: "Any-angle planning. relaxation마다 조부모로의 직선 지름길을 시험하면 " +
                 "지그재그가 팽팽한 직선 구간으로 접힌다.",
         },
     },
@@ -66,7 +66,7 @@ export const ALGO_BLURBS: AlgoBlurb[] = [
         blurb: {
             en: "Theta* with the expensive check deferred: assume line of sight at " +
                 "generation, verify once per expansion, repair if the view was blocked.",
-            ko: "비싼 검사를 미룬 Theta*. 생성 때는 line of sight 를 가정하고, 확장마다 " +
+            ko: "비싼 검사를 미룬 Theta*. 생성 때는 line of sight를 가정하고, 확장마다 " +
                 "한 번 확인하고, 막혀 있었으면 수리한다.",
         },
     },
@@ -75,8 +75,17 @@ export const ALGO_BLURBS: AlgoBlurb[] = [
         blurb: {
             en: "Kill grid symmetry with geometry: scan straight lines to the few jump " +
                 "points where turning is forced — A*'s optimal paths at a fraction of the work.",
-            ko: "기하로 grid 대칭을 제거한다. 꺾임이 강제되는 소수의 jump point 까지 " +
+            ko: "기하로 grid 대칭을 제거한다. 꺾임이 강제되는 소수의 jump point까지 " +
                 "직선 스캔해, A*의 최적 경로를 몇 분의 일의 작업으로 찾는다.",
+        },
+    },
+    {
+        slug: "visibility_astar",
+        blurb: {
+            en: "Make line of sight the successor relation itself: every visible cell is a " +
+                "neighbor at straight-line cost, and A* returns the cell-centre visibility-graph optimum.",
+            ko: "line of sight 자체를 successor 관계로 삼는다. 보이는 모든 셀이 직선거리 " +
+                "비용의 이웃이 되고, A*가 셀 중심 visibility graph의 최적을 돌려준다.",
         },
     },
     {
@@ -84,8 +93,8 @@ export const ALGO_BLURBS: AlgoBlurb[] = [
         blurb: {
             en: "Search the car's own pose space: constant-curvature arc primitives, a " +
                 "binned closed set, and paths a real vehicle can actually drive.",
-            ko: "차량의 pose 공간을 직접 탐색한다. 일정 곡률 arc primitive 와 bin " +
-                "closed set 으로, 실제 차량이 달릴 수 있는 경로를 찾는다.",
+            ko: "차량의 pose 공간을 직접 탐색한다. 일정 곡률 arc primitive와 bin " +
+                "closed set으로, 실제 차량이 달릴 수 있는 경로를 찾는다.",
         },
     },
     {

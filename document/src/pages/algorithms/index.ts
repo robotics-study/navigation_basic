@@ -104,7 +104,22 @@ const data: IAlgoData[] = [
             {en: "References", ko: "References"},
         ],
     },
-    {slug: "visibility_astar", title: {en: "Visibility A*", ko: "Visibility A*"}, category: "search"},
+    {
+        slug: "visibility_astar",
+        title: {en: "Visibility A*", ko: "Visibility A*"},
+        category: "search",
+        supportedExample: {python: true, "c++": true},
+        contents: lazy(() => import("./global/search/VisibilityAstar")),
+        sections: [
+            {en: "From Shortcut to Successor", ko: "지름길에서 successor로"},
+            {en: "Properties and Complexity", ko: "성질과 복잡도"},
+            {en: "The Algorithm", ko: "알고리즘"},
+            {en: "Not the True Optimum", ko: "참 최적은 아니다"},
+            {en: "Demo", ko: "Demo"},
+            {en: "Implementation", ko: "Implementation"},
+            {en: "References", ko: "References"},
+        ],
+    },
     {slug: "anya", title: {en: "Anya", ko: "Anya"}, category: "search"},
     {
         slug: "dstar_lite",
