@@ -1,8 +1,8 @@
 import {ReactNode} from "react";
 import {T, useTr} from "../../../../libs/i18n";
 import {BlockMath, InlineMath} from "../../../../components/math/Tex";
-import AStarSandbox from "../../../../components/panels/planning/astar/AStarSandbox";
-import AStarReplay from "../../../../components/panels/planning/astar/AStarReplay";
+import AStarSandbox from "../../../../components/panels/global/astar/AStarSandbox";
+import AStarReplay from "../../../../components/panels/global/astar/AStarReplay";
 
 // 접이식 증명 블록 — 본문 흐름은 직관 중심으로 유지하고, 형식 증명은 원할 때만 편다.
 const Proof = ({title, children}: {title: string; children: ReactNode}) => (

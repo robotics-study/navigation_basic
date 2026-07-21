@@ -25,7 +25,7 @@ export const CATEGORIES: Array<{
 }> = [
     {key: "search", title: {en: "Graph Search", ko: "Graph Search"}},
     {key: "sampling", title: {en: "Sampling", ko: "Sampling"}},
-    {key: "control", title: {en: "Control", ko: "Control"}},
+    {key: "local", title: {en: "Local Planning", ko: "Local Planning"}},
     {key: "multi", title: {en: "Multi-Agent", ko: "Multi-Agent"}},
 ];
 
@@ -38,24 +38,26 @@ export const SECTIONS: Array<{
     categories: AlgoCategory[];
 }> = [
     {
-        key: "planning",
-        title: {en: "Planning", ko: "Planning"},
+        key: "global",
+        title: {en: "Global Planning", ko: "Global Planning"},
         desc: {
-            en: "Global path planning: discrete search over grids and graphs, and " +
-                "sampling-based planners for continuous spaces.",
-            ko: "전역 경로 계획: 격자·그래프 위의 이산 탐색과, 연속 공간을 위한 " +
-                "sampling 기반 planner.",
+            en: "Start-to-goal path planning over the whole map: discrete search on grids " +
+                "and graphs, and sampling-based planners for continuous spaces.",
+            ko: "맵 전체를 보고 시작→목표 경로를 찾는 계획: 격자·그래프 위의 이산 탐색과, " +
+                "연속 공간을 위한 sampling 기반 planner.",
         },
         categories: ["search", "sampling"],
     },
     {
-        key: "control",
-        title: {en: "Control", ko: "Control"},
+        key: "local",
+        title: {en: "Local Planning", ko: "Local Planning"},
         desc: {
-            en: "Reactive local planning and path tracking on the robot: DWA, Pure Pursuit, VFH, MPC.",
-            ko: "로봇 위에서 도는 반응형 local planning 과 경로 추종: DWA, Pure Pursuit, VFH, MPC.",
+            en: "Following the global path in the here-and-now: reactive avoidance and " +
+                "local trajectory optimization — DWA, Pure Pursuit, VFH, MPC.",
+            ko: "전역 경로를 지금-여기서 따라가는 계획: 반응형 회피와 지역 궤적 최적화 — " +
+                "DWA, Pure Pursuit, VFH, MPC.",
         },
-        categories: ["control"],
+        categories: ["local"],
     },
     {
         key: "multi",
@@ -69,4 +71,4 @@ export const SECTIONS: Array<{
 ];
 
 export const sectionOf = (category: AlgoCategory): AlgoSection =>
-    SECTIONS.find((s) => s.categories.includes(category))?.key ?? "planning"
+    SECTIONS.find((s) => s.categories.includes(category))?.key ?? "global"
