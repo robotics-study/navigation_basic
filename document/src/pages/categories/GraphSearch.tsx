@@ -2,6 +2,7 @@ import {T, useTr} from "../../libs/i18n";
 import Terms from "../../components/math/Terms";
 import {BlockMath, InlineMath} from "../../components/math/Tex";
 import GridAsGraph from "../../components/panels/intro/GridAsGraph";
+import DijkstraVsAstarLive from "../../components/panels/intro/DijkstraVsAstarLive";
 
 const GraphSearch = () => {
     const t = useTr()
@@ -94,6 +95,27 @@ const GraphSearch = () => {
                     </p>
                 </>}
             />
+
+            <T
+                en={<p>
+                    That one knob is visible below. Both runs share the map, the start, and the goal;
+                    only <InlineMath math="w"/> differs. Dijkstra (<InlineMath math="w = 0"/>) has no
+                    heuristic to pull it, so it expands a growing disc in every direction — the gray
+                    shadow is every cell it touched. A* (<InlineMath math="w = 1"/>) adds the
+                    straight-line estimate and collapses that disc into a narrow wedge aimed at the
+                    goal. Both return the identical least-cost path; A* just looks at a fraction of
+                    the graph to find it.
+                </p>}
+                ko={<p>
+                    그 손잡이 하나가 아래에 보인다. 두 실행은 맵·시작·목표를 공유하고{" "}
+                    <InlineMath math="w"/>만 다르다. Dijkstra(<InlineMath math="w = 0"/>)는 끌어
+                    줄 heuristic이 없어 사방으로 커지는 원판을 확장한다. 회색 그림자가 건드린 셀
+                    전부다. A*(<InlineMath math="w = 1"/>)는 직선 추정치를 더해 그 원판을 목표를
+                    겨눈 좁은 쐐기로 접는다. 둘은 똑같은 최소 비용 경로를 반환한다. A*는 그것을
+                    찾는 데 그래프의 일부만 볼 뿐이다.
+                </p>}
+            />
+            <DijkstraVsAstarLive/>
 
             <h2>{t("Guarantees", "보장")}</h2>
             <T

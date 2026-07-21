@@ -2,6 +2,7 @@ import {ReactNode} from "react";
 import {T, useTr} from "../../libs/i18n";
 import {InlineMath} from "../../components/math/Tex";
 import DiscretizeVsSample from "../../components/panels/intro/DiscretizeVsSample";
+import SearchVsSampleLive from "../../components/panels/intro/SearchVsSampleLive";
 
 // navigation stack 파이프라인 다이어그램 — 외부 자산 없이 토큰 색만으로 그린다.
 const StackBox = ({label, sub, accent}: {label: string; sub: string; accent?: boolean}) => (
@@ -203,6 +204,24 @@ const GlobalPlanning = () => {
                 </tr>
                 </tbody>
             </table>
+
+            <T
+                en={<p>
+                    The difference is easiest to see when both families attack the <em>same</em>{" "}
+                    problem. Below, A* and RRT* are handed one map and one start–goal pair. A* sweeps
+                    a cost contour outward cell by cell — orderly, exhaustive, guaranteed. RRT* throws
+                    a tree of random samples at the space until one branch reaches the goal —
+                    scattershot, but never enumerating a grid. Watch where each spends its effort.
+                </p>}
+                ko={<p>
+                    두 계열의 차이는 <em>같은</em> 문제를 함께 풀릴 때 가장 잘 보인다. 아래는 A*와
+                    RRT*에게 맵 하나와 시작·목표 한 쌍을 준 것이다. A*는 비용 등고선을 셀 단위로
+                    바깥으로 쓸어 나간다. 질서정연하고 빠짐없고 보장이 있다. RRT*는 무작위 표본의
+                    트리를 공간에 던져 한 가지가 목표에 닿을 때까지 뻗는다. 산발적이지만 격자를
+                    열거하지는 않는다. 각자 어디에 힘을 쓰는지 지켜보라.
+                </p>}
+            />
+            <SearchVsSampleLive/>
 
             <h2>{t("How This Repository Abstracts It", "이 저장소의 추상화")}</h2>
             <T
