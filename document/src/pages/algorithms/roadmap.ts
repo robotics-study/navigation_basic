@@ -35,6 +35,15 @@ export const ALGO_BLURBS: AlgoBlurb[] = [
         },
     },
     {
+        slug: "ara_star",
+        blurb: {
+            en: "Anytime A*: publish an ε-bounded path almost instantly, then tighten ε " +
+                "and reuse the search until the answer is optimal.",
+            ko: "Anytime A*. ε-한계가 보장된 경로를 거의 즉시 발표하고, ε을 조이며 " +
+                "탐색을 재사용해 최적까지 간다.",
+        },
+    },
+    {
         slug: "astar",
         blurb: {
             en: "Dijkstra plus a compass: order the frontier by g + h and an admissible " +

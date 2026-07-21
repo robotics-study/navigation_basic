@@ -12,8 +12,11 @@ export interface GridTimeline {
     // 실행형 planner(D* Lite 등)의 주행·감지 이벤트. 비어 있으면 일반 one-shot 탐색.
     robot: Array<{step: number; cell: Cell}>;
     revealed: Array<{step: number; cell: Cell}>;
-    path: Cell[];
-    pathStep: number;                                       // path_found 시점 (없으면 Infinity)
+    // anytime planner(ARA* 등)는 path_found 를 여러 번 방출한다 — 개선 순서대로 쌓인다.
+    // cost 가 이벤트에 없으면 8-connected unit/√2 스텝 합으로 계산해 채운다.
+    paths: Array<{step: number; path: Cell[]; cost: number}>;
+    path: Cell[];                                           // 마지막(최종) 경로
+    pathStep: number;                                       // 첫 path_found 시점 (없으면 Infinity)
     params?: Record<string, unknown>;
     metrics?: Record<string, number>;
     success?: boolean;
@@ -21,6 +24,17 @@ export interface GridTimeline {
 
 const asCell = (state?: number[]): Cell | null =>
     state && state.length >= 2 ? [state[0], state[1]] : null
+
+// 8-connected 격자 경로의 기하 비용 (unit/√2 스텝 합). cost 없는 path_found 의 대체값.
+const geometricCost = (path: Cell[]): number => {
+    let total = 0
+    for (let i = 1; i < path.length; i++) {
+        const dr = Math.abs(path[i][0] - path[i - 1][0])
+        const dc = Math.abs(path[i][1] - path[i - 1][1])
+        total += dr && dc ? Math.SQRT2 : 1
+    }
+    return total
+}
 
 export function buildGridTimeline(events: TraceEvent[]): GridTimeline {
     const timeline: GridTimeline = {
@@ -30,6 +44,7 @@ export function buildGridTimeline(events: TraceEvent[]): GridTimeline {
         candidates: [],
         robot: [],
         revealed: [],
+        paths: [],
         path: [],
         pathStep: Infinity,
     }
@@ -67,9 +82,11 @@ export function buildGridTimeline(events: TraceEvent[]): GridTimeline {
             }
             case "path_found":
                 if (ev.path) {
-                    timeline.path = ev.path
+                    const path = ev.path
                         .map((s) => asCell(s))
                         .filter((c): c is Cell => c !== null)
+                    timeline.paths.push({step, path, cost: ev.cost ?? geometricCost(path)})
+                    timeline.path = path
                     timeline.pathStep = Math.min(timeline.pathStep, step)
                 }
                 break

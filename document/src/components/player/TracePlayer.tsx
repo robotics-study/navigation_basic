@@ -72,7 +72,15 @@ const TracePlayer = ({
         [timeline, step],
     )
     const finished = step >= timeline.steps
-    const pathShown = step >= timeline.pathStep && timeline.path.length > 0
+    // anytime planner 대응: 현재 step 까지 발표된 최신 경로의 비용을 보여 준다.
+    const visiblePath = useMemo(() => {
+        let latest: GridTimeline["paths"][number] | null = null
+        for (const p of timeline.paths) {
+            if (p.step <= step) latest = p
+        }
+        return latest
+    }, [timeline, step])
+    const pathShown = visiblePath !== null
 
     const replay = () => {
         setStep(0)
@@ -112,8 +120,14 @@ const TracePlayer = ({
                 {pathShown && <>
                     {" · "}{t("path cost", "경로 비용")}{" "}
                     <span className="font-semibold" style={{color: PATH_COLOR}}>
-                        {(timeline.metrics?.path_cost ?? 0).toFixed(2)}
+                        {visiblePath!.cost.toFixed(2)}
                     </span>
+                    {timeline.paths.length > 1 && <>
+                        {" · "}{t("solution", "해")}{" "}
+                        <span className="tabular-nums">
+                            {timeline.paths.filter((p) => p.step <= step).length}/{timeline.paths.length}
+                        </span>
+                    </>}
                 </>}
                 {finished && !pathShown && <>
                     {" · "}<span className="font-semibold">{t("no path", "경로 없음")}</span>

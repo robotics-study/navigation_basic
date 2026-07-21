@@ -67,7 +67,15 @@ const GridCanvas = ({
         () => showTree && timeline ? timeline.edges.filter((e) => e.step <= step) : [],
         [showTree, timeline, step],
     )
-    const pathVisible = timeline !== undefined && step >= timeline.pathStep && timeline.path.length > 0
+    // anytime planner 는 개선된 경로를 여러 번 발표한다 — 현재 step 까지의 최신 경로를 그린다.
+    const visiblePath = useMemo(() => {
+        if (!timeline) return null
+        let latest: Cell[] | null = null
+        for (const p of timeline.paths) {
+            if (p.step <= step) latest = p.path
+        }
+        return latest
+    }, [timeline, step])
 
     // 실행형 planner(D* Lite 등): 로봇이 주행하며 장애물을 발견한다. 이때 실제 맵은
     // 로봇이 모르는 정보이므로 벽을 흐리게(ghost) 깔고, 발견된 벽만 진하게 그린다.
@@ -175,9 +183,9 @@ const GridCanvas = ({
                     <Line key={`t${i}`} points={[...center(e.from), ...center(e.to)]}
                           stroke={colors.accent} strokeWidth={1} opacity={0.5}/>
                 ))}
-                {/* 최종 경로 */}
-                {pathVisible && (
-                    <Line points={timeline!.path.flatMap((c) => center(c))}
+                {/* 발표된 최신 경로 */}
+                {visiblePath && (
+                    <Line points={visiblePath.flatMap((c) => center(c))}
                           stroke={PATH_COLOR} strokeWidth={Math.max(2.5, cell * 0.28)}
                           lineCap="round" lineJoin="round"/>
                 )}
