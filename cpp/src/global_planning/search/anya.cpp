@@ -203,7 +203,9 @@ std::vector<std::pair<Pt, Interval>> successors(const std::unordered_set<Cell>& 
     auto beams = clear_pieces(free, root, y, span_lo, span_hi, splits, eps);
     emit(free, root, y, beams, found, eps);
     int steps = 0;
-    while (!beams.empty() && r0 - 2 <= y && y <= r1 + 2 && steps < 400) {
+    // steps bound derives from the component height — a pure safety net; the y-range
+    // check binds first, so the sweep is never cut short on any map size (optimality).
+    while (!beams.empty() && r0 - 2 <= y && y <= r1 + 2 && steps < (r1 - r0 + 8)) {
       double yn = y + direction;
       std::vector<std::pair<double, double>> child;
       for (auto [a, b] : beams) {
@@ -230,7 +232,7 @@ std::vector<std::pair<Pt, Interval>> successors(const std::unordered_set<Cell>& 
     for (int direction : {1, -1}) {
       int x = static_cast<int>(std::round(rx));
       int steps = 0;
-      while (c0 - 2 <= x && x <= c1 + 2 && steps < 400) {
+      while (c0 - 2 <= x && x <= c1 + 2 && steps < (c1 - c0 + 8)) {
         int col = direction > 0 ? x : x - 1;
         if (!cell_free(free, col, yr - 1) && !cell_free(free, col, yr)) break;
         x += direction;
