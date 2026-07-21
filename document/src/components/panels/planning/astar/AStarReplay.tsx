@@ -1,11 +1,11 @@
 import {useEffect, useMemo, useState} from "react";
-import CanvasFigure, {modalCanvasSize} from "../../CanvasFigure";
-import TracePlayer from "../../player/TracePlayer";
-import {loadGridMap, loadTrace} from "../../../libs/trace/load";
-import {buildGridTimeline, Cell, GridTimeline} from "../../../libs/trace/timeline";
-import {GridMap} from "../../../libs/grid";
-import {useTr} from "../../../libs/i18n";
-import cn from "../../../libs/cn";
+import CanvasFigure, {modalCanvasSize} from "../../../CanvasFigure";
+import TracePlayer from "../../../player/TracePlayer";
+import {loadGridMap, loadTrace} from "../../../../libs/trace/load";
+import {buildGridTimeline, Cell, GridTimeline} from "../../../../libs/trace/timeline";
+import {GridMap} from "../../../../libs/grid";
+import {useTr} from "../../../../libs/i18n";
+import cn from "../../../../libs/cn";
 
 // 실제 C++/Python 데모가 방출한 trace 를 재생한다 — 사이트의 시각화가 저장소 구현과
 // 같은 이벤트 계약(spec/trace_schema.json)을 소비한다는 것을 그대로 보여 주는 패널.

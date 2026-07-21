@@ -1,11 +1,11 @@
 import {useMemo, useState} from "react";
-import CanvasFigure, {modalCanvasSize} from "../../CanvasFigure";
-import TracePlayer from "../../player/TracePlayer";
-import {runAStar} from "../../../libs/algorithms/astar";
-import {buildGridTimeline, Cell} from "../../../libs/trace/timeline";
-import {GridMap} from "../../../libs/grid";
-import {useTr} from "../../../libs/i18n";
-import cn from "../../../libs/cn";
+import CanvasFigure, {modalCanvasSize} from "../../../CanvasFigure";
+import TracePlayer from "../../../player/TracePlayer";
+import {runAStar} from "../../../../libs/algorithms/astar";
+import {buildGridTimeline, Cell} from "../../../../libs/trace/timeline";
+import {GridMap} from "../../../../libs/grid";
+import {useTr} from "../../../../libs/i18n";
+import cn from "../../../../libs/cn";
 import {pocketMap, SANDBOX_GOAL, SANDBOX_START} from "./presets";
 
 // 라이브 A* sandbox — 브라우저에서 직접 탐색을 실행한다. 벽을 그리고 시작/목표를 끌면

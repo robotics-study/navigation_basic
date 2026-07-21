@@ -1,6 +1,6 @@
 import {ISupportedExample, Localized} from "../../../types/global";
 import algorithms from "../algorithms";
-import {ALGO_BLURBS, CATEGORIES} from "../algorithms/roadmap";
+import {ALGO_BLURBS, CATEGORIES, SECTIONS} from "../algorithms/roadmap";
 import BrandLogo from "../../components/BrandLogo";
 import HeroSearch from "../../components/panels/HeroSearch";
 import {useAlgoNav} from "../../libs/nav";
@@ -71,7 +71,8 @@ const Home = () => {
                     <span className="chip">Any-Angle</span>
                     <span className="chip">Sampling</span>
                     <span className="chip">RRT*</span>
-                    <span className="chip">Batch Planners</span>
+                    <span className="chip">Control</span>
+                    <span className="chip">Multi-Agent</span>
                     <span className="chip">C++ / Python</span>
                 </div>
                 <div className="lander-btns">
@@ -87,25 +88,34 @@ const Home = () => {
             <HeroSearch/>
 
             <div className="lander-cats">
-                {CATEGORIES.map((cat, ci) => {
-                    const items = algorithms.filter((a) => a.category === cat.key)
+                {SECTIONS.map((sec, si) => {
+                    const multiCat = sec.categories.length > 1
                     return (
-                        <div key={cat.key} className="lander-cat">
+                        <div key={sec.key} className="lander-cat">
                             <div className="part-head">
                                 <h3>
-                                    <span className="part-index">{["I", "II", "III", "IV"][ci]}</span>
-                                    {pick(lang, cat.title)}
+                                    <span className="part-index">{["I", "II", "III"][si]}</span>
+                                    {pick(lang, sec.title)}
                                 </h3>
-                                <p className="part-desc">{pick(lang, cat.desc)}</p>
+                                <p className="part-desc">{pick(lang, sec.desc)}</p>
                             </div>
-                            <div className="card-grid">
-                                {items.map((a) => (
-                                    <AlgoCard key={a.slug} slug={a.slug} title={a.title}
-                                              blurb={blurbOf(a.slug)}
-                                              supportedExample={a.supportedExample}
-                                              onOpen={a.contents ? () => go(a.slug) : undefined}/>
-                                ))}
-                            </div>
+                            {sec.categories.map((catKey) => {
+                                const cat = CATEGORIES.find((c) => c.key === catKey)!
+                                const items = algorithms.filter((a) => a.category === catKey)
+                                return (
+                                    <div key={catKey}>
+                                        {multiCat && <h4 className="cat-head">{pick(lang, cat.title)}</h4>}
+                                        <div className="card-grid">
+                                            {items.map((a) => (
+                                                <AlgoCard key={a.slug} slug={a.slug} title={a.title}
+                                                          blurb={blurbOf(a.slug)}
+                                                          supportedExample={a.supportedExample}
+                                                          onOpen={a.contents ? () => go(a.slug) : undefined}/>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )
+                            })}
                         </div>
                     )
                 })}

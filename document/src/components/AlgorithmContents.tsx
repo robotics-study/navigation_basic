@@ -1,7 +1,7 @@
 import {IAlgoData} from "../../types/global";
 import 'katex/dist/katex.min.css';
 import algorithms from "../pages/algorithms";
-import {CATEGORIES} from "../pages/algorithms/roadmap";
+import {CATEGORIES, SECTIONS, sectionOf} from "../pages/algorithms/roadmap";
 import {useAlgoNav} from "../libs/nav";
 import {useLang, useTr, pick} from "../libs/i18n";
 
@@ -29,6 +29,8 @@ const AlgorithmContents = (algo: IAlgoData) => {
     const prev = idx > 0 ? ready[idx - 1] : undefined
     const next = idx >= 0 && idx < ready.length - 1 ? ready[idx + 1] : undefined
 
+    // eyebrow: "Planning · Graph Search" 처럼 대분류 · 중분류. 이름이 같으면 하나만.
+    const secTitle = SECTIONS.find((s) => s.key === sectionOf(category))?.title
     const catTitle = CATEGORIES.find((c) => c.key === category)?.title
 
     const codeLinks = supportedExample
@@ -41,7 +43,13 @@ const AlgorithmContents = (algo: IAlgoData) => {
     return (
         <main className="content">
             <article className="content-inner">
-                {catTitle && <p className="eyebrow">{pick(lang, catTitle)}</p>}
+                {secTitle && catTitle && (
+                    <p className="eyebrow">
+                        {pick(lang, secTitle) === pick(lang, catTitle)
+                            ? pick(lang, secTitle)
+                            : `${pick(lang, secTitle)} · ${pick(lang, catTitle)}`}
+                    </p>
+                )}
                 <h1>{pick(lang, title)}</h1>
 
                 {codeLinks.length > 0 && (

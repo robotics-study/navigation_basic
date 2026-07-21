@@ -1,5 +1,5 @@
-import {emptyGrid, GridMap} from "../../../libs/grid";
-import {Cell} from "../../../libs/trace/timeline";
+import {emptyGrid, GridMap} from "../../../../libs/grid";
+import {Cell} from "../../../../libs/trace/timeline";
 
 export const SANDBOX_N = 20;
 export const SANDBOX_START: Cell = [SANDBOX_N - 2, 1];

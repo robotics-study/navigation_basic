@@ -15,7 +15,7 @@ const data: IAlgoData[] = [
         title: {en: "A*", ko: "A*"},
         category: "search",
         supportedExample: {python: true, "c++": true},
-        contents: lazy(() => import("./Astar")),
+        contents: lazy(() => import("./planning/search/Astar")),
         sections: [
             {en: "From Dijkstra to A*", ko: "Dijkstra에서 A*로"},
             {en: "The Algorithm", ko: "알고리즘"},
@@ -53,11 +53,11 @@ const data: IAlgoData[] = [
     {slug: "eit_star", title: {en: "EIT*", ko: "EIT*"}, category: "sampling"},
     {slug: "fcit_star", title: {en: "FCIT*", ko: "FCIT*"}, category: "sampling"},
     {slug: "sst", title: {en: "SST", ko: "SST"}, category: "sampling"},
-    // ---- Local planning (구현 예정) ----
-    {slug: "dwa", title: {en: "DWA", ko: "DWA"}, category: "local"},
-    {slug: "pure_pursuit", title: {en: "Pure Pursuit", ko: "Pure Pursuit"}, category: "local"},
-    {slug: "vfh", title: {en: "VFH", ko: "VFH"}, category: "local"},
-    {slug: "mpc", title: {en: "MPC", ko: "MPC"}, category: "local"},
+    // ---- Control (구현 예정) ----
+    {slug: "dwa", title: {en: "DWA", ko: "DWA"}, category: "control"},
+    {slug: "pure_pursuit", title: {en: "Pure Pursuit", ko: "Pure Pursuit"}, category: "control"},
+    {slug: "vfh", title: {en: "VFH", ko: "VFH"}, category: "control"},
+    {slug: "mpc", title: {en: "MPC", ko: "MPC"}, category: "control"},
     // ---- Multi-agent (구현 예정) ----
     {slug: "prioritized_astar", title: {en: "Prioritized A*", ko: "Prioritized A*"}, category: "multi"},
     {slug: "joint_astar", title: {en: "Joint-space A*", ko: "Joint-space A*"}, category: "multi"},

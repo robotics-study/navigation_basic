@@ -486,6 +486,17 @@
     overflow: hidden;
 }
 
+/* 대분류 안의 중분류 sub-label (Graph Search / Sampling 등) */
+.sidebar .sb-sub {
+    margin: 10px 8px 4px 26px;
+    font-size: .66rem;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: var(--muted);
+    font-weight: 700;
+    opacity: .75;
+}
+
 .content {
     padding: 40px 48px 90px;
     min-width: 0;
@@ -991,6 +1002,16 @@ h3:hover .anchor {
     margin: 0;
     color: var(--muted);
     font-size: .9rem;
+}
+
+/* 대분류 안의 중분류 sub-heading (Graph Search / Sampling 등) */
+.lander .cat-head {
+    margin: 0 0 12px;
+    font-size: .78rem;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--muted);
+    font-weight: 700;
 }
 
 .card-grid {

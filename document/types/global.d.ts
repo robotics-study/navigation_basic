@@ -6,8 +6,11 @@ export interface Localized<T = string> {
     ko: T,
 }
 
-// 저장소의 구현 카테고리. search/sampling 은 global_planning 하위 디렉토리와 일치한다.
-export type AlgoCategory = "search" | "sampling" | "local" | "multi";
+// 대분류(section) → 중분류(category) 2단 구조.
+// section 은 홈/사이드바의 큰 묶음이고, category 는 그 안의 알고리즘 계열이다.
+// search/sampling 은 저장소 global_planning 하위 디렉토리와 일치한다.
+export type AlgoSection = "planning" | "control" | "multi";
+export type AlgoCategory = "search" | "sampling" | "control" | "multi";
 
 export interface ISupportedExample {
     python?: boolean,
