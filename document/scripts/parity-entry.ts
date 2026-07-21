@@ -10,5 +10,6 @@ export {runVisibilityAStar} from "../src/libs/algorithms/visibility_astar";
 export {runAnya} from "../src/libs/algorithms/anya";
 export {runPRM, runPRMStar} from "../src/libs/algorithms/prm";
 export {runRRT, runRRTConnect} from "../src/libs/algorithms/rrt";
+export {runRRTStar} from "../src/libs/algorithms/rrt_star";
 export {runHybridAStar} from "../src/libs/algorithms/hybrid_astar";
 export {parseGridMap} from "../src/libs/grid";

@@ -143,6 +143,15 @@ export const ALGO_BLURBS: AlgoBlurb[] = [
         },
     },
     {
+        slug: "rrt_star",
+        blurb: {
+            en: "RRT that never settles: every new node shops for the cheapest parent, " +
+                "then rewires its neighbors — and the path converges to the optimum.",
+            ko: "안주하지 않는 RRT. 새 노드마다 가장 싼 부모를 골라잡고 이웃을 다시 " +
+                "배선해, 경로가 최적으로 수렴한다.",
+        },
+    },
+    {
         slug: "astar",
         blurb: {
             en: "Dijkstra plus a compass: order the frontier by g + h and an admissible " +
