@@ -54,6 +54,7 @@ const AraScene = ({panel = 340}: {panel?: number}) => {
         <TracePlayer
             map={map} timeline={timeline} start={start} goal={goal} panel={panel}
             onPaintCell={paintCell}
+            onReset={() => { setMap(greedyTrapMap()); setStart(GREEDY_START); setGoal(GREEDY_GOAL) }}
             onMoveStart={moveEndpoint(setStart)}
             onMoveGoal={moveEndpoint(setGoal)}
             footer={

@@ -45,6 +45,7 @@ const DijkstraScene = ({panel = 340}: {panel?: number}) => {
         <TracePlayer
             map={map} timeline={timelines[mode]} start={start} goal={goal} panel={panel}
             onPaintCell={paintCell}
+            onReset={() => { setMap(hopcostMap()); setStart(HOPCOST_START); setGoal(HOPCOST_GOAL) }}
             onMoveStart={moveEndpoint(setStart)}
             onMoveGoal={moveEndpoint(setGoal)}
             footer={

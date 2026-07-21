@@ -47,6 +47,7 @@ const ThetaScene = ({panel = 340}: {panel?: number}) => {
             map={map} timeline={timeline} start={start} goal={goal} panel={panel}
             overlayPath={showAstar ? astar.path : undefined}
             onPaintCell={paintCell}
+            onReset={() => { setMap(pillarsMap()); setStart(PILLAR_START); setGoal(PILLAR_GOAL) }}
             onMoveStart={moveEndpoint(setStart)}
             onMoveGoal={moveEndpoint(setGoal)}
             footer={
