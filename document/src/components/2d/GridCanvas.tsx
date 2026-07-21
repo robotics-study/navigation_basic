@@ -75,10 +75,17 @@ const GridCanvas = ({
         })
         return out
     }, [timeline, firstSeen, step, map.width])
-    const edgesVisible = useMemo(
-        () => showTree && timeline ? timeline.edges.filter((e) => e.step <= step) : [],
-        [showTree, timeline, step],
-    )
+    const edgesVisible = useMemo(() => {
+        if (!showTree || !timeline) return []
+        // rewire 는 같은 자식의 새 간선을 덧붙이므로, 자식별로 마지막 간선만 남겨
+        // 현재 트리를 그린다 (낡은 부모 간선이 화면에 남지 않게).
+        const latest = new Map<string, (typeof timeline.edges)[number]>()
+        for (const e of timeline.edges) {
+            if (e.step > step) break
+            latest.set(`${e.to[0]},${e.to[1]}`, e)
+        }
+        return Array.from(latest.values())
+    }, [showTree, timeline, step])
     const samplesVisible = useMemo(
         () => timeline ? timeline.samples.filter((s) => s.step <= step) : [],
         [timeline, step],

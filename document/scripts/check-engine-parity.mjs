@@ -71,6 +71,13 @@ const RUNNERS = {
         {map: m, start: s, goal: g, maxIterations: p.max_iterations ?? 4000,
          stepSize: p.step_size ?? 0.5, goalTolerance: p.goal_tolerance ?? 0.3,
          seed: p.seed ?? 1}),
+    rrt_star: (m, s, g, p) => engines.runRRTStar(
+        {map: m, start: s, goal: g, maxIterations: p.max_iterations ?? 8000,
+         stepSize: p.step_size ?? 0.5, goalBias: p.goal_bias ?? 0.05,
+         goalTolerance: p.goal_tolerance ?? 0.3,
+         neighborRadius: p.neighbor_radius ?? 1.5,
+         radiusMode: p.radius_mode ?? "fixed", rggGamma: p.rgg_gamma ?? 2,
+         seed: p.seed ?? 1}),
     prm_star: (m, s, g, p) => engines.runPRMStar(
         {map: m, start: s, goal: g, numSamples: p.num_samples ?? 250,
          gamma: p.gamma ?? 30, seed: p.seed ?? 1}),
@@ -104,6 +111,7 @@ const CHECKS = [
     {algo: "prm_star", maps: ["maze01", "open01"], exact: true},
     {algo: "rrt", maps: ["maze01", "open01"], exact: true},
     {algo: "rrt_connect", maps: ["maze01", "open01"], exact: true},
+    {algo: "rrt_star", maps: ["maze01", "open01"], exact: true},
     // sin/cos 가 libm 구현마다 1 ULP 다를 수 있어 비용은 허용 오차로만 비교한다.
     {algo: "hybrid_astar", maps: ["open01", "maze01"], exact: false, costTol: 0.05},
 ];
