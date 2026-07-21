@@ -11,7 +11,7 @@ import enum
 from abc import ABC, abstractmethod
 from typing import Protocol, TypeVar
 
-from .types import Footprint  # same core layer; types.py does not import capabilities.py
+from .types import Footprint, Pose  # same core layer; types.py does not import capabilities.py
 
 StateT = TypeVar("StateT")
 # SE2CollisionSpace consumes its state only as a method argument (never returns it), so
@@ -89,6 +89,14 @@ class SamplingSpace(Protocol[StateT]):
 
     def steer(self, a: StateT, b: StateT, eta: float) -> StateT: ...
 
+
+
+class SamplingSE2Space(SamplingSpace[StateT], SE2CollisionSpace[Pose], Protocol[StateT]):
+    """SamplingSpace that also answers SE(2) footprint collisions — for kinodynamic
+    vehicle planners that forward-propagate poses over a sampled map (SST). The
+    footprint is an inscribed disc, so collision depends only on (x, y); theta is
+    carried for the pose contract. Structural, so one concrete grid satisfies the
+    sampling and SE(2) views without a class hierarchy."""
 
 class MapBase(ABC):
     """Base for concrete maps. Owns the single `supports` implementation."""

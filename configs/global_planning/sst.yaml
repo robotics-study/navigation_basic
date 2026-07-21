@@ -55,6 +55,14 @@ params:
     min: 0.001
     max: 100.0
     description: forward propagation 지속 시간 상한 (s).
+  - name: footprint_radius
+    type: float
+    default: 0.15
+    min: 0.01
+    max: 20.0
+    description: >-
+      로봇 inscribed disc footprint 반경 (meter, world). 전파 arc 의 모든 웨이포인트
+      pose 에서 disc 충돌을 검사해 차체가 벽을 비켜 가게 한다 (Hybrid A* 와 동일 모델).
   - name: sst_star
     type: bool
     default: false

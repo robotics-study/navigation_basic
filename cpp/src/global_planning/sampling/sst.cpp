@@ -5,6 +5,7 @@
 #include <cmath>
 #include <limits>
 #include <random>
+#include <stdexcept>
 #include <unordered_set>
 #include <vector>
 
@@ -37,6 +38,14 @@ core::PlanResult<Point> SstPlanner::plan(SamplingSpace<Point>& space, const Poin
   const double prop_min = params_.get_float("prop_duration_min");
   const double prop_max = params_.get_float("prop_duration_max");
   const bool sst_star = params_.get_bool("sst_star");
+  // 차체는 inscribed disc — 점이 아니라 몸체가 벽을 비켜 가야 한다. capability 는
+  // required_capabilities 로 선언되어 로드 단계에서 검증되고, 여기서는 같은 concrete
+  // grid 가 두 view 를 함께 구현하므로 cross-cast 로 SE(2) view 를 얻는다.
+  const core::Footprint footprint{params_.get_float("footprint_radius")};
+  auto* se2 = dynamic_cast<core::SE2CollisionSpace<core::Pose>*>(&space);
+  if (se2 == nullptr) {
+    throw std::invalid_argument("sst: map does not provide SE2CollisionSpace");
+  }
   std::mt19937 rng(static_cast<unsigned>(params_.get_int("seed")));
   std::uniform_real_distribution<double> unit(0.0, 1.0);
 
@@ -119,6 +128,9 @@ core::PlanResult<Point> SstPlanner::plan(SamplingSpace<Point>& space, const Poin
       x += v * std::cos(theta) * dt;
       y += v * std::sin(theta) * dt;
       Point p{x, y};
+      // 웨이포인트 간격(0.2 m)이 footprint 반경 이하라 disc 사슬이 chord 를 덮지만,
+      // 얇은 벽 corner-cut 은 supercover chord 검사로 함께 막는다.
+      if (se2->is_collision(footprint, core::Pose{x, y, theta})) return false;
       if (!space.is_state_valid(p) || !space.is_motion_valid(prev, p)) return false;
       out_wps.push_back(p);
       prev = p;

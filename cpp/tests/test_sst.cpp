@@ -32,6 +32,7 @@ std::string sst_cfg(int max_iterations, const std::string& sst_star = "false") {
       "  - {name: max_omega, type: float, default: 1.5, min: 0.0, max: 100, description: w}\n"
       "  - {name: prop_duration_min, type: float, default: 0.2, min: 0.001, max: 100, description: pmn}\n"
       "  - {name: prop_duration_max, type: float, default: 0.8, min: 0.001, max: 100, description: pmx}\n"
+      "  - {name: footprint_radius, type: float, default: 0.2, min: 0.01, max: 20, description: fp}\n"
       "  - {name: sst_star, type: bool, default: " + sst_star + ", description: star}\n"
       "  - {name: seed, type: int, default: 1, min: 0, max: 2147483647, description: s}\n");
 }
