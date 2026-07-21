@@ -426,23 +426,21 @@
     font-size: .58rem;
 }
 
-/* 카테고리 disclosure — 알고리즘이 카테고리당 십수 개라 접지 않으면 네비가 감당이 안 된다 */
+/* 대분류 disclosure — rail(세로선) 계층. 알고리즘이 수십 개라 접지 않으면 감당이 안 된다. */
 .sidebar .sb-group {
-    margin-top: 12px;
+    margin-top: 10px;
 }
 
 .sidebar .sb-head {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 7px;
     width: 100%;
-    padding: 5px 8px;
+    padding: 6px 8px;
     border-radius: 8px;
-    font-size: .74rem;
-    text-transform: uppercase;
-    letter-spacing: .08em;
-    color: var(--muted);
-    font-weight: 700;
+    font-size: .88rem;
+    color: var(--text);
+    font-weight: 600;
     background: none;
     border: none;
     cursor: pointer;
@@ -451,20 +449,20 @@
 }
 
 .sidebar .sb-head:hover {
-    color: var(--text);
     background: var(--surface-2);
 }
 
 .sidebar .sb-head .sb-count {
     margin-left: auto;
+    font-size: .7rem;
+    color: var(--muted);
     font-weight: 600;
-    opacity: .7;
-    letter-spacing: 0;
     font-variant-numeric: tabular-nums;
 }
 
 .sidebar .sb-head .sb-chev {
     flex: none;
+    color: var(--muted);
     transition: transform .18s;
 }
 
@@ -484,21 +482,34 @@
 
 .sidebar .sb-body > div {
     overflow: hidden;
+    margin-left: 13px;
+    border-left: 1px solid var(--border);
+    padding-left: 10px;
+}
+
+.sidebar .sb-body a:not(.sb-sub) {
+    padding: 5px 9px;
+    font-size: .86rem;
 }
 
 /* 대분류 안의 중분류 sub-label (Graph Search / Sampling 등).
+   일반 항목과 같은 행 높이를 쓰고 weight/색으로만 구분한다 (행 높이 들쭉날쭉 방지).
    소개 페이지가 있으면 <a> 로 렌더되어 클릭 시 카테고리 소개로 간다. */
 .sidebar .sb-sub {
     display: block;
-    margin: 10px 8px 4px 26px;
-    padding: 2px 4px;
-    border-radius: 6px;
-    font-size: .66rem;
-    text-transform: uppercase;
-    letter-spacing: .07em;
+    margin: 6px 0 1px;
+    padding: 5px 9px;
+    border-radius: 8px;
+    font-size: .84rem;
     color: var(--muted);
-    font-weight: 700;
-    opacity: .8;
+    font-weight: 600;
+}
+
+/* 중분류 아래 항목 묶음 — 중첩 rail 로 "Graph Search 의 하위"임을 분명히 한다 */
+.sidebar .sb-cat-body {
+    margin-left: 13px;
+    border-left: 1px solid var(--border);
+    padding-left: 8px;
 }
 
 .sidebar a.sb-sub:hover {
@@ -510,7 +521,26 @@
 .sidebar a.sb-sub.active {
     background: color-mix(in srgb, var(--accent) 14%, transparent);
     color: var(--accent);
-    opacity: 1;
+}
+
+/* 미집필 항목 접기 — 기본은 "+ n more soon" 한 줄, 클릭하면 dim 목록 토글 */
+.sidebar .sb-more {
+    display: block;
+    width: 100%;
+    padding: 4px 9px;
+    border: none;
+    background: none;
+    font-family: inherit;
+    font-size: .76rem;
+    color: var(--muted);
+    text-align: left;
+    cursor: pointer;
+    border-radius: 8px;
+}
+
+.sidebar .sb-more:hover {
+    background: var(--surface-2);
+    color: var(--text);
 }
 
 .content {
