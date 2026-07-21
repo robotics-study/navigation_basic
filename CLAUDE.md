@@ -164,6 +164,8 @@ React 18 + Vite + TS + Tailwind SPA. 2D 는 Konva, 3D 는 Babylon(필요 시 도
 
 인트로 → 개념/유도(From X to Y 등) → **Properties and Complexity** → **The Algorithm** → 증명(collapsible) → (반례 등 이론 보조) → **Demo** → **Implementation** → **References**. registry `sections[]` 도 같은 순서로.
 
+- **알고리즘 배치는 항상 계보순**: registry 배열(= 사이드바·pager·홈 카드 순서)은 학습 계보를 따른다 — 기반 탐색(BFS→Dijkstra→A*) → 파생 가지 순(예: grid 가속 JPS → any-angle Theta* 계열 → incremental·anytime D* Lite→ARA*→AD* → 연속 상태 Hybrid A*). 새 알고리즘은 자기 계보 가지 위치에 끼워 넣는다 (끝에 append 금지).
+
 - **The Algorithm**: 자료구조·루프 요약 문단 → `Pseudocode` 블록(`# 1~n` 스텝 마커) → 바로 아래 "1. ~한다" 번호 목록으로 각 스텝의 무엇/왜 해설 (pop 시점 goal 검사 같은 함정 포함).
 - **증명**: 산문 서술 금지. 가정 → BlockMath 부등식 체인 → 모순/결론의 단계형.
 - **Parameters 섹션 금지** — 웹은 알고리즘 설명이지 코드 문서가 아니다. parameter 개념(예: weighted A* 의 w)은 이론 산문에서 다룬다.
