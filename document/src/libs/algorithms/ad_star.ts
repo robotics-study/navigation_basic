@@ -132,7 +132,7 @@ export function runADStar({map, start, goal, epsStart, epsFinal, epsStep, sensor
         incons.delete(ui)
         if (gOf(u) !== rhsOf(u)) {
             if (!closed.has(ui)) queueInsert(u, calcKey(u))
-            else incons.add(ui)   // 이미 확장됨: 다음 reopen 으로 미룬다 (INCONS)
+            else incons.add(ui)   // 이미 확장됨: 다음 reopen으로 미룬다 (INCONS)
         }
     }
 
@@ -263,7 +263,7 @@ export function runADStar({map, start, goal, epsStart, epsFinal, epsStep, sensor
             sLast = sStart
             for (const v of changed) updateState(v)
             // 감지된 변화는 유의미한 사건으로 취급: ε를 다시 올려 준최적 해를 빨리 얻고,
-            // 이후 루프가 eps_final 까지 도로 조인다.
+            // 이후 루프가 eps_final까지 도로 조인다.
             eps = Math.max(epsStart, epsFinal)
             replans++
             reopen()

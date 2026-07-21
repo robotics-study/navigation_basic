@@ -16,7 +16,7 @@ const data: ISectionIntro[] = [
         contents: lazy(() => import("./GlobalPlanning")),
         sections: [
             {en: "The Problem", ko: "문제 정의"},
-            {en: "Where It Sits in the Navigation Stack", ko: "Navigation Stack 에서의 위치"},
+            {en: "Where It Sits in the Navigation Stack", ko: "Navigation Stack에서의 위치"},
             {en: "Two Families: Search and Sampling", ko: "두 계열: Search와 Sampling"},
             {en: "How This Repository Abstracts It", ko: "이 저장소의 추상화"},
             {en: "Suggested Reading Order", ko: "권장 읽기 순서"},

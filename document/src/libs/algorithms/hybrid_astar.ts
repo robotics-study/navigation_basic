@@ -4,8 +4,8 @@ import {TraceEvent} from "../trace/types";
 // 브라우저 라이브 데모용 Hybrid A*. 저장소 구현(Dolgov, Thrun, Montemerlo & Diebel
 // 2008 단순화판: Euclidean h, analytic expansion 없음)을 미러한다. 상태는 연속
 // SE(2) pose (x, y, θ)이고, closed set은 (x, y, θ) bin 위에서 관리된다.
-// sin/cos 는 libm 구현별로 1 ULP 차이가 날 수 있어 python demo 와는 허용 오차
-// 안에서만 일치한다 (parity 하니스에서 tolerance 로 검사).
+// sin/cos는 libm 구현별로 1 ULP 차이가 날 수 있어 python demo와는 허용 오차
+// 안에서만 일치한다 (parity 하니스에서 tolerance로 검사).
 export type Pose = [number, number, number];
 
 export interface HybridAStarOptions {
@@ -36,7 +36,7 @@ const angDiff = (a: number, b: number): number => {
     return Math.abs(d)
 }
 
-// 일정 곡률 arc 를 부호 있는 길이만큼 정확히 적분한다.
+// 일정 곡률 arc를 부호 있는 길이만큼 정확히 적분한다.
 export const integrate = (p: Pose, kappa: number, length: number): Pose => {
     const [x, y, theta] = p
     const theta2 = theta + kappa * length
@@ -50,7 +50,7 @@ export const integrate = (p: Pose, kappa: number, length: number): Pose => {
     ]
 }
 
-// 내접원 footprint 의 disc-셀 겹침 충돌 검사 — 저장소 OccupancyGrid2D.is_collision 미러.
+// 내접원 footprint의 disc-셀 겹침 충돌 검사 — 저장소 OccupancyGrid2D.is_collision 미러.
 const isCollision = (map: GridMap, radius: number, x: number, y: number): boolean => {
     const res = map.resolution
     const half = res * 0.5

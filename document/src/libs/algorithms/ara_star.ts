@@ -13,7 +13,7 @@ export interface ARAStarOptions {
     epsStep: number;
 }
 
-// 반복별 통계 — sandbox 가 "매번 weighted A* 재실행"과 비교할 때 쓴다.
+// 반복별 통계 — sandbox가 "매번 weighted A* 재실행"과 비교할 때 쓴다.
 export interface IterationStat {
     eps: number;
     expanded: number;   // 이 반복에서의 확장 수
@@ -80,7 +80,7 @@ export function runARAStar({map, start, goal, epsStart, epsFinal, epsStep}: ARAS
         inOpen[i] = true
     }
     const popMin = (): {key: number; i: number} | null => {
-        // 낡은 항목(open 에서 빠진 것)은 건너뛴다. 교육용 규모라 선형 최소 탐색으로 충분.
+        // 낡은 항목(open에서 빠진 것)은 건너뛴다. 교육용 규모라 선형 최소 탐색으로 충분.
         let bestAt = -1
         for (let k = 0; k < heap.length; k++) {
             const e = heap[k]
@@ -165,7 +165,7 @@ export function runARAStar({map, start, goal, epsStart, epsFinal, epsStep}: ARAS
         }
         if (eps <= epsFinal) break
         eps = Math.max(epsFinal, eps - epsStep)
-        // INCONS∪OPEN 을 조여진 ε 키로 다시 열고 CLOSED 를 비운다.
+        // INCONS∪OPEN을 조여진 ε 키로 다시 열고 CLOSED를 비운다.
         const reopen = new Set<number>(incons)
         for (const e of heap) if (inOpen[e.i]) reopen.add(e.i)
         incons.clear()

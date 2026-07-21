@@ -4,7 +4,7 @@ import {Cell} from "../trace/timeline";
 
 // 브라우저 라이브 데모용 D* Lite. 저장소 구현과 같은 move → sense → repair 루프를 돌고
 // 같은 trace 이벤트를 방출한다 (Koenig & Likhachev 2002). 로봇은 지도를 모르는 채
-// 출발하고, 센서 반경 안에서 발견한 벽만 belief 에 쌓으며 backward g/rhs 를 수리한다.
+// 출발하고, 센서 반경 안에서 발견한 벽만 belief에 쌓으며 backward g/rhs를 수리한다.
 export interface DStarLiteOptions {
     map: GridMap;          // 실제 지도 (로봇은 모름)
     start: Cell;
@@ -12,7 +12,7 @@ export interface DStarLiteOptions {
     sensorRadius: number;
 }
 
-// 재계획 시점의 belief 스냅샷 — sandbox 가 "매번 A* 재실행" 비용과 비교할 때 쓴다.
+// 재계획 시점의 belief 스냅샷 — sandbox가 "매번 A* 재실행" 비용과 비교할 때 쓴다.
 export interface ReplanSnapshot {
     blocked: Set<number>;  // belief (cell index)
     robot: Cell;
@@ -113,7 +113,7 @@ export function runDStarLite({map, start, goal, sensorRadius}: DStarLiteOptions)
             return null
         }
         open.splice(bestAt, 1)
-        open.push(best)   // peek 이므로 유지 (pop 은 keyOf 삭제로 표현)
+        open.push(best)   // peek 이므로 유지 (pop은 keyOf 삭제로 표현)
         return {key: best.key, cell: best.cell}
     }
 
@@ -185,7 +185,7 @@ export function runDStarLite({map, start, goal, sensorRadius}: DStarLiteOptions)
         return toUpdate
     }
 
-    // Initialize: goal 이 backward 탐색의 뿌리다.
+    // Initialize: goal이 backward 탐색의 뿌리다.
     rhs.set(idx(goal), 0)
     queueInsert(goal, calcKey(goal))
     for (const v of sense(sStart)) updateVertex(v)

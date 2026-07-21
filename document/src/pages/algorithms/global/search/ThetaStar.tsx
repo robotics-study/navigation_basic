@@ -32,10 +32,10 @@ const ThetaStar = () => {
                     founding algorithm of any-angle planning.
                 </p>}
                 ko={<p>
-                    지금까지의 planner 는 전부 grid edge 에 붙은 경로를 돌려준다. 수평, 수직,
+                    지금까지의 planner는 전부 grid edge에 붙은 경로를 돌려준다. 수평, 수직,
                     45°. 실제 로봇은 여덟 방향으로만 돌지 않는다. Theta*(Nash, Daniel, Koenig
-                    &amp; Felner, 2007)는 A*의 탐색을 유지하되, line of sight 가 있으면 경로
-                    구간이 grid 를 <em>곧장 가로지르게</em> 한다. any-angle planning 의 시조다.
+                    &amp; Felner, 2007)는 A*의 탐색을 유지하되, line of sight가 있으면 경로
+                    구간이 grid를 <em>곧장 가로지르게</em> 한다. any-angle planning의 시조다.
                 </p>}
             />
 
@@ -71,7 +71,7 @@ const ThetaStar = () => {
                         (최악 방향에서 <InlineMath math="2\cos(\pi/8)/(1+\cos(\pi/4)) - 1"/>) 길다.
                         더 나쁜 것은 <em>보기에도</em> 틀렸다는 점이다. 직선이 명백히 들어가는
                         자리에 긴 지그재그가 놓인다. A* 경로를 사후에 smoothing 하면 낫긴 하지만
-                        해결은 아니다. smoother 는 A*가 우연히 돌려준 그 경로 하나만 보는데, 그
+                        해결은 아니다. smoother는 A*가 우연히 돌려준 그 경로 하나만 보는데, 그
                         경로가 장애물의 반대쪽을 돌아갔을 수도 있다.
                     </p>
                     <p>
@@ -105,13 +105,13 @@ const ThetaStar = () => {
                 ko={<ul>
                     <li><strong>Any-angle</strong>: 경로의 꼭짓점은 grid 셀이지만, 그 사이 구간은
                         임의 각도의 직선이다.</li>
-                    <li>실전에서 <strong>grid-최적보다 짧다</strong>(아래 sandbox 가 그 차이를
+                    <li>실전에서 <strong>grid-최적보다 짧다</strong>(아래 sandbox가 그 차이를
                         보여 준다). 다만 모든 연속 경로 중 <strong>최적이라는 보장은 없다</strong>.
                         Daniel et al.(2010)에 반례가 있고, 실측 준최적성은 1% 미만 수준이다.</li>
-                    <li><strong>비용</strong>: A* 꼴 탐색 한 번에, 생성되는 edge 마다 최대 한
+                    <li><strong>비용</strong>: A* 꼴 탐색 한 번에, 생성되는 edge마다 최대 한
                         번의 line-of-sight 검사가 붙는다. 큰 맵에서는 큐가 아니라 이 검사가
-                        runtime 을 지배한다 (Lazy Theta* 가 파고드는 지점).</li>
-                    <li>heuristic 은 직선 Euclidean 으로, any-angle{" "}
+                        runtime을 지배한다 (Lazy Theta*가 파고드는 지점).</li>
+                    <li>heuristic은 직선 Euclidean으로, any-angle{" "}
                         <InlineMath math="g"/> 값과 consistent 하다.</li>
                 </ul>}
             />
@@ -125,7 +125,7 @@ const ThetaStar = () => {
                 </p>}
                 ko={<p>
                     구조는 A* 그대로다. OPEN/CLOSED, pop-min, relaxation. 각 노드가 부모를
-                    기억하고, relaxation 에 직선 선택지가 하나 추가될 뿐이다 (시작 노드의 부모는
+                    기억하고, relaxation에 직선 선택지가 하나 추가될 뿐이다 (시작 노드의 부모는
                     자기 자신):
                 </p>}
             />
@@ -158,13 +158,13 @@ while OPEN is not empty:
                 ko={<ol>
                     <li>재구성은 부모 링크를 따라간다. A*와 달리 연속한 부모가 여러 칸 떨어져
                         있을 수 있고, 각 링크가 곧 직선 구간이다.</li>
-                    <li>line-of-sight 질의는 생성되는 edge 마다 한 번,{" "}
+                    <li>line-of-sight 질의는 생성되는 edge마다 한 번,{" "}
                         <InlineMath math="s"/>가 아니라 <em>조부모</em>{" "}
                         <InlineMath math="p"/>에서 쏜다.</li>
-                    <li>path 2: 조부모에 직선으로 잇는다. line of sight 가 성립하면 path 1보다
+                    <li>path 2: 조부모에 직선으로 잇는다. line of sight가 성립하면 path 1보다
                         나쁠 수 없으므로(아래 논증) 비교 없이 채택한다.</li>
                     <li>path 1: 평범한 grid 스텝. 벽이 시야를 막을 때 탐색의 완전성을 지키는
-                        fallback 이다.</li>
+                        fallback이다.</li>
                 </ol>}
             />
             <Proof title={t("Lemma (the shortcut never hurts)", "보조정리 (지름길은 손해가 없다)")}>
@@ -189,7 +189,7 @@ while OPEN is not empty:
                             <InlineMath math="\text{parent}(s) = p"/>면{" "}
                             <InlineMath math="g(s) = g(p) + \lVert p - s \rVert"/>다 (모든 부모
                             링크는 직선 구간). <InlineMath math="p"/>에서{" "}
-                            <InlineMath math="s'"/>로 line of sight 가 있으면:
+                            <InlineMath math="s'"/>로 line of sight가 있으면:
                         </p>
                         <BlockMath math="g(p) + \lVert p - s' \rVert \;\overset{\triangle}{\le}\; g(p) + \lVert p - s \rVert + \lVert s - s' \rVert \;=\; g(s) + \lVert s - s' \rVert \;\le\; g(s) + c(s, s')"/>
                         <p>
@@ -210,17 +210,17 @@ while OPEN is not empty:
                     segments, with both costs in the readout.
                 </p>}
                 ko={<p>
-                    먼저 primitive 부터. 아래 figure 는 이 사이트의 엔진과 저장소가 공유하는
+                    먼저 primitive부터. 아래 figure는 이 사이트의 엔진과 저장소가 공유하는
                     바로 그 line-of-sight 검사다. 선분이 지나는 모든 셀을 도는 supercover 순회다.
-                    다음은 planner 다. 기둥 sandbox 에서 A* 겹치기를 켜고, 45°에 갇힌 점선
-                    경로와 Theta*의 직선 구간을 비교해 보라. 두 비용이 readout 에 함께 나온다.
+                    다음은 planner다. 기둥 sandbox에서 A* 겹치기를 켜고, 45°에 갇힌 점선
+                    경로와 Theta*의 직선 구간을 비교해 보라. 두 비용이 readout에 함께 나온다.
                 </p>}
             />
             <SupercoverLos/>
             <ThetaStarSandbox/>
             <TraceReplay algo="theta_star" maps={["open01", "maze01"]} label={t(
                 "Real traces from the repository's Theta* demo — watch parent links jump many cells as shortcuts form",
-                "저장소 Theta* demo 의 실제 trace. 지름길이 생기며 부모 링크가 여러 칸을 건너뛰는 것이 보인다",
+                "저장소 Theta* demo의 실제 trace. 지름길이 생기며 부모 링크가 여러 칸을 건너뛰는 것이 보인다",
             )}/>
 
             <h2>Implementation</h2>
@@ -230,8 +230,8 @@ while OPEN is not empty:
                     the Euclidean heuristic and the two-path relaxation. Embedded below in full.
                 </p>}
                 ko={<p>
-                    구현은 공유 best-first 코어를 쓰지 않는다. any-angle 에는 Euclidean
-                    heuristic 과 두 갈래 relaxation 이 필요하기 때문이다. 전체를 아래에 embed
+                    구현은 공유 best-first 코어를 쓰지 않는다. any-angle에는 Euclidean
+                    heuristic과 두 갈래 relaxation이 필요하기 때문이다. 전체를 아래에 embed
                     했다.
                 </p>}
             />

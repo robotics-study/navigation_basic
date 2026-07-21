@@ -8,8 +8,8 @@ import {useTr} from "../../../../libs/i18n";
 import {PATH_COLOR} from "../../../2d/GridCanvas";
 import cn from "../../../../libs/cn";
 
-// Hybrid A* 전용: 주차 베이. goal 은 베이 안쪽을 향한 heading 이 걸린 pose 라
-// 위치만 맞추는 grid planner 로는 표현 자체가 안 되는 문제다.
+// Hybrid A* 전용: 주차 베이. goal은 베이 안쪽을 향한 heading이 걸린 pose 라
+// 위치만 맞추는 grid planner로는 표현 자체가 안 되는 문제다.
 export const LOT_N = 18;
 // 베이 안쪽, 위(+y)를 향해 진입.
 export const LOT_START: Pose = [2.5, 2.5, 0];
@@ -93,7 +93,7 @@ const HybridScene = ({panel = 340}: {panel?: number}) => {
                                 </span>
                             </>
                             : <span className="font-semibold">{t("no path", "경로 없음")}</span>}
-                        {" · "}{t("goal heading points into the bay", "goal heading 은 베이 안쪽을 향한다")}
+                        {" · "}{t("goal heading points into the bay", "goal heading은 베이 안쪽을 향한다")}
                         {" · "}{t("draw walls to reshape the lot", "벽을 그려 주차장을 바꿔 보라")}
                     </div>
                 </div>
@@ -107,7 +107,7 @@ const HybridSandbox = () => {
     return <CanvasFigure
         label={t(
             "Live Hybrid A* parking: the search tree is arcs, the path swings wide to enter the bay with the required heading — tighten the turn radius or forbid reverse and watch the maneuver change",
-            "라이브 Hybrid A* 주차. 탐색 트리가 arc 들이고, 경로는 요구된 heading 으로 베이에 들어가려고 크게 돈다. 회전 반경을 조이거나 후진을 끄면 기동이 달라진다",
+            "라이브 Hybrid A* 주차. 탐색 트리가 arc 들이고, 경로는 요구된 heading으로 베이에 들어가려고 크게 돈다. 회전 반경을 조이거나 후진을 끄면 기동이 달라진다",
         )}
         tight bodyClassName="w-fit" className="w-full"
         modal={<HybridScene panel={Math.min(modalCanvasSize(1).width, 640)}/>}

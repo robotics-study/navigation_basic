@@ -15,11 +15,11 @@ export interface GridTimeline {
     // 실행형 planner(D* Lite 등)의 주행·감지 이벤트. 비어 있으면 일반 one-shot 탐색.
     robot: Array<{step: number; cell: Cell}>;
     revealed: Array<{step: number; cell: Cell}>;
-    // anytime planner(ARA* 등)는 path_found 를 여러 번 방출한다 — 개선 순서대로 쌓인다.
-    // cost 가 이벤트에 없으면 8-connected unit/√2 스텝 합으로 계산해 채운다.
+    // anytime planner(ARA* 등)는 path_found를 여러 번 방출한다 — 개선 순서대로 쌓인다.
+    // cost가 이벤트에 없으면 8-connected unit/√2 스텝 합으로 계산해 채운다.
     paths: Array<{step: number; path: Cell[]; cost: number}>;
     path: Cell[];                                           // 마지막(최종) 경로
-    // 최종 경로의 원본 상태열 (연속 planner 는 [x, y, θ]) — 차량 주행 애니메이션용.
+    // 최종 경로의 원본 상태열 (연속 planner는 [x, y, θ]) — 차량 주행 애니메이션용.
     pathStates: number[][];
     pathStep: number;                                       // 첫 path_found 시점 (없으면 Infinity)
     params?: Record<string, unknown>;
@@ -30,7 +30,7 @@ export interface GridTimeline {
 const asCell = (state?: number[]): Cell | null =>
     state && state.length >= 2 ? [state[0], state[1]] : null
 
-// 8-connected 격자 경로의 기하 비용 (unit/√2 스텝 합). cost 없는 path_found 의 대체값.
+// 8-connected 격자 경로의 기하 비용 (unit/√2 스텝 합). cost 없는 path_found의 대체값.
 const geometricCost = (path: Cell[]): number => {
     // 폴리라인 유클리드 길이 — grid 경로에서는 unit/√2 스텝 합과 일치하고,
     // 연속(SE(2)) 경로에서도 그대로 성립한다.
@@ -43,12 +43,12 @@ const geometricCost = (path: Cell[]): number => {
 
 export interface PathSampler {
     length: number;                                   // 경로 전체 호 길이
-    at: (s: number) => [number, number, number];      // 호 길이 s 에서의 pose
+    at: (s: number) => [number, number, number];      // 호 길이 s에서의 pose
 }
 
-// 상태열 [x, y, θ]를 누적 호 길이로 매개화해 pose 를 보간한다 — 찾은 경로를
+// 상태열 [x, y, θ]를 누적 호 길이로 매개화해 pose를 보간한다 — 찾은 경로를
 // 차량이 실제로 주행하는 애니메이션에 쓴다. θ는 최단 각도차로 보간해
-// 전진/후진 전환(θ와 진행 방향이 반대)에서도 저장된 heading 을 따른다.
+// 전진/후진 전환(θ와 진행 방향이 반대)에서도 저장된 heading을 따른다.
 export function pathSampler(states: number[][]): PathSampler {
     const cum: number[] = [0]
     for (let i = 1; i < states.length; i++) {

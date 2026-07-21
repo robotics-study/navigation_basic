@@ -4,7 +4,7 @@ import {Cell} from "../trace/timeline";
 
 // 브라우저 라이브 데모용 Theta* / Lazy Theta*. 저장소 구현과 같은 연산(유클리드 sqrt,
 // supercover LOS, FIFO tie-break, 이웃 순서)을 그대로 미러해 trace 이벤트·확장 수가
-// python demo 와 일치한다 (Nash, Daniel, Koenig & Felner 2007; Nash & Koenig 2010).
+// python demo와 일치한다 (Nash, Daniel, Koenig & Felner 2007; Nash & Koenig 2010).
 export interface ThetaStarOptions {
     map: GridMap;
     start: Cell;
@@ -42,8 +42,8 @@ const neighbors = (map: GridMap, s: Cell): Array<[Cell, number]> => {
 }
 
 // 셀 중심 사이 직선의 supercover 통과 검사 (Amanatides & Woo 1987). 저장소의
-// is_motion_valid 와 동일한 규칙: 지나는 모든 셀이 free, 정확한 corner 교차는 양쪽
-// 직교 셀이 모두 free 여야 한다. (row, col) 공간에서 x=col, y=row 로 계산해도 대칭이라
+// is_motion_valid와 동일한 규칙: 지나는 모든 셀이 free, 정확한 corner 교차는 양쪽
+// 직교 셀이 모두 free 여야 한다. (row, col) 공간에서 x=col, y=row로 계산해도 대칭이라
 // 결과는 같다.
 export function lineOfSight(map: GridMap, a: Cell, b: Cell): boolean {
     const x0 = a[1] + 0.5
@@ -115,7 +115,7 @@ const run = (opts: ThetaStarOptions, lazy: boolean): TraceEvent[] => {
         algorithm: lazy ? "lazy_theta_star" : "theta_star",
         params: {heuristic_weight: w},
     })
-    // 웹 패널 전용 지표: LOS 검사 횟수 — lazy 가 절약하는 것이 바로 이것이다.
+    // 웹 패널 전용 지표: LOS 검사 횟수 — lazy가 절약하는 것이 바로 이것이다.
     let losChecks = 0
     const los = (a: Cell, b: Cell): boolean => {
         losChecks++
@@ -198,7 +198,7 @@ const run = (opts: ThetaStarOptions, lazy: boolean): TraceEvent[] => {
                 cand = ctx.g.get(idx(p))! + ecost
                 parI = idx(p)
             } else {
-                // Path 1 — s 를 거치는 표준 grid 스텝.
+                // Path 1 — s를 거치는 표준 grid 스텝.
                 ecost = edgeCost
                 cand = ctx.g.get(si)! + ecost
                 parI = si

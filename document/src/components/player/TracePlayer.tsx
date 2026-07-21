@@ -81,7 +81,7 @@ const TracePlayer = ({
         [timeline, step],
     )
     const finished = step >= timeline.steps
-    // anytime planner 대응: 현재 step 까지 발표된 최신 경로의 비용을 보여 준다.
+    // anytime planner 대응: 현재 step까지 발표된 최신 경로의 비용을 보여 준다.
     const visiblePath = useMemo(() => {
         let latest: GridTimeline["paths"][number] | null = null
         for (const p of timeline.paths) {

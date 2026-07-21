@@ -1,6 +1,6 @@
 import {useTr} from "../../../../libs/i18n";
 
-// A* 계열 지도를 2×2 로 정리한 다이어그램. AD* 가 두 축의 교차점임을 보여 준다.
+// A* 계열 지도를 2×2 로 정리한 다이어그램. AD*가 두 축의 교차점임을 보여 준다.
 // 외부 자산 없이 디자인 토큰만 쓴다.
 const Quad = ({name, desc, accent}: {name: string; desc: string; accent?: boolean}) => (
     <div className={`rounded-xl border px-4 py-3 text-center ${

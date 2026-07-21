@@ -80,7 +80,7 @@ const GlobalPlanning = () => {
                 ko={<>
                     <p>
                         형식적으로: 환경 지도와 시작 상태 <InlineMath math="s"/>, 목표 상태{" "}
-                        <InlineMath math="g"/>가 주어졌을 때, <InlineMath math="s"/> 에서{" "}
+                        <InlineMath math="g"/>가 주어졌을 때, <InlineMath math="s"/>에서{" "}
                         <InlineMath math="g"/>로 가는 충돌 없는 경로를 찾는다. 가능하면 길이 같은
                         비용을 최소화하고, 최적성이나 준최적 한계 같은 보장도 갖추면 좋다. 스택의
                         뒷단과 구분되는 가정이 셋 있다:
@@ -97,7 +97,7 @@ const GlobalPlanning = () => {
                 </>}
             />
 
-            <h2>{t("Where It Sits in the Navigation Stack", "Navigation Stack 에서의 위치")}</h2>
+            <h2>{t("Where It Sits in the Navigation Stack", "Navigation Stack에서의 위치")}</h2>
             <StackDiagram/>
             <T
                 en={<p>

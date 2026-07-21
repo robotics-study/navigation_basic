@@ -93,7 +93,7 @@ const GridAsGraph = () => {
     return <CanvasFigure
         label={t(
             "A grid is a graph: free cells are vertices, neighbor relations are edges — switching 4→8 changes the edge set, not the algorithm",
-            "grid는 그래프다. 자유 셀이 vertex, 이웃 관계가 edge 이고, 4→8 전환은 알고리즘이 아니라 edge 집합을 바꾼다",
+            "grid는 그래프다. 자유 셀이 vertex, 이웃 관계가 edge이고, 4→8 전환은 알고리즘이 아니라 edge 집합을 바꾼다",
         )}
         tight bodyClassName="w-fit" className="w-full"
         modal={<Scene/>}
