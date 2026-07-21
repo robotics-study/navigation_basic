@@ -10,7 +10,7 @@ import {PATH_COLOR} from "../../../2d/GridCanvas";
 import cn from "../../../../libs/cn";
 import {
     ABIT_BATCH_COUNTS, ABIT_BATCH_SIZE, ABIT_GAMMA, ABIT_GOAL, ABIT_INFLATION,
-    ABIT_INFLATION_FINAL, ABIT_START, ABIT_TRUNCATION, chamberMap,
+    ABIT_INFLATION_FINAL, ABIT_START, ABIT_TRUNCATION, wedgeMap,
 } from "./presets";
 
 // 라이브 ABIT* sandbox. 같은 표본 위에서 un-inflated 기준선(inflation 1, truncation 1,
@@ -23,7 +23,7 @@ const cellToWorld = (map: GridMap, c: Cell): Point =>
 
 const AbitStarScene = ({panel = 340}: {panel?: number}) => {
     const t = useTr()
-    const [map, setMap] = useState<GridMap>(chamberMap)
+    const [map, setMap] = useState<GridMap>(wedgeMap)
     const [start, setStart] = useState<Point>(ABIT_START)
     const [goal, setGoal] = useState<Point>(ABIT_GOAL)
     const [maxBatches, setMaxBatches] = useState(6)
@@ -73,7 +73,7 @@ const AbitStarScene = ({panel = 340}: {panel?: number}) => {
             onMoveStart={moveEndpoint(setStart)}
             onMoveGoal={moveEndpoint(setGoal)}
             onReset={() => {
-                setMap(chamberMap())
+                setMap(wedgeMap())
                 setStart(ABIT_START)
                 setGoal(ABIT_GOAL)
             }}

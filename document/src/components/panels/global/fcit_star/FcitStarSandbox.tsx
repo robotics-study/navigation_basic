@@ -1,47 +1,47 @@
 import {useMemo, useState} from "react";
 import CanvasFigure, {modalCanvasSize} from "../../../CanvasFigure";
 import TracePlayer from "../../../player/TracePlayer";
-import {runBITStar} from "../../../../libs/algorithms/bit_star";
-import {runInformedRRTStar} from "../../../../libs/algorithms/informed_rrt_star";
+import {runFCITStar} from "../../../../libs/algorithms/fcit_star";
+import {runAITStar} from "../../../../libs/algorithms/ait_star";
 import {Point} from "../../../../libs/algorithms/sampling_space";
 import {buildGridTimeline, Cell} from "../../../../libs/trace/timeline";
 import {GridMap} from "../../../../libs/grid";
 import {useTr} from "../../../../libs/i18n";
 import {PATH_COLOR} from "../../../2d/GridCanvas";
 import cn from "../../../../libs/cn";
-import {BIT_BATCH_SIZE, BIT_GAMMA, BIT_GOAL, BIT_START, pillarFieldMap} from "./presets";
+import {FCIT_BATCH_SIZE, FCIT_GOAL, FCIT_START, staggeredMap} from "./presets";
 
-// 라이브 BIT* sandbox. 배치 수를 늘리면 현직 해가 어떻게 조여지는지(anytime)와,
-// 같은 표본 예산의 Informed RRT*가 아직 경로를 못 찾을 때 BIT*는 이미 더 낮은
-// 비용에 닿아 있음을 나란히 보여준다. 간선 큐가 목표에 닿을 수 있는 간선부터
-// 꺼내므로 BIT*는 더 적은 표본으로 먼저·더 좋은 경로를 얻는다 (Gammell et al. 2015).
-const BATCH_COUNTS = [1, 2, 4, 6]
+// 라이브 FCIT* sandbox. 엇갈린 블록 사이 긴 자유 구간을 직선으로 꿰는 문제다. FCIT*의
+// 완전 연결 그래프는 그 직행 간선을 담으므로 첫 배치에서 이미 정확한 최적을 반환한다.
+// 옆에서는 같은 표본 예산의 AIT*(줄어드는 반경 RGG)가 함께 도는데, 먼 거리를 한 간선으로
+// 잇지 못해 꺾인 사슬로 이어 배치가 쌓여야 직선에 다가간다. 완전 연결이 반경 그래프가
+// 놓치는 직행 지름길을 잡는다 (Wilson et al. 2025).
+const BATCH_COUNTS = [1, 2, 3, 4]
+const AIT_GAMMA = 30
 
 const cellToWorld = (map: GridMap, c: Cell): Point =>
     [map.originX + (c[1] + 0.5) * map.resolution,
      map.originY + (map.height - 1 - c[0] + 0.5) * map.resolution]
 
-const BitStarScene = ({panel = 340}: {panel?: number}) => {
+const FcitStarScene = ({panel = 340}: {panel?: number}) => {
     const t = useTr()
-    const [map, setMap] = useState<GridMap>(pillarFieldMap)
-    const [start, setStart] = useState<Point>(BIT_START)
-    const [goal, setGoal] = useState<Point>(BIT_GOAL)
-    const [numBatches, setNumBatches] = useState(4)
+    const [map, setMap] = useState<GridMap>(staggeredMap)
+    const [start, setStart] = useState<Point>(FCIT_START)
+    const [goal, setGoal] = useState<Point>(FCIT_GOAL)
+    const [numBatches, setNumBatches] = useState(2)
     const [seed, setSeed] = useState(1)
 
     const timeline = useMemo(
-        () => buildGridTimeline(runBITStar({
-            map, start, goal, batchSize: BIT_BATCH_SIZE, maxBatches: numBatches,
-            gamma: BIT_GAMMA, seed,
+        () => buildGridTimeline(runFCITStar({
+            map, start, goal, batchSize: FCIT_BATCH_SIZE, maxBatches: numBatches, seed,
         })),
         [map, start, goal, numBatches, seed],
     )
-    // 같은 표본 예산(배치 수 × 배치 크기 = 반복 횟수)의 Informed RRT* 비교.
-    const informed = useMemo(() => {
-        const tl = buildGridTimeline(runInformedRRTStar({
-            map, start, goal, maxIterations: numBatches * BIT_BATCH_SIZE, stepSize: 1.0,
-            goalBias: 0.05, goalTolerance: 0.5, neighborRadius: 3.0, radiusMode: "fixed",
-            rggGamma: 2, seed,
+    // 같은 표본 예산(배치 수 × 배치 크기)의 AIT* 비교 — 줄어드는 반경 RGG.
+    const ait = useMemo(() => {
+        const tl = buildGridTimeline(runAITStar({
+            map, start, goal, batchSize: FCIT_BATCH_SIZE, maxBatches: numBatches,
+            gamma: AIT_GAMMA, seed,
         }))
         return {cost: tl.metrics?.path_cost, success: tl.success !== false && tl.paths.length > 0}
     }, [map, start, goal, numBatches, seed])
@@ -49,7 +49,6 @@ const BitStarScene = ({panel = 340}: {panel?: number}) => {
     const cost = timeline.metrics?.path_cost
     const success = timeline.success !== false && timeline.paths.length > 0
     const edges = timeline.edges.length
-    const improves = timeline.candidates.length
 
     const paintCell = (row: number, col: number, occupied: boolean) => {
         setMap((prev) => {
@@ -72,10 +71,10 @@ const BitStarScene = ({panel = 340}: {panel?: number}) => {
             onMoveStart={moveEndpoint(setStart)}
             onMoveGoal={moveEndpoint(setGoal)}
             onReset={() => {
-                setMap(pillarFieldMap())
-                setStart(BIT_START)
-                setGoal(BIT_GOAL)
-                setNumBatches(4)
+                setMap(staggeredMap())
+                setStart(FCIT_START)
+                setGoal(FCIT_GOAL)
+                setNumBatches(2)
                 setSeed(1)
             }}
             footer={
@@ -98,8 +97,7 @@ const BitStarScene = ({panel = 340}: {panel?: number}) => {
                         </button>
                     </div>
                     <div className="text-xs text-muted text-center tabular-nums">
-                        <InfoRow success={success} cost={cost} edges={edges}
-                                 improves={improves} informed={informed} t={t}/>
+                        <InfoRow success={success} cost={cost} edges={edges} ait={ait} t={t}/>
                     </div>
                 </div>
             }
@@ -107,42 +105,41 @@ const BitStarScene = ({panel = 340}: {panel?: number}) => {
     )
 }
 
-const InfoRow = ({success, cost, edges, improves, informed, t}: {
-    success: boolean; cost?: number; edges: number; improves: number;
-    informed: {cost?: number; success: boolean};
+const InfoRow = ({success, cost, edges, ait, t}: {
+    success: boolean; cost?: number; edges: number;
+    ait: {cost?: number; success: boolean};
     t: (en: string, ko: string) => string;
 }) => (
     <>
         {success
             ? <>
-                BIT*{" "}
+                FCIT*{" "}
                 <span className="font-semibold">{edges}</span>
                 {" " + t("edges", "간선") + " · "}
                 <span className="font-semibold" style={{color: PATH_COLOR}}>
                     {cost?.toFixed(2)}
                 </span>
-                {" · " + improves + t("× improved", "회 개선")}
             </>
             : <span className="font-semibold">{t("no path yet", "아직 경로 없음")}</span>}
-        {" vs Informed RRT* "}
+        {" vs AIT* "}
         <span className="font-semibold">
-            {informed.success ? informed.cost?.toFixed(2) : t("no path yet", "아직 경로 없음")}
+            {ait.success ? ait.cost?.toFixed(2) : t("no path yet", "아직 경로 없음")}
         </span>
     </>
 )
 
-const BitStarSandbox = () => {
+const FcitStarSandbox = () => {
     const t = useTr()
     return <CanvasFigure
         label={t(
-            "Live BIT* through a pillar field: raise the batch count and the informed ellipse tightens the incumbent toward the taut corner path, while Informed RRT* on the same sample budget has often not found a path yet — the edge queue reaches the goal with far fewer samples",
-            "기둥밭을 꿰는 라이브 BIT*. 배치 수를 늘리면 informed 타원이 현직 해를 모서리에 밀착한 팽팽한 경로로 조여 가는데, 같은 표본 예산의 Informed RRT*는 아직 경로를 못 찾은 경우가 많다. 간선 큐가 훨씬 적은 표본으로 목표에 닿는다",
+            "Live FCIT* between staggered blocks: the fully connected graph threads the long free stretches with single direct edges and lands near the optimum on the first batch, while AIT* on the same sample budget must chain radius-bounded edges and only catches up as batches accumulate",
+            "엇갈린 블록 사이의 라이브 FCIT*. 완전 연결 그래프가 긴 자유 구간을 직행 간선 하나로 꿰어 첫 배치부터 최적 근처에 닿는데, 같은 표본 예산의 AIT*는 반경에 묶인 간선을 사슬로 이어야 해 배치가 쌓여야 따라온다",
         )}
         tight bodyClassName="w-fit" className="w-full"
-        modal={<BitStarScene panel={Math.min(modalCanvasSize(1).width, 640)}/>}
+        modal={<FcitStarScene panel={Math.min(modalCanvasSize(1).width, 640)}/>}
     >
-        <BitStarScene panel={340}/>
+        <FcitStarScene panel={340}/>
     </CanvasFigure>
 }
 
-export default BitStarSandbox
+export default FcitStarSandbox

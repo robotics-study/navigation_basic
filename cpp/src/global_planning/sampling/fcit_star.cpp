@@ -103,7 +103,7 @@ core::PlanResult<Point> FcitStarPlanner::plan(SamplingSpace<Point>& space, const
     // --- 2. fully connected adjacency, minus known-invalid motions -------------
     // No radius: FCIT* pairs every sample with every other, trading a denser
     // candidate graph for a search that can find shortcuts a radius-limited RGG
-    // would miss (Wilson, Strub & Gammell 2025).
+    // would miss (Wilson, Thomason, Kingston, Kavraki & Gammell 2025).
     std::vector<std::vector<int>> nbr(static_cast<size_t>(n));
     for (int i = 0; i < n; ++i) {
       for (int j = 0; j < n; ++j) {

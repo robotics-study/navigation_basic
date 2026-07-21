@@ -213,6 +213,37 @@ export const ALGO_BLURBS: AlgoBlurb[] = [
         },
     },
     {
+        slug: "eit_star",
+        blurb: {
+            en: "AIT* with a second reverse search: alongside cost-to-go it estimates " +
+                "effort-to-go — the collision checks a path still needs — and breaks ties " +
+                "toward the cheaper-to-validate route.",
+            ko: "역방향 탐색을 하나 더 단 AIT*. cost-to-go 곁에 effort-to-go, 곧 경로가 " +
+                "아직 치를 충돌 검사 수를 추정해, 검증이 더 싼 쪽으로 tie를 가른다.",
+        },
+    },
+    {
+        slug: "fcit_star",
+        blurb: {
+            en: "AIT* without the radius: search the fully connected graph over the batch, " +
+                "every sample paired with every other, so two distant states join in one " +
+                "direct edge that a shrinking-radius graph would need a chain to span.",
+            ko: "반경을 뺀 AIT*. 배치 위 완전 연결 그래프를 탐색해 모든 표본을 서로 짝지으므로, " +
+                "줄어드는 반경 그래프라면 사슬이 필요했을 먼 두 상태를 한 직행 간선으로 잇는다.",
+        },
+    },
+    {
+        slug: "sst",
+        blurb: {
+            en: "RRT without a steering function: grow the tree by firing random controls " +
+                "forward, then keep only the cheapest node per witness ball so the active " +
+                "tree stays sparse and the incumbent cost never rises.",
+            ko: "steering function 없는 RRT. 랜덤 control을 정방향으로 쏴 트리를 키우고, " +
+                "witness 공마다 가장 싼 노드만 남겨 active 트리를 희소하게 유지하며 현직 " +
+                "비용이 오르지 않게 한다.",
+        },
+    },
+    {
         slug: "astar",
         blurb: {
             en: "Dijkstra plus a compass: order the frontier by g + h and an admissible " +

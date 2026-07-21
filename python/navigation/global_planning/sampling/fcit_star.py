@@ -1,4 +1,4 @@
-"""FCIT* — Fully Connected Informed Trees (Wilson, Strub & Gammell 2025, ICRA).
+"""FCIT* — Fully Connected Informed Trees (Wilson, Thomason, Kingston, Kavraki & Gammell 2025, ICRA).
 
 FCIT* observes that modern collision-checking is cheap enough that a batch
 planner need not restrict its candidate graph to a shrinking radius-neighbour RGG
@@ -146,7 +146,7 @@ class FCITStar(GlobalPlanner[Point, "SamplingSpace[Point]"]):
         # --- 2. fully connected adjacency, minus known-invalid motions ----------
         # No radius: FCIT* pairs every sample with every other, trading a denser
         # candidate graph for a search that can find shortcuts a radius-limited RGG
-        # (BIT*/AIT*) would miss (Wilson, Strub & Gammell 2025).
+        # (BIT*/AIT*) would miss (Wilson, Thomason, Kingston, Kavraki & Gammell 2025).
         nbr: list[list[int]] = [
             [j for j in range(n) if j != i and _edge_key(i, j) not in invalid_edges]
             for i in range(n)
