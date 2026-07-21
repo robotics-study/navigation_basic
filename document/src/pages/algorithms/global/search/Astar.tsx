@@ -3,6 +3,13 @@ import {T, useTr} from "../../../../libs/i18n";
 import {BlockMath, InlineMath} from "../../../../components/math/Tex";
 import AStarSandbox from "../../../../components/panels/global/astar/AStarSandbox";
 import AStarReplay from "../../../../components/panels/global/astar/AStarReplay";
+import CodeTabs from "../../../../components/CodeTabs";
+import astarPy from "../../../../../../python/navigation/global_planning/search/astar.py?raw";
+import bestFirstPy from "../../../../../../python/navigation/global_planning/search/_bestfirst.py?raw";
+import astarCpp from "../../../../../../cpp/src/global_planning/search/astar.cpp?raw";
+import discreteSearchHpp from "../../../../../../cpp/include/navigation/global_planning/search/discrete_search.hpp?raw";
+
+const REPO = "https://github.com/robotics-study/navigation/blob/main"
 
 // 접이식 증명 블록 — 본문 흐름은 직관 중심으로 유지하고, 형식 증명은 원할 때만 편다.
 const Proof = ({title, children}: {title: string; children: ReactNode}) => (
@@ -66,7 +73,7 @@ const Astar = () => {
                     <p>
                         Dijkstra 알고리즘에서 출발하자. Dijkstra 는 시작점에서 frontier 를 바깥으로
                         키워 가며, 항상 시작점부터의 비용 <InlineMath math="g(n)"/> 이 가장 작은
-                        노드를 확장한다. 최적성은 증명되지만 — 장님 탐색이다. frontier 가 모든
+                        노드를 확장한다. 최적성은 증명되지만, 장님 탐색이다. frontier 가 모든
                         방향으로 동심원처럼 퍼지면서, 목표에서 <em>멀어지는</em> 노드에도 똑같이
                         공을 들인다. 정렬 기준 어디에도 목표가 어디 있는지에 대한 정보가 없기
                         때문이다.
@@ -121,8 +128,8 @@ const Astar = () => {
                 </>}
                 ko={<>
                     <p>
-                        A*는 두 개의 장부를 유지한다. <strong>OPEN</strong> — 발견됐지만 아직
-                        확장되지 않은 노드를 <InlineMath math="f"/> 순으로 담는 우선순위 큐 — 와,
+                        A*는 두 개의 장부를 유지한다. 발견됐지만 아직 확장되지 않은 노드를{" "}
+                        <InlineMath math="f"/> 순으로 담는 우선순위 큐 <strong>OPEN</strong> 과,
                         이미 확장된 노드의 집합 <strong>CLOSED</strong> 다. 각 노드는 지금까지 알려진
                         최선의 <InlineMath math="g"/> 값과 부모를 기억하고, 최종 경로는 부모를
                         거슬러 올라가 복원한다.
@@ -142,7 +149,7 @@ const Astar = () => {
                         비용 grid 에서는 많은 노드가 같은 <InlineMath math="f"/> 를 가져, 순진한
                         큐는 그 평원 전체를 확장해 버린다. <InlineMath math="f"/> 동률일 때{" "}
                         <InlineMath math="g"/> 가 큰(경로를 따라 더 깊이 간) 노드를 우선하면 이
-                        평원이 깨진다 — 아래 데모에서 A*가 Dijkstra 를 눈에 띄게 이기는 것도 이
+                        평원이 깨진다. 아래 demo 에서 A*가 Dijkstra 를 눈에 띄게 이기는 것도 이
                         덕분이다.
                     </p>
                 </>}
@@ -196,16 +203,16 @@ const Astar = () => {
                     <ul>
                         <li>
                             <strong>Admissible</strong>: 모든 노드에서{" "}
-                            <InlineMath math="h(n) \le h^*(n)"/> — 추정치가 실제 남은 비용을 절대
+                            <InlineMath math="h(n) \le h^*(n)"/>, 즉 추정치가 실제 남은 비용을 절대
                             과대평가하지 않는다. A*가 처음 반환하는 경로가 최적인 것은 이 성질
                             덕분이다.
                         </li>
                         <li>
                             <strong>Consistent</strong> (monotone): 모든 간선에서{" "}
-                            <InlineMath math="h(n) \le c(n, n') + h(n')"/> — 삼각 부등식이다.
+                            <InlineMath math="h(n) \le c(n, n') + h(n')"/>, 즉 삼각 부등식이다.
                             consistency 는 admissibility 를 함의하고, 나아가 한번 확장된 노드의{" "}
-                            <InlineMath math="g"/> 가 최종값임을 보장한다 — 어떤 노드도 재확장이
-                            필요 없다.
+                            <InlineMath math="g"/> 가 최종값임을 보장한다. 어떤 노드도 재확장할
+                            필요가 없다.
                         </li>
                     </ul>
                     <p>
@@ -221,13 +228,13 @@ const Astar = () => {
                         탐색은 더 탐욕적이 되어 확장 노드가 줄고, 최적성은 잃지만 손해는 유계다:
                         반환 경로의 비용이 최적의 <InlineMath math="w"/> 배를 넘지 않는다. Dijkstra
                         가 한쪽 끝, greedy best-first 가 반대쪽 끝인 이 g–h 다이얼이 실전에서 가장
-                        유용한 손잡이이며, 이 저장소 구현의 <code>heuristic_weight</code> 파라미터가
-                        바로 그것이다.
+                        유용한 손잡이이며, 이 저장소 구현의 <code>heuristic_weight</code> parameter
+                        가 바로 그것이다.
                     </p>
                 </>}
             />
 
-            <h2>{t("Interactive Demo", "인터랙티브 데모")}</h2>
+            <h2>Demo</h2>
             <T
                 en={<p>
                     The sandbox below runs A* live in your browser. Drag on the grid to draw or erase
@@ -261,11 +268,67 @@ const Astar = () => {
                     위에서 실행되며 방출한 <em>기록된 trace</em> 를 재생한다. 저장소의 모든
                     알고리즘이 같은 JSON 이벤트 스트림(<code>node_expanded</code>,{" "}
                     <code>edge_added</code>, <code>path_found</code>, …)을 방출하므로 이 플레이어
-                    하나로 무엇이든 재생할 수 있다 — 시각화 계층은 알고리즘 내부를 전혀 만지지
+                    하나로 무엇이든 재생할 수 있다. 시각화 계층은 알고리즘 내부를 전혀 만지지
                     않는다.
                 </p>}
             />
             <AStarReplay/>
+
+            <h2>Implementation</h2>
+            <T
+                en={<p>
+                    The repository's A* is deliberately thin. Dijkstra and A* share one best-first
+                    loop (lazy priority queue, edge relaxation, trace emission); A* is the subclass
+                    that turns the heuristic on and supplies the weight <InlineMath math="w"/> from
+                    its parameters. The code below is the actual source, not an excerpt.
+                </p>}
+                ko={<p>
+                    이 저장소의 A* 구현은 의도적으로 얇다. Dijkstra 와 A* 는 하나의 best-first
+                    루프(lazy priority queue, edge relaxation, trace 방출)를 공유하고, A* 는
+                    heuristic 을 켜고 parameter 에서 가중치 <InlineMath math="w"/> 를 공급하는
+                    subclass 다. 아래 코드는 발췌가 아니라 실제 소스 그대로다.
+                </p>}
+            />
+            <CodeTabs
+                tabs={[
+                    {
+                        label: "python",
+                        lang: "python",
+                        files: [
+                            {
+                                name: "python/navigation/global_planning/search/astar.py",
+                                code: astarPy,
+                                href: `${REPO}/python/navigation/global_planning/search/astar.py`,
+                            },
+                            {
+                                name: "python/navigation/global_planning/search/_bestfirst.py",
+                                code: bestFirstPy,
+                                href: `${REPO}/python/navigation/global_planning/search/_bestfirst.py`,
+                            },
+                        ],
+                    },
+                    {
+                        label: "c++",
+                        lang: "cpp",
+                        files: [
+                            {
+                                name: "cpp/src/global_planning/search/astar.cpp",
+                                code: astarCpp,
+                                href: `${REPO}/cpp/src/global_planning/search/astar.cpp`,
+                            },
+                            {
+                                name: "cpp/include/navigation/global_planning/search/discrete_search.hpp",
+                                code: discreteSearchHpp,
+                                href: `${REPO}/cpp/include/navigation/global_planning/search/discrete_search.hpp`,
+                            },
+                        ],
+                    },
+                ]}
+                caption={t(
+                    "The shared best-first core and the A* subclass, embedded from the repository sources",
+                    "공유 best-first 코어와 A* subclass. 저장소 소스를 그대로 embed 한 것이다",
+                )}
+            />
 
             <h2>{t("Why A* Is Optimal", "A*는 왜 최적인가")}</h2>
             <T
@@ -280,8 +343,8 @@ const Astar = () => {
                     admissible heuristic 이라면, A*가 목표를 OPEN 에서 처음 꺼내는 순간 찾은 경로는
                     최적이다. 직관은 이렇다: 더 나은 경로가 있다면 그 경로의 아직 확장되지 않은
                     접두부는 그 경로 비용 이하의 <InlineMath math="f"/> 값을 갖고 있어, 목표보다
-                    먼저 꺼내졌을 것이다. 형식적 서술은 아래에 접어 두었다 — 자세히 보고 싶으면
-                    펼쳐라.
+                    먼저 꺼내졌을 것이다. 형식적 서술은 아래에 접어 두었으니, 자세히 보고 싶으면
+                    펼쳐 보라.
                 </p>}
             />
             <Proof title={t("Theorem (optimality of A*)", "정리 (A*의 최적성)")}>
@@ -361,7 +424,7 @@ const Astar = () => {
                         <p>
                             즉 A*가 탐색하는 모든 경로를 따라 <InlineMath math="f"/> 는 감소하지
                             않는다. 따라서 노드는 <InlineMath math="f"/> 의 비감소 순서로 확장되고,
-                            노드가 처음 확장될 때 그 <InlineMath math="g"/> 는 이미 최적이다 — 다시
+                            노드가 처음 확장될 때 그 <InlineMath math="g"/> 는 이미 최적이라 다시
                             열 필요가 없다. consistent heuristic 을 쓰는 구현이 단순한 CLOSED 집합만
                             으로 충분한 이유다. <InlineMath math="\blacksquare"/>
                         </p>
@@ -398,14 +461,14 @@ const Astar = () => {
                             확장할 수 없다 (Dechter &amp; Pearl, 1985).</li>
                         <li><strong>비용</strong>: 최악의 경우 시간·메모리 모두 분기 계수{" "}
                             <InlineMath math="b"/> 와 해 깊이 <InlineMath math="d"/> 에 대해{" "}
-                            <InlineMath math="O(b^d)"/> — heuristic 은 상수를 크게 줄이지만 점근
+                            <InlineMath math="O(b^d)"/> 다. heuristic 은 상수를 크게 줄이지만 점근
                             차수는 못 줄이고, 보통 메모리가 먼저 바닥난다. 이 한계가 뒤 페이지에서
                             다루는 반복·증분 변형(ARA*, D* Lite)의 동기다.</li>
                     </ul>
                 </>}
             />
 
-            <h2>{t("Parameters", "파라미터")}</h2>
+            <h2>Parameters</h2>
             <T
                 en={<p>
                     Parameters are declared per algorithm and loaded
@@ -443,20 +506,30 @@ const Astar = () => {
                 </tbody>
             </table>
 
-            <h2>{t("References", "참고문헌")}</h2>
+            <h2>References</h2>
             <ol>
                 <li>
                     P. E. Hart, N. J. Nilsson, B. Raphael,{" "}
-                    <em>A Formal Basis for the Heuristic Determination of Minimum Cost Paths</em>,
+                    <a href="https://doi.org/10.1109/TSSC.1968.300136" target="_blank"
+                       rel="noopener noreferrer">
+                        <em>A Formal Basis for the Heuristic Determination of Minimum Cost Paths</em>
+                    </a>,
                     IEEE Transactions on Systems Science and Cybernetics, 1968.
                 </li>
                 <li>
-                    I. Pohl, <em>Heuristic Search Viewed as Path Finding in a Graph</em>,
+                    I. Pohl,{" "}
+                    <a href="https://doi.org/10.1016/0004-3702(70)90007-X" target="_blank"
+                       rel="noopener noreferrer">
+                        <em>Heuristic Search Viewed as Path Finding in a Graph</em>
+                    </a>,
                     Artificial Intelligence, 1970.
                 </li>
                 <li>
                     R. Dechter, J. Pearl,{" "}
-                    <em>Generalized Best-First Search Strategies and the Optimality of A*</em>,
+                    <a href="https://doi.org/10.1145/3828.3830" target="_blank"
+                       rel="noopener noreferrer">
+                        <em>Generalized Best-First Search Strategies and the Optimality of A*</em>
+                    </a>,
                     Journal of the ACM, 1985.
                 </li>
             </ol>

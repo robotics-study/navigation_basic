@@ -109,7 +109,7 @@ const AStarReplay = () => {
     return <CanvasFigure
         label={t(
             "Replaying real traces emitted by the repository's C++ and Python A* demos — the same JSON event stream drives this player",
-            "저장소의 C++/Python A* 데모가 실제로 방출한 trace 재생 — 이 플레이어는 그 JSON 이벤트 스트림을 그대로 소비한다",
+            "저장소의 C++/Python demo 가 실제로 방출한 trace 재생. 이 플레이어는 그 JSON 이벤트 스트림을 그대로 소비한다",
         )}
         tight
         bodyClassName="w-fit"
