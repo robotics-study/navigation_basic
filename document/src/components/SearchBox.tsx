@@ -6,7 +6,7 @@ import cn from "../libs/cn";
 
 // 검색 드롭다운 — 점수 정렬·키보드 탐색·바깥 클릭 닫기.
 const SearchBox = () => {
-    const {go} = useAlgoNav()
+    const {go, goSection, goCategory} = useAlgoNav()
     const {lang} = useLang()
     const t = useTr()
     const [query, setQuery] = useState("")
@@ -25,8 +25,10 @@ const SearchBox = () => {
     const goResult = useCallback((r: SearchEntry) => {
         setOpen(false)
         setQuery("")
-        go(r.slug, r.anchor)
-    }, [go])
+        if (r.section) goSection(r.section, r.anchor)
+        else if (r.category) goCategory(r.category, r.anchor)
+        else if (r.slug) go(r.slug, r.anchor)
+    }, [go, goSection, goCategory])
 
     const onKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === "ArrowDown") {
@@ -73,7 +75,7 @@ const SearchBox = () => {
                 {results.length === 0
                     ? <div className="r-empty">{t("No results", "결과 없음")}</div>
                     : results.map((r, i) => (
-                        <a key={`${r.slug}-${r.anchor ?? "top"}`}
+                        <a key={`${r.section ?? r.category ?? r.slug}-${r.anchor ?? "top"}`}
                            className={cn(i === sel && "sel")}
                            onMouseEnter={() => setSel(i)}
                            onClick={(e) => {

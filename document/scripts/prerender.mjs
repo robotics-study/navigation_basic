@@ -51,6 +51,48 @@ const parseBlurbs = () => {
     return out;
 };
 
+// roadmap.ts 의 SECTIONS 에서 대분류 제목·소개(en)를 얻는다.
+const parseSectionMeta = () => {
+    const src = readFileSync(join(root, "src/pages/algorithms/roadmap.ts"), "utf-8");
+    const sectionsBlock = src.match(/SECTIONS[\s\S]*$/)[0];
+    const out = new Map();
+    for (const raw of sectionsBlock.split(/\n\s*\{\s*\n\s*key:/).slice(1)) {
+        const key = raw.match(/^\s*"([a-z]+)"/)[1];
+        const title = enOf(raw.match(/title:\s*\{[\s\S]*?\}/)[0]);
+        const descBlock = raw.match(/desc:\s*\{[\s\S]*?\n\s*\}/);
+        out.set(key, {title, desc: descBlock ? enOf(descBlock[0]) : ""});
+    }
+    return out;
+};
+
+// 소개 페이지 레지스트리(sections/categories)에서 key 와 본문 h2 제목(en)을 얻는다.
+const parseIntros = (file) => {
+    const src = readFileSync(join(root, file), "utf-8");
+    return src
+        .split(/\n\s*\{\s*\n\s*key:/)
+        .slice(1)
+        .filter((raw) => raw.includes("contents:"))
+        .map((raw) => {
+            const key = raw.match(/^\s*"([a-z]+)"/)[1];
+            const sectionsBlock = raw.match(/sections:\s*\[([\s\S]*?)\]/);
+            const sections = sectionsBlock
+                ? [...sectionsBlock[1].matchAll(/\{en:\s*"((?:[^"\\]|\\.)*)"/g)].map((m) => m[1])
+                : [];
+            return {key, sections};
+        });
+};
+
+// roadmap.ts 의 CATEGORIES 에서 중분류 제목(en)을 얻는다 (한 줄 리터럴).
+const parseCategoryTitles = () => {
+    const src = readFileSync(join(root, "src/pages/algorithms/roadmap.ts"), "utf-8");
+    const block = src.match(/CATEGORIES[\s\S]*?\];/)[0];
+    const out = new Map();
+    for (const m of block.matchAll(/\{key:\s*"([a-z]+)",\s*title:\s*\{en:\s*"([^"]+)"/g)) {
+        out.set(m[1], m[2]);
+    }
+    return out;
+};
+
 const clamp = (t, max = 155) => (t.length <= max ? t : t.slice(0, max - 1).trimEnd() + "…");
 const escAttr = (t) => t.replaceAll("&", "&amp;").replaceAll('"', "&quot;");
 const escHtml = (t) => t.replaceAll("&", "&amp;").replaceAll("<", "&lt;");
@@ -62,13 +104,12 @@ const replaceTag = (html, pattern, replacement, what) => {
 
 const algos = parseAlgos();
 const blurbs = parseBlurbs();
+const sectionMeta = parseSectionMeta();
 const template = readFileSync(join(root, "dist/index.html"), "utf-8");
 
-for (const {slug, title, sections} of algos) {
-    const pageTitle = `${title} · ${SITE}`;
-    const blurb = blurbs.get(slug) ?? "";
-    const desc = clamp(`${blurb} Topics: ${sections.join(", ")}.`.trim());
-    const urlEn = `${ORIGIN}${BASE}algo/${slug}/`;
+// subpath: "algo/<slug>" | "section/<key>". 페이지별 메타를 박은 정적 셸을 쓴다.
+const writeShell = ({subpath, pageTitle, desc, topics}) => {
+    const urlEn = `${ORIGIN}${BASE}${subpath}/`;
     const urlKo = `${urlEn}?lang=ko`;
     const jsonld = {
         "@context": "https://schema.org",
@@ -78,7 +119,7 @@ for (const {slug, title, sections} of algos) {
         inLanguage: "en",
         url: urlEn,
         isPartOf: {"@type": "WebSite", name: SITE, url: `${ORIGIN}${BASE}`},
-        about: sections,
+        about: topics,
     };
 
     let html = template;
@@ -106,11 +147,45 @@ for (const {slug, title, sections} of algos) {
     html = replaceTag(html, /(<script id="page-jsonld" type="application\/ld\+json">)[\s\S]*?(<\/script>)/,
         `$1${JSON.stringify(jsonld)}$2`, "jsonld");
 
-    const dir = join(root, "dist/algo", slug);
+    const dir = join(root, "dist", subpath);
     mkdirSync(dir, {recursive: true});
     writeFileSync(join(dir, "index.html"), html);
+};
+
+for (const {slug, title, sections} of algos) {
+    const blurb = blurbs.get(slug) ?? "";
+    writeShell({
+        subpath: `algo/${slug}`,
+        pageTitle: `${title} · ${SITE}`,
+        desc: clamp(`${blurb} Topics: ${sections.join(", ")}.`.trim()),
+        topics: sections,
+    });
+}
+
+const intros = parseIntros("src/pages/sections/index.ts");
+for (const {key, sections} of intros) {
+    const meta = sectionMeta.get(key) ?? {title: key, desc: ""};
+    writeShell({
+        subpath: `section/${key}`,
+        pageTitle: `${meta.title} · ${SITE}`,
+        desc: clamp(`${meta.desc} Topics: ${sections.join(", ")}.`.trim()),
+        topics: sections,
+    });
+}
+
+const catIntros = parseIntros("src/pages/categories/index.ts");
+const catTitles = parseCategoryTitles();
+for (const {key, sections} of catIntros) {
+    const title = catTitles.get(key) ?? key;
+    writeShell({
+        subpath: `category/${key}`,
+        pageTitle: `${title} · ${SITE}`,
+        desc: clamp(`An introduction to ${title.toLowerCase()} for robot navigation. ` +
+            `Topics: ${sections.join(", ")}.`),
+        topics: sections,
+    });
 }
 
 // 알 수 없는 경로도 SPA 로 부팅하도록 404 셸을 둔다 (GitHub Pages 관례).
 cpSync(join(root, "dist/index.html"), join(root, "dist/404.html"));
-console.log(`prerender: ${algos.length} page shells + 404.html`);
+console.log(`prerender: ${algos.length} algo + ${intros.length} section + ${catIntros.length} category shells + 404.html`);

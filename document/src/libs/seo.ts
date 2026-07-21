@@ -5,7 +5,9 @@
 
 import {Lang, pick} from "./i18n";
 import {IAlgoData} from "../../types/global";
-import {ALGO_BLURBS} from "../pages/algorithms/roadmap";
+import {ALGO_BLURBS, CATEGORIES, SECTIONS} from "../pages/algorithms/roadmap";
+import {ISectionIntro} from "../pages/sections";
+import {ICategoryIntro} from "../pages/categories";
 
 const ORIGIN = "https://robotics-study.github.io";
 const BASE_PATH = "/navigation/";
@@ -54,9 +56,10 @@ function clamp(text: string, max = 155): string {
     return text.length <= max ? text : text.slice(0, max - 1).trimEnd() + "…"
 }
 
-// 해시·잡다한 파라미터를 뺀 정규화 URL. 알고리즘은 /algo/<slug>/ 경로, 언어 변형은 ?lang=ko.
-export function pageUrl(lang: Lang, slug?: string): string {
-    const path = slug !== undefined ? `algo/${slug}/` : ""
+// 해시·잡다한 파라미터를 뺀 정규화 URL. subpath 는 "algo/<slug>" | "section/<key>" | 없음(홈),
+// 언어 변형은 ?lang=ko.
+export function pageUrl(lang: Lang, subpath?: string): string {
+    const path = subpath !== undefined ? `${subpath}/` : ""
     const qs = lang === "ko" ? "?lang=ko" : ""
     return `${ORIGIN}${BASE_PATH}${path}${qs}`
 }
@@ -82,12 +85,15 @@ export interface PageMeta {
     title: string
     description: string
     lang: Lang
-    algo?: IAlgoData
+    // 정규화 URL 의 하위 경로 ("algo/astar" 등). 없으면 홈.
+    subpath?: string
+    // TechArticle JSON-LD 의 about 목록 (본문 h2 제목들).
+    topics?: string[]
 }
 
-export function applyPageMeta({title, description, lang, algo}: PageMeta) {
+export function applyPageMeta({title, description, lang, subpath, topics}: PageMeta) {
     const desc = clamp(description)
-    const canonical = pageUrl(lang, algo?.slug)
+    const canonical = pageUrl(lang, subpath)
     document.title = title
     document.documentElement.lang = lang
     upsertMeta("name", "description", desc)
@@ -100,11 +106,11 @@ export function applyPageMeta({title, description, lang, algo}: PageMeta) {
     upsertLink("canonical", canonical)
     trackPageView(title)
     // 언어별 대체 URL: 같은 페이지의 en/ko 쌍.
-    upsertLink("alternate", pageUrl("en", algo?.slug), "en")
-    upsertLink("alternate", pageUrl("ko", algo?.slug), "ko")
-    upsertLink("alternate", pageUrl("en", algo?.slug), "x-default")
+    upsertLink("alternate", pageUrl("en", subpath), "en")
+    upsertLink("alternate", pageUrl("ko", subpath), "ko")
+    upsertLink("alternate", pageUrl("en", subpath), "x-default")
     // 페이지 구조화 데이터.
-    if (algo) {
+    if (subpath) {
         upsertJsonLd("page-jsonld", {
             "@context": "https://schema.org",
             "@type": "TechArticle",
@@ -117,7 +123,7 @@ export function applyPageMeta({title, description, lang, algo}: PageMeta) {
                 name: SITE[lang],
                 url: pageUrl(lang),
             },
-            about: (algo.sections ?? []).map((s) => pick(lang, s)),
+            about: topics ?? [],
         })
     } else {
         upsertJsonLd("page-jsonld", {
@@ -154,7 +160,8 @@ export function algoMeta(lang: Lang, algo?: IAlgoData): PageMeta {
     }
     const title = pick(lang, algo.title)
     const blurb = ALGO_BLURBS.find((b) => b.slug === algo.slug)?.blurb
-    const topics = (algo.sections ?? []).map((s) => pick(lang, s)).join(", ")
+    const topicList = (algo.sections ?? []).map((s) => pick(lang, s))
+    const topics = topicList.join(", ")
     const intro = blurb ? pick(lang, blurb) : ""
     const body = lang === "ko"
         ? `${intro} ${topics ? `주요 내용: ${topics}.` : ""}`.trim()
@@ -163,6 +170,42 @@ export function algoMeta(lang: Lang, algo?: IAlgoData): PageMeta {
         title: `${title} · ${SITE[lang]}`,
         description: body,
         lang,
-        algo,
+        subpath: `algo/${algo.slug}`,
+        topics: topicList,
+    }
+}
+
+// 중분류 소개 → 페이지 메타. 설명은 본문 h2 제목으로 만든다.
+export function categoryMeta(lang: Lang, intro: ICategoryIntro): PageMeta {
+    const category = CATEGORIES.find((c) => c.key === intro.key)!
+    const title = pick(lang, category.title)
+    const topicList = intro.sections.map((s) => pick(lang, s))
+    const topics = topicList.join(", ")
+    const body = lang === "ko" ? `${title} 소개. 주요 내용: ${topics}.`
+        : `An introduction to ${title.toLowerCase()} for robot navigation. Topics: ${topics}.`
+    return {
+        title: `${title} · ${SITE[lang]}`,
+        description: body,
+        lang,
+        subpath: `category/${intro.key}`,
+        topics: topicList,
+    }
+}
+
+// 대분류 소개 → 페이지 메타. 설명은 대분류 한 줄 소개 + 본문 h2 제목으로 만든다.
+export function sectionMeta(lang: Lang, intro: ISectionIntro): PageMeta {
+    const section = SECTIONS.find((s) => s.key === intro.key)!
+    const title = pick(lang, section.title)
+    const topicList = intro.sections.map((s) => pick(lang, s))
+    const topics = topicList.join(", ")
+    const body = lang === "ko"
+        ? `${pick(lang, section.desc)} 주요 내용: ${topics}.`
+        : `${pick(lang, section.desc)} Topics: ${topics}.`
+    return {
+        title: `${title} · ${SITE[lang]}`,
+        description: body,
+        lang,
+        subpath: `section/${intro.key}`,
+        topics: topicList,
     }
 }

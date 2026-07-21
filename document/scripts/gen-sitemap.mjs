@@ -18,8 +18,17 @@ const slugs = indexTs
     .map((block) => block.match(/^\s*"([a-z0-9_]+)"/)[1]);
 if (slugs.length === 0) throw new Error("no written pages found in pages/algorithms/index.ts");
 
-const url = (lang, slug) => {
-    const path = slug !== undefined ? `algo/${slug}/` : "";
+const introKeys = (file) => readFileSync(join(root, file), "utf-8")
+    .split(/\n\s*\{\s*\n\s*key:/)
+    .slice(1)
+    .filter((block) => block.includes("contents:"))
+    .map((block) => block.match(/^\s*"([a-z]+)"/)[1]);
+const sectionKeys = introKeys("src/pages/sections/index.ts");
+const categoryKeys = introKeys("src/pages/categories/index.ts");
+
+// subpath: "algo/<slug>" | "section/<key>" | undefined(홈)
+const url = (lang, subpath) => {
+    const path = subpath !== undefined ? `${subpath}/` : "";
     const qs = lang === "ko" ? "?lang=ko" : "";
     return `${ORIGIN}${BASE}${path}${qs}`;
 };
@@ -27,19 +36,21 @@ const url = (lang, slug) => {
 const esc = (s) => s.replaceAll("&", "&amp;");
 const today = new Date().toISOString().slice(0, 10);
 
-const entry = (lang, slug, priority) => `  <url>
-    <loc>${esc(url(lang, slug))}</loc>
+const entry = (lang, subpath, priority) => `  <url>
+    <loc>${esc(url(lang, subpath))}</loc>
     <lastmod>${today}</lastmod>
     <priority>${priority}</priority>
-    <xhtml:link rel="alternate" hreflang="en" href="${esc(url("en", slug))}"/>
-    <xhtml:link rel="alternate" hreflang="ko" href="${esc(url("ko", slug))}"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="${esc(url("en", slug))}"/>
+    <xhtml:link rel="alternate" hreflang="en" href="${esc(url("en", subpath))}"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="${esc(url("ko", subpath))}"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="${esc(url("en", subpath))}"/>
   </url>`;
 
 const entries = [
     entry("en", undefined, "1.0"),
     entry("ko", undefined, "1.0"),
-    ...slugs.flatMap((s) => [entry("en", s, "0.8"), entry("ko", s, "0.8")]),
+    ...sectionKeys.flatMap((k) => [entry("en", `section/${k}`, "0.9"), entry("ko", `section/${k}`, "0.9")]),
+    ...categoryKeys.flatMap((k) => [entry("en", `category/${k}`, "0.9"), entry("ko", `category/${k}`, "0.9")]),
+    ...slugs.flatMap((s) => [entry("en", `algo/${s}`, "0.8"), entry("ko", `algo/${s}`, "0.8")]),
 ];
 
 const xml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -50,4 +61,4 @@ ${entries.join("\n")}
 `;
 
 writeFileSync(join(root, "public/sitemap.xml"), xml);
-console.log(`sitemap.xml: ${entries.length} URLs (pages: ${slugs.join(", ")})`);
+console.log(`sitemap.xml: ${entries.length} URLs (sections: ${sectionKeys.join(", ")} / categories: ${categoryKeys.join(", ")} / pages: ${slugs.join(", ")})`);

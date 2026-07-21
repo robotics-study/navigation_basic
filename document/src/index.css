@@ -486,15 +486,31 @@
     overflow: hidden;
 }
 
-/* 대분류 안의 중분류 sub-label (Graph Search / Sampling 등) */
+/* 대분류 안의 중분류 sub-label (Graph Search / Sampling 등).
+   소개 페이지가 있으면 <a> 로 렌더되어 클릭 시 카테고리 소개로 간다. */
 .sidebar .sb-sub {
+    display: block;
     margin: 10px 8px 4px 26px;
+    padding: 2px 4px;
+    border-radius: 6px;
     font-size: .66rem;
     text-transform: uppercase;
     letter-spacing: .07em;
     color: var(--muted);
     font-weight: 700;
-    opacity: .75;
+    opacity: .8;
+}
+
+.sidebar a.sb-sub:hover {
+    background: var(--surface-2);
+    color: var(--text);
+    text-decoration: none;
+}
+
+.sidebar a.sb-sub.active {
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    color: var(--accent);
+    opacity: 1;
 }
 
 .content {
@@ -690,10 +706,12 @@ h3:hover .anchor {
     color: var(--code-text);
 }
 
+/* 표는 콘텐츠 폭 안에서 가운데 정렬. 넘치면 자체 가로 스크롤. */
 .content-inner table {
     border-collapse: collapse;
-    width: 100%;
-    margin: 1.2em 0;
+    width: fit-content;
+    max-width: 100%;
+    margin: 1.2em auto;
     font-size: .9rem;
     display: block;
     overflow-x: auto;
@@ -1004,14 +1022,30 @@ h3:hover .anchor {
     font-size: .9rem;
 }
 
+/* 대분류 소개 페이지로 가는 링크 — 파트 제목 옆에 조용히 붙는다 */
+.part-head .part-intro {
+    margin-left: auto;
+    font-size: .8rem;
+    font-weight: 600;
+    color: var(--accent);
+    cursor: pointer;
+}
+
 /* 대분류 안의 중분류 sub-heading (Graph Search / Sampling 등) */
 .lander .cat-head {
+    display: flex;
+    align-items: baseline;
     margin: 0 0 12px;
     font-size: .78rem;
     text-transform: uppercase;
     letter-spacing: .08em;
     color: var(--muted);
     font-weight: 700;
+}
+
+.lander .cat-head .part-intro {
+    text-transform: none;
+    letter-spacing: 0;
 }
 
 .card-grid {

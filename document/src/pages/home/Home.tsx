@@ -1,5 +1,6 @@
 import {ISupportedExample, Localized} from "../../../types/global";
 import algorithms from "../algorithms";
+import categoryIntros from "../categories";
 import {ALGO_BLURBS, CATEGORIES, SECTIONS} from "../algorithms/roadmap";
 import BrandLogo from "../../components/BrandLogo";
 import HeroSearch from "../../components/panels/HeroSearch";
@@ -53,7 +54,7 @@ const AlgoCard = ({slug, title, blurb, supportedExample, onOpen}: {
 }
 
 const Home = () => {
-    const {go} = useAlgoNav()
+    const {go, goSection, goCategory} = useAlgoNav()
     const {lang} = useLang()
     const t = useTr()
     const ready = algorithms.filter((a) => a.contents)
@@ -96,15 +97,29 @@ const Home = () => {
                                 <h3>
                                     <span className="part-index">{["I", "II", "III"][si]}</span>
                                     {pick(lang, sec.title)}
+                                    <a className="part-intro" onClick={() => goSection(sec.key)}>
+                                        Introduction →
+                                    </a>
                                 </h3>
                                 <p className="part-desc">{pick(lang, sec.desc)}</p>
                             </div>
                             {sec.categories.map((catKey) => {
                                 const cat = CATEGORIES.find((c) => c.key === catKey)!
                                 const items = algorithms.filter((a) => a.category === catKey)
+                                const hasIntro = categoryIntros.some((c) => c.key === catKey)
                                 return (
                                     <div key={catKey}>
-                                        {multiCat && <h4 className="cat-head">{pick(lang, cat.title)}</h4>}
+                                        {multiCat && (
+                                            <h4 className="cat-head">
+                                                {pick(lang, cat.title)}
+                                                {hasIntro && (
+                                                    <a className="part-intro"
+                                                       onClick={() => goCategory(catKey)}>
+                                                        Introduction →
+                                                    </a>
+                                                )}
+                                            </h4>
+                                        )}
                                         <div className="card-grid">
                                             {items.map((a) => (
                                                 <AlgoCard key={a.slug} slug={a.slug} title={a.title}

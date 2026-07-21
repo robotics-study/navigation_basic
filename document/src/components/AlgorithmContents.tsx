@@ -19,7 +19,7 @@ const codeLinkFor = (algo: IAlgoData, language: string): string | null => {
 
 const AlgorithmContents = (algo: IAlgoData) => {
     const {title, slug, contents: Contents, supportedExample, category} = algo
-    const {go} = useAlgoNav()
+    const {go, goSection} = useAlgoNav()
     const {lang} = useLang()
     const t = useTr()
 
@@ -73,9 +73,11 @@ const AlgorithmContents = (algo: IAlgoData) => {
                             <div className="dir">{t("← Prev", "← 이전")}</div>
                             <div className="ttl">{pick(lang, prev.title)}</div>
                         </a>
-                        : <a onClick={() => go(null)}>
+                        : <a onClick={() => goSection(sectionOf(category))}>
                             <div className="dir">{t("← Prev", "← 이전")}</div>
-                            <div className="ttl">{t("Home", "홈")}</div>
+                            <div className="ttl">
+                                {secTitle ? pick(lang, secTitle) : t("Home", "홈")} · Introduction
+                            </div>
                         </a>}
                     {next
                         ? <a className="next" onClick={() => go(next.slug)}>

@@ -1,19 +1,46 @@
 import algorithms from "../pages/algorithms";
+import sectionIntros from "../pages/sections";
+import categoryIntros from "../pages/categories";
+import {CATEGORIES, SECTIONS} from "../pages/algorithms/roadmap";
+import {AlgoCategory, AlgoSection} from "../../types/global";
 import {slugify} from "./slug";
 import {Lang, pick} from "./i18n";
 
 export interface SearchEntry {
     title: string
     crumb: string
-    slug: string
+    // 알고리즘 페이지 대상. section 과 둘 중 하나만 있다.
+    slug?: string
+    // 대분류 소개 페이지 대상.
+    section?: AlgoSection
+    // 중분류 소개 페이지 대상.
+    category?: AlgoCategory
     anchor?: string   // 섹션 앵커(slug). 없으면 페이지 최상단.
     text: string      // 매칭용 추가 텍스트
 }
 
-// 알고리즘 메타데이터(제목 + 섹션)로 정적 검색 인덱스를 구성한다.
+// 알고리즘·대분류 소개 메타데이터(제목 + 섹션)로 정적 검색 인덱스를 구성한다.
 // SPA 라 빌드 대신 런타임에 언어별로 한 번 만든다.
 function buildIndex(lang: Lang): SearchEntry[] {
     const entries: SearchEntry[] = []
+    for (const intro of sectionIntros) {
+        const secDef = SECTIONS.find((s) => s.key === intro.key)!
+        const title = pick(lang, secDef.title)
+        entries.push({title, crumb: "Introduction", section: intro.key, text: `${title} introduction overview`})
+        for (const s of intro.sections) {
+            const sec = pick(lang, s)
+            entries.push({title: sec, crumb: title, section: intro.key, anchor: slugify(sec), text: sec})
+        }
+    }
+    for (const intro of categoryIntros) {
+        const catDef = CATEGORIES.find((c) => c.key === intro.key)!
+        const title = pick(lang, catDef.title)
+        entries.push({title, crumb: "Introduction", category: intro.key, text: `${title} introduction overview`})
+        for (const s of intro.sections) {
+            const sec = pick(lang, s)
+            entries.push({title: sec, crumb: title, category: intro.key, anchor: slugify(sec), text: sec})
+        }
+    }
     for (const a of algorithms) {
         if (!a.contents) continue   // 집필된 페이지만 검색 대상
         const title = pick(lang, a.title)

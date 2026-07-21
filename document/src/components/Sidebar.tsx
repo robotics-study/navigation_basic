@@ -1,5 +1,6 @@
 import {useEffect, useState} from "react";
 import algorithms from "../pages/algorithms";
+import categoryIntros from "../pages/categories";
 import {CATEGORIES, SECTIONS, sectionOf} from "../pages/algorithms/roadmap";
 import {AlgoSection} from "../../types/global";
 import {useAlgoNav} from "../libs/nav";
@@ -18,12 +19,14 @@ const Chevron = () => (
 // 중분류(Graph Search/Sampling …) sub-label 로 묶는다. 알고리즘이 수십 개라 현재 페이지가
 // 속한 대분류만 기본으로 펼친다. 집필된 페이지는 링크, 미집필은 dim 처리.
 const Sidebar = ({open: mobileOpen, onNavigate}: { open?: boolean; onNavigate?: () => void }) => {
-    const {current, go} = useAlgoNav()
+    const {current, currentSection: introSection, currentCategory, go, goSection, goCategory} = useAlgoNav()
     const {lang} = useLang()
     const t = useTr()
 
     const currentAlgo = algorithms.find((a) => a.slug === current)
-    const currentSection = currentAlgo ? sectionOf(currentAlgo.category) : undefined
+    const currentSection = currentAlgo ? sectionOf(currentAlgo.category)
+        : currentCategory ? sectionOf(currentCategory)
+            : introSection ?? undefined
     // 홈에서는 첫 대분류를 펼쳐 목차 역할을 하게 한다.
     const defaultOpen = currentSection ?? SECTIONS[0].key
     const [opened, setOpened] = useState<Set<AlgoSection>>(() => new Set([defaultOpen]))
@@ -73,12 +76,28 @@ const Sidebar = ({open: mobileOpen, onNavigate}: { open?: boolean; onNavigate?: 
                         </button>
                         <div className="sb-body">
                             <div>
+                                <a className={cn(introSection === sec.key && "active")}
+                                   onClick={() => {
+                                       goSection(sec.key)
+                                       onNavigate?.()
+                                   }}>
+                                    Introduction
+                                </a>
                                 {sec.categories.map((catKey) => {
                                     const cat = CATEGORIES.find((c) => c.key === catKey)!
                                     const catItems = items.filter((a) => a.category === catKey)
+                                    const hasIntro = categoryIntros.some((c) => c.key === catKey)
                                     return (
                                         <div key={catKey}>
-                                            {multiCat && <div className="sb-sub">{pick(lang, cat.title)}</div>}
+                                            {multiCat && (hasIntro
+                                                ? <a className={cn("sb-sub", currentCategory === catKey && "active")}
+                                                     onClick={() => {
+                                                         goCategory(catKey)
+                                                         onNavigate?.()
+                                                     }}>
+                                                    {pick(lang, cat.title)}
+                                                </a>
+                                                : <div className="sb-sub">{pick(lang, cat.title)}</div>)}
                                             {catItems.map((a) => a.contents
                                                 ? (
                                                     <a key={a.slug}
