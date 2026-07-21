@@ -134,6 +134,15 @@ export const ALGO_BLURBS: AlgoBlurb[] = [
         },
     },
     {
+        slug: "rrt_connect",
+        blurb: {
+            en: "Two trees, one from each end: EXTEND explores, CONNECT sprints greedily " +
+                "at the other tree's newest node, and the fronts splice in the middle.",
+            ko: "양끝에서 트리 하나씩. EXTEND가 탐사하고 CONNECT가 상대 트리의 최신 " +
+                "노드로 내달려, 두 전선이 가운데에서 접합된다.",
+        },
+    },
+    {
         slug: "astar",
         blurb: {
             en: "Dijkstra plus a compass: order the frontier by g + h and an admissible " +

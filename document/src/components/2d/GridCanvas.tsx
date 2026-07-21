@@ -106,6 +106,16 @@ const GridCanvas = ({
     )
 
     // 벽 페인팅: pointer down 시 첫 셀의 반전값을 붓 값으로 삼아 드래그 내내 유지한다.
+    // 연속 모드에서는 start/goal 이 world 좌표라, 가드 비교 전에 셀 인덱스로 바꾼다.
+    const markerCell = (c: Cell): Cell => timeline?.continuous
+        ? [map.height - 1 - Math.floor((c[1] - map.originY) / map.resolution),
+           Math.floor((c[0] - map.originX) / map.resolution)]
+        : c
+    const sameCell = (a: Cell | undefined, c: Cell): boolean => {
+        if (!a) return false
+        const m = markerCell(a)
+        return m[0] === c[0] && m[1] === c[1]
+    }
     const paintValue = useRef<boolean | null>(null)
     const cellAt = (stage: Konva.Stage | null): Cell | null => {
         const pos = stage?.getPointerPosition()
@@ -117,8 +127,7 @@ const GridCanvas = ({
     }
     const paint = (c: Cell) => {
         if (!onPaintCell || paintValue.current === null) return
-        if (start && c[0] === start[0] && c[1] === start[1]) return
-        if (goal && c[0] === goal[0] && c[1] === goal[1]) return
+        if (sameCell(start, c) || sameCell(goal, c)) return
         onPaintCell(c[0], c[1], paintValue.current)
     }
 
@@ -177,8 +186,7 @@ const GridCanvas = ({
                    const c = cellAt(e.target.getStage())
                    if (!c) return
                    // 시작/골 위에서 드래그를 시작하면 페인팅이 아니라 endpoint 이동이다.
-                   if (start && c[0] === start[0] && c[1] === start[1]) return
-                   if (goal && c[0] === goal[0] && c[1] === goal[1]) return
+                   if (sameCell(start, c) || sameCell(goal, c)) return
                    paintValue.current = !map.occupied[c[0] * map.width + c[1]]
                    paint(c)
                }}

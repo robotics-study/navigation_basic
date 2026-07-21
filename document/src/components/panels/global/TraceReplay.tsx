@@ -55,8 +55,14 @@ const ReplayScene = ({algo, maps, truePathOf, vehicle, panel = 340}: {
     }, [algo, mapName])
 
     // trace에는 시작/목표가 명시 이벤트로 없다 — 첫 확장 노드가 시작, 경로 끝이 목표다.
+    // 확장 이벤트가 없는 trace(RRT 계열)는 경로 양끝, 그것도 없으면 첫 간선의
+    // 부모(트리 뿌리)로 유도한다.
     const start = useMemo<Cell | undefined>(
-        () => loaded?.timeline.expanded[0]?.cell, [loaded])
+        () => loaded?.timeline.expanded[0]?.cell
+            ?? (loaded && loaded.timeline.path.length > 0
+                ? loaded.timeline.path[0] : undefined)
+            ?? loaded?.timeline.edges[0]?.from,
+        [loaded])
     const goal = useMemo<Cell | undefined>(
         () => loaded && loaded.timeline.path.length > 0
             ? loaded.timeline.path[loaded.timeline.path.length - 1]
