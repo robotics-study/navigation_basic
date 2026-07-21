@@ -31,3 +31,4 @@ docs/.jekyll-cache/
 
 # 세션 상태 산출물 (round summary 등)
 .claude/state/
+document/.vite/
