@@ -14,5 +14,8 @@ export {runRRTStar} from "../src/libs/algorithms/rrt_star";
 export {runInformedRRTStar} from "../src/libs/algorithms/informed_rrt_star";
 export {runFastRRT} from "../src/libs/algorithms/fast_rrt";
 export {runFMTStar} from "../src/libs/algorithms/fmt_star";
+export {runBITStar} from "../src/libs/algorithms/bit_star";
+export {runABITStar} from "../src/libs/algorithms/abit_star";
+export {runAITStar} from "../src/libs/algorithms/ait_star";
 export {runHybridAStar} from "../src/libs/algorithms/hybrid_astar";
 export {parseGridMap} from "../src/libs/grid";

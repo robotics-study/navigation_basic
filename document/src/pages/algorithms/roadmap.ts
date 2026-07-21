@@ -181,6 +181,38 @@ export const ALGO_BLURBS: AlgoBlurb[] = [
         },
     },
     {
+        slug: "bit_star",
+        blurb: {
+            en: "Informed RRT*'s ellipse and FMT*'s batch, searched like A* over edges: " +
+                "a cost-ordered edge queue lazily connects the graph and tightens the path " +
+                "batch by batch.",
+            ko: "Informed RRT*의 타원과 FMT*의 배치를 간선 위 A*로 탐색한다. cost 순 간선 " +
+                "큐가 그래프를 lazy하게 잇고 배치마다 경로를 조인다.",
+        },
+    },
+    {
+        slug: "abit_star",
+        blurb: {
+            en: "BIT* with two dials: inflate the heuristic so early batches rush to a " +
+                "first solution, truncate each batch once no edge can improve it much, and " +
+                "relax both to 1 so the last batch is admissible BIT* again.",
+            ko: "다이얼 둘을 단 BIT*. heuristic을 부풀려 초반 배치가 첫 해로 달려가고, " +
+                "어떤 간선도 크게 못 줄이면 배치를 조기 종료하며, 둘을 1로 풀어 마지막 " +
+                "배치는 다시 admissible BIT*가 된다.",
+        },
+    },
+    {
+        slug: "ait_star",
+        blurb: {
+            en: "BIT* with an obstacle-aware heuristic: a lazy reverse search over the " +
+                "sample graph replaces the straight-line estimate, and every edge the " +
+                "forward search finds blocked feeds back to sharpen it.",
+            ko: "장애물을 아는 heuristic을 단 BIT*. 표본 그래프 위 lazy 역방향 탐색이 " +
+                "직선거리 추정을 대신하고, 전방 탐색이 막혔다고 밝힌 간선이 되먹여져 " +
+                "heuristic을 날카롭게 벼린다.",
+        },
+    },
+    {
         slug: "astar",
         blurb: {
             en: "Dijkstra plus a compass: order the frontier by g + h and an admissible " +
