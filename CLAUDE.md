@@ -155,3 +155,25 @@ python tools/bench/run_matrix.py --maps maps/ --algos global_planning --out out/
 - **Python**: 전 함수 type hint 필수. `numpy` 기반 좌표 연산. 추상 클래스는 `abc.ABC`. `any`/무타입 dict 전달 금지 — 파라미터는 `ParamSet`, 상태는 `types.py` 의 dataclass 를 쓴다.
 - 좌표계: world 좌표 (x, y[, theta]) 는 float, grid 인덱스는 (row, col) int — 변환은 맵 클래스만 담당한다. 이 구분을 흐리는 코드 금지.
 - 주석은 WHY 만. 알고리즘 수식/휴리스틱 선택 근거는 논문 인용(저자, 연도)으로 남긴다.
+
+## 문서 사이트 (document/)
+
+React 18 + Vite + TS + Tailwind SPA. 2D 는 Konva, 3D 는 Babylon(필요 시 도입), 수식은 KaTeX, 이중언어는 `<T en ko>`. 대분류(Global/Local Planning, Multi-Agent)는 저장소 최상위 카테고리와 1:1 미러. 빌드/검증: `cd document && yarn build`, dev 서버 `yarn dev`.
+
+### 알고리즘 페이지 규칙 (순서 고정)
+
+인트로 → 개념/유도(From X to Y 등) → **Properties and Complexity** → **The Algorithm** → 증명(collapsible) → (반례 등 이론 보조) → **Demo** → **Implementation** → **References**. registry `sections[]` 도 같은 순서로.
+
+- **The Algorithm**: 자료구조·루프 요약 문단 → `Pseudocode` 블록(`# 1~n` 스텝 마커) → 바로 아래 "1. ~한다" 번호 목록으로 각 스텝의 무엇/왜 해설 (pop 시점 goal 검사 같은 함정 포함).
+- **증명**: 산문 서술 금지. 가정 → BlockMath 부등식 체인 → 모순/결론의 단계형.
+- **Parameters 섹션 금지** — 웹은 알고리즘 설명이지 코드 문서가 아니다. parameter 개념(예: weighted A* 의 w)은 이론 산문에서 다룬다.
+- **Demo**: 간단한 알고리즘은 TS 라이브 엔진(trace 이벤트 계약 공유), 무거운 것은 기록 trace 재생. TraceReplay 는 py trace 한 벌만(`<map>.py.jsonl.gz`, C++/Python 은 동일 이벤트 열), 배속 버튼 없이 고정 2×.
+- **Implementation**: 실제 저장소 소스를 vite `?raw` 로 embed (사본 금지), python/c++ 탭 토글 + 파일별 GitHub 링크.
+- **References**: 실제 논문 링크(DOI) 필수.
+- **시각 자료 적극 배치**: 페이지·소개마다 Konva figure (CanvasFigure 래핑, 테마 색은 useCanvasColors). 데이터 표는 가운데 정렬(전역 CSS 처리됨).
+
+### 한국어 작문 규칙
+
+- 기술 용어 과잉 번역 금지: 헤딩·UI 는 Demo / Parameters / References 처럼 영어 유지. "인터랙티브 데모" 같은 음차 금지.
+- **직역 금지**: 한국어는 영어 번역이 아니라 같은 내용을 한국어로 새로 쓴다. "어른이 된 BFS"(BFS grown up), "비용 물결"(cost ripple) 류 번역투 금지 — 자연스러운 표현(비용 등고선, 맹목 탐색 등)으로.
+- 한국어 산문에서 em-dash 삽입구("A — B — C") 금지. 문장 분리나 쉼표/괄호로 재구성.
