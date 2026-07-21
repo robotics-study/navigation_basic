@@ -25,10 +25,13 @@ interface TraceReplayProps {
     // 가로지를 수 있다 — 동일 입력으로 라이브 엔진을 돌려 실제 기하를 그린다.
     truePathOf?: (map: GridMap, start: Cell, goal: Cell,
                   params: Record<string, unknown> | undefined) => Cell[];
+    // SE(2) 차량 planner 재생: 로봇을 차로 그리고 경로를 주행한다.
+    vehicle?: boolean;
 }
 
-const ReplayScene = ({algo, maps, truePathOf, panel = 340}: {
-    algo: string; maps: string[]; truePathOf?: TraceReplayProps["truePathOf"]; panel?: number;
+const ReplayScene = ({algo, maps, truePathOf, vehicle, panel = 340}: {
+    algo: string; maps: string[]; truePathOf?: TraceReplayProps["truePathOf"];
+    vehicle?: boolean; panel?: number;
 }) => {
     const t = useTr()
     const [mapName, setMapName] = useState(maps[0])
@@ -91,20 +94,20 @@ const ReplayScene = ({algo, maps, truePathOf, panel = 340}: {
         </div>
     }
     return <TracePlayer map={loaded.map} timeline={loaded.timeline}
-                        start={start} goal={goal} truePath={truePath}
+                        start={start} goal={goal} truePath={truePath} vehicle={vehicle}
                         panel={panel} footer={selector}/>
 }
 
-const TraceReplay = ({algo, maps, label, truePathOf}: TraceReplayProps) => {
+const TraceReplay = ({algo, maps, label, truePathOf, vehicle}: TraceReplayProps) => {
     return <CanvasFigure
         label={label}
         tight
         bodyClassName="w-fit"
         className="w-full"
-        modal={<ReplayScene algo={algo} maps={maps} truePathOf={truePathOf}
+        modal={<ReplayScene algo={algo} maps={maps} truePathOf={truePathOf} vehicle={vehicle}
                             panel={Math.min(modalCanvasSize(1).width, 640)}/>}
     >
-        <ReplayScene algo={algo} maps={maps} truePathOf={truePathOf}/>
+        <ReplayScene algo={algo} maps={maps} truePathOf={truePathOf} vehicle={vehicle}/>
     </CanvasFigure>
 }
 

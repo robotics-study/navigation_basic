@@ -87,11 +87,32 @@ def export_map(name: str) -> None:
     print(f"map: {out.relative_to(REPO)} ({width}x{height})")
 
 
-def run_demo(algo: str, map_name: str, impl: str, trace_path: Path) -> bool:
+def params_file(algo: str, overrides: dict[str, str], tmp: Path) -> Path:
+    """Config yaml 경로 — override 가 있으면 default 를 바꾼 사본을 tmp 에 만든다.
+
+    벤치마크 기본 예산(예: PRM num_samples=1500)은 웹 재생 파일로는 수 MB 라,
+    웹 자산은 더 작은 예산으로 다시 굴린다. 파라미터는 trace 의
+    planning_started 에 기록되므로 재생/parity 는 그대로 성립한다.
+    """
+    src = REPO / "configs" / "global_planning" / f"{algo}.yaml"
+    if not overrides:
+        return src
+    doc = yaml.safe_load(src.read_text())
+    for p in doc["params"]:
+        if p["name"] in overrides:
+            raw = overrides[p["name"]]
+            p["default"] = int(raw) if p["type"] == "int" else float(raw)
+    out = tmp / f"{algo}.yaml"
+    out.write_text(yaml.safe_dump(doc, sort_keys=False, allow_unicode=True))
+    return out
+
+
+def run_demo(algo: str, map_name: str, impl: str, trace_path: Path,
+             params_path: Path) -> bool:
     common = [
         "--map", str(REPO / "maps" / "grid" / f"{map_name}.yaml"),
         "--scenario", str(REPO / "maps" / "scenarios" / f"{map_name}_s1.yaml"),
-        "--params", str(REPO / "configs" / "global_planning" / f"{algo}.yaml"),
+        "--params", str(params_path),
         "--trace", str(trace_path),
     ]
     if impl == "py":
@@ -109,12 +130,13 @@ def run_demo(algo: str, map_name: str, impl: str, trace_path: Path) -> bool:
     return True
 
 
-def export_traces(algo: str, map_name: str) -> None:
+def export_traces(algo: str, map_name: str, overrides: dict[str, str]) -> None:
     # C++/Python 데모는 동일 이벤트 열을 방출하므로 웹 자산은 py 한 벌만 만든다.
     for impl in ("py",):
         with tempfile.TemporaryDirectory() as tmp:
             trace = Path(tmp) / "trace.jsonl"
-            if not run_demo(algo, map_name, impl, trace):
+            params_path = params_file(algo, overrides, Path(tmp))
+            if not run_demo(algo, map_name, impl, trace, params_path):
                 continue
             events = sum(1 for _ in trace.open())
             if events > MAX_EVENTS:
@@ -134,12 +156,15 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="export web data assets for document/")
     parser.add_argument("--algos", default="", help="comma-separated algorithm slugs (empty: maps only)")
     parser.add_argument("--maps", required=True, help="comma-separated grid map names")
+    parser.add_argument("--set", action="append", default=[], metavar="KEY=VALUE",
+                        help="param default override for the demo run (repeatable)")
     args = parser.parse_args()
     algos = [a for a in args.algos.split(",") if a]
+    overrides = dict(kv.split("=", 1) for kv in args.set)
     for map_name in args.maps.split(","):
         export_map(map_name)
         for algo in algos:
-            export_traces(algo, map_name)
+            export_traces(algo, map_name, overrides)
 
 
 if __name__ == "__main__":

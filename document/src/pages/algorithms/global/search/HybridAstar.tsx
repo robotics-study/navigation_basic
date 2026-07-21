@@ -189,7 +189,7 @@ while OPEN is not empty:
             />
             <PrimitiveFan/>
             <HybridSandbox/>
-            <TraceReplay algo="hybrid_astar" maps={["open01", "maze01"]} label={t(
+            <TraceReplay vehicle algo="hybrid_astar" maps={["open01", "maze01"]} label={t(
                 "Real traces from the repository's Hybrid A* demo — pose dots and arc chords instead of cells",
                 "저장소 Hybrid A* demo의 실제 trace. 셀 대신 pose 점과 arc 현이 그려진다",
             )}/>

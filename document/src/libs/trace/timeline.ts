@@ -12,6 +12,8 @@ export interface GridTimeline {
     expanded: Array<{step: number; cell: Cell; cost?: number}>;
     edges: Array<{step: number; from: Cell; to: Cell}>;
     candidates: Array<{step: number; cell: Cell}>;
+    // sampling planner 의 표본 (world 좌표) — roadmap/tree 정점 후보.
+    samples: Array<{step: number; cell: Cell}>;
     // 실행형 planner(D* Lite 등)의 주행·감지 이벤트. 비어 있으면 일반 one-shot 탐색.
     robot: Array<{step: number; cell: Cell}>;
     revealed: Array<{step: number; cell: Cell}>;
@@ -79,6 +81,7 @@ export function buildGridTimeline(events: TraceEvent[]): GridTimeline {
         expanded: [],
         edges: [],
         candidates: [],
+        samples: [],
         robot: [],
         revealed: [],
         paths: [],
@@ -108,6 +111,11 @@ export function buildGridTimeline(events: TraceEvent[]): GridTimeline {
             case "candidate_evaluated": {
                 const cell = asCell(ev.state)
                 if (cell) timeline.candidates.push({step, cell})
+                break
+            }
+            case "sample_drawn": {
+                const cell = asCell(ev.state)
+                if (cell) timeline.samples.push({step, cell})
                 break
             }
             case "edge_added":

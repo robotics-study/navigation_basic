@@ -57,7 +57,7 @@ const HybridScene = ({panel = 340}: {panel?: number}) => {
             map={map} timeline={timeline} panel={panel}
             start={[LOT_START[0], LOT_START[1]]}
             goal={[LOT_GOAL[0], LOT_GOAL[1]]}
-            startPose={LOT_START} goalPose={LOT_GOAL}
+            startPose={LOT_START} goalPose={LOT_GOAL} vehicle
             showTree
             onPaintCell={paintCell}
             onReset={() => setMap(parkingLotMap())}

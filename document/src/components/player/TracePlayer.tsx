@@ -19,6 +19,9 @@ interface TracePlayerProps {
     // 연속 상태 planner 용 시작/목표 pose (θ 포함). 없으면 경로 양끝에서 유도한다.
     startPose?: [number, number, number];
     goalPose?: [number, number, number];
+    // SE(2) 차량 planner 전용: 로봇을 차로 그리고 경로를 주행한다. sampling 계열의
+    // 연속 timeline 에서는 꺼져 있어야 한다.
+    vehicle?: boolean;
     panel?: number;
     showTree?: boolean;
     overlayPath?: Cell[];
@@ -48,7 +51,7 @@ const Btn = ({onClick, label, children, active}: {
 )
 
 const TracePlayer = ({
-                         map, timeline, start, goal, startPose, goalPose,
+                         map, timeline, start, goal, startPose, goalPose, vehicle = false,
                          panel = 340, showTree, overlayPath, truePath,
                          shadowCells, autoPlay = true,
                          onPaintCell, onMoveStart, onMoveGoal, onReset, footer,
@@ -96,10 +99,10 @@ const TracePlayer = ({
 
     // 연속 planner: 탐색 재생이 끝나면 찾은 경로를 차량이 주행한다.
     const sampler = useMemo(
-        () => timeline.continuous && timeline.pathStates.length > 1
+        () => vehicle && timeline.continuous && timeline.pathStates.length > 1
             ? pathSampler(timeline.pathStates)
             : null,
-        [timeline],
+        [timeline, vehicle],
     )
     const [drive, setDrive] = useState(0)
     useEffect(() => {
@@ -117,11 +120,11 @@ const TracePlayer = ({
     }, [sampler, finished])
 
     const carPose = useMemo<[number, number, number] | undefined>(() => {
-        if (!timeline.continuous) return undefined
+        if (!vehicle || !timeline.continuous) return undefined
         if (sampler && finished) return sampler.at(drive * sampler.length)
         return startPose ?? (sampler ? sampler.at(0) : undefined)
-    }, [timeline, sampler, finished, drive, startPose])
-    const goalCarPose = timeline.continuous
+    }, [timeline, vehicle, sampler, finished, drive, startPose])
+    const goalCarPose = vehicle && timeline.continuous
         ? goalPose ?? (sampler ? sampler.at(sampler.length) : undefined)
         : undefined
 
