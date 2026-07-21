@@ -217,9 +217,9 @@ main:
                         </p>
                         <BlockMath math="g(\text{goal}) \;\le\; g^*(s) + \varepsilon h(s) \;\overset{\text{admissible}}{\le}\; \varepsilon\bigl(g^*(s) + h^*(s)\bigr) \;=\; \varepsilon\, C^*"/>
                         <Terms items={[
-                            ["\\varepsilon", <>the current heuristic inflation (<InlineMath math="\\varepsilon \\ge 1"/>); the frontier is ordered by <InlineMath math="g + \\varepsilon h"/></>],
+                            ["\\varepsilon", <>the current heuristic inflation (<InlineMath math="\varepsilon \ge 1"/>); the frontier is ordered by <InlineMath math="g + \varepsilon h"/></>],
                             ["g(\\text{goal})", "cost of the path being published"],
-                            ["g^*(s),\\ h^*(s)", <>true optimal cost start→<InlineMath math="s"/> and true remaining cost <InlineMath math="s"/>→goal; admissibility gives <InlineMath math="h \\le h^*"/></>],
+                            ["g^*(s),\\ h^*(s)", <>true optimal cost start→<InlineMath math="s"/> and true remaining cost <InlineMath math="s"/>→goal; admissibility gives <InlineMath math="h \le h^*"/></>],
                             ["C^*", <>optimal start→goal cost, <InlineMath math="g^*(s) + h^*(s)"/> along the optimal path</>],
                         ]}/>
                         <p>
@@ -240,9 +240,9 @@ main:
                         </p>
                         <BlockMath math="g(\text{goal}) \;\le\; g^*(s) + \varepsilon h(s) \;\overset{\text{admissible}}{\le}\; \varepsilon\bigl(g^*(s) + h^*(s)\bigr) \;=\; \varepsilon\, C^*"/>
                         <Terms items={[
-                            ["\\varepsilon", <>현재의 heuristic 팽창 계수 (<InlineMath math="\\varepsilon \\ge 1"/>). frontier는 <InlineMath math="g + \\varepsilon h"/>로 정렬된다</>],
+                            ["\\varepsilon", <>현재의 heuristic 팽창 계수 (<InlineMath math="\varepsilon \ge 1"/>). frontier는 <InlineMath math="g + \varepsilon h"/>로 정렬된다</>],
                             ["g(\\text{goal})", "지금 발표하는 경로의 비용"],
-                            ["g^*(s),\\ h^*(s)", <>시작→<InlineMath math="s"/> 참 최적 비용과 <InlineMath math="s"/>→목표 참 잔여 비용. admissible 이란 <InlineMath math="h \\le h^*"/>라는 뜻</>],
+                            ["g^*(s),\\ h^*(s)", <>시작→<InlineMath math="s"/> 참 최적 비용과 <InlineMath math="s"/>→목표 참 잔여 비용. admissible이란 <InlineMath math="h \le h^*"/>라는 뜻</>],
                             ["C^*", <>최적 시작→목표 비용. 최적 경로 위에서 <InlineMath math="g^*(s) + h^*(s)"/>와 같다</>],
                         ]}/>
                         <p>

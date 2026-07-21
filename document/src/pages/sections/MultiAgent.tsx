@@ -94,7 +94,7 @@ const MultiAgent = () => {
                     <ul>
                         <li>
                             <strong>Decoupled (Prioritized A*).</strong> agent에 순서를 매기고, 각자
-                            앞선 agent 들의 경로를 움직이는 장애물로 취급하며 시공간 A*로
+                            앞선 agent들의 경로를 움직이는 장애물로 취급하며 시공간 A*로
                             계획한다. 빠르고 확장성 있지만 불완전하다: 우선순위를 잘못 매기면 뒤의
                             agent를 구석에 가둘 수 있다.
                         </li>

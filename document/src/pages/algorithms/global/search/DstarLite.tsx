@@ -63,8 +63,8 @@ const DstarLite = () => {
                     <p>
                         설정은 이렇다. 로봇은 격자 크기만 알고 모든 셀이 비어 있다고 가정하며,
                         작은 반경 안의 실제 점유를 알려 주는 센서를 갖고 있다. 그래도 goal에
-                        도착해야 한다. 순진한 전략도 동작은 한다. 현재 believe하는 지도로 A*를
-                        돌리고, 주행하다 센서가 그 믿음과 어긋나면 계획을 버리고 A*를 다시
+                        도착해야 한다. 순진한 전략도 동작은 한다. 현재 belief 지도로 A*를
+                        돌리고, 주행하다 센서가 그 belief와 어긋나면 계획을 버리고 A*를 다시
                         돌리는 것이다. 다만 발견이 이어지는 긴 복도에서는 벽 하나마다 전체 탐색
                         비용을 다시 낸다.
                     </p>
@@ -173,12 +173,12 @@ const DstarLite = () => {
                         <InlineMath math="g/rhs"/>; the queue holds only inconsistent vertices.</li>
                 </ul>}
                 ko={<ul>
-                    <li><strong>현재 believe 기준으로 완전하고 정확하다</strong>: 매 수리 후의
+                    <li><strong>현재 belief 기준으로 완전하고 정확하다</strong>: 매 수리 후의
                         greedy 한 걸음은 로봇이 지금까지 아는 정보에 대해 최적인 경로를 따른다.</li>
                     <li><strong>Incremental</strong>: 수리 비용은 지도 크기가 아니라 영향권
                         크기에 비례한다. 최악의 경우(모든 것을 무효화하는 발견)는 A* 전체
                         재실행으로 퇴화하지만, 보통의 발견은 작은 이웃만 건드린다.</li>
-                    <li><strong>사후적으로 전역 최적은 아니다</strong>: 실행된 궤적은 believe
+                    <li><strong>사후적으로 전역 최적은 아니다</strong>: 실행된 궤적은 belief
                         기준 최적일 뿐, 처음부터 다른 길을 찍었다면 함정을 통째로 피했을 수도
                         있다. 지도를 모르는 이상 어떤 online 알고리즘도 이것을 이길 수 없다.</li>
                     <li><strong>메모리</strong>는 <InlineMath math="g/rhs"/>에{" "}
@@ -257,7 +257,7 @@ main:
                         under-consistent면 먼저 <InlineMath math="\infty"/>로 올려서 인상이
                         전파되게 한다.</li>
                     <li>수리된 비용장을 따라 greedy로 한 걸음 내려간다.</li>
-                    <li>감지한다. believe가 바뀌었으면 <InlineMath math="k_m"/>을 밀고, 손상된
+                    <li>감지한다. belief가 바뀌었으면 <InlineMath math="k_m"/>을 밀고, 손상된
                         vertex를 표시하고, 수리한다.</li>
                 </ol>}
             />
@@ -321,7 +321,7 @@ main:
                             <InlineMath math="U"/>가 비면(또는 조기 종료가 발동하면) 로봇의 값이
                             의존하는 모든 vertex에서 <InlineMath math="g = rhs"/>이고,{" "}
                             <InlineMath math="rhs"/> 정의를 풀면 goal까지 비용에 대한 Bellman
-                            방정식이 된다. 즉 <InlineMath math="g"/>는 현재 believe 기준의 실제
+                            방정식이 된다. 즉 <InlineMath math="g"/>는 현재 belief 기준의 실제
                             최단 거리다. <InlineMath math="\blacksquare"/>
                         </p>
                     </>}

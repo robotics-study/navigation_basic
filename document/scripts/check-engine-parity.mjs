@@ -129,7 +129,8 @@ const RUNNERS = {
         {map: m, start: s, goal: g, maxIterations: p.max_iterations ?? 4000,
          goalBias: p.goal_bias ?? 0.1, goalTolerance: p.goal_tolerance ?? 1.0,
          neighborRadius: p.neighbor_radius ?? 2.0, controlWeight: p.control_weight ?? 1.0,
-         maxVelocity: p.max_velocity ?? 1.5, seed: p.seed ?? 1}),
+         maxVelocity: p.max_velocity ?? 1.5,
+         footprintRadius: p.footprint_radius ?? 0.15, seed: p.seed ?? 1}),
     // LQR-RRT* 경로는 goal rest 상태에 스냅되어 끝나지만 SST/hybrid와 동일하게
     // 시나리오 goal을 하드코딩한다 (두 맵 시나리오 goal 동일).
     lqr_rrt_star: (m, s, g, p) => engines.runLQRRRTStar(
@@ -139,7 +140,7 @@ const RUNNERS = {
          neighborRadius: p.neighbor_radius ?? 2.0, qPos: p.q_pos ?? 1.0,
          qVel: p.q_vel ?? 1.0, rCtrl: p.r_ctrl ?? 1.0, lqrDt: p.lqr_dt ?? 0.2,
          controlLimit: p.control_limit ?? 10.0, maxVelocity: p.max_velocity ?? 1.5,
-         seed: p.seed ?? 1}),
+         footprintRadius: p.footprint_radius ?? 0.15, seed: p.seed ?? 1}),
     prm_star: (m, s, g, p) => engines.runPRMStar(
         {map: m, start: s, goal: g, numSamples: p.num_samples ?? 250,
          gamma: p.gamma ?? 30, seed: p.seed ?? 1}),

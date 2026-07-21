@@ -16,7 +16,7 @@ const AdStar = () => {
         <>
             <T
                 en={<p>
-                    The last three pages solved two different hard problems: ARA* buys a usable
+                    The last two pages solved two different hard problems: ARA* buys a usable
                     answer <em>now</em> and improves it, D* Lite survives a map that turns out to
                     be wrong. A real robot usually needs both at once — it is driving through an
                     unknown building <em>and</em> its control loop wants a plan this cycle. AD*
@@ -24,7 +24,7 @@ const AdStar = () => {
                     the closing piece of this incremental/anytime arc.
                 </p>}
                 ko={<p>
-                    앞의 세 페이지는 서로 다른 두 난제를 풀었다. ARA*는 쓸 만한 답을{" "}
+                    앞의 두 페이지는 서로 다른 두 난제를 풀었다. ARA*는 쓸 만한 답을{" "}
                     <em>지금</em> 사고 나서 개선하고, D* Lite는 지도가 틀렸다는 사실을 버텨 낸다.
                     실제 로봇에게는 대개 둘이 동시에 필요하다. 모르는 건물을 주행하는{" "}
                     <em>동시에</em> 제어 루프는 이번 주기의 계획을 요구한다. AD*(Likhachev,
@@ -98,7 +98,7 @@ const AdStar = () => {
                         adds bounded rework (each reopen re-keys OPEN ∪ INCONS).</li>
                 </ul>}
                 ko={<ul>
-                    <li><strong>Anytime</strong>: 발표되는 모든 계획이 현재 believe에 대해{" "}
+                    <li><strong>Anytime</strong>: 발표되는 모든 계획이 현재 belief에 대해{" "}
                         <InlineMath math="\varepsilon"/>-준최적이고, 그때의 ε이 한계값이다.</li>
                     <li><strong>Incremental</strong>: 발견은 재시작이 아니라 g/rhs 장의 국소
                         수리를 부른다. D* Lite의 경제성이 그대로 이어진다.</li>

@@ -236,7 +236,9 @@ export function runAnyaFull(opts: AnyaOptions): AnyaResult {
             let beams = clearPieces(root, y, spanLo, spanHi, splits)
             emitCorners(root, y, beams, found)
             let steps = 0
-            while (beams.length > 0 && r0 - 2 <= y && y <= r1 + 2 && steps < 400) {
+            // steps 상한은 성분 높이 유도 안전망 — y-범위 검사가 먼저 물므로 어떤
+            // 크기의 맵에서도 sweep을 조기 종료시키지 않는다 (최적성 유지).
+            while (beams.length > 0 && r0 - 2 <= y && y <= r1 + 2 && steps < (r1 - r0 + 8)) {
                 const yn = y + direction
                 const child: Array<[number, number]> = []
                 for (const [a, b] of beams) {
@@ -263,7 +265,7 @@ export function runAnyaFull(opts: AnyaOptions): AnyaResult {
             for (const direction of [1, -1]) {
                 let x = Math.round(rx)
                 let steps = 0
-                while (c0 - 2 <= x && x <= c1 + 2 && steps < 400) {
+                while (c0 - 2 <= x && x <= c1 + 2 && steps < (c1 - c0 + 8)) {
                     const col = direction > 0 ? x : x - 1
                     if (!cellFree(col, yr - 1) && !cellFree(col, yr)) break
                     x += direction

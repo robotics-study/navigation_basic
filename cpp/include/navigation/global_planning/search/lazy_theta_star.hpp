@@ -13,7 +13,9 @@ namespace navigation::global_planning {
 // checking; the single line-of-sight query is deferred to set_vertex when the
 // vertex is popped, and the parent is repaired to the cheapest settled grid
 // neighbour only if the assumption fails. One check per expanded vertex instead of
-// per edge — same any-angle paths, fewer checks. w > 1 is weighted (Pohl 1970).
+// per edge. Per-instance paths can differ slightly from Theta*'s in either direction
+// (optimistic assumption shifts tie-breaks) but lengths stay comparable in aggregate
+// (Nash & Koenig 2010) — and far fewer checks. w > 1 is weighted (Pohl 1970).
 class LazyThetaStarPlanner final : public core::LineOfSightPlanner {
  public:
   explicit LazyThetaStarPlanner(core::ParamSet params)

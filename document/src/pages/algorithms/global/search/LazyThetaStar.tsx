@@ -82,7 +82,7 @@ const LazyThetaStar = () => {
                 ko={<ul>
                     <li><strong>line-of-sight 검사가 확장마다 한 번</strong>이다. 확장마다 최대
                         여덟 번에서 줄어든다. 아래 sandbox가 같은 문제에서 양쪽을 센다.</li>
-                    <li><strong>경로는 거의 항상 Theta*와 같다.</strong> 수리된 vertex 가
+                    <li><strong>경로는 거의 항상 Theta*와 같다.</strong> 수리된 vertex가
                         (커진) 비용을 가진 채 재정렬 없이 확장되므로 확장 순서가 근소하게 어긋날
                         수 있다. 이 사이트의 maze 벤치마크에서 비용 차이는 0.03%(27.7566 vs
                         27.7478)이고, 아예 0인 경우도 흔하다.</li>

@@ -144,24 +144,25 @@ const Sampling = () => {
             <T
                 en={<ul>
                     <li><strong>Feasibility first</strong> — RRT (grow a tree), RRT-Connect (grow
-                        two, from both ends), Fast-RRT (bias the growth), PRM (build a roadmap).</li>
+                        two, from both ends), PRM (build a roadmap).</li>
                     <li><strong>Optimality</strong> — RRT* and PRM* (rewire / connect at the radius
-                        that preserves asymptotic optimality).</li>
+                        that preserves asymptotic optimality), plus accelerations like Fast-RRT
+                        that keep the rewire and speed up the search.</li>
                     <li><strong>Informed &amp; batch</strong> — Informed RRT* (sample the ellipsoid
                         that can improve the solution), FMT* (marching over a batch), BIT*, ABIT*,
                         AIT*, EIT*, FCIT* (batches + heuristically ordered edge processing).</li>
-                    <li><strong>Kinodynamic</strong> — Kinodynamic RRT*, LQR-RRT*, SST (plan
+                    <li><strong>Kinodynamic</strong> — SST, Kinodynamic RRT*, LQR-RRT* (plan
                         directly over dynamics, where steering exactly is hard or impossible).</li>
                 </ul>}
                 ko={<ul>
                     <li><strong>Feasibility 우선</strong>: RRT(트리 하나), RRT-Connect(양끝에서
-                        둘), Fast-RRT(성장에 bias), PRM(roadmap 구축).</li>
+                        둘), PRM(roadmap 구축).</li>
                     <li><strong>최적성</strong>: RRT*와 PRM*(점근 최적성이 보존되는 반경으로
-                        rewire/연결).</li>
+                        rewire/연결), 그리고 rewire를 유지한 채 탐색을 가속하는 Fast-RRT.</li>
                     <li><strong>Informed &amp; batch</strong>: Informed RRT*(해를 개선할 수 있는
                         타원체만 샘플링), FMT*(batch 단위 전파), BIT*, ABIT*, AIT*, EIT*,
                         FCIT*(batch와 heuristic 순서의 간선 처리).</li>
-                    <li><strong>Kinodynamic</strong>: Kinodynamic RRT*, LQR-RRT*, SST(정확한 steer
+                    <li><strong>Kinodynamic</strong>: SST, Kinodynamic RRT*, LQR-RRT*(정확한 steer
                         가 어렵거나 불가능한 동역학 위에서 직접 계획).</li>
                 </ul>}
             />

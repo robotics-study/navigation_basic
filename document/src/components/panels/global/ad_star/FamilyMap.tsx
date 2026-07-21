@@ -25,7 +25,7 @@ const FamilyMap = () => {
                     <div className="text-center text-xs font-semibold text-muted uppercase tracking-wide">
                         {t("unknown / changing map", "지도를 모르거나 변함")}
                     </div>
-                    {/* vertical-rl 만 사용: 한글은 세로쓰기로 서고, 180° 회전을 더하면 글리프가 뒤집힌다 */}
+                    {/* vertical-rl만 사용: 한글은 세로쓰기로 서고, 180° 회전을 더하면 글리프가 뒤집힌다 */}
                     <div className="flex items-center justify-center text-xs font-semibold text-muted uppercase tracking-wide"
                          style={{writingMode: "vertical-rl"}}>
                         {t("time to deliberate", "시간 여유 있음")}

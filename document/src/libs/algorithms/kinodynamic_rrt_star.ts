@@ -1,7 +1,7 @@
 import {GridMap} from "../grid";
 import {TraceEvent} from "../trace/types";
 import {NumpyRandom} from "./numpy_rng";
-import {Point, SamplingGrid} from "./sampling_space";
+import {discCollides, Point, SamplingGrid} from "./sampling_space";
 
 // 브라우저 라이브 데모용 Kinodynamic RRT* (Webb & van den Berg 2013). 저장소 구현을
 // 그대로 미러한다: 상태는 double integrator (x, y, vx, vy)이고, 간선은 직선이 아니라
@@ -20,6 +20,8 @@ export interface KinodynamicRRTStarOptions {
     neighborRadius: number;
     controlWeight: number;
     maxVelocity: number;
+    // 미지정 시 config 기본값과 같은 0.15 (차체 disc 반경, meter)
+    footprintRadius?: number;
     seed: number;
 }
 
@@ -250,13 +252,17 @@ type Emit = (ev: Omit<TraceEvent, "seq">) => void;
 
 // 최적 간선 x0→x1: 충돌 없으면 (edge_cost, dense 궤적), 아니면 null.
 function connect(
-    space: SamplingGrid, x0: State4, x1: State4, r: number,
+    space: SamplingGrid, map: GridMap, footprintRadius: number,
+    x0: State4, x1: State4, r: number,
 ): {edgeCost: number; traj: Point[]} | null {
     const [cost, tau] = optimalCost(x0, x1, r);
     if (!Number.isFinite(cost) || tau <= EPS) return null;
     const traj = trajectoryXY(x0, x1, tau);
     let prev: Point = [x0[0], x0[1]];
     for (const pt of traj) {
+        // disc는 방향 불변이라 theta는 형식상 0. 웨이포인트 간격(≤0.3 m)과 반경이
+        // 같은 자릿수라 disc 사슬이 몸체 여유를 근사한다.
+        if (discCollides(map, footprintRadius, pt[0], pt[1])) return null;
         if (!space.isMotionValid(prev, pt)) return null;
         prev = pt;
     }
@@ -265,7 +271,7 @@ function connect(
 
 export function runKinodynamicRRTStar(opts: KinodynamicRRTStarOptions): TraceEvent[] {
     const {map, start, goal, maxIterations, goalBias, goalTolerance, neighborRadius,
-           controlWeight: r, maxVelocity, seed} = opts;
+           controlWeight: r, maxVelocity, footprintRadius = 0.15, seed} = opts;
     const space = new SamplingGrid(map, seed);
     const rng = new NumpyRandom(seed);
     const events: TraceEvent[] = [];
@@ -276,7 +282,8 @@ export function runKinodynamicRRTStar(opts: KinodynamicRRTStarOptions): TraceEve
         algorithm: "kinodynamic_rrt_star",
         params: {max_iterations: maxIterations, goal_bias: goalBias,
                  goal_tolerance: goalTolerance, neighbor_radius: neighborRadius,
-                 control_weight: r, max_velocity: maxVelocity, seed},
+                 control_weight: r, max_velocity: maxVelocity,
+                 footprint_radius: footprintRadius, seed},
     });
 
     // 고정 최종상태: start/goal은 정지 상태(속도 0)로 들어 올린다.
@@ -350,7 +357,7 @@ export function runKinodynamicRRTStar(opts: KinodynamicRRTStarOptions): TraceEve
         let bestEdge: Point[] = [];
         let bestTotal = Infinity;
         for (const j of cands) {
-            const conn = connect(space, tree.states[j], xNew, r);
+            const conn = connect(space, map, footprintRadius, tree.states[j], xNew, r);
             if (conn === null) continue;
             const total = tree.cost[j] + conn.edgeCost;
             emit({event: "candidate_evaluated", state: [xNew[0], xNew[1]], cost: total});
@@ -377,7 +384,7 @@ export function runKinodynamicRRTStar(opts: KinodynamicRRTStarOptions): TraceEve
         const xNew = tree.states[newIdx];
         for (const j of neighbors) {
             if (j === tree.parent[newIdx] || j === newIdx) continue;
-            const conn = connect(space, xNew, tree.states[j], r);
+            const conn = connect(space, map, footprintRadius, xNew, tree.states[j], r);
             if (conn === null) continue;
             if (tree.cost[newIdx] + conn.edgeCost < tree.cost[j]) {
                 tree.reparent(j, newIdx, conn.edgeCost, conn.traj);
@@ -395,7 +402,7 @@ export function runKinodynamicRRTStar(opts: KinodynamicRRTStarOptions): TraceEve
             && Math.abs(xNew[2]) <= EPS && Math.abs(xNew[3]) <= EPS) {
             return {cost: tree.cost[newIdx], traj: []};
         }
-        const conn = connect(space, xNew, xGoal, r);
+        const conn = connect(space, map, footprintRadius, xNew, xGoal, r);
         if (conn === null) return null;
         return {cost: tree.cost[newIdx] + conn.edgeCost, traj: conn.traj};
     };

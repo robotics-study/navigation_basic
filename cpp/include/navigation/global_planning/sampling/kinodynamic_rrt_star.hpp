@@ -22,7 +22,7 @@ class KinodynamicRrtStarPlanner final : public core::SamplingPlanner {
       : core::SamplingPlanner(std::move(params)) {}
   std::string name() const override { return "kinodynamic_rrt_star"; }
   std::set<core::Capability> required_capabilities() const override {
-    return {core::Capability::SAMPLING_SPACE};
+    return {core::Capability::SAMPLING_SPACE, core::Capability::SE2_COLLISION_SPACE};
   }
   core::PlanResult<core::Point> plan(core::SamplingSpace<core::Point>& space,
                                      const core::Point& start, const core::Point& goal,

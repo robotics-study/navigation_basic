@@ -304,8 +304,8 @@ return failure`}/>
                     ]}/>
                     <p>
                         admissible heuristic을 의도적으로 <em>부풀리면</em>{" "}
-                        <strong>weighted A*</strong> (Pohl, 1970)가 된다: frontier 를{" "}
-                        <InlineMath math="w > 1"/> 인 <InlineMath math="f = g + w\,h"/>로 정렬한다.
+                        <strong>weighted A*</strong> (Pohl, 1970)가 된다: frontier를{" "}
+                        <InlineMath math="w > 1"/>인 <InlineMath math="f = g + w\,h"/>로 정렬한다.
                         탐색은 더 탐욕적이 되어 확장 노드가 줄고, 최적성은 잃어도 손실에는 상한이 있다:
                         반환 경로의 비용이 최적의 <InlineMath math="w"/> 배를 넘지 않는다. Dijkstra
                         가 한쪽 끝, greedy best-first가 반대쪽 끝인 이 g–h 다이얼이 실전에서 가장
@@ -373,7 +373,7 @@ return failure`}/>
                         <BlockMath math="f(n) = g^*(n) + h(n) \;\overset{\text{admissible}}{\le}\; g^*(n) + h^*(n) \;=\; C^* \;<\; g(\text{goal}) = f(\text{goal})"/>
                         <Terms items={[
                             ["g^*(n)", <>시작→<InlineMath math="n"/>의 참 최적 비용</>],
-                            ["h^*(n)", <><InlineMath math="n"/>→목표의 참 최적 잔여 비용 (admissible 이란 <InlineMath math="h \le h^*"/>라는 뜻)</>],
+                            ["h^*(n)", <><InlineMath math="n"/>→목표의 참 최적 잔여 비용 (admissible이란 <InlineMath math="h \le h^*"/>라는 뜻)</>],
                             ["C^*", "최적 시작→목표 경로의 비용"],
                             ["f,\\ g,\\ h", <>A*의 그 양들: <InlineMath math="f = g + h"/>, <InlineMath math="g"/> = 지금까지 찾은 최소 비용, <InlineMath math="h"/> = heuristic 추정치</>],
                         ]}/>
@@ -444,8 +444,8 @@ return failure`}/>
                     아래 sandbox는 브라우저에서 A*를 라이브로 실행한다. grid를 드래그해 벽을
                     그리거나 지우고, 두 끝점을 끌어 시작/목표를 옮기고, 가중치{" "}
                     <InlineMath math="w"/>를 바꿔 보라. 볼거리는 셋이다: <InlineMath math="w"/>가
-                    커질수록 탐색 영역(남색)의 모양이 어떻게 변하는지, <InlineMath math="w = 0"/>{" "}
-                    이 모든 방향으로 대칭으로 번지는 것, 그리고 greedy 설정이 U자 pocket 안으로
+                    커질수록 탐색 영역(남색)의 모양이 어떻게 변하는지, <InlineMath math="w = 0"/>이
+                    모든 방향으로 대칭으로 번지는 것, 그리고 greedy 설정이 U자 pocket 안으로
                     뛰어들었다가 눈에 띄게 더 긴 경로를 들고 나오는 것.
                 </p>}
             />

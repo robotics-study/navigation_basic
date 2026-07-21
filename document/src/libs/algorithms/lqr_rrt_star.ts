@@ -1,7 +1,7 @@
 import {GridMap} from "../grid";
 import {TraceEvent} from "../trace/types";
 import {NumpyRandom} from "./numpy_rng";
-import {Point, SamplingGrid} from "./sampling_space";
+import {discCollides, Point, SamplingGrid} from "./sampling_space";
 
 // 브라우저 라이브 데모용 LQR-RRT* (Perez, Platt, Konidaris, Kaelbling &
 // Lozano-Pérez 2012). 저장소 python 구현을 그대로 미러한다. RRT*의 거리 metric과
@@ -25,6 +25,8 @@ export interface LQRRRTStarOptions {
     lqrDt: number;
     controlLimit: number;
     maxVelocity: number;
+    // 미지정 시 config 기본값과 같은 0.15 (차체 disc 반경, meter)
+    footprintRadius?: number;
     seed: number;
 }
 
@@ -203,7 +205,7 @@ class LqrTree {
 
 export function runLQRRRTStar(opts: LQRRRTStarOptions): TraceEvent[] {
     const {map, start, goal, maxIterations, stepSize, goalBias, goalTolerance,
-           neighborRadius, qPos, qVel, rCtrl, lqrDt, controlLimit, maxVelocity, seed} = opts;
+           neighborRadius, qPos, qVel, rCtrl, lqrDt, controlLimit, maxVelocity, footprintRadius = 0.15, seed} = opts;
     const space = new SamplingGrid(map, seed);
     const rng = new NumpyRandom(seed);
     const events: TraceEvent[] = [];
@@ -215,7 +217,8 @@ export function runLQRRRTStar(opts: LQRRRTStarOptions): TraceEvent[] {
         params: {max_iterations: maxIterations, step_size: stepSize, goal_bias: goalBias,
                  goal_tolerance: goalTolerance, neighbor_radius: neighborRadius,
                  q_pos: qPos, q_vel: qVel, r_ctrl: rCtrl, lqr_dt: lqrDt,
-                 control_limit: controlLimit, max_velocity: maxVelocity, seed},
+                 control_limit: controlLimit, max_velocity: maxVelocity,
+                 footprint_radius: footprintRadius, seed},
     });
 
     // Riccati는 구성 시 한 번 — 이 LTI 계에서 S/K는 상태 독립이다.
@@ -276,6 +279,9 @@ export function runLQRRRTStar(opts: LQRRRTStarOptions): TraceEvent[] {
             vx = vx + dt * ux;
             vy = vy + dt * uy;
             const cur: Point = [px, py];
+            // disc는 방향 불변이라 theta는 형식상 0. 적분 스텝(≤ v_max·dt ≈ 0.3 m)과
+            // 반경이 같은 자릿수라 disc 사슬이 몸체 여유를 근사한다.
+            if (discCollides(map, footprintRadius, px, py)) return null;
             if (!space.isMotionValid(prev, cur)) return null;
             traj.push(cur);
             prev = cur;

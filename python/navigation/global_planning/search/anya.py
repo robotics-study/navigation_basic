@@ -359,7 +359,9 @@ class Anya(GlobalPlanner[Cell, "LineOfSightSpace[Cell]"]):
             beams = _clear_pieces(free, root, float(y), span_lo, span_hi, splits, eps)
             self._emit(free, root, float(y), beams, found, eps)
             steps = 0
-            while beams and r0 - 2 <= y <= r1 + 2 and steps < 400:
+            # steps 상한은 성분 높이에서 유도한 순수 안전망 — y-범위 검사가 먼저 물므로
+            # 어떤 크기의 맵에서도 sweep 을 조기 종료시키지 않는다 (최적성 유지).
+            while beams and r0 - 2 <= y <= r1 + 2 and steps < (r1 - r0 + 8):
                 yn = y + direction
                 child: list[tuple[float, float]] = []
                 for a, b in beams:
@@ -383,7 +385,7 @@ class Anya(GlobalPlanner[Cell, "LineOfSightSpace[Cell]"]):
             for direction in (1, -1):
                 x = int(round(rx))
                 steps = 0
-                while c0 - 2 <= x <= c1 + 2 and steps < 400:
+                while c0 - 2 <= x <= c1 + 2 and steps < (c1 - c0 + 8):
                     col = x if direction > 0 else x - 1
                     if not _cell_free(free, col, yr - 1) and not _cell_free(free, col, yr):
                         break

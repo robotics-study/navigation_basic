@@ -12,6 +12,10 @@ import {insertBestParent, nearRadius, rewireStep} from "./rrt_star";
 // 지름길 pruning). planner RNG와 map RNG가 같은 seed의 독립 numpy 스트림이라는 것,
 // 그리고 goal_bias 동전과 random steering 각도는 planner RNG, 표본은 map RNG라는
 // draw 순서까지 미러하므로 같은 seed면 python demo와 표본·트리·개선 열이 일치한다.
+// 논문과의 의도된 편차: Wu et al.은 plain RRT를 외곽 루프마다 재초기화하고 여러
+// 경로를 교차점에서 융합(Fast-Optimal, Alg. 3/4/7)하지만, 이 저장소(와 이 미러)는
+// 지속되는 RRT* 트리 + 단일 경로 삼각부등식 shortcut으로 대체한다. 점근 최적성은
+// RRT* rewire가 진다. Fast-Sampling/Random Steering은 논문 그대로다 (Alg. 5/6).
 export interface FastRRTOptions {
     map: GridMap;
     start: Point;

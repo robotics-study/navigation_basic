@@ -36,6 +36,7 @@ std::string lqr_cfg(int max_iterations, double goal_tolerance, double r_ctrl = 1
       "  - {name: lqr_dt, type: float, default: 0.2, min: 0.01, max: 10, description: dt}\n"
       "  - {name: control_limit, type: float, default: 10.0, min: 0.01, max: 1000, description: u}\n"
       "  - {name: max_velocity, type: float, default: 1.5, min: 0.01, max: 100, description: v}\n"
+      "  - {name: footprint_radius, type: float, default: 0.15, min: 0.01, max: 20, description: fp}\n"
       "  - {name: seed, type: int, default: 3, min: 0, max: 2147483647, description: s}\n");
 }
 

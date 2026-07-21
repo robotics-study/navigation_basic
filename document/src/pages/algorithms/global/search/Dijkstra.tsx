@@ -100,8 +100,8 @@ const Dijkstra = () => {
                 ko={<ul>
                     <li>유한 그래프에서 <strong>완전</strong>하고, 음수 아닌 edge 비용에서{" "}
                         <strong>최적</strong>이다.</li>
-                    <li><strong>시간</strong>은 binary heap 으로{" "}
-                        <InlineMath math="O((V + E)\log V)"/> (Fibonacci heap 으로는{" "}
+                    <li><strong>시간</strong>은 binary heap으로{" "}
+                        <InlineMath math="O((V + E)\log V)"/> (Fibonacci heap으로는{" "}
                         <InlineMath math="O(E + V\log V)"/> 이지만 대체로 이론적 관심사),{" "}
                         <strong>메모리</strong>는 <InlineMath math="O(V)"/>.</li>
                     <li>노드를 <InlineMath math="g"/> 비감소 순으로 확장한다. frontier가 비용
@@ -215,7 +215,7 @@ return failure`}/>
                         <BlockMath math="g(v) \;\overset{\text{relaxed}}{\le}\; \delta(s, u) + c(u, v) \;\overset{c\,\ge\,0}{\le}\; \delta(s, n) \;<\; g(n)"/>
                         <Terms items={[
                             ["\\delta(s, x)", <>true shortest-path cost from the start to <InlineMath math="x"/></>],
-                            ["(u, v)", <>the first edge of the shortest path <InlineMath math="\\sigma"/> that leaves the settled set: <InlineMath math="u"/> settled, <InlineMath math="v"/> not yet</>],
+                            ["(u, v)", <>the first edge of the shortest path <InlineMath math="\sigma"/> that leaves the settled set: <InlineMath math="u"/> settled, <InlineMath math="v"/> not yet</>],
                             ["g(\\cdot)", "cheapest cost found so far; relaxing (u, v) already offered v the value δ(s,u) + c(u,v)"],
                         ]}/>
                         <p>
@@ -240,7 +240,7 @@ return failure`}/>
                         <BlockMath math="g(v) \;\overset{\text{relaxed}}{\le}\; \delta(s, u) + c(u, v) \;\overset{c\,\ge\,0}{\le}\; \delta(s, n) \;<\; g(n)"/>
                         <Terms items={[
                             ["\\delta(s, x)", <>시작→<InlineMath math="x"/>의 참 최단 비용</>],
-                            ["(u, v)", <>최단 경로 <InlineMath math="\\sigma"/>가 settle 집합을 처음 벗어나는 간선. <InlineMath math="u"/>는 settle 됨, <InlineMath math="v"/>는 아직</>],
+                            ["(u, v)", <>최단 경로 <InlineMath math="\sigma"/>가 settle 집합을 처음 벗어나는 간선. <InlineMath math="u"/>는 settle 됨, <InlineMath math="v"/>는 아직</>],
                             ["g(\\cdot)", "지금까지 찾은 최소 비용. (u, v)를 relax 할 때 v는 이미 δ(s,u) + c(u,v)를 제안받았다"],
                         ]}/>
                         <p>

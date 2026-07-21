@@ -122,7 +122,7 @@ const GraphSearch = () => {
             <h2>{t("A Map of the Algorithms", "알고리즘 지도")}</h2>
             <T
                 en={<ul>
-                    <li><strong>Foundations</strong> — BFS (uniform hops), Dijkstra (uniform costs),
+                    <li><strong>Foundations</strong> — BFS (uniform hops), Dijkstra (weighted costs),
                         A* (heuristic guidance). Everything else assumes these.</li>
                     <li><strong>Anytime &amp; incremental</strong> — ARA* (start greedy, tighten the
                         bound), D* Lite (repair the plan when the map changes), AD* (both at once).</li>

@@ -379,10 +379,10 @@ for each batch:
             <h2>Demo</h2>
             <T
                 en={<p>
-                    The sandbox runs BIT* around a central block and lets you add batches one at
-                    a time. The first batch already returns a bent path; each further batch draws
-                    a fresh informed batch and the edge queue tightens the incumbent toward the
-                    taut corner route. Alongside, Informed RRT* runs on the same sample budget —
+                    The sandbox runs BIT* through a field of nine pillars and lets you add batches
+                    one at a time. The first batch already returns a bent path; each further batch
+                    draws a fresh informed batch and the edge queue tightens the incumbent toward the
+                    taut route that hugs the pillar corners. Alongside, Informed RRT* runs on the same sample budget —
                     and often has not found a path yet, because BIT*'s edge queue reaches the goal
                     with far fewer samples. The replay below is the repository demo on the
                     benchmark maps.

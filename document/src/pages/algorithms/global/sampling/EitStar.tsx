@@ -388,18 +388,21 @@ return path to goal from the last forward tree`}/>
             <h2>Demo</h2>
             <T
                 en={<p>
-                    The sandbox runs EIT* through a thick wall with a single gate at the top, with the
-                    start and goal both low so the path must detour up and over. Watch the two reverse
+                    The sandbox runs EIT* around a thick horizontal shelf that splits top from bottom
+                    and is open only at its right end. The start sits above the shelf and the goal below
+                    it, both on the left, so the straight line between them cuts through the shelf and
+                    the real path has to detour around the open right end. Watch the two reverse
                     heuristics read out at the start: cost-to-go <InlineMath math="\hat h"/> in metres
                     — the same estimate AIT* builds — and effort-to-go <InlineMath math="\hat e"/> in
-                    collision-check segments, the second reverse search EIT* adds. Both route over the
-                    gate, so both climb above the obstacle-blind straight-line count. Add batches and
-                    the estimates sharpen as invalid edges prune both reverse graphs. The replay below
-                    is the repository demo on the benchmark maps.
+                    collision-check segments, the second reverse search EIT* adds. Both route around the
+                    shelf's right end, so both climb above the obstacle-blind straight-line count. Add
+                    batches and the estimates sharpen as invalid edges prune both reverse graphs. The
+                    replay below is the repository demo on the benchmark maps.
                 </p>}
                 ko={<p>
-                    sandbox는 위쪽에 문 하나만 난 두꺼운 벽에 EIT*를 돌린다. 시작점과 goal이 모두 아래에
-                    있어 경로는 위로 크게 우회해야 한다. 시작점에서 읽히는 두 역방향 heuristic을 보라.
+                    sandbox는 위아래를 가르고 오른쪽 끝만 열린 두꺼운 가로 선반에 EIT*를 돌린다. start는
+                    선반 위, goal은 선반 아래에 있고 둘 다 왼쪽이라, 둘을 잇는 직선은 선반을 가로질러 실제
+                    경로는 열린 오른쪽 끝을 크게 돌아야 한다. 시작점에서 읽히는 두 역방향 heuristic을 보라.
                     meters로 잰 cost-to-go <InlineMath math="\hat h"/>는 AIT*가 세우는 것과 같은 추정이고,
                     충돌 검사 segment로 잰 effort-to-go <InlineMath math="\hat e"/>는 EIT*가 더한 두 번째
                     역방향 탐색이다. 둘 다 선반 오른쪽 끝을 돌아, 장애물을 못 보는 직선 검사 수를 넘어 오른다.

@@ -8,8 +8,10 @@ line-of-sight query is deferred to ``set_vertex`` when the vertex is popped for
 expansion: if the assumed parent is not actually visible, the parent is repaired
 to the cheapest already-settled grid neighbour (Path 1 is a valid adjacent move,
 so the generator is always a visible fallback). This yields one line-of-sight
-check per *expanded vertex* instead of one per *edge* — same any-angle paths as
-Theta*, far fewer checks (Nash & Koenig 2010).
+check per *expanded vertex* instead of one per *edge*. Per instance the returned
+path can differ slightly from Theta*'s in either direction (the optimistic
+assumption changes tie-breaking), but path lengths stay comparable in aggregate
+("without an increase in path length", Nash & Koenig 2010) — and far fewer checks.
 
 Does NOT subclass ``_BestFirstSearch`` (its octile heuristic + grid relaxation are
 wrong for any-angle) and does NOT import Theta* (algorithm modules must not depend

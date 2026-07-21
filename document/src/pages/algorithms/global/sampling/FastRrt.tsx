@@ -79,7 +79,7 @@ const FastRrt = () => {
                         ["q_{\\text{new}}", "the candidate new node produced by a random probe"],
                         ["q_{\\text{near}}", <>the tree node nearest to the sample, from which the extension is attempted</>],
                         ["\\eta", "the step size: the fixed extension distance of one steer"],
-                        ["\\theta", <><strong>the new term</strong>: a random heading drawn uniformly in <InlineMath math="[0, 2\\pi)"/>, retried up to a bounded count until the step is collision-free</>],
+                        ["\\theta", <><strong>the new term</strong>: a random heading drawn uniformly in <InlineMath math="[0, 2\pi)"/>, retried up to a bounded count until the step is collision-free</>],
                     ]}/>
                     <p>
                         <strong>Fast-Optimal.</strong> Once a node reaches the goal region,
@@ -118,7 +118,7 @@ const FastRrt = () => {
                         ["q_{\\text{new}}", "무작위 탐침이 만든 후보 새 노드"],
                         ["q_{\\text{near}}", <>표본에 가장 가까운 트리 노드. 확장을 시도하는 출발점이다</>],
                         ["\\eta", "step size. steer 한 번의 고정 확장 거리"],
-                        ["\\theta", <><strong>새로 추가된 항</strong>: <InlineMath math="[0, 2\\pi)"/>에서 균일하게 뽑는 무작위 방향. 스텝이 충돌 없을 때까지 상한 횟수만큼 재시도한다</>],
+                        ["\\theta", <><strong>새로 추가된 항</strong>: <InlineMath math="[0, 2\pi)"/>에서 균일하게 뽑는 무작위 방향. 스텝이 충돌 없을 때까지 상한 횟수만큼 재시도한다</>],
                     ]}/>
                     <p>
                         <strong>Fast-Optimal.</strong> 노드가 goal 영역에 닿으면 추출된
@@ -138,6 +138,11 @@ const FastRrt = () => {
                         explores, not the RRT* rewiring that carries the asymptotic
                         guarantee. Fast-Sampling and Random Steering are heuristics that cut
                         search-time variance, especially through narrow passages.</li>
+                    <li><strong>Divergence from the paper</strong>: Wu et al. re-initialise a
+                        plain RRT per outer iteration and their Fast-Optimal <em>fuses
+                        multiple paths</em> at crossing points; this repository keeps one
+                        persistent RRT* tree and replaces the fusion with a single-path
+                        triangle-inequality shortcut — same intent, simpler mechanism.</li>
                     <li><strong>Anytime</strong>: the incumbent is the cheapest shortcut path
                         seen so far and only improves; the loop always runs its full
                         budget.</li>
@@ -160,6 +165,10 @@ const FastRrt = () => {
                         점근 보장을 지는 RRT* rewire는 건드리지 않는다. Fast-Sampling 과
                         Random Steering은 search-time variance를 줄이는 휴리스틱이고,
                         특히 좁은 통로에서 효과가 크다.</li>
+                    <li><strong>논문과의 편차</strong>: Wu et al.은 외곽 루프마다 plain RRT를
+                        재초기화하고 Fast-Optimal이 <em>여러 경로를 교차점에서 융합</em>하지만,
+                        이 저장소는 지속되는 RRT* 트리 하나에 단일 경로 삼각부등식 shortcut을
+                        얹는다. 의도는 같고 기전은 더 단순하다.</li>
                     <li><strong>Anytime</strong>: 현직 해는 지금까지 본 가장 싼 지름길
                         경로이고 개선만 된다. 루프는 언제나 예산을 다 쓴다.</li>
                     <li>RRT처럼 <strong>확률적 완전</strong>. goal biased draw는 항상
@@ -273,7 +282,7 @@ repeat max_iterations times:
                     </>}
                     ko={<>
                         <p>
-                            <strong>가정.</strong> 지름길은 waypoint 들의 한 구간{" "}
+                            <strong>가정.</strong> 지름길은 waypoint들의 한 구간{" "}
                             <InlineMath math="p_i, p_{i+1}, \dots, p_j"/>를 하나의 직선 현{" "}
                             <InlineMath math="p_i \to p_j"/>로 바꾸며, 그 현이 충돌 없을
                             때에만 그렇게 한다. 그 길이는 제거되는 폴리라인과 삼각 부등식을

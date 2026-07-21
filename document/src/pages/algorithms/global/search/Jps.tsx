@@ -63,7 +63,7 @@ const Jps = () => {
                     </p>
                     <p>
                         구체적으로 JPS는 이웃 여덟을 큐에 넣는 대신, 허용된 각 방향으로 셀을
-                        건너뛰며 직선 <em>스캔</em>을 하고, goal 이나 <em>forced neighbor</em> 가
+                        건너뛰며 직선 <em>스캔</em>을 하고, goal이나 <em>forced neighbor</em>가
                         있는 셀에서만 멈춘다. 이 저장소의 grid는 corner-cutting을 금지하므로,
                         forced neighbor는 진행 방향의 대각 <em>뒤</em>에 장애물이 있어 여기서
                         꺾어야만 닿는 옆 칸이 열릴 때 생긴다. 대각 스캔은 위임한다. 대각 한 걸음
@@ -148,7 +148,7 @@ scan(u, d):
                     <li>goal은 항상 스캔을 멈춘다. jump 대상으로 도달 가능해야 하기 때문이다.</li>
                     <li>forced-neighbor 규칙(no-corner-cutting 변형). 꺾어야 하는 순간은 장애물
                         모서리를 막 지난 직후뿐이다.</li>
-                    <li>대각 스캔은 직선 probe로 한 단계 위임한다. 직교 방향으로 jump point 가
+                    <li>대각 스캔은 직선 probe로 한 단계 위임한다. 직교 방향으로 jump point가
                         "보이는" 대각 셀이 곧 경로가 갈라져야 하는 지점이다.</li>
                 </ol>}
             />

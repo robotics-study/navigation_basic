@@ -146,8 +146,8 @@ class SST(_SamplingPlanner):
                 x += v * math.cos(theta) * dt
                 y += v * math.sin(theta) * dt
                 p: Point = (x, y)
-                # 웨이포인트 간격(0.2 m)이 footprint 반경 이하라 disc 사슬이 chord를
-                # 덮지만, 얇은 벽 corner-cut 은 supercover chord 검사로 함께 막는다.
+                # 웨이포인트 간격(0.2 m)과 반경이 같은 자릿수라 disc 사슬이 몸체 여유를
+                # 근사하고, 점 수준 corner-cut 은 supercover chord 검사가 마저 막는다.
                 if space.is_collision(footprint, (x, y, theta)):
                     return None
                 if not space.is_state_valid(p) or not space.is_motion_valid(prev, p):

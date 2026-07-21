@@ -10,6 +10,16 @@ Improved-RRT + Fast-Optimal on top of an RRT*-style tree:
   * Fast-Optimal: once a feasible path exists, shortcut-prune it via the triangle
     inequality (drop waypoints whose bypass segment is collision-free) and keep
     the min-cost path; anytime, like RRT*.
+
+Divergence from the paper (deliberate): Wu et al.'s framework re-initialises a
+PLAIN RRT (no rewiring) per outer iteration and their Fast-Optimal FUSES the
+resulting multiple paths at their crossing points (Alg. 3/4/7). This
+implementation instead keeps ONE persistent RRT*-style tree (choose-parent +
+rewire) and replaces the multi-path fusion with a single-path triangle-inequality
+shortcut — same intent (cheap post-hoc path improvement), different mechanism;
+asymptotic optimality here is carried by the RRT* rewiring, not by fusion.
+Fast-Sampling and Random Steering follow the paper (Alg. 5/6, with the unbounded
+resample loop capped by `steering_attempts`).
 """
 
 from __future__ import annotations
