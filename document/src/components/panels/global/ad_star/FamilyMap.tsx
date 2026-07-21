@@ -25,14 +25,15 @@ const FamilyMap = () => {
                     <div className="text-center text-xs font-semibold text-muted uppercase tracking-wide">
                         {t("unknown / changing map", "지도를 모르거나 변함")}
                     </div>
-                    <div className="flex items-center justify-end text-xs font-semibold text-muted uppercase tracking-wide"
-                         style={{writingMode: "vertical-rl", transform: "rotate(180deg)"}}>
+                    {/* vertical-rl 만 사용: 한글은 세로쓰기로 서고, 180° 회전을 더하면 글리프가 뒤집힌다 */}
+                    <div className="flex items-center justify-center text-xs font-semibold text-muted uppercase tracking-wide"
+                         style={{writingMode: "vertical-rl"}}>
                         {t("time to deliberate", "시간 여유 있음")}
                     </div>
                     <Quad name="A*" desc={t("one optimal search", "한 번의 최적 탐색")}/>
                     <Quad name="D* Lite" desc={t("incremental repair", "incremental 수리")}/>
-                    <div className="flex items-center justify-end text-xs font-semibold text-muted uppercase tracking-wide"
-                         style={{writingMode: "vertical-rl", transform: "rotate(180deg)"}}>
+                    <div className="flex items-center justify-center text-xs font-semibold text-muted uppercase tracking-wide"
+                         style={{writingMode: "vertical-rl"}}>
                         {t("answer needed now", "답이 지금 필요")}
                     </div>
                     <Quad name="ARA*" desc={t("anytime ε-schedule", "anytime ε-스케줄")}/>
