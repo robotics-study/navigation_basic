@@ -44,6 +44,15 @@ export const ALGO_BLURBS: AlgoBlurb[] = [
         },
     },
     {
+        slug: "ad_star",
+        blurb: {
+            en: "ARA* and D* Lite fused: anytime ε-bounded plans while driving an " +
+                "unknown map, repaired incrementally at every discovery.",
+            ko: "ARA*와 D* Lite의 결합. 미지 지도를 주행하며 anytime ε-한계 계획을 " +
+                "발표하고, 발견마다 incremental하게 수리한다.",
+        },
+    },
+    {
         slug: "astar",
         blurb: {
             en: "Dijkstra plus a compass: order the frontier by g + h and an admissible " +
