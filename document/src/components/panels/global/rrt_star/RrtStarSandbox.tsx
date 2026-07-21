@@ -1,6 +1,7 @@
 import {useMemo, useState} from "react";
 import CanvasFigure, {modalCanvasSize} from "../../../CanvasFigure";
 import TracePlayer from "../../../player/TracePlayer";
+import ParamSlider from "../../../player/ParamSlider";
 import {runRRT} from "../../../../libs/algorithms/rrt";
 import {runRRTStar} from "../../../../libs/algorithms/rrt_star";
 import {Point} from "../../../../libs/algorithms/sampling_space";
@@ -11,9 +12,6 @@ import {PATH_COLOR} from "../../../2d/GridCanvas";
 import cn from "../../../../libs/cn";
 import {BLOCK_GOAL, BLOCK_START, centerBlockMap} from "./presets";
 
-// 라이브 RRT* sandbox. 예산을 키우면 경로가 팽팽해지는 anytime 수렴을, 같은
-// seed의 RRT 첫 경로(점선)와 비용으로 맞세워 보여 준다.
-const BUDGETS = [800, 2000, 5000];
 
 const cellToWorld = (map: GridMap, c: Cell): Point =>
     [map.originX + (c[1] + 0.5) * map.resolution,
@@ -76,17 +74,7 @@ const RrtStarScene = ({panel = 340}: {panel?: number}) => {
             footer={
                 <div className="flex flex-col items-center gap-1.5">
                     <div className="flex items-center justify-center gap-1.5 text-xs text-muted flex-wrap tabular-nums">
-                        {BUDGETS.map((b) => (
-                            <button key={b} type="button" onClick={() => setBudget(b)}
-                                    className={cn(
-                                        "px-2 py-0.5 rounded border tabular-nums",
-                                        budget === b
-                                            ? "border-[var(--accent)] text-[var(--accent)] font-semibold"
-                                            : "border-border hover:bg-surface",
-                                    )}>
-                                {b} {t("iters", "반복")}
-                            </button>
-                        ))}
+                        <ParamSlider label={t("iters", "반복")} value={budget} min={500} max={6000} step={100} onCommit={setBudget}/>
                         <button type="button" onClick={() => setShowRrt((v) => !v)}
                                 className={cn(
                                     "px-2 py-0.5 rounded border",

@@ -1,20 +1,15 @@
 import {useMemo, useState} from "react";
 import CanvasFigure, {modalCanvasSize} from "../../../CanvasFigure";
 import TracePlayer from "../../../player/TracePlayer";
+import ParamSlider from "../../../player/ParamSlider";
 import {runLQRRRTStar} from "../../../../libs/algorithms/lqr_rrt_star";
 import {Point} from "../../../../libs/algorithms/sampling_space";
 import {buildGridTimeline, Cell} from "../../../../libs/trace/timeline";
 import {GridMap} from "../../../../libs/grid";
 import {useTr} from "../../../../libs/i18n";
 import {PATH_COLOR} from "../../../2d/GridCanvas";
-import cn from "../../../../libs/cn";
 import {LQR_GOAL, LQR_START, chevronMap} from "./presets";
 
-// 라이브 LQR-RRT* sandbox. 제어 비용 가중 r_ctrl을 바꾸면 steering의 성격이 드러난다.
-// r_ctrl이 작으면 제어를 아끼지 않아 짧고 공격적인 rest→rest 호로 싸게 도달하고, 크면
-// 굼뜬 조절이 되어 같은 트리 크기에서도 궤적 LQR 비용이 오른다. 곡선 간선과 차량 주행이
-// 피드백 steering을 그대로 보여 준다.
-const R_CTRL = [0.2, 1.0, 5.0]
 const BUDGET = 1200
 
 const cellToWorld = (map: GridMap, c: Cell): Point =>
@@ -72,17 +67,7 @@ const LqrScene = ({panel = 340}: {panel?: number}) => {
                 <div className="flex flex-col items-center gap-1.5">
                     <div className="flex items-center justify-center gap-1.5 text-xs text-muted flex-wrap tabular-nums">
                         <span>{t("control cost r", "제어 비용 r")}</span>
-                        {R_CTRL.map((r) => (
-                            <button key={r} type="button" onClick={() => setRCtrl(r)}
-                                    className={cn(
-                                        "px-2 py-0.5 rounded border tabular-nums",
-                                        rCtrl === r
-                                            ? "border-[var(--accent)] text-[var(--accent)] font-semibold"
-                                            : "border-border hover:bg-surface",
-                                    )}>
-                                {r.toFixed(1)}
-                            </button>
-                        ))}
+                        <ParamSlider label="r" value={rCtrl} min={0.2} max={5} step={0.1} onCommit={setRCtrl}/>
                         <button type="button" onClick={() => setSeed((s) => s + 1)}
                                 className="px-2 py-0.5 rounded border border-border hover:bg-surface">
                             {t("regrow", "다시 성장")}

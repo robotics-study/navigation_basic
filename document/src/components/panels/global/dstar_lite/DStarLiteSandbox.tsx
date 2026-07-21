@@ -1,6 +1,7 @@
 import {useMemo, useState} from "react";
 import CanvasFigure, {modalCanvasSize} from "../../../CanvasFigure";
 import TracePlayer from "../../../player/TracePlayer";
+import ParamSlider from "../../../player/ParamSlider";
 import {runDStarLite} from "../../../../libs/algorithms/dstar_lite";
 import {runAStar} from "../../../../libs/algorithms/astar";
 import {buildGridTimeline, Cell} from "../../../../libs/trace/timeline";
@@ -12,11 +13,6 @@ import {
     trapMap, TRAP_GOAL, TRAP_START,
 } from "./presets";
 
-// 라이브 D* Lite sandbox. 사용자가 그리는 벽은 "실제 지도"이고 로봇은 그것을 모른 채
-// 출발한다. 핵심 수치는 하나다: D* Lite의 수리 비용 vs 재계획 때마다 A*를 처음부터
-// 다시 돌렸을 때의 비용. scattered는 수리가 압도하는 일반 지형, trap은 발견 하나가
-// 탐색 대부분을 무효화하는 최악 지형이다.
-const RADII = [1, 3, 5];
 type Preset = "scattered" | "trap";
 const PRESETS: Record<Preset, {map: () => GridMap; start: Cell; goal: Cell}> = {
     scattered: {map: scatterMap, start: SCATTER_START, goal: SCATTER_GOAL},
@@ -99,17 +95,7 @@ const DStarLiteScene = ({panel = 340}: {panel?: number}) => {
                             </button>
                         ))}
                         <span className="mx-1" aria-hidden="true">·</span>
-                        {RADII.map((r) => (
-                            <button key={r} type="button" onClick={() => setRadius(r)}
-                                    className={cn(
-                                        "px-2 py-0.5 rounded border tabular-nums",
-                                        radius === r
-                                            ? "border-[var(--accent)] text-[var(--accent)] font-semibold"
-                                            : "border-border hover:bg-surface",
-                                    )}>
-                                {t("sensor", "sensor")} {r}
-                            </button>
-                        ))}
+                        <ParamSlider label={t("sensor radius", "센서 반경")} value={radius} min={1} max={8} step={1} onCommit={setRadius}/>
                         <span className="tabular-nums">
                             {t("replans", "replan")}{" "}
                             <span className="font-semibold" style={{color: "var(--accent)"}}>{replans}</span>

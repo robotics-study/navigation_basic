@@ -4,6 +4,7 @@ import categoryIntros from "../categories";
 import {ALGO_BLURBS, CATEGORIES, SECTIONS} from "../algorithms/roadmap";
 import BrandLogo from "../../components/BrandLogo";
 import HeroSearch from "../../components/panels/HeroSearch";
+import SiteHighlights from "../../components/panels/home/SiteHighlights";
 import {useAlgoNav} from "../../libs/nav";
 import {useLang, useTr, pick} from "../../libs/i18n";
 import cn from "../../libs/cn";
@@ -66,6 +67,14 @@ const Home = () => {
             <div className="lander-top">
                 <BrandLogo size={54} gradId="navLanderLogo"/>
                 <h1>navigation<span className="wm-dim"> study</span></h1>
+                <p className="sub">
+                    {t(
+                        "A study of path-planning algorithms — each one derived, proven, run live in your " +
+                        "browser, and shown as the real C++ and Python source that implements it.",
+                        "path-planning 알고리즘을 하나하나 유도하고 증명하고, 브라우저에서 라이브로 돌려 보며, " +
+                        "그것을 구현한 실제 C++·Python 소스까지 함께 읽는 학습 사이트.",
+                    )}
+                </p>
                 <div className="lander-chips">
                     <span className="chip">Graph Search</span>
                     <span className="chip">A*</span>
@@ -87,6 +96,8 @@ const Home = () => {
             </div>
 
             <HeroSearch/>
+
+            <SiteHighlights/>
 
             <div className="lander-cats">
                 {SECTIONS.map((sec, si) => {

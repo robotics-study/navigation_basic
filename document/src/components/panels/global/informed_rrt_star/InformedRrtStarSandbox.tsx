@@ -1,6 +1,7 @@
 import {useMemo, useState} from "react";
 import CanvasFigure, {modalCanvasSize} from "../../../CanvasFigure";
 import TracePlayer from "../../../player/TracePlayer";
+import ParamSlider from "../../../player/ParamSlider";
 import {runInformedRRTStar} from "../../../../libs/algorithms/informed_rrt_star";
 import {runRRTStar} from "../../../../libs/algorithms/rrt_star";
 import {Point} from "../../../../libs/algorithms/sampling_space";
@@ -11,9 +12,6 @@ import {PATH_COLOR} from "../../../2d/GridCanvas";
 import cn from "../../../../libs/cn";
 import {OPEN_GOAL, OPEN_START, openEllipseMap} from "./presets";
 
-// 라이브 Informed RRT* sandbox. 첫 해가 나오면 표본이 start/goal 초점의 타원 안으로
-// 몰리는 것을, 같은 seed·예산의 RRT*(점선, 균일 표본) 경로/비용과 맞세워 보여 준다.
-const BUDGETS = [500, 1000, 2000];
 
 const cellToWorld = (map: GridMap, c: Cell): Point =>
     [map.originX + (c[1] + 0.5) * map.resolution,
@@ -78,17 +76,7 @@ const InformedRrtStarScene = ({panel = 340}: {panel?: number}) => {
             footer={
                 <div className="flex flex-col items-center gap-1.5">
                     <div className="flex items-center justify-center gap-1.5 text-xs text-muted flex-wrap tabular-nums">
-                        {BUDGETS.map((b) => (
-                            <button key={b} type="button" onClick={() => setBudget(b)}
-                                    className={cn(
-                                        "px-2 py-0.5 rounded border tabular-nums",
-                                        budget === b
-                                            ? "border-[var(--accent)] text-[var(--accent)] font-semibold"
-                                            : "border-border hover:bg-surface",
-                                    )}>
-                                {b} {t("iters", "반복")}
-                            </button>
-                        ))}
+                        <ParamSlider label={t("iters", "반복")} value={budget} min={300} max={3000} step={100} onCommit={setBudget}/>
                         <button type="button" onClick={() => setShowRrtStar((v) => !v)}
                                 className={cn(
                                     "px-2 py-0.5 rounded border",

@@ -1,6 +1,7 @@
 import {useMemo, useState} from "react";
 import CanvasFigure, {modalCanvasSize} from "../../../CanvasFigure";
 import TracePlayer from "../../../player/TracePlayer";
+import ParamSlider from "../../../player/ParamSlider";
 import {rggRadius, runPRM, runPRMStar} from "../../../../libs/algorithms/prm";
 import {Point} from "../../../../libs/algorithms/sampling_space";
 import {buildGridTimeline, Cell} from "../../../../libs/trace/timeline";
@@ -10,9 +11,6 @@ import {PATH_COLOR} from "../../../2d/GridCanvas";
 import cn from "../../../../libs/cn";
 import {SCATTER_GOAL, SCATTER_START, scatterMap} from "./presets";
 
-// 라이브 PRM* sandbox. 같은 seed의 고정 반경 PRM 경로(점선)를 겹쳐, 줄어드는
-// r_n이 어떻게 연결성과 경로 품질을 동시에 잡는지 비용 숫자로 비교한다.
-const SAMPLE_COUNTS = [100, 300, 800];
 const PRM_RADIUS = 2.5;
 
 const cellToWorld = (map: GridMap, c: Cell): Point =>
@@ -72,17 +70,7 @@ const PrmStarScene = ({panel = 340}: {panel?: number}) => {
             footer={
                 <div className="flex flex-col items-center gap-1.5">
                     <div className="flex items-center justify-center gap-1.5 text-xs text-muted flex-wrap tabular-nums">
-                        {SAMPLE_COUNTS.map((n) => (
-                            <button key={n} type="button" onClick={() => setNumSamples(n)}
-                                    className={cn(
-                                        "px-2 py-0.5 rounded border tabular-nums",
-                                        numSamples === n
-                                            ? "border-[var(--accent)] text-[var(--accent)] font-semibold"
-                                            : "border-border hover:bg-surface",
-                                    )}>
-                                {n} {t("samples", "표본")}
-                            </button>
-                        ))}
+                        <ParamSlider label={t("samples", "표본")} value={numSamples} min={50} max={1000} step={25} onCommit={setNumSamples}/>
                         <button type="button" onClick={() => setShowPrm((v) => !v)}
                                 className={cn(
                                     "px-2 py-0.5 rounded border",

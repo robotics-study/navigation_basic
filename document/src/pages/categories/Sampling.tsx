@@ -1,6 +1,6 @@
 import {T, useTr} from "../../libs/i18n";
 import {InlineMath} from "../../components/math/Tex";
-import RrtVsPrm from "../../components/panels/intro/RrtVsPrm";
+import SampleTreeVsRoadmapLive from "../../components/panels/intro/SampleTreeVsRoadmapLive";
 
 const Sampling = () => {
     const t = useTr()
@@ -116,7 +116,7 @@ const Sampling = () => {
                 </ul>}
             />
 
-            <RrtVsPrm/>
+            <SampleTreeVsRoadmapLive/>
 
             <h2>{t("Guarantees", "보장")}</h2>
             <T

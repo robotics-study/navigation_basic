@@ -1,6 +1,7 @@
 import {useMemo, useState} from "react";
 import CanvasFigure, {modalCanvasSize} from "../../../CanvasFigure";
 import TracePlayer from "../../../player/TracePlayer";
+import ParamSlider from "../../../player/ParamSlider";
 import {runFMTStar} from "../../../../libs/algorithms/fmt_star";
 import {runPRMStar} from "../../../../libs/algorithms/prm";
 import {Point} from "../../../../libs/algorithms/sampling_space";
@@ -8,13 +9,8 @@ import {buildGridTimeline, Cell} from "../../../../libs/trace/timeline";
 import {GridMap} from "../../../../libs/grid";
 import {useTr} from "../../../../libs/i18n";
 import {PATH_COLOR} from "../../../2d/GridCanvas";
-import cn from "../../../../libs/cn";
 import {FMT_GOAL, FMT_START, zigMap} from "./presets";
 
-// 라이브 FMT* sandbox. 같은 표본 위에서 PRM*를 함께 돌려, 세운 간선 수(= 통과한
-// 충돌 검사)와 최종 비용을 나란히 보여준다. FMT*는 후보마다 근방 최소비용 간선
-// 하나만 lazy 검사해 트리를 세우므로, 같은 비용을 훨씬 적은 간선으로 얻는다.
-const SAMPLE_COUNTS = [150, 300, 600];
 const GAMMA = 30;
 
 const cellToWorld = (map: GridMap, c: Cell): Point =>
@@ -70,17 +66,7 @@ const FmtStarScene = ({panel = 340}: {panel?: number}) => {
             footer={
                 <div className="flex flex-col items-center gap-1.5">
                     <div className="flex items-center justify-center gap-1.5 text-xs text-muted flex-wrap tabular-nums">
-                        {SAMPLE_COUNTS.map((n) => (
-                            <button key={n} type="button" onClick={() => setNumSamples(n)}
-                                    className={cn(
-                                        "px-2 py-0.5 rounded border tabular-nums",
-                                        numSamples === n
-                                            ? "border-[var(--accent)] text-[var(--accent)] font-semibold"
-                                            : "border-border hover:bg-surface",
-                                    )}>
-                                {n} {t("samples", "표본")}
-                            </button>
-                        ))}
+                        <ParamSlider label={t("samples", "표본")} value={numSamples} min={50} max={800} step={25} onCommit={setNumSamples}/>
                         <button type="button" onClick={() => setSeed((s) => s + 1)}
                                 className="px-2 py-0.5 rounded border border-border hover:bg-surface">
                             {t("resample", "다시 추첨")}

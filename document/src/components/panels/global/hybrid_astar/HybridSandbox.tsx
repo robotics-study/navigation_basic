@@ -1,6 +1,7 @@
 import {useMemo, useState} from "react";
 import CanvasFigure, {modalCanvasSize} from "../../../CanvasFigure";
 import TracePlayer from "../../../player/TracePlayer";
+import ParamSlider from "../../../player/ParamSlider";
 import {runHybridAStar, Pose} from "../../../../libs/algorithms/hybrid_astar";
 import {buildGridTimeline} from "../../../../libs/trace/timeline";
 import {emptyGrid, GridMap} from "../../../../libs/grid";
@@ -25,7 +26,6 @@ export function parkingLotMap(): GridMap {
     return map
 }
 
-const RADII = [1.0, 1.6, 2.4];
 
 const HybridScene = ({panel = 340}: {panel?: number}) => {
     const t = useTr()
@@ -64,17 +64,7 @@ const HybridScene = ({panel = 340}: {panel?: number}) => {
             footer={
                 <div className="flex flex-col items-center gap-1.5">
                     <div className="flex items-center justify-center gap-1.5 text-xs text-muted flex-wrap tabular-nums">
-                        {RADII.map((r) => (
-                            <button key={r} type="button" onClick={() => setRadius(r)}
-                                    className={cn(
-                                        "px-2 py-0.5 rounded border tabular-nums",
-                                        radius === r
-                                            ? "border-[var(--accent)] text-[var(--accent)] font-semibold"
-                                            : "border-border hover:bg-surface",
-                                    )}>
-                                R = {r}
-                            </button>
-                        ))}
+                        <ParamSlider label="R" value={radius} min={0.8} max={2.6} step={0.1} onCommit={setRadius}/>
                         <button type="button" onClick={() => setAllowReverse((v) => !v)}
                                 className={cn(
                                     "px-2 py-0.5 rounded border",

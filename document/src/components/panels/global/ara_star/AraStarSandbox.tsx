@@ -1,18 +1,15 @@
 import {useMemo, useState} from "react";
 import CanvasFigure, {modalCanvasSize} from "../../../CanvasFigure";
 import TracePlayer from "../../../player/TracePlayer";
+import ParamSlider from "../../../player/ParamSlider";
 import {runARAStar} from "../../../../libs/algorithms/ara_star";
 import {runAStar} from "../../../../libs/algorithms/astar";
 import {buildGridTimeline, Cell} from "../../../../libs/trace/timeline";
 import {GridMap} from "../../../../libs/grid";
 import {useTr} from "../../../../libs/i18n";
 import {PATH_COLOR} from "../../../2d/GridCanvas";
-import cn from "../../../../libs/cn";
 import {greedyTrapMap, GREEDY_GOAL, GREEDY_START} from "./presets";
 
-// 라이브 ARA* sandbox. 재생하면 ε 반복마다 경로가 발표되고(빨간 경로가 점점 짧아진다),
-// footer는 반복별 (ε, 확장 수, 비용)과 "매번 weighted A* 재실행" 대비 절약을 보여 준다.
-const EPS_STARTS = [1.5, 2.5, 4];
 
 const AraScene = ({panel = 340}: {panel?: number}) => {
     const t = useTr()
@@ -60,17 +57,7 @@ const AraScene = ({panel = 340}: {panel?: number}) => {
             footer={
                 <div className="flex flex-col items-center gap-1.5">
                     <div className="flex items-center justify-center gap-1.5 text-xs text-muted flex-wrap">
-                        {EPS_STARTS.map((e) => (
-                            <button key={e} type="button" onClick={() => setEpsStart(e)}
-                                    className={cn(
-                                        "px-2 py-0.5 rounded border tabular-nums",
-                                        epsStart === e
-                                            ? "border-[var(--accent)] text-[var(--accent)] font-semibold"
-                                            : "border-border hover:bg-surface",
-                                    )}>
-                                ε₀ = {e}
-                            </button>
-                        ))}
+                        <ParamSlider label="ε₀" value={epsStart} min={1} max={5} step={0.25} onCommit={setEpsStart}/>
                     </div>
                     <div className="flex items-center justify-center gap-3 text-xs text-muted flex-wrap tabular-nums">
                         {run.iterations.map((it, i) => (

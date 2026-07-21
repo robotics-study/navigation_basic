@@ -1,19 +1,15 @@
 import {useMemo, useState} from "react";
 import CanvasFigure, {modalCanvasSize} from "../../../CanvasFigure";
 import TracePlayer from "../../../player/TracePlayer";
+import ParamSlider from "../../../player/ParamSlider";
 import {runPRM} from "../../../../libs/algorithms/prm";
 import {Point} from "../../../../libs/algorithms/sampling_space";
 import {buildGridTimeline, Cell} from "../../../../libs/trace/timeline";
 import {GridMap} from "../../../../libs/grid";
 import {useTr} from "../../../../libs/i18n";
 import {PATH_COLOR} from "../../../2d/GridCanvas";
-import cn from "../../../../libs/cn";
 import {GATE_GOAL, GATE_START, gateMap} from "./presets";
 
-// 라이브 PRM sandbox. 좁은 문 맵에서 표본 수와 seed를 바꿔 가며 roadmap 이
-// 이어지는 순간(확률적 완전성)을 직접 본다.
-const SAMPLE_COUNTS = [60, 150, 300];
-const RADII = [1.8, 2.5, 3.2];
 
 const cellToWorld = (map: GridMap, c: Cell): Point =>
     [map.originX + (c[1] + 0.5) * map.resolution,
@@ -66,28 +62,8 @@ const PrmScene = ({panel = 340}: {panel?: number}) => {
             footer={
                 <div className="flex flex-col items-center gap-1.5">
                     <div className="flex items-center justify-center gap-1.5 text-xs text-muted flex-wrap tabular-nums">
-                        {SAMPLE_COUNTS.map((n) => (
-                            <button key={n} type="button" onClick={() => setNumSamples(n)}
-                                    className={cn(
-                                        "px-2 py-0.5 rounded border tabular-nums",
-                                        numSamples === n
-                                            ? "border-[var(--accent)] text-[var(--accent)] font-semibold"
-                                            : "border-border hover:bg-surface",
-                                    )}>
-                                {n} {t("samples", "표본")}
-                            </button>
-                        ))}
-                        {RADII.map((r) => (
-                            <button key={r} type="button" onClick={() => setRadius(r)}
-                                    className={cn(
-                                        "px-2 py-0.5 rounded border tabular-nums",
-                                        radius === r
-                                            ? "border-[var(--accent)] text-[var(--accent)] font-semibold"
-                                            : "border-border hover:bg-surface",
-                                    )}>
-                                r = {r}
-                            </button>
-                        ))}
+                        <ParamSlider label={t("samples", "표본")} value={numSamples} min={30} max={400} step={10} onCommit={setNumSamples}/>
+                        <ParamSlider label="r" value={radius} min={1.2} max={3.5} step={0.1} onCommit={setRadius}/>
                         <button type="button" onClick={() => setSeed((s) => s + 1)}
                                 className="px-2 py-0.5 rounded border border-border hover:bg-surface">
                             {t("resample", "다시 추첨")}

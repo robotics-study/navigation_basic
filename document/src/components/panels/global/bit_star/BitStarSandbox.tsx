@@ -1,6 +1,7 @@
 import {useMemo, useState} from "react";
 import CanvasFigure, {modalCanvasSize} from "../../../CanvasFigure";
 import TracePlayer from "../../../player/TracePlayer";
+import ParamSlider from "../../../player/ParamSlider";
 import {runBITStar} from "../../../../libs/algorithms/bit_star";
 import {runInformedRRTStar} from "../../../../libs/algorithms/informed_rrt_star";
 import {Point} from "../../../../libs/algorithms/sampling_space";
@@ -8,14 +9,8 @@ import {buildGridTimeline, Cell} from "../../../../libs/trace/timeline";
 import {GridMap} from "../../../../libs/grid";
 import {useTr} from "../../../../libs/i18n";
 import {PATH_COLOR} from "../../../2d/GridCanvas";
-import cn from "../../../../libs/cn";
 import {BIT_BATCH_SIZE, BIT_GAMMA, BIT_GOAL, BIT_START, pillarFieldMap} from "./presets";
 
-// 라이브 BIT* sandbox. 배치 수를 늘리면 현직 해가 어떻게 조여지는지(anytime)와,
-// 같은 표본 예산의 Informed RRT*가 아직 경로를 못 찾을 때 BIT*는 이미 더 낮은
-// 비용에 닿아 있음을 나란히 보여준다. 간선 큐가 목표에 닿을 수 있는 간선부터
-// 꺼내므로 BIT*는 더 적은 표본으로 먼저·더 좋은 경로를 얻는다 (Gammell et al. 2015).
-const BATCH_COUNTS = [1, 2, 4, 6]
 
 const cellToWorld = (map: GridMap, c: Cell): Point =>
     [map.originX + (c[1] + 0.5) * map.resolution,
@@ -81,17 +76,7 @@ const BitStarScene = ({panel = 340}: {panel?: number}) => {
             footer={
                 <div className="flex flex-col items-center gap-1.5">
                     <div className="flex items-center justify-center gap-1.5 text-xs text-muted flex-wrap tabular-nums">
-                        {BATCH_COUNTS.map((n) => (
-                            <button key={n} type="button" onClick={() => setNumBatches(n)}
-                                    className={cn(
-                                        "px-2 py-0.5 rounded border tabular-nums",
-                                        numBatches === n
-                                            ? "border-[var(--accent)] text-[var(--accent)] font-semibold"
-                                            : "border-border hover:bg-surface",
-                                    )}>
-                                {n} {t("batches", "배치")}
-                            </button>
-                        ))}
+                        <ParamSlider label={t("batches", "배치")} value={numBatches} min={1} max={8} step={1} onCommit={setNumBatches}/>
                         <button type="button" onClick={() => setSeed((s) => s + 1)}
                                 className="px-2 py-0.5 rounded border border-border hover:bg-surface">
                             {t("resample", "다시 추첨")}

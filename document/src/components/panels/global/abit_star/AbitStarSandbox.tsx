@@ -1,15 +1,15 @@
 import {useMemo, useState} from "react";
 import CanvasFigure, {modalCanvasSize} from "../../../CanvasFigure";
 import TracePlayer from "../../../player/TracePlayer";
+import ParamSlider from "../../../player/ParamSlider";
 import {runABITStar} from "../../../../libs/algorithms/abit_star";
 import {Point} from "../../../../libs/algorithms/sampling_space";
 import {buildGridTimeline, Cell} from "../../../../libs/trace/timeline";
 import {GridMap} from "../../../../libs/grid";
 import {useTr} from "../../../../libs/i18n";
 import {PATH_COLOR} from "../../../2d/GridCanvas";
-import cn from "../../../../libs/cn";
 import {
-    ABIT_BATCH_COUNTS, ABIT_BATCH_SIZE, ABIT_GAMMA, ABIT_GOAL, ABIT_INFLATION,
+    ABIT_BATCH_SIZE, ABIT_GAMMA, ABIT_GOAL, ABIT_INFLATION,
     ABIT_INFLATION_FINAL, ABIT_START, ABIT_TRUNCATION, wedgeMap,
 } from "./presets";
 
@@ -80,17 +80,7 @@ const AbitStarScene = ({panel = 340}: {panel?: number}) => {
             footer={
                 <div className="flex flex-col items-center gap-1.5">
                     <div className="flex items-center justify-center gap-1.5 text-xs text-muted flex-wrap tabular-nums">
-                        {ABIT_BATCH_COUNTS.map((b) => (
-                            <button key={b} type="button" onClick={() => setMaxBatches(b)}
-                                    className={cn(
-                                        "px-2 py-0.5 rounded border tabular-nums",
-                                        maxBatches === b
-                                            ? "border-[var(--accent)] text-[var(--accent)] font-semibold"
-                                            : "border-border hover:bg-surface",
-                                    )}>
-                                {b} {t("batches", "배치")}
-                            </button>
-                        ))}
+                        <ParamSlider label={t("batches", "배치")} value={maxBatches} min={1} max={10} step={1} onCommit={setMaxBatches}/>
                         <button type="button" onClick={() => setSeed((s) => s + 1)}
                                 className="px-2 py-0.5 rounded border border-border hover:bg-surface">
                             {t("resample", "다시 추첨")}

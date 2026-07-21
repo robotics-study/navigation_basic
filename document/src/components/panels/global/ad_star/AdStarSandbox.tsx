@@ -1,6 +1,7 @@
 import {useMemo, useState} from "react";
 import CanvasFigure, {modalCanvasSize} from "../../../CanvasFigure";
 import TracePlayer from "../../../player/TracePlayer";
+import ParamSlider from "../../../player/ParamSlider";
 import {runADStar} from "../../../../libs/algorithms/ad_star";
 import {runDStarLite} from "../../../../libs/algorithms/dstar_lite";
 import {buildGridTimeline, Cell} from "../../../../libs/trace/timeline";
@@ -12,9 +13,6 @@ import {
     trapMap, TRAP_GOAL, TRAP_START,
 } from "../dstar_lite/presets";
 
-// 라이브 AD* sandbox. D* Lite와 같은 미지 지도 설정에서, ε 팽창 덕에 "첫 해"가 얼마나
-// 빨리 나오는지가 핵심 수치다 (D* Lite는 처음부터 belief-최적을 계산한다).
-const EPS_STARTS = [1.5, 2.5, 4];
 type Preset = "scattered" | "trap";
 const PRESETS: Record<Preset, {map: () => GridMap; start: Cell; goal: Cell}> = {
     scattered: {map: scatterMap, start: SCATTER_START, goal: SCATTER_GOAL},
@@ -94,17 +92,7 @@ const AdScene = ({panel = 340}: {panel?: number}) => {
                             </button>
                         ))}
                         <span className="mx-1" aria-hidden="true">·</span>
-                        {EPS_STARTS.map((e) => (
-                            <button key={e} type="button" onClick={() => setEpsStart(e)}
-                                    className={cn(
-                                        "px-2 py-0.5 rounded border tabular-nums",
-                                        epsStart === e
-                                            ? "border-[var(--accent)] text-[var(--accent)] font-semibold"
-                                            : "border-border hover:bg-surface",
-                                    )}>
-                                ε₀ = {e}
-                            </button>
-                        ))}
+                        <ParamSlider label="ε₀" value={epsStart} min={1} max={5} step={0.25} onCommit={setEpsStart}/>
                     </div>
                     <div className="text-xs text-muted text-center tabular-nums">
                         {t("first solution after", "첫 해까지 확장")}{" "}

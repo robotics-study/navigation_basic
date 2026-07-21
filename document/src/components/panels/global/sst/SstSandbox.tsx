@@ -1,6 +1,7 @@
 import {useMemo, useState} from "react";
 import CanvasFigure, {modalCanvasSize} from "../../../CanvasFigure";
 import TracePlayer from "../../../player/TracePlayer";
+import ParamSlider from "../../../player/ParamSlider";
 import {runSST} from "../../../../libs/algorithms/sst";
 import {runRRTStar} from "../../../../libs/algorithms/rrt_star";
 import {Point} from "../../../../libs/algorithms/sampling_space";
@@ -8,13 +9,8 @@ import {buildGridTimeline, Cell} from "../../../../libs/trace/timeline";
 import {GridMap} from "../../../../libs/grid";
 import {useTr} from "../../../../libs/i18n";
 import {PATH_COLOR} from "../../../2d/GridCanvas";
-import cn from "../../../../libs/cn";
 import {SST_GOAL, SST_START, islandMap} from "./presets";
 
-// 라이브 SST sandbox. witness 반경 δ_s를 키우면 active 트리가 희소해지는(active 노드가
-// 줄어드는) sparsification을, 같은 예산에서 모든 노드를 들고 있는 RRT*의 dense 트리
-// 크기와 맞세워 보여 준다.
-const RADII = [0.3, 0.4, 0.5]
 const BUDGET = 4000
 
 const cellToWorld = (map: GridMap, c: Cell): Point =>
@@ -82,17 +78,7 @@ const SstScene = ({panel = 340}: {panel?: number}) => {
                 <div className="flex flex-col items-center gap-1.5">
                     <div className="flex items-center justify-center gap-1.5 text-xs text-muted flex-wrap tabular-nums">
                         <span>{t("witness δ_s", "witness δ_s")}</span>
-                        {RADII.map((r) => (
-                            <button key={r} type="button" onClick={() => setDeltaS(r)}
-                                    className={cn(
-                                        "px-2 py-0.5 rounded border tabular-nums",
-                                        deltaS === r
-                                            ? "border-[var(--accent)] text-[var(--accent)] font-semibold"
-                                            : "border-border hover:bg-surface",
-                                    )}>
-                                {r.toFixed(1)}
-                            </button>
-                        ))}
+                        <ParamSlider label="δs" value={deltaS} min={0.3} max={0.5} step={0.05} onCommit={setDeltaS}/>
                         <button type="button" onClick={() => setSeed((s) => s + 1)}
                                 className="px-2 py-0.5 rounded border border-border hover:bg-surface">
                             {t("regrow", "다시 성장")}
