@@ -10,6 +10,7 @@
   "scripts": {
     "dev": "vite",
     "build": "node scripts/gen-sitemap.mjs && vite build && node scripts/prerender.mjs",
+    "check:parity": "node scripts/check-engine-parity.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
