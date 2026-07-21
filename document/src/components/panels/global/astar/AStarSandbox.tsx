@@ -48,6 +48,7 @@ export const SandboxScene = ({panel = 340}: {panel?: number}) => {
         <TracePlayer
             map={map} timeline={timeline} start={start} goal={goal} panel={panel}
             onPaintCell={paintCell}
+            onReset={() => { setMap(pocketMap()); setStart(SANDBOX_START); setGoal(SANDBOX_GOAL) }}
             onMoveStart={moveEndpoint(setStart)}
             onMoveGoal={moveEndpoint(setGoal)}
             footer={

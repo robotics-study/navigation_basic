@@ -59,6 +59,7 @@ const JpsScene = ({panel = 340}: {panel?: number}) => {
             showTree
             shadowCells={showAstar ? astar.cells : undefined}
             onPaintCell={paintCell}
+            onReset={() => { setMap(hallMap()); setStart(HALL_START); setGoal(HALL_GOAL) }}
             onMoveStart={moveEndpoint(setStart)}
             onMoveGoal={moveEndpoint(setGoal)}
             footer={

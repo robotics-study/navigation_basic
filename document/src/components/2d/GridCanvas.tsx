@@ -20,6 +20,9 @@ interface GridCanvasProps {
     showTree?: boolean;
     // 비교용 보조 경로 (점선, muted) — any-angle vs grid 경로 대조 등에 쓴다.
     overlayPath?: Cell[];
+    // 최종 경로의 참 기하 (연속 (row, col) 꼭짓점). 있으면 셀 스냅된 timeline 경로
+    // 대신 이것을 그린다 — Anya 처럼 turning point 가 셀 중심이 아닌 경우용.
+    truePath?: Cell[];
     // 비교용 배경 셀 집합 (muted 반투명) — 다른 알고리즘의 확장 영역 대조 등에 쓴다.
     shadowCells?: Cell[];
     // 연속 상태(SE(2)) planner 용 차량 표시 — carPose는 현재(주행 중) pose,
@@ -34,7 +37,7 @@ interface GridCanvasProps {
 
 const GridCanvas = ({
                         map, panel, timeline, step = Infinity, start, goal,
-                        showTree = false, overlayPath, shadowCells, carPose, goalPose,
+                        showTree = false, overlayPath, truePath, shadowCells, carPose, goalPose,
                         onPaintCell, onMoveStart, onMoveGoal,
                     }: GridCanvasProps) => {
     const colors = useCanvasColors();
@@ -232,9 +235,9 @@ const GridCanvas = ({
                           dash={[cell * 0.5, cell * 0.4]} lineCap="round" lineJoin="round"
                           opacity={0.85}/>
                 )}
-                {/* 발표된 최신 경로 */}
+                {/* 발표된 최신 경로 (truePath 가 있으면 참 기하로 대체) */}
                 {visiblePath && (
-                    <Line points={visiblePath.flatMap((c) => center(c))}
+                    <Line points={(truePath ?? visiblePath).flatMap((c) => center(c))}
                           stroke={PATH_COLOR} strokeWidth={Math.max(2.5, cell * 0.28)}
                           lineCap="round" lineJoin="round"/>
                 )}

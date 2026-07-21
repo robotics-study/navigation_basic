@@ -45,6 +45,7 @@ const LazyScene = ({panel = 340}: {panel?: number}) => {
         <TracePlayer
             map={map} timeline={timeline} start={start} goal={goal} panel={panel}
             onPaintCell={paintCell}
+            onReset={() => { setMap(rubbleMap()); setStart(RUBBLE_START); setGoal(RUBBLE_GOAL) }}
             onMoveStart={moveEndpoint(setStart)}
             onMoveGoal={moveEndpoint(setGoal)}
             footer={

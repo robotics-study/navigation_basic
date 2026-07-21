@@ -89,6 +89,15 @@ export const ALGO_BLURBS: AlgoBlurb[] = [
         },
     },
     {
+        slug: "anya",
+        blurb: {
+            en: "Turn where obstacles actually bend: search corner roots with row-interval " +
+                "sweeps and return the exact Euclidean shortest any-angle path.",
+            ko: "장애물이 실제로 꺾이는 곳에서 꺾는다. corner root를 행 interval sweep으로 " +
+                "탐색해 정확한 유클리드 최단 any-angle 경로를 돌려준다.",
+        },
+    },
+    {
         slug: "hybrid_astar",
         blurb: {
             en: "Search the car's own pose space: constant-curvature arc primitives, a " +

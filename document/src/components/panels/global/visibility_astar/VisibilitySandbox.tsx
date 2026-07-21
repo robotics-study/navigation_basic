@@ -47,6 +47,7 @@ const VisibilityScene = ({panel = 340}: {panel?: number}) => {
             map={map} timeline={timeline} start={start} goal={goal} panel={panel}
             overlayPath={showTheta ? theta.path : undefined}
             onPaintCell={paintCell}
+            onReset={() => { setMap(slabsMap()); setStart(SLAB_START); setGoal(SLAB_GOAL) }}
             onMoveStart={moveEndpoint(setStart)}
             onMoveGoal={moveEndpoint(setGoal)}
             footer={

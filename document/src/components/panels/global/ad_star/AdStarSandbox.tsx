@@ -76,6 +76,7 @@ const AdScene = ({panel = 340}: {panel?: number}) => {
         <TracePlayer
             map={map} timeline={timeline} start={start} goal={goal} panel={panel}
             onPaintCell={paintCell}
+            onReset={() => applyPreset(preset)}
             onMoveStart={moveEndpoint(setStart)}
             onMoveGoal={moveEndpoint(setGoal)}
             footer={

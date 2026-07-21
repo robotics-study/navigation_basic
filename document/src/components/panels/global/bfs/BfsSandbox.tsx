@@ -39,6 +39,7 @@ const BfsScene = ({panel = 340}: {panel?: number}) => {
         <TracePlayer
             map={map} timeline={timeline} start={start} goal={goal} panel={panel}
             onPaintCell={paintCell}
+            onReset={() => { setMap(roomsMap()); setStart(ROOMS_START); setGoal(ROOMS_GOAL) }}
             onMoveStart={moveEndpoint(setStart)}
             onMoveGoal={moveEndpoint(setGoal)}
             footer={

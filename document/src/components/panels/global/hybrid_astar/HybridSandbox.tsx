@@ -60,6 +60,7 @@ const HybridScene = ({panel = 340}: {panel?: number}) => {
             startPose={LOT_START} goalPose={LOT_GOAL}
             showTree
             onPaintCell={paintCell}
+            onReset={() => setMap(parkingLotMap())}
             footer={
                 <div className="flex flex-col items-center gap-1.5">
                     <div className="flex items-center justify-center gap-1.5 text-xs text-muted flex-wrap tabular-nums">

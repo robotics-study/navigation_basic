@@ -22,12 +22,15 @@ interface TracePlayerProps {
     panel?: number;
     showTree?: boolean;
     overlayPath?: Cell[];
+    truePath?: Cell[];
     shadowCells?: Cell[];
     autoPlay?: boolean;
     // sandbox 상호작용 passthrough — 입력이 바뀌면 부모가 timeline을 새로 만든다.
     onPaintCell?: (row: number, col: number, occupied: boolean) => void;
     onMoveStart?: (cell: Cell) => void;
     onMoveGoal?: (cell: Cell) => void;
+    // 맵/시작/목표를 preset 초기값으로 되돌린다. 있으면 리셋 버튼이 붙는다.
+    onReset?: () => void;
     // 플레이어 아래 추가 컨트롤 (heuristic 버튼 등).
     footer?: ReactNode;
 }
@@ -46,9 +49,9 @@ const Btn = ({onClick, label, children, active}: {
 
 const TracePlayer = ({
                          map, timeline, start, goal, startPose, goalPose,
-                         panel = 340, showTree, overlayPath,
+                         panel = 340, showTree, overlayPath, truePath,
                          shadowCells, autoPlay = true,
-                         onPaintCell, onMoveStart, onMoveGoal, footer,
+                         onPaintCell, onMoveStart, onMoveGoal, onReset, footer,
                      }: TracePlayerProps) => {
     const t = useTr()
     const [step, setStep] = useState(autoPlay ? 0 : timeline.steps)
@@ -131,7 +134,8 @@ const TracePlayer = ({
         <div className="flex flex-col gap-2 items-center">
             <GridCanvas map={map} panel={panel} timeline={timeline} step={step}
                         start={start} goal={goal} showTree={showTree} overlayPath={overlayPath}
-                        shadowCells={shadowCells} carPose={carPose} goalPose={goalCarPose}
+                        truePath={truePath} shadowCells={shadowCells}
+                        carPose={carPose} goalPose={goalCarPose}
                         onPaintCell={onPaintCell} onMoveStart={onMoveStart} onMoveGoal={onMoveGoal}/>
 
             <div className="flex items-center gap-1.5 text-xs text-muted w-full" style={{maxWidth: panel}}>
@@ -153,6 +157,16 @@ const TracePlayer = ({
                        }}
                        className="flex-1 accent-[var(--accent)]"
                        aria-label={t("search progress", "탐색 진행")}/>
+                {onReset && (
+                    <Btn onClick={onReset} label={t("reset the sandbox", "sandbox 초기화")}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"
+                             strokeLinejoin="round" aria-hidden="true">
+                            <path d="M3 12a9 9 0 1 0 3-6.7"/>
+                            <path d="M3 4v5h5"/>
+                        </svg>
+                    </Btn>
+                )}
             </div>
 
             <div className="text-xs text-muted text-center tabular-nums">
