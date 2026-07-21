@@ -686,9 +686,29 @@
     margin: .9em 0;
 }
 
+/* Tailwind preflight 가 list-style 을 지우므로 본문에서 복원한다. */
 .content-inner ul,
 .content-inner ol {
     padding-left: 1.4em;
+    margin: .9em 0;
+}
+
+.content-inner ul {
+    list-style: disc;
+}
+
+.content-inner ol {
+    list-style: decimal;
+}
+
+.content-inner ul > li::marker {
+    color: var(--muted);
+}
+
+/* 알고리즘 스텝 번호가 한눈에 들어오게 강조 */
+.content-inner ol > li::marker {
+    color: var(--accent);
+    font-weight: 700;
 }
 
 .content-inner li {
