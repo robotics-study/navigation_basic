@@ -9,5 +9,6 @@ export {runJPS} from "../src/libs/algorithms/jps";
 export {runVisibilityAStar} from "../src/libs/algorithms/visibility_astar";
 export {runAnya} from "../src/libs/algorithms/anya";
 export {runPRM, runPRMStar} from "../src/libs/algorithms/prm";
+export {runRRT} from "../src/libs/algorithms/rrt";
 export {runHybridAStar} from "../src/libs/algorithms/hybrid_astar";
 export {parseGridMap} from "../src/libs/grid";

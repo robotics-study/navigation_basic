@@ -125,6 +125,15 @@ export const ALGO_BLURBS: AlgoBlurb[] = [
         },
     },
     {
+        slug: "rrt",
+        blurb: {
+            en: "Grow a tree from the start, one steered step toward each random sample: " +
+                "Voronoi bias pulls it into unexplored space until a branch touches the goal.",
+            ko: "시작점에서 트리를 키운다. 무작위 표본 쪽으로 한 스텝씩. Voronoi bias가 " +
+                "미탐사 공간으로 트리를 끌고 가고, 가지가 goal에 닿으면 끝난다.",
+        },
+    },
+    {
         slug: "astar",
         blurb: {
             en: "Dijkstra plus a compass: order the frontier by g + h and an admissible " +
