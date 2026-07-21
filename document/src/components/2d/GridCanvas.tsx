@@ -1,5 +1,5 @@
 import {useMemo, useRef} from "react";
-import {Circle, Group, Layer, Line, Rect, Stage} from "react-konva";
+import {Circle, Group, Layer, Line, Rect, Shape, Stage} from "react-konva";
 import Konva from "konva";
 import {GridMap, worldToCellUnits} from "../../libs/grid";
 import {Cell, GridTimeline} from "../../libs/trace/timeline";
@@ -203,12 +203,21 @@ const GridCanvas = ({
                     <Rect key={`sh${i}`} x={c[1] * cell} y={c[0] * cell}
                           width={cell} height={cell} fill={colors.muted} opacity={0.22}/>
                 ))}
-                {/* 표본 (sampling planner) — roadmap/tree 정점 후보 점 */}
-                {samplesVisible.map((s, i) => (
-                    <Circle key={`sm${i}`} x={center(s.cell)[0]} y={center(s.cell)[1]}
-                            radius={Math.max(1.2, cell * 0.07)} fill={colors.muted}
-                            opacity={0.55}/>
-                ))}
+                {/* 표본 (sampling planner) — 정점 후보 점, 한 Shape 로 배치 드로잉 */}
+                {samplesVisible.length > 0 && (
+                    <Shape listening={false}
+                           sceneFunc={(ctx, shape) => {
+                               const r = Math.max(1.2, cell * 0.07)
+                               ctx.beginPath()
+                               for (const s of samplesVisible) {
+                                   const [x, y] = center(s.cell)
+                                   ctx.moveTo(x + r, y)
+                                   ctx.arc(x, y, r, 0, 2 * Math.PI, false)
+                               }
+                               ctx.fillStrokeShape(shape)
+                           }}
+                           fill={colors.muted} opacity={0.55}/>
+                )}
                 {/* 탐색 완료(CLOSED) — 연속 모드에서는 pose 점, grid 모드에서는 셀 */}
                 {expandedVisible.map((e, i) => continuous
                     ? <Circle key={`e${i}`} x={center(e.cell)[0]} y={center(e.cell)[1]}
@@ -241,11 +250,21 @@ const GridCanvas = ({
                     <Line key={`gh${k}`} points={[0, k * cell, stageW, k * cell]}
                           stroke={colors.border} strokeWidth={0.5} opacity={0.6}/>
                 ))}
-                {/* 탐색 트리 (sampling 계열용) */}
-                {edgesVisible.map((e, i) => (
-                    <Line key={`t${i}`} points={[...center(e.from), ...center(e.to)]}
-                          stroke={colors.accent} strokeWidth={1} opacity={0.5}/>
-                ))}
+                {/* 탐색 트리 (sampling 계열용) — 간선 수천 개를 한 Shape 로 배치 드로잉 */}
+                {edgesVisible.length > 0 && (
+                    <Shape listening={false}
+                           sceneFunc={(ctx, shape) => {
+                               ctx.beginPath()
+                               for (const e of edgesVisible) {
+                                   const [x1, y1] = center(e.from)
+                                   const [x2, y2] = center(e.to)
+                                   ctx.moveTo(x1, y1)
+                                   ctx.lineTo(x2, y2)
+                               }
+                               ctx.fillStrokeShape(shape)
+                           }}
+                           stroke={colors.accent} strokeWidth={1} opacity={0.5}/>
+                )}
                 {/* 비교용 보조 경로 (점선) */}
                 {overlayPath && overlayPath.length > 1 && (
                     <Line points={overlayPath.flatMap((c) => center(c))}

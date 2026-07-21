@@ -101,6 +101,7 @@ const ReplayScene = ({algo, maps, truePathOf, vehicle, panel = 340}: {
     }
     return <TracePlayer map={loaded.map} timeline={loaded.timeline}
                         start={start} goal={goal} truePath={truePath} vehicle={vehicle}
+                        showTree={loaded.timeline.samples.length > 0}
                         panel={panel} footer={selector}/>
 }
 
