@@ -1,0 +1,174 @@
+import {useMemo, useRef} from "react";
+import {Circle, Layer, Line, Rect, Stage} from "react-konva";
+import Konva from "konva";
+import {GridMap} from "../../libs/grid";
+import {Cell, GridTimeline} from "../../libs/trace/timeline";
+import {useCanvasColors} from "../../libs/useTheme";
+
+// 경로/goal 강조색 — 라이트/다크 양쪽에서 accent(indigo)와 대비되는 warm red.
+export const PATH_COLOR = "#e0533d";
+
+interface GridCanvasProps {
+    map: GridMap;
+    // 가장 긴 변의 픽셀 크기. 셀 크기는 여기서 유도된다.
+    panel: number;
+    timeline?: GridTimeline;
+    // 이 step 이하의 이벤트만 그린다 (재생/스크럽).
+    step?: number;
+    start?: Cell;
+    goal?: Cell;
+    showTree?: boolean;
+    // sandbox 상호작용 — 핸들러가 있을 때만 활성화된다.
+    onPaintCell?: (row: number, col: number, occupied: boolean) => void;
+    onMoveStart?: (cell: Cell) => void;
+    onMoveGoal?: (cell: Cell) => void;
+}
+
+const GridCanvas = ({
+                        map, panel, timeline, step = Infinity, start, goal,
+                        showTree = false, onPaintCell, onMoveStart, onMoveGoal,
+                    }: GridCanvasProps) => {
+    const colors = useCanvasColors();
+    const cell = panel / Math.max(map.width, map.height);
+    const stageW = Math.round(cell * map.width);
+    const stageH = Math.round(cell * map.height);
+
+    // 셀별 최초 candidate/expanded step — frontier(발견되었지만 아직 확장 전) 표시에 쓴다.
+    const firstSeen = useMemo(() => {
+        const cand = new Map<number, number>()
+        const exp = new Map<number, number>()
+        if (timeline) {
+            for (const c of timeline.candidates) {
+                const key = c.cell[0] * map.width + c.cell[1]
+                if (!cand.has(key)) cand.set(key, c.step)
+            }
+            for (const e of timeline.expanded) {
+                const key = e.cell[0] * map.width + e.cell[1]
+                if (!exp.has(key)) exp.set(key, e.step)
+            }
+        }
+        return {cand, exp}
+    }, [timeline, map.width])
+
+    const expandedVisible = useMemo(
+        () => timeline ? timeline.expanded.filter((e) => e.step <= step) : [],
+        [timeline, step],
+    )
+    const frontierVisible = useMemo(() => {
+        if (!timeline) return []
+        const out: Cell[] = []
+        firstSeen.cand.forEach((candStep, key) => {
+            const expStep = firstSeen.exp.get(key) ?? Infinity
+            if (candStep <= step && step < expStep) out.push([Math.floor(key / map.width), key % map.width])
+        })
+        return out
+    }, [timeline, firstSeen, step, map.width])
+    const edgesVisible = useMemo(
+        () => showTree && timeline ? timeline.edges.filter((e) => e.step <= step) : [],
+        [showTree, timeline, step],
+    )
+    const pathVisible = timeline !== undefined && step >= timeline.pathStep && timeline.path.length > 0
+
+    // 벽 페인팅: pointer down 시 첫 셀의 반전값을 붓 값으로 삼아 드래그 내내 유지한다.
+    const paintValue = useRef<boolean | null>(null)
+    const cellAt = (stage: Konva.Stage | null): Cell | null => {
+        const pos = stage?.getPointerPosition()
+        if (!pos) return null
+        const col = Math.floor(pos.x / cell)
+        const row = Math.floor(pos.y / cell)
+        if (row < 0 || row >= map.height || col < 0 || col >= map.width) return null
+        return [row, col]
+    }
+    const paint = (c: Cell) => {
+        if (!onPaintCell || paintValue.current === null) return
+        if (start && c[0] === start[0] && c[1] === start[1]) return
+        if (goal && c[0] === goal[0] && c[1] === goal[1]) return
+        onPaintCell(c[0], c[1], paintValue.current)
+    }
+
+    const center = (c: Cell): [number, number] => [(c[1] + 0.5) * cell, (c[0] + 0.5) * cell]
+
+    const endpoint = (c: Cell, fill: string, onMove?: (cell: Cell) => void) => {
+        const [x, y] = center(c)
+        return <Circle
+            x={x} y={y} radius={cell * 0.36} fill={fill}
+            stroke={colors.bg} strokeWidth={Math.max(1, cell * 0.06)}
+            draggable={!!onMove}
+            onDragEnd={(e) => {
+                const col = Math.floor(e.target.x() / cell)
+                const row = Math.floor(e.target.y() / cell)
+                // 스냅은 부모 상태 갱신이 담당한다 — 원래 중심으로 되돌려 이중 이동을 막는다.
+                e.target.position({x, y})
+                onMove?.([
+                    Math.max(0, Math.min(map.height - 1, row)),
+                    Math.max(0, Math.min(map.width - 1, col)),
+                ])
+            }}
+        />
+    }
+
+    return (
+        <Stage width={stageW} height={stageH}
+               className="bg-surface border border-border rounded-lg overflow-hidden w-fit"
+               onPointerDown={(e) => {
+                   if (!onPaintCell) return
+                   const c = cellAt(e.target.getStage())
+                   if (!c) return
+                   // 시작/골 위에서 드래그를 시작하면 페인팅이 아니라 endpoint 이동이다.
+                   if (start && c[0] === start[0] && c[1] === start[1]) return
+                   if (goal && c[0] === goal[0] && c[1] === goal[1]) return
+                   paintValue.current = !map.occupied[c[0] * map.width + c[1]]
+                   paint(c)
+               }}
+               onPointerMove={(e) => {
+                   if (paintValue.current === null) return
+                   const c = cellAt(e.target.getStage())
+                   if (c) paint(c)
+               }}
+               onPointerUp={() => { paintValue.current = null }}
+               onPointerLeave={() => { paintValue.current = null }}>
+            <Layer>
+                {/* 탐색 완료(CLOSED) 셀 */}
+                {expandedVisible.map((e, i) => (
+                    <Rect key={`e${i}`} x={e.cell[1] * cell} y={e.cell[0] * cell}
+                          width={cell} height={cell} fill={colors.accent} opacity={0.24}/>
+                ))}
+                {/* frontier(OPEN) 셀 — 발견됐지만 아직 확장 전 */}
+                {frontierVisible.map((c, i) => (
+                    <Rect key={`f${i}`} x={c[1] * cell} y={c[0] * cell}
+                          width={cell} height={cell} fill={colors.accent} opacity={0.10}/>
+                ))}
+                {/* 벽 */}
+                {map.occupied.map((occ, i) => occ && (
+                    <Rect key={`w${i}`} x={(i % map.width) * cell} y={Math.floor(i / map.width) * cell}
+                          width={cell} height={cell} fill={colors.text} opacity={0.78}/>
+                ))}
+                {/* grid 선 — 셀이 충분히 클 때만 (작으면 노이즈) */}
+                {cell >= 9 && Array.from({length: map.width + 1}, (_, k) => (
+                    <Line key={`gv${k}`} points={[k * cell, 0, k * cell, stageH]}
+                          stroke={colors.border} strokeWidth={0.5} opacity={0.6}/>
+                ))}
+                {cell >= 9 && Array.from({length: map.height + 1}, (_, k) => (
+                    <Line key={`gh${k}`} points={[0, k * cell, stageW, k * cell]}
+                          stroke={colors.border} strokeWidth={0.5} opacity={0.6}/>
+                ))}
+                {/* 탐색 트리 (sampling 계열용) */}
+                {edgesVisible.map((e, i) => (
+                    <Line key={`t${i}`} points={[...center(e.from), ...center(e.to)]}
+                          stroke={colors.accent} strokeWidth={1} opacity={0.5}/>
+                ))}
+                {/* 최종 경로 */}
+                {pathVisible && (
+                    <Line points={timeline!.path.flatMap((c) => center(c))}
+                          stroke={PATH_COLOR} strokeWidth={Math.max(2.5, cell * 0.28)}
+                          lineCap="round" lineJoin="round"/>
+                )}
+                {/* 시작/목표 */}
+                {start && endpoint(start, colors.accent, onMoveStart)}
+                {goal && endpoint(goal, PATH_COLOR, onMoveGoal)}
+            </Layer>
+        </Stage>
+    )
+}
+
+export default GridCanvas
