@@ -8,7 +8,7 @@ import {useTr} from "../../../../libs/i18n";
 import cn from "../../../../libs/cn";
 import {pocketMap, SANDBOX_GOAL, SANDBOX_START} from "../astar/presets";
 
-// 라이브 BFS sandbox — FIFO frontier 가 hop 동심원으로 번지는 것을 본다.
+// 라이브 BFS sandbox — FIFO frontier가 hop 동심원으로 번지는 것을 본다.
 // 벽을 그리고 시작/목표를 끌면 즉시 재탐색한다.
 const BfsScene = ({panel = 340}: {panel?: number}) => {
     const t = useTr()
@@ -77,7 +77,7 @@ const BfsSandbox = () => {
     return <CanvasFigure
         label={t(
             "Live BFS: the frontier expands as concentric hop-rings, blind to direction — the path it returns has the fewest edges, not the lowest cost",
-            "라이브 BFS. frontier 가 방향을 모른 채 hop 동심원으로 번지고, 반환 경로는 비용이 아니라 edge 수가 최소다",
+            "라이브 BFS. frontier가 방향을 모른 채 hop 동심원으로 번지고, 반환 경로는 비용이 아니라 edge 수가 최소다",
         )}
         tight bodyClassName="w-fit" className="w-full"
         modal={<BfsScene panel={Math.min(modalCanvasSize(1).width, 640)}/>}

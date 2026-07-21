@@ -33,10 +33,10 @@ const Dijkstra = () => {
                     parent of A*.
                 </p>}
                 ko={<p>
-                    Dijkstra 알고리즘은 BFS 에 비용 개념을 얹은 확장이다. 1959년 "그래프에 관한 두
-                    문제에 대한 소고"로 발표되어, BFS 가 답하지 못하는 질문에 답한다. edge 비용이
+                    Dijkstra 알고리즘은 BFS에 비용 개념을 얹은 확장이다. 1959년 "그래프에 관한 두
+                    문제에 대한 소고"로 발표되어, BFS가 답하지 못하는 질문에 답한다. edge 비용이
                     제각각일 때 <em>가장 싼</em> 경로는 무엇인가? 65년이 지난 지금도 라우팅의
-                    근간이고, 이 섹션에서는 A* 의 직계 부모다.
+                    근간이고, 이 섹션에서는 A*로 바로 이어지는 전 단계다.
                 </p>}
             />
 
@@ -59,14 +59,14 @@ const Dijkstra = () => {
                 </>}
                 ko={<>
                     <p>
-                        BFS 는 노드를 <em>발견 시각</em> 순으로 확장하고, 그것은 hop 수와
-                        일치한다. Dijkstra 는 한 가지만 바꾼다. <em>시작점부터의 비용</em>
+                        BFS는 노드를 <em>발견 시각</em> 순으로 확장하고, 그것은 hop 수와
+                        일치한다. Dijkstra는 한 가지만 바꾼다. <em>시작점부터의 비용</em>
                     </p>
                     <BlockMath math="g(n) = \min_{\text{paths } s \to n} \sum_{\text{edges}} c(e)"/>
                     <p>
-                        순으로 확장하고, 그것을 FIFO 대신 priority queue 로 유지한다. BFS 가 최초
-                        발견에서 부모를 고정하는 것과 달리 Dijkstra 는 계속 <em>relax</em> 한다.
-                        발견된 노드로 가는 더 싼 길이 나타날 때마다 <InlineMath math="g"/> 와
+                        순으로 확장하고, 그것을 FIFO 대신 priority queue로 유지한다. BFS가 최초
+                        발견에서 부모를 고정하는 것과 달리 Dijkstra는 계속 <em>relax</em> 한다.
+                        발견된 노드로 가는 더 싼 길이 나타날 때마다 <InlineMath math="g"/>와
                         부모를 갱신한다. 노드의 답은 꺼내지는 순간, 즉 <em>settle</em> 되는
                         순간에야 확정된다. 그 뒤로는 더 싼 길이 도달할 수 없기 때문이다.
                     </p>
@@ -93,11 +93,11 @@ const Dijkstra = () => {
                         <InlineMath math="O((V + E)\log V)"/> (Fibonacci heap 으로는{" "}
                         <InlineMath math="O(E + V\log V)"/> 이지만 대체로 이론적 관심사),{" "}
                         <strong>메모리</strong>는 <InlineMath math="O(V)"/>.</li>
-                    <li>노드를 <InlineMath math="g"/> 비감소 순으로 확장한다. frontier 가 비용
-                        등고선처럼 사방으로 퍼진다는 뜻이고, A* 가 heuristic 으로 고치는 맹목
+                    <li>노드를 <InlineMath math="g"/> 비감소 순으로 확장한다. frontier가 비용
+                        등고선처럼 사방으로 퍼진다는 뜻이고, A*가 heuristic으로 고치는 맹목
                         탐색이 정확히 이것이다.</li>
-                    <li>본질적으로 one-to-all 이다. 끝까지 돌리면 <em>모든</em> 노드로의 최단
-                        경로가 나오고, costmap potential 이 그렇게 만들어진다.</li>
+                    <li>본질적으로 one-to-all이다. 끝까지 돌리면 <em>모든</em> 노드로의 최단
+                        경로가 나오고, costmap potential이 그렇게 만들어진다.</li>
                 </ul>}
             />
 
@@ -112,7 +112,7 @@ const Dijkstra = () => {
                     neighbor:
                 </p>}
                 ko={<p>
-                    상태는 <InlineMath math="g"/> 를 키로 하는 min-heap <InlineMath math="Q"/> 와,
+                    상태는 <InlineMath math="g"/>를 키로 하는 min-heap <InlineMath math="Q"/>와,
                     노드별 <InlineMath math="g"/> 값·부모다. 매 반복은 세 가지를 한다. 가장 싼
                     노드를 꺼내 settle 하고(이제 그 답은 확정이다), 목표인지 확인하고, 나가는
                     간선을 전부 <em>relax</em> 한다. 이웃으로 가는 더 싼 길이 나타나면 기록하고 그
@@ -145,15 +145,15 @@ return failure`}/>
                         improvement and push <InlineMath math="n'"/> (again).</li>
                 </ol>}
                 ko={<ol>
-                    <li>시작 노드를 비용 0 으로 heap 에 넣는다.</li>
-                    <li>frontier 에서 가장 싼 노드를 꺼낸다. 아래 정리에 의해 이 시점의{" "}
-                        <InlineMath math="g"/> 가 실제 최단 거리다.</li>
-                    <li>낡은 항목은 건너뛴다. 같은 노드가 갱신 전 비용으로 heap 에 여러 번 들어
-                        있을 수 있다 (<em>lazy queue</em> 관용구, decrease-key 불필요).</li>
+                    <li>시작 노드를 비용 0으로 heap에 넣는다.</li>
+                    <li>frontier에서 가장 싼 노드를 꺼낸다. 아래 정리에 의해 이 시점의{" "}
+                        <InlineMath math="g"/>가 실제 최단 거리다.</li>
+                    <li>stale 항목은 건너뛴다. 같은 노드가 갱신 전 비용으로 heap에 여러 번
+                        들어 있을 수 있다 (<em>lazy queue</em> 관용구, decrease-key 불필요).</li>
                     <li>goal 검사를 pop 시점에 한다. 꺼내지는 순간 settle 되므로 경로는 최적이다.</li>
-                    <li>나가는 간선을 전부 relax 한다. <InlineMath math="n"/> 을 거치는 길이{" "}
-                        <InlineMath math="n'"/> 의 지금까지 최선보다 싸면, 개선을 기록하고{" "}
-                        <InlineMath math="n'"/> 을 (다시) push 한다.</li>
+                    <li>나가는 간선을 전부 relax 한다. <InlineMath math="n"/>을 거치는 길이{" "}
+                        <InlineMath math="n'"/>의 지금까지 최선보다 싸면, 개선을 기록하고{" "}
+                        <InlineMath math="n'"/>을 (다시) push 한다.</li>
                 </ol>}
             />
             <T
@@ -164,7 +164,7 @@ return failure`}/>
                     buys a much simpler implementation.
                 </p>}
                 ko={<p>
-                    relaxation 단계의 push 가 이 저장소가 쓰는 <em>lazy queue</em> 관용구다.
+                    relaxation 단계의 push가 이 저장소가 쓰는 <em>lazy queue</em> 관용구다.
                     decrease-key 자료구조 대신, 낡은 항목은 꺼낼 때 건너뛴다 (settle 검사). 큐
                     항목 몇 개를 더 쓰는 대신 구현이 훨씬 단순해진다.
                 </p>}
@@ -180,10 +180,10 @@ return failure`}/>
                     version is folded below.
                 </p>}
                 ko={<p>
-                    가장 싼 frontier 노드를 settle 하는 것은 greedy 전략이고, greedy 는 대개
+                    가장 싼 frontier 노드를 settle 하는 것은 greedy 전략이고, greedy는 대개
                     최적성을 보장하지 못한다. 그런데 여기서는 통한다. 이유는 하나,{" "}
                     <strong>edge 비용이 음수가 아니기 때문</strong>이다. settle 되는 노드보다 나은
-                    경로가 있다면 frontier 를 거쳐 나가야 하는데, frontier 의 모든 출구가 이미
+                    경로가 있다면 frontier를 거쳐 나가야 하는데, frontier의 모든 출구가 이미
                     그만큼 비싸다. 형식적 서술은 아래에 접어 두었다.
                 </p>}
             />
@@ -211,21 +211,21 @@ return failure`}/>
                     ko={<>
                         <p>
                             <strong>가정.</strong> 간선 비용 <InlineMath math="\ge 0"/>. 꺼낸 순서에
-                            대한 귀납으로, settle 된 모든 <InlineMath math="u"/> 는 이미{" "}
+                            대한 귀납으로, settle 된 모든 <InlineMath math="u"/>는 이미{" "}
                             <InlineMath math="g(u) = \delta(s, u)"/> 다. 귀류법으로{" "}
-                            <InlineMath math="n"/> 이 <InlineMath math="g(n) > \delta(s, n)"/> 으로
+                            <InlineMath math="n"/>이 <InlineMath math="g(n) > \delta(s, n)"/>으로
                             꺼내졌다고 하자.
                         </p>
                         <p>
-                            <InlineMath math="n"/> 으로 가는 최단 경로 <InlineMath math="\sigma"/>
-                            에서, settle 집합을 처음 벗어나는 간선을 <InlineMath math="(u, v)"/> 라
+                            <InlineMath math="n"/>으로 가는 최단 경로 <InlineMath math="\sigma"/>
+                            에서, settle 집합을 처음 벗어나는 간선을 <InlineMath math="(u, v)"/>라
                             하면:
                         </p>
                         <BlockMath math="g(v) \;\overset{\text{relaxed}}{\le}\; \delta(s, u) + c(u, v) \;\overset{c\,\ge\,0}{\le}\; \delta(s, n) \;<\; g(n)"/>
                         <p>
-                            <InlineMath math="\Rightarrow v"/> 가 <InlineMath math="n"/> 보다 먼저
+                            <InlineMath math="\Rightarrow v"/>가 <InlineMath math="n"/>보다 먼저
                             꺼내진다. 모순. 음수 간선 하나가 가운데 부등호를 깨는데, 그 실패
-                            모드가 Bellman–Ford 의 존재 이유다. <InlineMath math="\blacksquare"/>
+                            모드가 Bellman–Ford의 존재 이유다. <InlineMath math="\blacksquare"/>
                         </p>
                     </>}
                 />
@@ -240,16 +240,16 @@ return failure`}/>
                     reported path cost drops — the fewest-edge path is not the cheapest one.
                 </p>}
                 ko={<p>
-                    sandbox 는 같은 문제를 BFS 와 Dijkstra 로 푼다. 대각 스텝이{" "}
+                    sandbox는 같은 문제를 BFS와 Dijkstra로 푼다. 대각 스텝이{" "}
                     <InlineMath math="\sqrt{2}"/> 비용을 갖도록 8-connected 다. 큐 종류를 바꿔 가며
-                    두 가지를 보라. frontier 가 hop 동심원에서 비용 등고선으로 바뀌는 것, 그리고
-                    보고되는 path cost 가 내려가는 것. 최소 edge 경로는 최소 비용 경로가 아니다.
+                    두 가지를 보라. frontier가 hop 동심원에서 비용 등고선으로 바뀌는 것, 그리고
+                    보고되는 path cost가 내려가는 것. 최소 edge 경로는 최소 비용 경로가 아니다.
                 </p>}
             />
             <DijkstraSandbox/>
             <TraceReplay algo="dijkstra" maps={["maze01", "open01"]} label={t(
                 "Real traces from the repository's Dijkstra demo on the benchmark maps",
-                "저장소 Dijkstra demo 가 벤치마크 맵에서 방출한 실제 trace",
+                "저장소 Dijkstra demo가 벤치마크 맵에서 방출한 실제 trace",
             )}/>
 
             <h2>Implementation</h2>
@@ -260,8 +260,8 @@ return failure`}/>
                     (<InlineMath math="f = g"/>). The subclass below is nearly empty on purpose.
                 </p>}
                 ko={<p>
-                    이 저장소에서 Dijkstra 는 공유 best-first 코어의 퇴화 사례다. A* 와 같은
-                    루프에서 heuristic 만 끈 것이다 (<InlineMath math="f = g"/>). 아래 subclass 가
+                    이 저장소에서 Dijkstra는 공유 best-first 코어의 퇴화 사례다. A*와 같은
+                    루프에서 heuristic만 끈 것이다 (<InlineMath math="f = g"/>). 아래 subclass가
                     거의 비어 있는 것은 의도된 것이다.
                 </p>}
             />
@@ -302,7 +302,7 @@ return failure`}/>
                 ]}
                 caption={t(
                     "The near-empty Dijkstra subclass and the shared best-first core it rides on",
-                    "거의 비어 있는 Dijkstra subclass 와 그것이 올라타는 공유 best-first 코어",
+                    "거의 비어 있는 Dijkstra subclass와 그것이 올라타는 공유 best-first 코어",
                 )}
             />
 

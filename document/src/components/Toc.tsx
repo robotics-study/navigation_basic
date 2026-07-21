@@ -9,8 +9,8 @@ interface TocItem {
     h3: boolean
 }
 
-// 우측 "On this page" — 렌더된 본문의 h2/h3 를 스캔해 id 부여 + 스크롤스파이.
-// 본문(특히 lazy 페이지·KaTeX·캔버스)이 비동기로 붙으므로 헤딩이 나타날 때까지 rAF 로 재시도한다.
+// 우측 "On this page" — 렌더된 본문의 h2/h3를 스캔해 id 부여 + 스크롤스파이.
+// 본문(특히 lazy 페이지·KaTeX·캔버스)이 비동기로 붙으므로 헤딩이 나타날 때까지 rAF로 재시도한다.
 const Toc = ({pageKey}: { pageKey: string }) => {
     const {lang} = useLang()
     const t = useTr()

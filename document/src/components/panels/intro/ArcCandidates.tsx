@@ -5,7 +5,7 @@ import {useCanvasColors} from "../../../libs/useTheme";
 import {PATH_COLOR} from "../../2d/GridCanvas";
 import {useTr} from "../../../libs/i18n";
 
-// local planning 의 핵심 그림: 로봇이 (v, ω) 후보 궤적(호)들을 전방 시뮬레이션하고
+// local planning의 핵심 그림: 로봇이 (v, ω) 후보 궤적(호)들을 전방 시뮬레이션하고
 // 충돌·진행도로 채점한다. 장애물을 끌면 채점이 즉시 바뀐다 (DWA 풍).
 const W = 320;
 const H = 300;
@@ -13,7 +13,7 @@ const ROBOT = {x: W / 2, y: H - 34};
 const HORIZON = 150;                 // 호 길이(px) — 전방 시뮬레이션 지평
 const CURVATURES = [-3.2, -2.2, -1.4, -0.7, 0, 0.7, 1.4, 2.2, 3.2];  // 1/반경 스케일
 
-// 곡률 k 의 호를 점열로 편다 (로봇 기준 위쪽 진행).
+// 곡률 k의 호를 점열로 편다 (로봇 기준 위쪽 진행).
 const arcPoints = (k: number): number[] => {
     const pts: number[] = []
     const steps = 24
@@ -86,14 +86,14 @@ const Scene = () => {
                 </Layer>
             </Stage>
             <div className="text-xs text-muted text-center tabular-nums">
-                {t("candidates", "후보")} {arcs.length}
+                candidates {arcs.length}
                 {" · "}
                 <span style={{color: "var(--accent)"}} className="font-semibold">
-                    {t("best arc", "최선 호")}
+                    best arc
                 </span>
                 {" · "}
                 <span style={{color: PATH_COLOR}} className="font-semibold">
-                    {t("collision", "충돌")}
+                    collision
                 </span>
             </div>
         </div>
@@ -105,7 +105,7 @@ const ArcCandidates = () => {
     return <CanvasFigure
         label={t(
             "The local planner's move: forward-simulate a fan of (v, ω) candidates, discard colliding ones, pick the best-scoring arc",
-            "local planner 의 한 수. (v, ω) 후보 부채꼴을 전방 시뮬레이션하고, 충돌 호를 버리고, 최고 점수 호를 고른다",
+            "local planner의 기본 동작. (v, ω) 후보 arc들을 전방 시뮬레이션하고, 충돌하는 arc를 버리고, 점수가 가장 높은 arc를 고른다",
         )}
         tight bodyClassName="w-fit" className="w-full"
         modal={<Scene/>}

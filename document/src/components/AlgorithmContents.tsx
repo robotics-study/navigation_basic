@@ -8,7 +8,7 @@ import {useLang, useTr, pick} from "../libs/i18n";
 const REPO = "https://github.com/robotics-study/navigation"
 
 // supportedExample(python/c++) → 실제 구현 파일로 가는 chip 링크.
-// search/sampling 은 global_planning 하위 디렉토리 구조와 slug 가 파일명과 일치한다.
+// search/sampling은 global_planning 하위 디렉토리 구조와 slug가 파일명과 일치한다.
 const codeLinkFor = (algo: IAlgoData, language: string): string | null => {
     if (algo.category !== "search" && algo.category !== "sampling") return null
     const sub = `global_planning/${algo.category}`
@@ -23,7 +23,7 @@ const AlgorithmContents = (algo: IAlgoData) => {
     const {lang} = useLang()
     const t = useTr()
 
-    // pager 는 집필된 페이지 사이만 오간다 (registry 배열 순서 = 학습 순서).
+    // pager는 집필된 페이지 사이만 오간다 (registry 배열 순서 = 학습 순서).
     const ready = algorithms.filter((a) => a.contents)
     const idx = ready.findIndex((a) => a.slug === slug)
     const prev = idx > 0 ? ready[idx - 1] : undefined

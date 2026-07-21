@@ -17,7 +17,7 @@ interface TracePlayerProps {
     panel?: number;
     showTree?: boolean;
     autoPlay?: boolean;
-    // sandbox 상호작용 passthrough — 입력이 바뀌면 부모가 timeline 을 새로 만든다.
+    // sandbox 상호작용 passthrough — 입력이 바뀌면 부모가 timeline을 새로 만든다.
     onPaintCell?: (row: number, col: number, occupied: boolean) => void;
     onMoveStart?: (cell: Cell) => void;
     onMoveGoal?: (cell: Cell) => void;

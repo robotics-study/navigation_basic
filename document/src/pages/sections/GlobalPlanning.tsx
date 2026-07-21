@@ -49,9 +49,9 @@ const GlobalPlanning = () => {
                     exists. This section studies the algorithms that produce that route.
                 </p>}
                 ko={<p>
-                    Global planning 은 navigation 의 첫 질문에 답한다: <em>지도가 주어졌을 때,
-                    여기서 저기까지 도대체 어떻게 가는가?</em> 스택의 나머지 — trajectory 추종,
-                    장애물 회피, 다중 로봇 조율 — 는 모두 "경로가 이미 있다"는 전제 위에서
+                    Global planning은 navigation의 첫 질문에 답한다: <em>지도가 주어졌을 때,
+                    여기서 저기까지 도대체 어떻게 가는가?</em> trajectory 추종, 장애물 회피,
+                    다중 로봇 조율 같은 스택의 나머지는 모두 "경로가 이미 있다"는 전제 위에서
                     동작한다. 이 섹션은 그 경로를 만들어 내는 알고리즘들을 다룬다.
                 </p>}
             />
@@ -80,18 +80,19 @@ const GlobalPlanning = () => {
                 ko={<>
                     <p>
                         형식적으로: 환경 지도와 시작 상태 <InlineMath math="s"/>, 목표 상태{" "}
-                        <InlineMath math="g"/> 가 주어졌을 때, <InlineMath math="s"/> 에서{" "}
-                        <InlineMath math="g"/> 로 가는 충돌 없는 경로를 찾는다 — 가능하면 길이 같은
-                        비용을 최소화하고, 가능하면 보장(최적성, 또는 준최적 한계)을 갖고서. 스택의
+                        <InlineMath math="g"/>가 주어졌을 때, <InlineMath math="s"/> 에서{" "}
+                        <InlineMath math="g"/>로 가는 충돌 없는 경로를 찾는다. 가능하면 길이 같은
+                        비용을 최소화하고, 최적성이나 준최적 한계 같은 보장도 갖추면 좋다. 스택의
                         뒷단과 구분되는 가정이 셋 있다:
                     </p>
                     <ul>
                         <li>지도를 <strong>미리 알고 있다</strong> (occupancy grid, graph, 기하
                             장애물 리스트).</li>
-                        <li><strong>움직이기 전에</strong> 계획한다 — 마이크로초가 아니라
-                            밀리초~초 단위로 생각할 여유가 있다.</li>
-                        <li>로봇을 단순화한다 — 보통 점 또는 원판. 기구학·동역학은 대개 다른
-                            단계의 몫이다 (Hybrid A*, kinodynamic 계열 같은 예외가 있다).</li>
+                        <li><strong>움직이기 전에</strong> 계획한다. 마이크로초가 아니라
+                            밀리초에서 초 단위로 생각할 여유가 있다.</li>
+                        <li>로봇을 단순화한다. 보통 점이나 원판으로 취급하고, 기구학·동역학은
+                            대개 다른 단계의 몫이다 (Hybrid A*, kinodynamic 계열 같은 예외가
+                            있다).</li>
                     </ul>
                 </>}
             />
@@ -110,16 +111,16 @@ const GlobalPlanning = () => {
                     cheap.
                 </p>}
                 ko={<p>
-                    Global planner 는 지도를 소비해 경로를 내놓고, local planner 는 그 경로를
+                    Global planner는 지도를 소비해 경로를 내놓고, local planner는 그 경로를
                     소비해 모터 명령을 내놓으며 지도에 없던 장애물에 반응한다. 이 분업은 의도된
-                    것이다: global planner 는 드물게 돌기 때문에 느리고 꼼꼼해도 되고, local
-                    planner 는 매 제어 주기마다 돌기 때문에 빠르고 근시안적이어야 한다. 세상이
-                    변해 경로가 무효가 되면 global planner 가 다시 계획한다 — incremental 계열
-                    (D* Lite, AD*)은 정확히 그 재계획을 싸게 만들기 위해 존재한다.
+                    것이다: global planner는 드물게 돌기 때문에 느리고 꼼꼼해도 되고, local
+                    planner는 매 제어 주기마다 돌기 때문에 빠르고 근시안적이어야 한다. 세상이
+                    변해 경로가 무효가 되면 global planner가 다시 계획한다. incremental 계열
+                    (D* Lite, AD*)은 바로 그 재계획을 싸게 만들기 위해 존재한다.
                 </p>}
             />
 
-            <h2>{t("Two Families: Search and Sampling", "두 계열: Search 와 Sampling")}</h2>
+            <h2>{t("Two Families: Search and Sampling", "두 계열: Search와 Sampling")}</h2>
             <T
                 en={<>
                     <p>
@@ -151,16 +152,16 @@ const GlobalPlanning = () => {
                     </p>
                     <ul>
                         <li>
-                            <strong>Graph search</strong> 는 먼저 이산화한다 — 격자나 그래프를
-                            씌우고, 그것을 정확하게 탐색한다. 강한 보장(완전성, 그래프 위 최적성)을
-                            얻는 대신 해상도가 대가다: 답의 품질은 이산화만큼만 좋고, 격자는 차원에
-                            따라 조합적으로 폭발한다.
+                            <strong>Graph search</strong>는 먼저 이산화한다. 격자나 그래프를 씌운 뒤
+                            그것을 정확하게 탐색한다. 강한 보장(완전성, 그래프 위 최적성)을 얻는
+                            대신 해상도가 대가다. 답의 품질은 이산화 해상도가 결정하고, 격자
+                            크기는 차원에 따라 조합적으로 폭발한다.
                         </li>
                         <li>
-                            <strong>Sampling</strong> 은 공간을 연속인 채로 두고 무작위 샘플로
+                            <strong>Sampling</strong>은 공간을 연속인 채로 두고 무작위 샘플로
                             찔러 본 뒤, 트리(RRT 계열)나 roadmap(PRM 계열)으로 잇는다. 보장은{" "}
-                            <em>확률적</em> 완전성과 <em>점근적</em> 최적성으로 약해지지만 — 격자가
-                            절망적인 고차원·복잡한 제약의 공간으로 확장된다.
+                            <em>확률적</em> 완전성과 <em>점근적</em> 최적성으로 약해지지만, 격자로는
+                            감당할 수 없는 고차원 공간과 복잡한 제약으로도 확장된다.
                         </li>
                     </ul>
                 </>}
@@ -228,21 +229,21 @@ const GlobalPlanning = () => {
                 </>}
                 ko={<>
                     <p>
-                        여기의 모든 알고리즘은 같은 추상화 위에서 C++/Python 으로 두 번 —
-                        독립적으로 — 구현된다. 그래서 두 구현을 이벤트 단위로 비교할 수 있다:
+                        여기의 모든 알고리즘은 같은 추상화 위에서 C++/Python으로 각각 독립적으로
+                        구현된다. 그래서 두 구현을 이벤트 단위로 비교할 수 있다:
                     </p>
                     <ul>
-                        <li><strong>맵 타입이 아니라 capability.</strong> planner 는 자기가 필요한
-                            것(search 는 <code>DiscreteSpace</code>, sampling 은{" "}
-                            <code>SamplingSpace</code>)을 선언하고, 그 capability 를 지원하는 맵은
+                        <li><strong>맵 타입이 아니라 capability.</strong> planner는 자기가 필요한
+                            것(search는 <code>DiscreteSpace</code>, sampling 은{" "}
+                            <code>SamplingSpace</code>)을 선언하고, 그 capability를 지원하는 맵은
                             무엇이든 붙는다. 맵 타입을 추가해도 알고리즘 코드는 안 바뀐다.</li>
-                        <li><strong>선언된 parameter.</strong> 각 알고리즘은 parameter 를 타입·기본값·
+                        <li><strong>선언된 parameter.</strong> 각 알고리즘은 parameter를 타입·기본값·
                             유효 범위와 함께 선언하고, 값은 두 언어가 공유하는{" "}
-                            <code>configs/</code> yaml 에서 로드된다.</li>
-                        <li><strong>Trace 이벤트.</strong> planner 는 JSON 이벤트 스트림
+                            <code>configs/</code> yaml에서 로드된다.</li>
+                        <li><strong>Trace 이벤트.</strong> planner는 JSON 이벤트 스트림
                             (<code>node_expanded</code>, <code>sample_drawn</code>,{" "}
-                            <code>path_found</code>, …)을 방출한다. 이 페이지들의 demo 는 정확히 그
-                            스트림을 재생한다 — 시각화는 알고리즘 내부를 만지지 않는다.</li>
+                            <code>path_found</code>, …)을 방출한다. 이 페이지들의 demo는 정확히 그
+                            스트림을 재생한다. 시각화는 알고리즘 내부를 만지지 않는다.</li>
                     </ul>
                 </>}
             />
@@ -264,15 +265,15 @@ const GlobalPlanning = () => {
                 </>}
                 ko={<>
                     <p>
-                        페이지들은 서로 위에 쌓인다. graph search 는{" "}
-                        <strong>BFS → Dijkstra → A*</strong> 로 비용과 heuristic 을 다지고,
+                        각 페이지는 앞 내용을 전제로 한다. graph search 는{" "}
+                        <strong>BFS → Dijkstra → A*</strong>로 비용과 heuristic을 다지고,
                         anytime/incremental 변형(<strong>ARA*, D* Lite, AD*</strong>)이 "한 번에
                         완벽하게"라는 가정을 풀고, any-angle 계열(<strong>Theta*, Anya</strong>)이
-                        격자의 45° 인공물을 없애고, <strong>JPS</strong> 는 격자 대칭성으로 속도를
-                        얻고, <strong>Hybrid A*</strong> 는 차량 기구학을 더한다. sampling 은{" "}
-                        <strong>RRT → RRT-Connect → RRT*</strong> 로 핵심 아이디어를 세운 뒤
-                        informed·batch 변형(<strong>Informed RRT*, FMT*, BIT*</strong> 와 후속들)이
-                        그것을 벼린다.
+                        격자 특유의 45° 꺾임을 없애고, <strong>JPS</strong>는 격자 대칭성으로 속도를
+                        얻고, <strong>Hybrid A*</strong>는 차량 기구학을 더한다. sampling 은{" "}
+                        <strong>RRT → RRT-Connect → RRT*</strong>로 핵심 아이디어를 세운 뒤
+                        informed·batch 변형(<strong>Informed RRT*, FMT*, BIT*</strong>와 후속들)이
+                        그것을 다듬는다.
                     </p>
                 </>}
             />

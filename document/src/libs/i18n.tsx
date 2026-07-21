@@ -7,7 +7,7 @@ export type Lang = "en" | "ko"
 const STORE_KEY = "mr-lang"
 
 // 언어 결정 우선순위: URL ?lang → localStorage 저장값 → 브라우저 언어 → 영어.
-// (URL 값은 LangProvider 가 별도로 우선 처리하므로 여기서는 저장값/브라우저만 본다.)
+// (URL 값은 LangProvider가 별도로 우선 처리하므로 여기서는 저장값/브라우저만 본다.)
 function detectLang(): Lang {
     try {
         const stored = localStorage.getItem(STORE_KEY)
@@ -31,8 +31,8 @@ export function LangProvider({children}: {children: ReactNode}) {
     const urlLang: Lang | null = raw === "ko" || raw === "en" ? raw : null
     const lang: Lang = urlLang ?? detectLang()
 
-    // URL 에 lang 이 없으면 감지값을 주소에 반영해 공유 가능한 링크로 만든다.
-    // 영어는 기본값이라 파라미터를 생략(깔끔한 URL), 한국어일 때만 ?lang=ko 를 붙인다.
+    // URL에 lang이 없으면 감지값을 주소에 반영해 공유 가능한 링크로 만든다.
+    // 영어는 기본값이라 파라미터를 생략(깔끔한 URL), 한국어일 때만 ?lang=ko를 붙인다.
     useEffect(() => {
         if (!urlLang && lang === "ko") {
             const next = new URLSearchParams(params)
@@ -41,7 +41,7 @@ export function LangProvider({children}: {children: ReactNode}) {
         }
     }, [urlLang, lang, params, setParams])
 
-    // <html lang> 을 실제 언어에 맞춰 접근성/크롤러 신호를 정확히 준다. 선택값도 저장.
+    // <html lang>을 실제 언어에 맞춰 접근성/크롤러 신호를 정확히 준다. 선택값도 저장.
     useEffect(() => {
         document.documentElement.lang = lang
         try {

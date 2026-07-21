@@ -6,8 +6,8 @@ import {CATEGORIES, SECTIONS} from "../pages/algorithms/roadmap";
 import {useAlgoNav} from "../libs/nav";
 import {useLang, useTr, pick} from "../libs/i18n";
 
-// 대분류 소개 페이지 래퍼 — AlgorithmContents 와 같은 본문 프레임에 소개 콘텐츠를 담는다.
-// pager 의 다음은 첫 중분류 소개(있으면), 없으면 그 대분류의 첫 집필 알고리즘이다.
+// 대분류 소개 페이지 래퍼 — AlgorithmContents와 같은 본문 프레임에 소개 콘텐츠를 담는다.
+// pager의 다음은 첫 중분류 소개(있으면), 없으면 그 대분류의 첫 집필 알고리즘이다.
 const SectionContents = ({intro}: {intro: ISectionIntro}) => {
     const {go, goSection, goCategory} = useAlgoNav()
     const {lang} = useLang()

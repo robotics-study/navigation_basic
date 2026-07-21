@@ -8,14 +8,14 @@ export interface AStarOptions {
     map: GridMap;
     start: Cell;
     goal: Cell;
-    // f = g + w·h. 0 이면 Dijkstra, 1 이면 A*(최적 보장), 1 초과면 weighted A*.
+    // f = g + w·h. 0이면 Dijkstra, 1이면 A*(최적 보장), 1 초과면 weighted A*.
     heuristicWeight: number;
     connectivity: 4 | 8;
 }
 
 const SQRT2 = Math.SQRT2;
 
-// 8-connected 격자의 admissible heuristic (octile distance). 4-connected 는 Manhattan.
+// 8-connected 격자의 admissible heuristic (octile distance). 4-connected는 Manhattan.
 function heuristic(a: Cell, b: Cell, connectivity: 4 | 8): number {
     const dr = Math.abs(a[0] - b[0])
     const dc = Math.abs(a[1] - b[1])
@@ -42,7 +42,7 @@ export function runAStar({map, start, goal, heuristicWeight, connectivity}: ASta
     const h = (c: Cell) => heuristicWeight * heuristic(c, goal, connectivity)
 
     // 데모 규모(수백 노드)에서는 배열 + 정렬로 충분하다. f 동률이면 g 큰 쪽 우선 —
-    // unit grid 의 f-동률 corridor 에서 낭비 확장을 막는 표준 tie-break.
+    // unit grid의 f-동률 corridor에서 낭비 확장을 막는 표준 tie-break.
     const open: Array<{i: number; f: number; g: number}> = []
     const startI = idx(start)
     g[startI] = 0

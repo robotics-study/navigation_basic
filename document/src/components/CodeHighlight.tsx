@@ -2,7 +2,7 @@ import {ReactNode, useMemo} from "react";
 
 // 의존성 없는 최소 syntax highlighter. 정확한 파서가 아니라 읽기 보조가 목적이라
 // comment / string / keyword / number / 전처리·데코레이터만 구분한다.
-// 색은 전역 CSS 의 --tok-* 변수를 그대로 쓴다 (라이트/다크 자동 대응).
+// 색은 전역 CSS의 --tok-* 변수를 그대로 쓴다 (라이트/다크 자동 대응).
 export type CodeLang = "python" | "cpp";
 
 const KEYWORDS: Record<CodeLang, Set<string>> = {
@@ -40,7 +40,7 @@ const STYLE: Record<string, string> = {
     type: "var(--tok-expr)",       // PascalCase 타입 · 네임스페이스 한정자
 }
 
-// 식별자 그룹 값 (python 은 6번째, cpp 는 5번째 캡처).
+// 식별자 그룹 값 (python은 6번째, cpp는 5번째 캡처).
 const wordOf = (match: RegExpExecArray, lang: CodeLang): string | undefined =>
     lang === "python" ? match[6] : match[5]
 
@@ -48,7 +48,7 @@ function classify(match: RegExpExecArray, lang: CodeLang, code: string): string 
     if (lang === "python") {
         const [, comment, triString, string, deco, num] = match
         if (comment) return "comment"
-        if (triString) return "comment"   // docstring 은 주석 취급이 읽기에 자연스럽다
+        if (triString) return "comment"   // docstring은 주석 취급이 읽기에 자연스럽다
         if (string) return "string"
         if (deco) return "meta"
         if (num) return "number"
@@ -62,7 +62,7 @@ function classify(match: RegExpExecArray, lang: CodeLang, code: string): string 
     const word = wordOf(match, lang)
     if (!word) return null
     if (KEYWORDS[lang].has(word)) return "keyword"
-    // 문맥 lookahead: 뒤가 '(' 면 함수, cpp 에서 뒤가 '::' 이거나 PascalCase 면 타입.
+    // 문맥 lookahead: 뒤가 '(' 면 함수, cpp에서 뒤가 '::' 이거나 PascalCase 면 타입.
     const rest = code.slice(match.index + match[0].length)
     if (/^\s*\(/.test(rest)) return "func"
     if (lang === "cpp" && rest.startsWith("::")) return "type"

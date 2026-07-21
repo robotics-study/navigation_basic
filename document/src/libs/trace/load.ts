@@ -2,8 +2,8 @@ import {TraceEvent} from "./types";
 import {GridMap, GridMapJson, parseGridMap} from "../grid";
 import {resolvePath} from "../url";
 
-// 데모 trace 는 용량 때문에 gzip(.jsonl.gz)으로 커밋된다. GitHub Pages 는 원본 바이트를
-// 그대로 주지만, vite dev 서버는 Content-Encoding: gzip 으로 서빙해 브라우저가 이미 해제한
+// 데모 trace는 용량 때문에 gzip(.jsonl.gz)으로 커밋된다. GitHub Pages는 원본 바이트를
+// 그대로 주지만, vite dev 서버는 Content-Encoding: gzip으로 서빙해 브라우저가 이미 해제한
 // 본문을 준다. 확장자 대신 gzip magic byte(1f 8b)로 판별해 두 환경 모두에서 동작하게 한다.
 async function fetchText(url: string): Promise<string> {
     const res = await fetch(url)

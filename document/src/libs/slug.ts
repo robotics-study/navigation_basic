@@ -1,4 +1,4 @@
-// 제목 텍스트 → URL 앵커(id) 변환. TOC 가 헤딩에 부여하는 id 와 검색 인덱스의 앵커가
+// 제목 텍스트 → URL 앵커(id) 변환. TOC가 헤딩에 부여하는 id와 검색 인덱스의 앵커가
 // 같은 규칙을 공유해야 검색 결과 딥링크(#anchor)가 실제 헤딩으로 스크롤된다.
 export function slugify(text: string): string {
     return text

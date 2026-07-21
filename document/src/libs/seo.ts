@@ -1,6 +1,6 @@
-// SPA 라 페이지 전환은 리로드 없이 일어난다. 크롤러/링크 프리뷰가 현재 뷰를 반영하도록
-// document.title, description, Open Graph, canonical, hreflang, JSON-LD 를 클라이언트에서
-// 갱신한다. index.html 에 정적으로 심어 둔 태그를 찾아 값만 바꾸고, 없으면 만든다.
+// SPA라 페이지 전환은 리로드 없이 일어난다. 크롤러/링크 프리뷰가 현재 뷰를 반영하도록
+// document.title, description, Open Graph, canonical, hreflang, JSON-LD를 클라이언트에서
+// 갱신한다. index.html에 정적으로 심어 둔 태그를 찾아 값만 바꾸고, 없으면 만든다.
 // 설명문은 마케팅 문구가 아니라 학습 내용(주제·개념) 중심으로 쓴다.
 
 import {Lang, pick} from "./i18n";
@@ -14,7 +14,7 @@ const BASE_PATH = "/navigation/";
 
 const SITE: Record<Lang, string> = {
     en: "Navigation · Study",
-    ko: "내비게이션 · 스터디",
+    ko: "Navigation · Study",
 }
 
 function upsertMeta(attr: "name" | "property", key: string, content: string) {
@@ -56,7 +56,7 @@ function clamp(text: string, max = 155): string {
     return text.length <= max ? text : text.slice(0, max - 1).trimEnd() + "…"
 }
 
-// 해시·잡다한 파라미터를 뺀 정규화 URL. subpath 는 "algo/<slug>" | "section/<key>" | 없음(홈),
+// 해시·잡다한 파라미터를 뺀 정규화 URL. subpath는 "algo/<slug>" | "section/<key>" | 없음(홈),
 // 언어 변형은 ?lang=ko.
 export function pageUrl(lang: Lang, subpath?: string): string {
     const path = subpath !== undefined ? `${subpath}/` : ""
@@ -70,7 +70,7 @@ declare global {
     }
 }
 
-// SPA 라우트 변경마다 GA4 page_view 를 직접 보낸다 (index.html 은 send_page_view: false).
+// SPA 라우트 변경마다 GA4 page_view를 직접 보낸다 (index.html은 send_page_view: false).
 // 로컬 개발 트래픽은 집계를 오염시키므로 배포 호스트에서만 보낸다.
 function trackPageView(title: string) {
     if (!window.location.hostname.endsWith("github.io")) return
@@ -85,9 +85,9 @@ export interface PageMeta {
     title: string
     description: string
     lang: Lang
-    // 정규화 URL 의 하위 경로 ("algo/astar" 등). 없으면 홈.
+    // 정규화 URL의 하위 경로 ("algo/astar" 등). 없으면 홈.
     subpath?: string
-    // TechArticle JSON-LD 의 about 목록 (본문 h2 제목들).
+    // TechArticle JSON-LD의 about 목록 (본문 h2 제목들).
     topics?: string[]
 }
 
@@ -149,8 +149,8 @@ const HOME_DESC: Record<Lang, string> = {
         "with interactive step-by-step search visualizations and C++/Python implementations.",
     ko:
         "로봇 navigation 알고리즘 학습 노트: graph search (Dijkstra, A*, D* Lite, Theta*, " +
-        "JPS, Anya) 와 sampling 기반 planner (RRT, RRT*, PRM, Informed RRT*, BIT*). " +
-        "탐색 과정을 step-by-step 으로 재생하는 인터랙티브 시각화와 C++/Python 구현.",
+        "JPS, Anya)와 sampling 기반 planner (RRT, RRT*, PRM, Informed RRT*, BIT*). " +
+        "탐색 과정을 step-by-step으로 재생하는 인터랙티브 시각화와 C++/Python 구현.",
 }
 
 // 알고리즘 → 페이지 메타. 설명은 한 줄 소개(내용 요약) + 주요 절 제목으로 만든다.

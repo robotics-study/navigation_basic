@@ -2,7 +2,7 @@ import {TraceEvent} from "./types";
 
 export type Cell = [number, number];  // (row, col)
 
-// trace 이벤트 열을 재생 가능한 타임라인으로 접는다. step 은 이벤트 index 와 같고,
+// trace 이벤트 열을 재생 가능한 타임라인으로 접는다. step은 이벤트 index와 같고,
 // 렌더러는 "step 이하"의 이벤트만 그린다 — 스크러버로 임의 시점 탐색이 가능하다.
 export interface GridTimeline {
     steps: number;                                          // 마지막 step (= 이벤트 수)

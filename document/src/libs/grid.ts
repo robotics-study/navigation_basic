@@ -1,5 +1,5 @@
 // 웹 패널이 쓰는 occupancy grid 모델. 저장소 컨벤션과 동일하게 셀 인덱스는 (row, col)
-// 이며 row 0 이 이미지 상단이다 (world 좌표 변환은 여기서 다루지 않는다 — 패널은 셀만 그린다).
+// 이며 row 0이 이미지 상단이다 (world 좌표 변환은 여기서 다루지 않는다 — 패널은 셀만 그린다).
 export interface GridMap {
     name: string;
     width: number;    // cols
@@ -16,7 +16,7 @@ export const inBounds = (map: GridMap, row: number, col: number) =>
 export const isOccupied = (map: GridMap, row: number, col: number) =>
     !inBounds(map, row, col) || map.occupied[cellIndex(map, row, col)];
 
-// tools/web_export 가 만드는 맵 JSON: rows 는 '#'(occupied)/'.'(free) 문자열 배열.
+// tools/web_export가 만드는 맵 JSON: rows는 '#'(occupied)/'.'(free) 문자열 배열.
 export interface GridMapJson {
     name: string;
     width: number;
