@@ -55,6 +55,7 @@ const RUNNERS = {
         {map: m, start: s, goal: g, heuristicWeight: p.heuristic_weight ?? 1}),
     lazy_theta_star: (m, s, g, p) => engines.runLazyThetaStar(
         {map: m, start: s, goal: g, heuristicWeight: p.heuristic_weight ?? 1}),
+    jps: (m, s, g) => engines.runJPS({map: m, start: s, goal: g}),
 };
 
 // exact: 연산 순서·tie-break 까지 py 를 미러 → expanded_nodes 도 일치해야 한다.
@@ -67,6 +68,7 @@ const CHECKS = [
     {algo: "ad_star", maps: ["dstar_trap01", "maze01"], exact: true},
     {algo: "theta_star", maps: ["maze01", "open01"], exact: true},
     {algo: "lazy_theta_star", maps: ["maze01", "open01"], exact: true},
+    {algo: "jps", maps: ["maze01", "open01"], exact: true},
 ];
 
 let failures = 0;

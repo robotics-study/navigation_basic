@@ -71,6 +71,15 @@ export const ALGO_BLURBS: AlgoBlurb[] = [
         },
     },
     {
+        slug: "jps",
+        blurb: {
+            en: "Kill grid symmetry with geometry: scan straight lines to the few jump " +
+                "points where turning is forced — A*'s optimal paths at a fraction of the work.",
+            ko: "기하로 grid 대칭을 제거한다. 꺾임이 강제되는 소수의 jump point 까지 " +
+                "직선 스캔해, A*의 최적 경로를 몇 분의 일의 작업으로 찾는다.",
+        },
+    },
+    {
         slug: "astar",
         blurb: {
             en: "Dijkstra plus a compass: order the frontier by g + h and an admissible " +

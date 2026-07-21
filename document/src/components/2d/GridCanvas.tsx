@@ -20,6 +20,8 @@ interface GridCanvasProps {
     showTree?: boolean;
     // 비교용 보조 경로 (점선, muted) — any-angle vs grid 경로 대조 등에 쓴다.
     overlayPath?: Cell[];
+    // 비교용 배경 셀 집합 (muted 반투명) — 다른 알고리즘의 확장 영역 대조 등에 쓴다.
+    shadowCells?: Cell[];
     // sandbox 상호작용 — 핸들러가 있을 때만 활성화된다.
     onPaintCell?: (row: number, col: number, occupied: boolean) => void;
     onMoveStart?: (cell: Cell) => void;
@@ -28,7 +30,8 @@ interface GridCanvasProps {
 
 const GridCanvas = ({
                         map, panel, timeline, step = Infinity, start, goal,
-                        showTree = false, overlayPath, onPaintCell, onMoveStart, onMoveGoal,
+                        showTree = false, overlayPath, shadowCells,
+                        onPaintCell, onMoveStart, onMoveGoal,
                     }: GridCanvasProps) => {
     const colors = useCanvasColors();
     const cell = panel / Math.max(map.width, map.height);
@@ -150,6 +153,11 @@ const GridCanvas = ({
                onPointerUp={() => { paintValue.current = null }}
                onPointerLeave={() => { paintValue.current = null }}>
             <Layer>
+                {/* 비교용 배경 셀 (다른 알고리즘의 확장 영역 등) */}
+                {shadowCells?.map((c, i) => (
+                    <Rect key={`sh${i}`} x={c[1] * cell} y={c[0] * cell}
+                          width={cell} height={cell} fill={colors.muted} opacity={0.22}/>
+                ))}
                 {/* 탐색 완료(CLOSED) 셀 */}
                 {expandedVisible.map((e, i) => (
                     <Rect key={`e${i}`} x={e.cell[1] * cell} y={e.cell[0] * cell}
