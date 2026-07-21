@@ -9,7 +9,7 @@ import {GridMap} from "../../../../libs/grid";
 import {useTr} from "../../../../libs/i18n";
 import {PATH_COLOR} from "../../../2d/GridCanvas";
 import cn from "../../../../libs/cn";
-import {BIT_BATCH_SIZE, BIT_GAMMA, BIT_GOAL, BIT_START, blockMap} from "./presets";
+import {BIT_BATCH_SIZE, BIT_GAMMA, BIT_GOAL, BIT_START, pillarFieldMap} from "./presets";
 
 // 라이브 BIT* sandbox. 배치 수를 늘리면 현직 해가 어떻게 조여지는지(anytime)와,
 // 같은 표본 예산의 Informed RRT*가 아직 경로를 못 찾을 때 BIT*는 이미 더 낮은
@@ -23,7 +23,7 @@ const cellToWorld = (map: GridMap, c: Cell): Point =>
 
 const BitStarScene = ({panel = 340}: {panel?: number}) => {
     const t = useTr()
-    const [map, setMap] = useState<GridMap>(blockMap)
+    const [map, setMap] = useState<GridMap>(pillarFieldMap)
     const [start, setStart] = useState<Point>(BIT_START)
     const [goal, setGoal] = useState<Point>(BIT_GOAL)
     const [numBatches, setNumBatches] = useState(4)
@@ -72,7 +72,7 @@ const BitStarScene = ({panel = 340}: {panel?: number}) => {
             onMoveStart={moveEndpoint(setStart)}
             onMoveGoal={moveEndpoint(setGoal)}
             onReset={() => {
-                setMap(blockMap())
+                setMap(pillarFieldMap())
                 setStart(BIT_START)
                 setGoal(BIT_GOAL)
                 setNumBatches(4)
@@ -135,8 +135,8 @@ const BitStarSandbox = () => {
     const t = useTr()
     return <CanvasFigure
         label={t(
-            "Live BIT* around a central block: raise the batch count and the informed ellipse tightens the incumbent toward the taut corner path, while Informed RRT* on the same sample budget has often not found a path yet — the edge queue reaches the goal with far fewer samples",
-            "가운데 블록을 도는 라이브 BIT*. 배치 수를 늘리면 informed 타원이 현직 해를 모서리에 밀착한 팽팽한 경로로 조여 가는데, 같은 표본 예산의 Informed RRT*는 아직 경로를 못 찾은 경우가 많다. 간선 큐가 훨씬 적은 표본으로 목표에 닿는다",
+            "Live BIT* through a pillar field: raise the batch count and the informed ellipse tightens the incumbent toward the taut corner path, while Informed RRT* on the same sample budget has often not found a path yet — the edge queue reaches the goal with far fewer samples",
+            "기둥밭을 꿰는 라이브 BIT*. 배치 수를 늘리면 informed 타원이 현직 해를 모서리에 밀착한 팽팽한 경로로 조여 가는데, 같은 표본 예산의 Informed RRT*는 아직 경로를 못 찾은 경우가 많다. 간선 큐가 훨씬 적은 표본으로 목표에 닿는다",
         )}
         tight bodyClassName="w-fit" className="w-full"
         modal={<BitStarScene panel={Math.min(modalCanvasSize(1).width, 640)}/>}
