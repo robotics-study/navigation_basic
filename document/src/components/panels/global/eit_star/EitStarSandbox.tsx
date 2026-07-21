@@ -1,20 +1,15 @@
 import {useMemo, useState} from "react";
 import CanvasFigure, {modalCanvasSize} from "../../../CanvasFigure";
 import TracePlayer from "../../../player/TracePlayer";
+import ParamSlider from "../../../player/ParamSlider";
 import {eitStarReadout, runEITStar} from "../../../../libs/algorithms/eit_star";
 import {Point} from "../../../../libs/algorithms/sampling_space";
 import {buildGridTimeline, Cell} from "../../../../libs/trace/timeline";
 import {GridMap} from "../../../../libs/grid";
 import {useTr} from "../../../../libs/i18n";
 import {PATH_COLOR} from "../../../2d/GridCanvas";
-import cn from "../../../../libs/cn";
 import {GATE_GOAL, GATE_START, shelfMap} from "./presets";
 
-// 라이브 EIT* sandbox. 시작점에서 EIT*가 세우는 두 역방향 heuristic을 나란히 보여 준다:
-// cost-to-go ĥ(meters, AIT*와 공유)와 effort-to-go ê(충돌 검사 segment 수, EIT*가 더한
-// 두 번째 역방향 탐색). 선반 오른쪽 끝을 도는 우회 때문에 둘 다 직선 baseline을 웃돈다. effort-to-go는
-// 거리가 아니라 검증 노력을 재며, 전방 탐색은 비용이 같은 후보를 이 effort로 가른다.
-const BATCH_COUNTS = [2, 4, 6];
 const BATCH_SIZE = 120;
 const GAMMA = 30;
 const STEP_SIZE = 0.5;
@@ -70,17 +65,7 @@ const EitStarScene = ({panel = 340}: {panel?: number}) => {
             footer={
                 <div className="flex flex-col items-center gap-1.5">
                     <div className="flex items-center justify-center gap-1.5 text-xs text-muted flex-wrap tabular-nums">
-                        {BATCH_COUNTS.map((b) => (
-                            <button key={b} type="button" onClick={() => setMaxBatches(b)}
-                                    className={cn(
-                                        "px-2 py-0.5 rounded border tabular-nums",
-                                        maxBatches === b
-                                            ? "border-[var(--accent)] text-[var(--accent)] font-semibold"
-                                            : "border-border hover:bg-surface",
-                                    )}>
-                                {b} {t("batches", "배치")}
-                            </button>
-                        ))}
+                        <ParamSlider label={t("batches", "배치")} value={maxBatches} min={1} max={8} step={1} onCommit={setMaxBatches}/>
                         <button type="button" onClick={() => setSeed((s) => s + 1)}
                                 className="px-2 py-0.5 rounded border border-border hover:bg-surface">
                             {t("resample", "다시 추첨")}

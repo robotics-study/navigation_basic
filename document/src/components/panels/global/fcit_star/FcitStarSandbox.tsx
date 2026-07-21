@@ -1,6 +1,7 @@
 import {useMemo, useState} from "react";
 import CanvasFigure, {modalCanvasSize} from "../../../CanvasFigure";
 import TracePlayer from "../../../player/TracePlayer";
+import ParamSlider from "../../../player/ParamSlider";
 import {runFCITStar} from "../../../../libs/algorithms/fcit_star";
 import {runAITStar} from "../../../../libs/algorithms/ait_star";
 import {Point} from "../../../../libs/algorithms/sampling_space";
@@ -8,15 +9,8 @@ import {buildGridTimeline, Cell} from "../../../../libs/trace/timeline";
 import {GridMap} from "../../../../libs/grid";
 import {useTr} from "../../../../libs/i18n";
 import {PATH_COLOR} from "../../../2d/GridCanvas";
-import cn from "../../../../libs/cn";
 import {FCIT_BATCH_SIZE, FCIT_GOAL, FCIT_START, staggeredMap} from "./presets";
 
-// 라이브 FCIT* sandbox. 엇갈린 블록 사이 긴 자유 구간을 직선으로 꿰는 문제다. FCIT*의
-// 완전 연결 그래프는 그 직행 간선을 담으므로 첫 배치에서 이미 정확한 최적을 반환한다.
-// 옆에서는 같은 표본 예산의 AIT*(줄어드는 반경 RGG)가 함께 도는데, 먼 거리를 한 간선으로
-// 잇지 못해 꺾인 사슬로 이어 배치가 쌓여야 직선에 다가간다. 완전 연결이 반경 그래프가
-// 놓치는 직행 지름길을 잡는다 (Wilson et al. 2025).
-const BATCH_COUNTS = [1, 2, 3, 4]
 const AIT_GAMMA = 30
 
 const cellToWorld = (map: GridMap, c: Cell): Point =>
@@ -80,17 +74,7 @@ const FcitStarScene = ({panel = 340}: {panel?: number}) => {
             footer={
                 <div className="flex flex-col items-center gap-1.5">
                     <div className="flex items-center justify-center gap-1.5 text-xs text-muted flex-wrap tabular-nums">
-                        {BATCH_COUNTS.map((n) => (
-                            <button key={n} type="button" onClick={() => setNumBatches(n)}
-                                    className={cn(
-                                        "px-2 py-0.5 rounded border tabular-nums",
-                                        numBatches === n
-                                            ? "border-[var(--accent)] text-[var(--accent)] font-semibold"
-                                            : "border-border hover:bg-surface",
-                                    )}>
-                                {n} {t("batches", "배치")}
-                            </button>
-                        ))}
+                        <ParamSlider label={t("batches", "배치")} value={numBatches} min={1} max={6} step={1} onCommit={setNumBatches}/>
                         <button type="button" onClick={() => setSeed((s) => s + 1)}
                                 className="px-2 py-0.5 rounded border border-border hover:bg-surface">
                             {t("resample", "다시 추첨")}

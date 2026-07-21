@@ -1,19 +1,15 @@
 import {useMemo, useState} from "react";
 import CanvasFigure, {modalCanvasSize} from "../../../CanvasFigure";
 import TracePlayer from "../../../player/TracePlayer";
+import ParamSlider from "../../../player/ParamSlider";
 import {runKinodynamicRRTStar} from "../../../../libs/algorithms/kinodynamic_rrt_star";
 import {Point} from "../../../../libs/algorithms/sampling_space";
 import {buildGridTimeline, Cell} from "../../../../libs/trace/timeline";
 import {GridMap} from "../../../../libs/grid";
 import {useTr} from "../../../../libs/i18n";
 import {PATH_COLOR} from "../../../2d/GridCanvas";
-import cn from "../../../../libs/cn";
 import {KINO_GOAL, KINO_START, slashMap} from "./presets";
 
-// 라이브 Kinodynamic RRT* sandbox. control_weight r을 키우면 제어 노력 J = ∫(1 + r·uᵀu)dt
-// 의 노력 항 페널티가 커져, 트리가 더 완만하고 긴(비용이 큰) 관성 궤적으로 자란다.
-// 대각 벽의 자유 끝을 차량이 넓은 호로 감아 도는 것이 vehicle 주행으로 보인다.
-const WEIGHTS = [0.3, 1.0, 3.0]
 const BUDGET = 2000
 
 const cellToWorld = (map: GridMap, c: Cell): Point =>
@@ -70,17 +66,7 @@ const KinodynamicScene = ({panel = 340}: {panel?: number}) => {
                 <div className="flex flex-col items-center gap-1.5">
                     <div className="flex items-center justify-center gap-1.5 text-xs text-muted flex-wrap tabular-nums">
                         <span>{t("effort penalty r", "제어 페널티 r")}</span>
-                        {WEIGHTS.map((r) => (
-                            <button key={r} type="button" onClick={() => setWeight(r)}
-                                    className={cn(
-                                        "px-2 py-0.5 rounded border tabular-nums",
-                                        weight === r
-                                            ? "border-[var(--accent)] text-[var(--accent)] font-semibold"
-                                            : "border-border hover:bg-surface",
-                                    )}>
-                                {r.toFixed(1)}
-                            </button>
-                        ))}
+                        <ParamSlider label="r" value={weight} min={0.2} max={3} step={0.1} onCommit={setWeight}/>
                         <button type="button" onClick={() => setSeed((s) => s + 1)}
                                 className="px-2 py-0.5 rounded border border-border hover:bg-surface">
                             {t("regrow", "다시 성장")}

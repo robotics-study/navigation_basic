@@ -1,19 +1,15 @@
 import {useMemo, useState} from "react";
 import CanvasFigure, {modalCanvasSize} from "../../../CanvasFigure";
 import TracePlayer from "../../../player/TracePlayer";
+import ParamSlider from "../../../player/ParamSlider";
 import {runRRT} from "../../../../libs/algorithms/rrt";
 import {Point} from "../../../../libs/algorithms/sampling_space";
 import {buildGridTimeline, Cell} from "../../../../libs/trace/timeline";
 import {GridMap} from "../../../../libs/grid";
 import {useTr} from "../../../../libs/i18n";
 import {PATH_COLOR} from "../../../2d/GridCanvas";
-import cn from "../../../../libs/cn";
 import {TRAP_GOAL, TRAP_START, bugTrapMap} from "./presets";
 
-// 라이브 RRT sandbox. bug trap에서 goal bias와 step size를 바꿔 가며 트리가
-// 함정을 빠져나오는 속도(반복 수)를 비교한다.
-const BIASES = [0, 0.05, 0.3];
-const STEPS = [0.3, 0.5, 1.0];
 
 const cellToWorld = (map: GridMap, c: Cell): Point =>
     [map.originX + (c[1] + 0.5) * map.resolution,
@@ -68,28 +64,8 @@ const RrtScene = ({panel = 340}: {panel?: number}) => {
             footer={
                 <div className="flex flex-col items-center gap-1.5">
                     <div className="flex items-center justify-center gap-1.5 text-xs text-muted flex-wrap tabular-nums">
-                        {BIASES.map((b) => (
-                            <button key={b} type="button" onClick={() => setGoalBias(b)}
-                                    className={cn(
-                                        "px-2 py-0.5 rounded border tabular-nums",
-                                        goalBias === b
-                                            ? "border-[var(--accent)] text-[var(--accent)] font-semibold"
-                                            : "border-border hover:bg-surface",
-                                    )}>
-                                bias {b}
-                            </button>
-                        ))}
-                        {STEPS.map((s) => (
-                            <button key={s} type="button" onClick={() => setStepSize(s)}
-                                    className={cn(
-                                        "px-2 py-0.5 rounded border tabular-nums",
-                                        stepSize === s
-                                            ? "border-[var(--accent)] text-[var(--accent)] font-semibold"
-                                            : "border-border hover:bg-surface",
-                                    )}>
-                                η = {s}
-                            </button>
-                        ))}
+                        <ParamSlider label="bias" value={goalBias} min={0} max={0.4} step={0.02} onCommit={setGoalBias}/>
+                        <ParamSlider label="η" value={stepSize} min={0.2} max={1.5} step={0.05} onCommit={setStepSize}/>
                         <button type="button" onClick={() => setSeed((s) => s + 1)}
                                 className="px-2 py-0.5 rounded border border-border hover:bg-surface">
                             {t("regrow", "다시 성장")}

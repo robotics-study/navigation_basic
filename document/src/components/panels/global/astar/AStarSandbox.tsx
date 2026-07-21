@@ -1,6 +1,7 @@
 import {useMemo, useState} from "react";
 import CanvasFigure, {modalCanvasSize} from "../../../CanvasFigure";
 import TracePlayer from "../../../player/TracePlayer";
+import ParamSlider from "../../../player/ParamSlider";
 import {runAStar} from "../../../../libs/algorithms/astar";
 import {buildGridTimeline, Cell} from "../../../../libs/trace/timeline";
 import {GridMap} from "../../../../libs/grid";
@@ -8,15 +9,6 @@ import {useTr} from "../../../../libs/i18n";
 import cn from "../../../../libs/cn";
 import {pocketMap, SANDBOX_GOAL, SANDBOX_START} from "./presets";
 
-// 라이브 A* sandbox — 브라우저에서 직접 탐색을 실행한다. 벽을 그리고 시작/목표를 끌면
-// 즉시 재탐색하고, heuristic 가중치를 바꾸면 Dijkstra ↔ A* ↔ weighted A*의 탐색량
-// 차이가 바로 보인다.
-const WEIGHTS: Array<{w: number; label: string}> = [
-    {w: 0, label: "w = 0 · Dijkstra"},
-    {w: 1, label: "w = 1 · A*"},
-    {w: 2, label: "w = 2"},
-    {w: 3, label: "w = 3 · greedy"},
-];
 
 export const SandboxScene = ({panel = 340}: {panel?: number}) => {
     const t = useTr()
@@ -54,17 +46,12 @@ export const SandboxScene = ({panel = 340}: {panel?: number}) => {
             footer={
                 <div className="flex flex-col items-center gap-1.5">
                     <div className="flex items-center justify-center gap-1.5 text-xs text-muted flex-wrap">
-                        {WEIGHTS.map(({w, label}) => (
-                            <button key={w} type="button" onClick={() => setWeight(w)}
-                                    className={cn(
-                                        "px-2 py-0.5 rounded border tabular-nums",
-                                        weight === w
-                                            ? "border-[var(--accent)] text-[var(--accent)] font-semibold"
-                                            : "border-border hover:bg-surface",
-                                    )}>
-                                {label}
-                            </button>
-                        ))}
+                        <ParamSlider label="w" value={weight} min={0} max={3} step={0.25} onCommit={setWeight}/>
+                        <span className="font-semibold">
+                            {weight === 0 ? "Dijkstra" : weight === 1 ? "A*"
+                                : weight < 1 ? t("under-weighted", "저가중")
+                                : t("weighted (greedier)", "weighted (더 탐욕적)")}
+                        </span>
                         <span className="mx-1" aria-hidden="true">·</span>
                         {([4, 8] as const).map((c) => (
                             <button key={c} type="button" onClick={() => setConnectivity(c)}

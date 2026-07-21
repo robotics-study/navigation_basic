@@ -1,6 +1,7 @@
 import {useMemo, useState} from "react";
 import CanvasFigure, {modalCanvasSize} from "../../../CanvasFigure";
 import TracePlayer from "../../../player/TracePlayer";
+import ParamSlider from "../../../player/ParamSlider";
 import {runRRT} from "../../../../libs/algorithms/rrt";
 import {runFastRRT} from "../../../../libs/algorithms/fast_rrt";
 import {Point} from "../../../../libs/algorithms/sampling_space";
@@ -11,10 +12,6 @@ import {PATH_COLOR} from "../../../2d/GridCanvas";
 import cn from "../../../../libs/cn";
 import {GAP_GOAL, GAP_START, narrowPassageMap} from "./presets";
 
-// 라이브 Fast-RRT sandbox. 한 칸 gap을 둔 벽에서, Fast-Sampling + Random Steering 이
-// 좁은 통로를 꾸준히 통과해 매끈한 경로(빨강)를 내는 것을, 같은 seed의 RRT 첫 경로
-// (점선)와 비용으로 맞세워 보여 준다. 다시 성장할 때마다 RRT는 종종 gap을 놓친다.
-const BUDGETS = [400, 800, 1500];
 
 const cellToWorld = (map: GridMap, c: Cell): Point =>
     [map.originX + (c[1] + 0.5) * map.resolution,
@@ -78,17 +75,7 @@ const FastRrtScene = ({panel = 340}: {panel?: number}) => {
             footer={
                 <div className="flex flex-col items-center gap-1.5">
                     <div className="flex items-center justify-center gap-1.5 text-xs text-muted flex-wrap tabular-nums">
-                        {BUDGETS.map((b) => (
-                            <button key={b} type="button" onClick={() => setBudget(b)}
-                                    className={cn(
-                                        "px-2 py-0.5 rounded border tabular-nums",
-                                        budget === b
-                                            ? "border-[var(--accent)] text-[var(--accent)] font-semibold"
-                                            : "border-border hover:bg-surface",
-                                    )}>
-                                {b} {t("iters", "반복")}
-                            </button>
-                        ))}
+                        <ParamSlider label={t("iters", "반복")} value={budget} min={200} max={2000} step={50} onCommit={setBudget}/>
                         <button type="button" onClick={() => setShowRrt((v) => !v)}
                                 className={cn(
                                     "px-2 py-0.5 rounded border",

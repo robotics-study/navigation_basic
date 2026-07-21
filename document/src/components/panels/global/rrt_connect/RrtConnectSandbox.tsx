@@ -1,18 +1,15 @@
 import {useMemo, useState} from "react";
 import CanvasFigure, {modalCanvasSize} from "../../../CanvasFigure";
 import TracePlayer from "../../../player/TracePlayer";
+import ParamSlider from "../../../player/ParamSlider";
 import {runRRT, runRRTConnect} from "../../../../libs/algorithms/rrt";
 import {Point} from "../../../../libs/algorithms/sampling_space";
 import {buildGridTimeline, Cell} from "../../../../libs/trace/timeline";
 import {GridMap} from "../../../../libs/grid";
 import {useTr} from "../../../../libs/i18n";
 import {PATH_COLOR} from "../../../2d/GridCanvas";
-import cn from "../../../../libs/cn";
 import {SCURVE_GOAL, SCURVE_START, sCurveMap} from "./presets";
 
-// 라이브 RRT-Connect sandbox. 같은 seed의 단일 트리 RRT와 반복·노드 수를 나란히
-// 보여 줘, 양쪽에서 자라는 것이 왜 두 배쯤 싼지 숫자로 비교한다.
-const STEPS = [0.3, 0.5, 1.0];
 
 const cellToWorld = (map: GridMap, c: Cell): Point =>
     [map.originX + (c[1] + 0.5) * map.resolution,
@@ -72,17 +69,7 @@ const RrtConnectScene = ({panel = 340}: {panel?: number}) => {
             footer={
                 <div className="flex flex-col items-center gap-1.5">
                     <div className="flex items-center justify-center gap-1.5 text-xs text-muted flex-wrap tabular-nums">
-                        {STEPS.map((s) => (
-                            <button key={s} type="button" onClick={() => setStepSize(s)}
-                                    className={cn(
-                                        "px-2 py-0.5 rounded border tabular-nums",
-                                        stepSize === s
-                                            ? "border-[var(--accent)] text-[var(--accent)] font-semibold"
-                                            : "border-border hover:bg-surface",
-                                    )}>
-                                η = {s}
-                            </button>
-                        ))}
+                        <ParamSlider label="η" value={stepSize} min={0.2} max={1.5} step={0.05} onCommit={setStepSize}/>
                         <button type="button" onClick={() => setSeed((s) => s + 1)}
                                 className="px-2 py-0.5 rounded border border-border hover:bg-surface">
                             {t("regrow", "다시 성장")}
