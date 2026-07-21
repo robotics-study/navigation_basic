@@ -30,6 +30,7 @@ std::string kino_cfg(int max_iterations, double goal_tolerance) {
       "  - {name: neighbor_radius, type: float, default: 2.0, min: 0.01, max: 100, description: r}\n"
       "  - {name: control_weight, type: float, default: 1.0, min: 0.001, max: 1000, description: w}\n"
       "  - {name: max_velocity, type: float, default: 1.5, min: 0.01, max: 100, description: v}\n"
+      "  - {name: footprint_radius, type: float, default: 0.15, min: 0.01, max: 20, description: fp}\n"
       "  - {name: seed, type: int, default: 3, min: 0, max: 2147483647, description: s}\n");
 }
 

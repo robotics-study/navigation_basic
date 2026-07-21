@@ -8,6 +8,7 @@
 #include <limits>
 #include <optional>
 #include <random>
+#include <stdexcept>
 #include <set>
 #include <utility>
 #include <vector>
@@ -219,6 +220,8 @@ struct KinoTree {
 
 // Optimal edge x0->x1: {edge_cost, dense trajectory} if collision-free, else nullopt.
 std::optional<std::pair<double, std::vector<Point>>> connect(SamplingSpace<Point>& space,
+                                                             core::SE2CollisionSpace<core::Pose>& se2,
+                                                             const core::Footprint& footprint,
                                                              const State4& x0, const State4& x1,
                                                              double r) {
   auto [c, tau] = optimal_cost(x0, x1, r);
@@ -226,6 +229,9 @@ std::optional<std::pair<double, std::vector<Point>>> connect(SamplingSpace<Point
   std::vector<Point> traj = trajectory_xy(x0, x1, tau);
   Point prev{x0[0], x0[1]};
   for (const Point& pt : traj) {
+    // disc 는 방향 불변이라 theta 는 형식상 0. 웨이포인트 간격(<=0.3 m)과 반경이 같은
+    // 자릿수라 disc 사슬이 몸체 여유를 근사하고, 점 수준은 supercover 가 마저 막는다.
+    if (se2.is_collision(footprint, core::Pose{pt.x, pt.y, 0.0})) return std::nullopt;
     if (!space.is_motion_valid(prev, pt)) return std::nullopt;
     prev = pt;
   }
@@ -285,6 +291,13 @@ core::PlanResult<Point> KinodynamicRrtStarPlanner::plan(SamplingSpace<Point>& sp
   const double neighbor_radius = params_.get_float("neighbor_radius");
   const double r = params_.get_float("control_weight");
   const double vmax = params_.get_float("max_velocity");
+  // 차체 disc — required_capabilities 가 SE(2) view 를 선언하므로 로드 단계에서
+  // 걸러지고, 같은 concrete grid 가 두 view 를 함께 구현해 cross-cast 로 얻는다.
+  const core::Footprint footprint{params_.get_float("footprint_radius")};
+  auto* se2 = dynamic_cast<core::SE2CollisionSpace<core::Pose>*>(&space);
+  if (se2 == nullptr) {
+    throw std::invalid_argument("kinodynamic_rrt_star: map does not provide SE2CollisionSpace");
+  }
   std::mt19937 rng(static_cast<unsigned>(params_.get_int("seed")));
   std::uniform_real_distribution<double> unit(0.0, 1.0);
   std::uniform_real_distribution<double> vel(-vmax, vmax);
@@ -326,7 +339,7 @@ core::PlanResult<Point> KinodynamicRrtStarPlanner::plan(SamplingSpace<Point>& sp
     double best_total = std::numeric_limits<double>::infinity();
     std::vector<Point> best_edge;
     for (int j : candidates) {
-      auto conn = connect(space, tree.states[j], x_new, r);
+      auto conn = connect(space, *se2, footprint, tree.states[j], x_new, r);
       if (!conn) continue;
       double total = tree.cost[j] + conn->first;
       if (recorder) recorder->candidate_evaluated(Point{x_new[0], x_new[1]}, total);
@@ -351,7 +364,7 @@ core::PlanResult<Point> KinodynamicRrtStarPlanner::plan(SamplingSpace<Point>& sp
     // Rewire: reroute neighbours through x_new when cheaper and feasible.
     for (int j : nbrs) {
       if (j == tree.parent[new_idx] || j == new_idx) continue;
-      auto conn = connect(space, x_new, tree.states[j], r);
+      auto conn = connect(space, *se2, footprint, x_new, tree.states[j], r);
       if (!conn) continue;
       if (tree.cost[new_idx] + conn->first < tree.cost[j]) {
         tree.reparent(j, new_idx, conn->first, conn->second);
@@ -372,7 +385,7 @@ core::PlanResult<Point> KinodynamicRrtStarPlanner::plan(SamplingSpace<Point>& sp
           std::abs(x_new[2]) <= kEps && std::abs(x_new[3]) <= kEps) {
         cand = tree.cost[new_idx];
       } else {
-        auto conn = connect(space, x_new, x_goal, r);
+        auto conn = connect(space, *se2, footprint, x_new, x_goal, r);
         if (conn) {
           cand = tree.cost[new_idx] + conn->first;
           traj = conn->second;

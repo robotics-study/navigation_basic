@@ -47,11 +47,11 @@ import time
 
 import numpy as np
 
-from navigation.core.capabilities import Capability, SamplingSpace
+from navigation.core.capabilities import Capability, SamplingSE2Space
 from navigation.core.params import ParamSet
 from navigation.core.planner import GlobalPlanner
 from navigation.core.trace import TraceRecorder
-from navigation.core.types import PlanResult, PlanStats, Point
+from navigation.core.types import Footprint, PlanResult, PlanStats, Point
 
 # Double-integrator planning state: world position + velocity (x, y, vx, vy). Only
 # the (x, y) projection is ever handed to the SamplingSpace map (no velocity).
@@ -183,7 +183,7 @@ class _LqrTree:
         return path
 
 
-class LQRRRTStar(GlobalPlanner[Point, "SamplingSpace[Point]"]):
+class LQRRRTStar(GlobalPlanner[Point, "SamplingSE2Space[Point]"]):
     def __init__(self, params: ParamSet) -> None:
         super().__init__(params)
         self._max_iter = params.get_int("max_iterations")
@@ -198,6 +198,8 @@ class LQRRRTStar(GlobalPlanner[Point, "SamplingSpace[Point]"]):
         self._u_max = params.get_float("control_limit")
         self._vmax = params.get_float("max_velocity")
         self._seed = params.get_int("seed")
+        # 차체는 inscribed disc — 점이 아니라 몸체가 벽을 비켜 가야 한다.
+        self._footprint = Footprint(params.get_float("footprint_radius"))
         # Riccati solve once: S/K are state-independent for this LTI system.
         self._s, self._k = solve_dlqr(self._q_pos, self._q_vel, self._r_ctrl, self._dt)
 
@@ -206,10 +208,10 @@ class LQRRRTStar(GlobalPlanner[Point, "SamplingSpace[Point]"]):
         return "lqr_rrt_star"
 
     def required_capabilities(self) -> set[Capability]:
-        return {Capability.SAMPLING_SPACE}
+        return {Capability.SAMPLING_SPACE, Capability.SE2_COLLISION_SPACE}
 
     def _sample(
-        self, space: SamplingSpace[Point], goal: State4, rng: np.random.Generator
+        self, space: "SamplingSE2Space[Point]", goal: State4, rng: np.random.Generator
     ) -> State4:
         # Goal-biasing draws the goal rest-state directly (LaValle 1998); otherwise a
         # free position with a random velocity so the LQR nearest metric is full-state.
@@ -232,7 +234,7 @@ class LQRRRTStar(GlobalPlanner[Point, "SamplingSpace[Point]"]):
         return (x_from[0] + dx * scale, x_from[1] + dy * scale, 0.0, 0.0)
 
     def _roll(
-        self, space: SamplingSpace[Point], x_from: State4, target: State4
+        self, space: "SamplingSE2Space[Point]", x_from: State4, target: State4
     ) -> tuple[float, list[Point]] | None:
         """Integrate the LQR feedback u=−K(x−target), clamped, from ``x_from`` until
         it reaches ``target`` (rest) or the horizon. Returns (edge_cost, dense (x, y)
@@ -266,6 +268,11 @@ class LQRRRTStar(GlobalPlanner[Point, "SamplingSpace[Point]"]):
             vx = vx + dt * ux
             vy = vy + dt * uy
             cur: Point = (px, py)
+            # disc 는 방향 불변이라 theta 는 형식상 0. 적분 스텝(≤ v_max·dt ≈ 0.3 m)과
+            # 반경이 같은 자릿수라 disc 사슬이 몸체 여유를 근사하고, 점 수준
+            # corner-cut 은 supercover chord 검사가 마저 막는다.
+            if space.is_collision(self._footprint, (px, py, 0.0)):
+                return None
             if not space.is_motion_valid(prev, cur):
                 return None
             traj.append(cur)
@@ -306,7 +313,7 @@ class LQRRRTStar(GlobalPlanner[Point, "SamplingSpace[Point]"]):
 
     def _choose_parent(
         self,
-        space: SamplingSpace[Point],
+        space: "SamplingSE2Space[Point]",
         tree: _LqrTree,
         x_new: State4,
         near_idx: int,
@@ -346,7 +353,7 @@ class LQRRRTStar(GlobalPlanner[Point, "SamplingSpace[Point]"]):
 
     def _rewire(
         self,
-        space: SamplingSpace[Point],
+        space: "SamplingSE2Space[Point]",
         tree: _LqrTree,
         new_idx: int,
         neighborhood: list[int],
@@ -368,7 +375,7 @@ class LQRRRTStar(GlobalPlanner[Point, "SamplingSpace[Point]"]):
 
     def plan(
         self,
-        space: SamplingSpace[Point],
+        space: "SamplingSE2Space[Point]",
         start: Point,
         goal: Point,
         recorder: TraceRecorder | None = None,
@@ -445,7 +452,7 @@ class LQRRRTStar(GlobalPlanner[Point, "SamplingSpace[Point]"]):
 
     def _goal_arrival(
         self,
-        space: SamplingSpace[Point],
+        space: "SamplingSE2Space[Point]",
         tree: _LqrTree,
         new_idx: int,
         x_new: State4,

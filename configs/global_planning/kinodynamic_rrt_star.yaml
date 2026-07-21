@@ -37,6 +37,14 @@ params:
     min: 0.01
     max: 100.0
     description: 샘플 상태의 축별 속도 범위 [-v_max, v_max] (m/s). double integrator 상태 (x, y, vx, vy).
+  - name: footprint_radius
+    type: float
+    default: 0.15
+    min: 0.01
+    max: 20.0
+    description: >-
+      로봇 inscribed disc footprint 반경 (meter, world). 궤적의 모든 웨이포인트에서
+      disc 충돌을 검사해 차체가 벽을 비켜 가게 한다 (Hybrid A*/SST 와 동일 모델).
   - name: seed
     type: int
     default: 1

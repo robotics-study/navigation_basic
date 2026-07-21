@@ -7,6 +7,7 @@
 #include <limits>
 #include <optional>
 #include <random>
+#include <stdexcept>
 #include <set>
 #include <utility>
 #include <vector>
@@ -197,6 +198,8 @@ struct LqrParams {
 // if it reaches target collision-free, else nullopt. edge_cost is the realised LQR
 // cost sum(x^T Q x + u^T R u) dt of the roll — the true edge cost (Perez et al. 2012).
 std::optional<std::pair<double, std::vector<Point>>> roll(SamplingSpace<Point>& space,
+                                                          core::SE2CollisionSpace<core::Pose>& se2,
+                                                          const core::Footprint& footprint,
                                                           const State4& x_from,
                                                           const State4& target,
                                                           const LqrParams& lp) {
@@ -221,6 +224,9 @@ std::optional<std::pair<double, std::vector<Point>>> roll(SamplingSpace<Point>& 
     vx = vx + dt * ux;
     vy = vy + dt * uy;
     Point cur{px, py};
+    // disc 는 방향 불변이라 theta 는 형식상 0. 적분 스텝(<= v_max*dt ~ 0.3 m)과 반경이
+    // 같은 자릿수라 disc 사슬이 몸체 여유를 근사하고, 점 수준은 supercover 가 마저 막는다.
+    if (se2.is_collision(footprint, core::Pose{px, py, 0.0})) return std::nullopt;
     if (!space.is_motion_valid(prev, cur)) return std::nullopt;
     traj.push_back(cur);
     prev = cur;
@@ -291,6 +297,13 @@ core::PlanResult<Point> LqrRrtStarPlanner::plan(SamplingSpace<Point>& space, con
   const double dt = params_.get_float("lqr_dt");
   const double u_max = params_.get_float("control_limit");
   const double vmax = params_.get_float("max_velocity");
+  // 차체 disc — required_capabilities 가 SE(2) view 를 선언하므로 로드 단계에서
+  // 걸러지고, 같은 concrete grid 가 두 view 를 함께 구현해 cross-cast 로 얻는다.
+  const core::Footprint footprint{params_.get_float("footprint_radius")};
+  auto* se2 = dynamic_cast<core::SE2CollisionSpace<core::Pose>*>(&space);
+  if (se2 == nullptr) {
+    throw std::invalid_argument("lqr_rrt_star: map does not provide SE2CollisionSpace");
+  }
   std::mt19937 rng(static_cast<unsigned>(params_.get_int("seed")));
   std::uniform_real_distribution<double> unit(0.0, 1.0);
   std::uniform_real_distribution<double> vel(-vmax, vmax);
@@ -327,7 +340,7 @@ core::PlanResult<Point> LqrRrtStarPlanner::plan(SamplingSpace<Point>& space, con
     int near_idx = nearest(tree, q_rand, lqr.s);
     // Extend: steer x_near to a rest waypoint at most step_size toward q_rand.
     State4 x_new = rest_target(tree.states[near_idx], q_rand, step_size);
-    auto near_roll = roll(space, tree.states[near_idx], x_new, lp);
+    auto near_roll = roll(space, *se2, footprint, tree.states[near_idx], x_new, lp);
     if (!near_roll) continue;
     std::vector<int> nbrs = neighborhood(tree, x_new, neighbor_radius);
 
@@ -338,7 +351,7 @@ core::PlanResult<Point> LqrRrtStarPlanner::plan(SamplingSpace<Point>& space, con
     double best_total = tree.cost[near_idx] + near_roll->first;
     for (int j : nbrs) {
       if (j == near_idx) continue;
-      auto conn = roll(space, tree.states[j], x_new, lp);
+      auto conn = roll(space, *se2, footprint, tree.states[j], x_new, lp);
       if (!conn) continue;
       double total = tree.cost[j] + conn->first;
       if (recorder) recorder->candidate_evaluated(Point{x_new[0], x_new[1]}, total);
@@ -362,7 +375,7 @@ core::PlanResult<Point> LqrRrtStarPlanner::plan(SamplingSpace<Point>& space, con
     // Rewire: reroute neighbours through x_new when the LQR roll reaches them cheaper.
     for (int j : nbrs) {
       if (j == tree.parent[new_idx] || j == new_idx) continue;
-      auto conn = roll(space, x_new, tree.states[j], lp);
+      auto conn = roll(space, *se2, footprint, x_new, tree.states[j], lp);
       if (!conn) continue;
       if (tree.cost[new_idx] + conn->first < tree.cost[j]) {
         tree.reparent(j, new_idx, conn->first, conn->second);
@@ -383,7 +396,7 @@ core::PlanResult<Point> LqrRrtStarPlanner::plan(SamplingSpace<Point>& space, con
           std::abs(x_new[2]) <= kEps && std::abs(x_new[3]) <= kEps) {
         cand = tree.cost[new_idx];
       } else {
-        auto conn = roll(space, x_new, x_goal, lp);
+        auto conn = roll(space, *se2, footprint, x_new, x_goal, lp);
         if (conn) {
           cand = tree.cost[new_idx] + conn->first;
           traj = conn->second;

@@ -128,8 +128,8 @@ core::PlanResult<Point> SstPlanner::plan(SamplingSpace<Point>& space, const Poin
       x += v * std::cos(theta) * dt;
       y += v * std::sin(theta) * dt;
       Point p{x, y};
-      // 웨이포인트 간격(0.2 m)이 footprint 반경 이하라 disc 사슬이 chord 를 덮지만,
-      // 얇은 벽 corner-cut 은 supercover chord 검사로 함께 막는다.
+      // 웨이포인트 간격(0.2 m)과 반경이 같은 자릿수라 disc 사슬이 몸체 여유를 근사하고,
+      // 점 수준 corner-cut 은 supercover chord 검사가 마저 막는다.
       if (se2->is_collision(footprint, core::Pose{x, y, theta})) return false;
       if (!space.is_state_valid(p) || !space.is_motion_valid(prev, p)) return false;
       out_wps.push_back(p);

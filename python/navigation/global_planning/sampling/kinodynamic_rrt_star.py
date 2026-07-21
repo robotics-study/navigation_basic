@@ -41,11 +41,11 @@ from collections.abc import Iterable
 
 import numpy as np
 
-from navigation.core.capabilities import Capability, SamplingSpace
+from navigation.core.capabilities import Capability, SamplingSE2Space
 from navigation.core.params import ParamSet
 from navigation.core.planner import GlobalPlanner
 from navigation.core.trace import TraceRecorder
-from navigation.core.types import PlanResult, PlanStats, Point
+from navigation.core.types import Footprint, PlanResult, PlanStats, Point
 
 # Double-integrator planning state: world position + velocity (x, y, vx, vy). The
 # planner works in this 4D space; only the (x, y) projection is ever handed to the
@@ -199,7 +199,7 @@ class _KinoTree:
         return path
 
 
-class KinodynamicRRTStar(GlobalPlanner[Point, "SamplingSpace[Point]"]):
+class KinodynamicRRTStar(GlobalPlanner[Point, "SamplingSE2Space[Point]"]):
     def __init__(self, params: ParamSet) -> None:
         super().__init__(params)
         self._max_iter = params.get_int("max_iterations")
@@ -209,16 +209,18 @@ class KinodynamicRRTStar(GlobalPlanner[Point, "SamplingSpace[Point]"]):
         self._r = params.get_float("control_weight")
         self._vmax = params.get_float("max_velocity")
         self._seed = params.get_int("seed")
+        # 차체는 inscribed disc — 점이 아니라 몸체가 벽을 비켜 가야 한다.
+        self._footprint = Footprint(params.get_float("footprint_radius"))
 
     @property
     def name(self) -> str:
         return "kinodynamic_rrt_star"
 
     def required_capabilities(self) -> set[Capability]:
-        return {Capability.SAMPLING_SPACE}
+        return {Capability.SAMPLING_SPACE, Capability.SE2_COLLISION_SPACE}
 
     def _sample(
-        self, space: SamplingSpace[Point], goal: State4, rng: np.random.Generator
+        self, space: "SamplingSE2Space[Point]", goal: State4, rng: np.random.Generator
     ) -> State4:
         # Goal-biasing draws the goal rest-state directly (LaValle 1998); otherwise a
         # free position with a random velocity in [-v_max, v_max]² (a full 4D sample).
@@ -230,7 +232,7 @@ class KinodynamicRRTStar(GlobalPlanner[Point, "SamplingSpace[Point]"]):
         return (px, py, vx, vy)
 
     def _connect(
-        self, space: SamplingSpace[Point], x0: State4, x1: State4
+        self, space: "SamplingSE2Space[Point]", x0: State4, x1: State4
     ) -> tuple[float, list[Point]] | None:
         """Optimal edge x0→x1: (edge_cost, dense trajectory) if collision-free, else None."""
         cost, tau = optimal_cost(x0, x1, self._r)
@@ -239,6 +241,11 @@ class KinodynamicRRTStar(GlobalPlanner[Point, "SamplingSpace[Point]"]):
         traj = _trajectory_xy(x0, x1, tau)
         prev = (x0[0], x0[1])
         for pt in traj:
+            # disc 는 방향 불변이라 pose 의 theta 는 형식상 0 을 넘긴다. 웨이포인트
+            # 간격(≤0.3 m)과 반경이 같은 자릿수라 disc 사슬이 몸체 여유를 근사하고,
+            # 점 수준 corner-cut 은 supercover chord 검사가 마저 막는다.
+            if space.is_collision(self._footprint, (pt[0], pt[1], 0.0)):
+                return None
             if not space.is_motion_valid(prev, pt):
                 return None
             prev = pt
@@ -269,7 +276,7 @@ class KinodynamicRRTStar(GlobalPlanner[Point, "SamplingSpace[Point]"]):
 
     def _choose_parent(
         self,
-        space: SamplingSpace[Point],
+        space: "SamplingSE2Space[Point]",
         tree: _KinoTree,
         x_new: State4,
         near_idx: int,
@@ -310,7 +317,7 @@ class KinodynamicRRTStar(GlobalPlanner[Point, "SamplingSpace[Point]"]):
 
     def _rewire(
         self,
-        space: SamplingSpace[Point],
+        space: "SamplingSE2Space[Point]",
         tree: _KinoTree,
         new_idx: int,
         neighborhood: Iterable[int],
@@ -332,7 +339,7 @@ class KinodynamicRRTStar(GlobalPlanner[Point, "SamplingSpace[Point]"]):
 
     def _goal_arrival(
         self,
-        space: SamplingSpace[Point],
+        space: "SamplingSE2Space[Point]",
         tree: _KinoTree,
         new_idx: int,
         x_new: State4,
@@ -359,7 +366,7 @@ class KinodynamicRRTStar(GlobalPlanner[Point, "SamplingSpace[Point]"]):
 
     def plan(
         self,
-        space: SamplingSpace[Point],
+        space: "SamplingSE2Space[Point]",
         start: Point,
         goal: Point,
         recorder: TraceRecorder | None = None,
