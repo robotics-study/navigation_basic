@@ -1,5 +1,6 @@
 import {ReactNode} from "react";
 import {T, useTr} from "../../../../libs/i18n";
+import Terms from "../../../../components/math/Terms";
 import {BlockMath, InlineMath} from "../../../../components/math/Tex";
 import DijkstraSandbox from "../../../../components/panels/global/dijkstra/DijkstraSandbox";
 import TraceReplay from "../../../../components/panels/global/TraceReplay";
@@ -49,6 +50,11 @@ const Dijkstra = () => {
                         <em>cost from the start</em>,
                     </p>
                     <BlockMath math="g(n) = \min_{\text{paths } s \to n} \sum_{\text{edges}} c(e),"/>
+                    <Terms items={[
+                        ["g(n)", <>cost of the cheapest start→<InlineMath math="n"/> path found so far; on settle it equals the true minimum</>],
+                        ["s", "the start node"],
+                        ["c(e)", <><strong>the new ingredient</strong>: each edge <InlineMath math="e"/> now carries its own non-negative cost, replacing BFS's implicit "every hop costs 1"</>],
+                    ]}/>
                     <p>
                         maintained with a priority queue instead of a FIFO. Where BFS fixes a node's
                         parent at first discovery, Dijkstra keeps <em>relaxing</em>: whenever a
@@ -63,6 +69,11 @@ const Dijkstra = () => {
                         일치한다. Dijkstra는 한 가지만 바꾼다. <em>시작점부터의 비용</em>
                     </p>
                     <BlockMath math="g(n) = \min_{\text{paths } s \to n} \sum_{\text{edges}} c(e)"/>
+                    <Terms items={[
+                        ["g(n)", <>지금까지 찾은 시작→<InlineMath math="n"/> 최소 비용. settle 되는 순간 참 최솟값과 같아진다</>],
+                        ["s", "시작 노드"],
+                        ["c(e)", <><strong>새로 추가된 재료</strong>: 간선 <InlineMath math="e"/>마다 자기 비용(음수 아님)이 붙는다. BFS의 암묵적 "모든 hop = 1"을 대체한다</>],
+                    ]}/>
                     <p>
                         순으로 확장하고, 그것을 FIFO 대신 priority queue로 유지한다. BFS가 최초
                         발견에서 부모를 고정하는 것과 달리 Dijkstra는 계속 <em>relax</em> 한다.
@@ -202,6 +213,11 @@ return failure`}/>
                             edge leaving the settled set. Then:
                         </p>
                         <BlockMath math="g(v) \;\overset{\text{relaxed}}{\le}\; \delta(s, u) + c(u, v) \;\overset{c\,\ge\,0}{\le}\; \delta(s, n) \;<\; g(n)"/>
+                        <Terms items={[
+                            ["\\delta(s, x)", <>true shortest-path cost from the start to <InlineMath math="x"/></>],
+                            ["(u, v)", <>the first edge of the shortest path <InlineMath math="\\sigma"/> that leaves the settled set: <InlineMath math="u"/> settled, <InlineMath math="v"/> not yet</>],
+                            ["g(\\cdot)", "cheapest cost found so far; relaxing (u, v) already offered v the value δ(s,u) + c(u,v)"],
+                        ]}/>
                         <p>
                             <InlineMath math="\Rightarrow v"/> pops before <InlineMath math="n"/> —
                             contradiction. One negative edge breaks the middle step; that failure
@@ -222,6 +238,11 @@ return failure`}/>
                             하면:
                         </p>
                         <BlockMath math="g(v) \;\overset{\text{relaxed}}{\le}\; \delta(s, u) + c(u, v) \;\overset{c\,\ge\,0}{\le}\; \delta(s, n) \;<\; g(n)"/>
+                        <Terms items={[
+                            ["\\delta(s, x)", <>시작→<InlineMath math="x"/>의 참 최단 비용</>],
+                            ["(u, v)", <>최단 경로 <InlineMath math="\\sigma"/>가 settle 집합을 처음 벗어나는 간선. <InlineMath math="u"/>는 settle 됨, <InlineMath math="v"/>는 아직</>],
+                            ["g(\\cdot)", "지금까지 찾은 최소 비용. (u, v)를 relax 할 때 v는 이미 δ(s,u) + c(u,v)를 제안받았다"],
+                        ]}/>
                         <p>
                             <InlineMath math="\Rightarrow v"/>가 <InlineMath math="n"/>보다 먼저
                             꺼내진다. 모순. 음수 간선 하나가 가운데 부등호를 깨는데, 그 실패

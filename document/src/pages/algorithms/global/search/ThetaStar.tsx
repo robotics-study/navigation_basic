@@ -1,5 +1,6 @@
 import {ReactNode} from "react";
 import {T, useTr} from "../../../../libs/i18n";
+import Terms from "../../../../components/math/Terms";
 import {BlockMath, InlineMath} from "../../../../components/math/Tex";
 import Pseudocode from "../../../../components/Pseudocode";
 import CodeTabs from "../../../../components/CodeTabs";
@@ -57,6 +58,13 @@ const ThetaStar = () => {
                         <InlineMath math="s"/>, each neighbor gets to try two parents:
                     </p>
                     <BlockMath math="\text{path 1: } g(s) + c(s, s') \qquad \text{path 2: } g(\text{parent}(s)) + \lVert \text{parent}(s) - s' \rVert \;\;\text{if line-of-sight}"/>
+                    <Terms items={[
+                        ["s,\\ s'", <>the node being expanded and the neighbor being relaxed</>],
+                        ["g(\\cdot)", "cost of the cheapest path found so far from the start"],
+                        ["c(s, s')", <>ordinary grid edge cost (1 or <InlineMath math="\\sqrt 2"/>)</>],
+                        ["\\text{parent}(s)", <><strong>the new ingredient</strong>: the node <InlineMath math="s"/> was reached from — possibly many cells away</>],
+                        ["\\lVert \\text{parent}(s) - s' \\rVert", "straight-line Euclidean distance of the shortcut leg"],
+                    ]}/>
                     <p>
                         Path 2 skips <InlineMath math="s"/> and connects the neighbor straight to
                         the expanded node's parent. Chains of such shortcuts collapse whole zigzag
@@ -79,6 +87,13 @@ const ThetaStar = () => {
                         <InlineMath math="s"/>를 확장할 때 각 이웃은 부모 후보 둘을 시험한다:
                     </p>
                     <BlockMath math="\text{path 1: } g(s) + c(s, s') \qquad \text{path 2: } g(\text{parent}(s)) + \lVert \text{parent}(s) - s' \rVert \;\;\text{(line-of-sight 일 때)}"/>
+                    <Terms items={[
+                        ["s,\\ s'", "확장 중인 노드와 relax 되는 이웃"],
+                        ["g(\\cdot)", "지금까지 찾은 시작부터의 최소 비용"],
+                        ["c(s, s')", <>평범한 grid 간선 비용 (1 또는 <InlineMath math="\\sqrt 2"/>)</>],
+                        ["\\text{parent}(s)", <><strong>새로 추가된 재료</strong>: <InlineMath math="s"/>가 도달해 온 노드. 여러 칸 떨어져 있을 수 있다</>],
+                        ["\\lVert \\text{parent}(s) - s' \\rVert", "지름길 구간의 유클리드 직선거리"],
+                    ]}/>
                     <p>
                         path 2는 <InlineMath math="s"/>를 건너뛰고 이웃을 확장 노드의 부모에
                         직선으로 잇는다. 이 지름길이 연쇄되면 지그재그 구간 전체가 장애물
@@ -178,6 +193,12 @@ while OPEN is not empty:
                             <InlineMath math="p"/> to <InlineMath math="s'"/>:
                         </p>
                         <BlockMath math="g(p) + \lVert p - s' \rVert \;\overset{\triangle}{\le}\; g(p) + \lVert p - s \rVert + \lVert s - s' \rVert \;=\; g(s) + \lVert s - s' \rVert \;\le\; g(s) + c(s, s')"/>
+                        <Terms items={[
+                            ["p", <>the grandparent <InlineMath math="\\text{parent}(s)"/>, with line of sight to <InlineMath math="s'"/></>],
+                            ["\\lVert \\cdot \\rVert", "Euclidean straight-line distance"],
+                            ["\\overset{\\triangle}{\\le}", "triangle inequality: the straight leg p→s' is no longer than the detour p→s→s'"],
+                            ["c(s, s')", <>grid edge cost, never below the straight distance <InlineMath math="\\lVert s - s' \\rVert"/></>],
+                        ]}/>
                         <p>
                             Path 2 is never worse than path 1, so preferring it is safe.{" "}
                             <InlineMath math="\blacksquare"/>
@@ -192,6 +213,12 @@ while OPEN is not empty:
                             <InlineMath math="s'"/>로 line of sight가 있으면:
                         </p>
                         <BlockMath math="g(p) + \lVert p - s' \rVert \;\overset{\triangle}{\le}\; g(p) + \lVert p - s \rVert + \lVert s - s' \rVert \;=\; g(s) + \lVert s - s' \rVert \;\le\; g(s) + c(s, s')"/>
+                        <Terms items={[
+                            ["p", <>조부모 <InlineMath math="\\text{parent}(s)"/>. <InlineMath math="s'"/>로의 line of sight가 있다</>],
+                            ["\\lVert \\cdot \\rVert", "유클리드 직선거리"],
+                            ["\\overset{\\triangle}{\\le}", "삼각 부등식. 직선 p→s'는 우회 p→s→s'보다 길 수 없다"],
+                            ["c(s, s')", <>grid 간선 비용. 직선거리 <InlineMath math="\\lVert s - s' \\rVert"/>보다 작을 수 없다</>],
+                        ]}/>
                         <p>
                             path 2는 path 1보다 나쁠 수 없고, 따라서 비교 없이 택해도 안전하다.{" "}
                             <InlineMath math="\blacksquare"/>

@@ -1,4 +1,5 @@
 import {T, useTr} from "../../libs/i18n";
+import Terms from "../../components/math/Terms";
 import {BlockMath, InlineMath} from "../../components/math/Tex";
 import GridAsGraph from "../../components/panels/intro/GridAsGraph";
 
@@ -56,6 +57,12 @@ const GraphSearch = () => {
                         one, and relax its outgoing edges:
                     </p>
                     <BlockMath math="f(n) = g(n) + w \cdot h(n)"/>
+                    <Terms items={[
+                        ["f(n)", <>priority of node <InlineMath math="n"/> in the frontier — smallest pops first</>],
+                        ["g(n)", <>actual cost of the cheapest path found so far from the start to <InlineMath math="n"/></>],
+                        ["h(n)", <>heuristic estimate of the remaining cost from <InlineMath math="n"/> to the goal</>],
+                        ["w", <>heuristic weight: <InlineMath math="w = 0"/> is Dijkstra, <InlineMath math="w = 1"/> is A*, <InlineMath math="w > 1"/> is greedier weighted A*</>],
+                    ]}/>
                     <p>
                         Choosing the priority <InlineMath math="f"/> chooses the algorithm: BFS uses
                         hop count, Dijkstra uses <InlineMath math="g"/> alone, A* adds an admissible{" "}
@@ -73,6 +80,12 @@ const GraphSearch = () => {
                         나가는 간선을 relax 한다:
                     </p>
                     <BlockMath math="f(n) = g(n) + w \cdot h(n)"/>
+                    <Terms items={[
+                        ["f(n)", <>frontier에서 노드 <InlineMath math="n"/>의 우선순위. 가장 작은 것부터 꺼낸다</>],
+                        ["g(n)", <>지금까지 찾은 시작→<InlineMath math="n"/> 최소 실비용</>],
+                        ["h(n)", <><InlineMath math="n"/>에서 목표까지 남은 비용의 heuristic 추정치</>],
+                        ["w", <>heuristic 가중치. <InlineMath math="w = 0"/>이면 Dijkstra, <InlineMath math="w = 1"/>이면 A*, <InlineMath math="w > 1"/>이면 더 탐욕적인 weighted A*</>],
+                    ]}/>
                     <p>
                         우선순위 <InlineMath math="f"/>를 고르는 것이 곧 알고리즘을 고르는 것이다.
                         BFS는 hop 수, Dijkstra는 <InlineMath math="g"/>만, A*는 admissible{" "}

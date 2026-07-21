@@ -1,5 +1,6 @@
 import {ReactNode} from "react";
 import {T, useTr} from "../../../../libs/i18n";
+import Terms from "../../../../components/math/Terms";
 import {BlockMath, InlineMath} from "../../../../components/math/Tex";
 import Pseudocode from "../../../../components/Pseudocode";
 import CodeTabs from "../../../../components/CodeTabs";
@@ -112,6 +113,12 @@ const DstarLite = () => {
                         one-step lookahead:
                     </p>
                     <BlockMath math="rhs(s) \;=\; \min_{s' \in succ(s)}\bigl(c(s, s') + g(s')\bigr), \qquad rhs(\text{goal}) = 0"/>
+                    <Terms items={[
+                        ["g(s)", <>committed estimate of the cost <em>from <InlineMath math="s"/> to the goal</em> (the search runs backward, so g measures cost-to-goal, not cost-from-start)</>],
+                        ["rhs(s)", <><strong>the new term</strong>: one-step lookahead — the best cost through any successor, recomputed instantly when an edge changes</>],
+                        ["succ(s)", <>grid neighbors of <InlineMath math="s"/></>],
+                        ["c(s, s')", "edge cost between neighbors (∞ once a wall is discovered)"],
+                    ]}/>
                     <p>
                         A vertex is <em>consistent</em> when <InlineMath math="g(s) = rhs(s)"/>.
                         When a wall appears, the affected vertices' <InlineMath math="rhs"/>{" "}
@@ -130,6 +137,12 @@ const DstarLite = () => {
                         <InlineMath math="g(s)"/> 옆에 one-step lookahead를 하나 더 둔다:
                     </p>
                     <BlockMath math="rhs(s) \;=\; \min_{s' \in succ(s)}\bigl(c(s, s') + g(s')\bigr), \qquad rhs(\text{goal}) = 0"/>
+                    <Terms items={[
+                        ["g(s)", <><InlineMath math="s"/>에서 <em>goal까지</em> 비용의 확정 추정치 (탐색이 backward라 g는 시작부터가 아니라 goal까지의 비용이다)</>],
+                        ["rhs(s)", <><strong>새로 추가된 항</strong>: one-step lookahead. 어떤 successor를 거치는 최선 비용으로, 간선이 바뀌면 즉시 다시 계산된다</>],
+                        ["succ(s)", <><InlineMath math="s"/>의 grid 이웃들</>],
+                        ["c(s, s')", "이웃 간 간선 비용 (벽이 발견되면 ∞)"],
+                    ]}/>
                     <p>
                         <InlineMath math="g(s) = rhs(s)"/>인 vertex를 <em>consistent</em>하다고
                         한다. 벽이 나타나면 영향을 받은 vertex들의 <InlineMath math="rhs"/>가
@@ -279,6 +292,10 @@ main:
                             through <code>update_vertex</code>, which ends with:
                         </p>
                         <BlockMath math="u \in U \;\Longleftrightarrow\; g(u) \ne rhs(u)"/>
+                        <Terms items={[
+                            ["U", "the priority queue: it holds exactly the inconsistent vertices, nothing else"],
+                            ["g(u),\ rhs(u)", <>committed estimate vs one-step lookahead of cost-to-goal; equality means <InlineMath math="u"/> is consistent (settled and correct)</>],
+                        ]}/>
                         <p>
                             When <InlineMath math="U"/> empties (or the early exit fires), every
                             vertex the robot's value depends on satisfies{" "}
@@ -296,6 +313,10 @@ main:
                             <code>update_vertex</code>를 거치고, 그 끝은 항상 다음을 복원한다:
                         </p>
                         <BlockMath math="u \in U \;\Longleftrightarrow\; g(u) \ne rhs(u)"/>
+                        <Terms items={[
+                            ["U", "priority queue. inconsistent한 vertex 정확히 그들만 들어 있다"],
+                            ["g(u),\ rhs(u)", <>goal까지 비용의 확정 추정치 vs one-step lookahead. 같으면 <InlineMath math="u"/>는 consistent (확정이고 올바름)</>],
+                        ]}/>
                         <p>
                             <InlineMath math="U"/>가 비면(또는 조기 종료가 발동하면) 로봇의 값이
                             의존하는 모든 vertex에서 <InlineMath math="g = rhs"/>이고,{" "}
