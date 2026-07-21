@@ -36,25 +36,37 @@ const STYLE: Record<string, string> = {
     keyword: "var(--tok-tag)",
     number: "var(--tok-expr)",
     meta: "var(--tok-attr)",       // 데코레이터 / 전처리 지시자
+    func: "var(--tok-attr)",       // 호출/정의되는 함수 이름
+    type: "var(--tok-expr)",       // PascalCase 타입 · 네임스페이스 한정자
 }
 
-function classify(match: RegExpExecArray, lang: CodeLang): string | null {
+// 식별자 그룹 값 (python 은 6번째, cpp 는 5번째 캡처).
+const wordOf = (match: RegExpExecArray, lang: CodeLang): string | undefined =>
+    lang === "python" ? match[6] : match[5]
+
+function classify(match: RegExpExecArray, lang: CodeLang, code: string): string | null {
     if (lang === "python") {
-        const [, comment, triString, string, deco, num, word] = match
+        const [, comment, triString, string, deco, num] = match
         if (comment) return "comment"
         if (triString) return "comment"   // docstring 은 주석 취급이 읽기에 자연스럽다
         if (string) return "string"
         if (deco) return "meta"
         if (num) return "number"
-        if (word) return KEYWORDS.python.has(word) ? "keyword" : null
-        return null
+    } else {
+        const [, comment, preproc, string, num] = match
+        if (comment) return "comment"
+        if (preproc) return "meta"
+        if (string) return "string"
+        if (num) return "number"
     }
-    const [, comment, preproc, string, num, word] = match
-    if (comment) return "comment"
-    if (preproc) return "meta"
-    if (string) return "string"
-    if (num) return "number"
-    if (word) return KEYWORDS.cpp.has(word) ? "keyword" : null
+    const word = wordOf(match, lang)
+    if (!word) return null
+    if (KEYWORDS[lang].has(word)) return "keyword"
+    // 문맥 lookahead: 뒤가 '(' 면 함수, cpp 에서 뒤가 '::' 이거나 PascalCase 면 타입.
+    const rest = code.slice(match.index + match[0].length)
+    if (/^\s*\(/.test(rest)) return "func"
+    if (lang === "cpp" && rest.startsWith("::")) return "type"
+    if (/^[A-Z]/.test(word)) return "type"
     return null
 }
 
@@ -65,7 +77,7 @@ export function highlight(code: string, lang: CodeLang): ReactNode[] {
     let key = 0
     for (let m = re.exec(code); m !== null; m = re.exec(code)) {
         if (m.index > last) out.push(code.slice(last, m.index))
-        const cls = classify(m, lang)
+        const cls = classify(m, lang, code)
         out.push(cls
             ? <span key={key++} style={{color: STYLE[cls]}}>{m[0]}</span>
             : m[0])

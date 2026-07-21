@@ -8,8 +8,38 @@ import {IAlgoData} from "../../../types/global";
 // 배열 순서가 사이드바·pager 의 진행 순서다 (학습 난이도 순).
 const data: IAlgoData[] = [
     // ---- Graph search ----
-    {slug: "bfs", title: {en: "BFS", ko: "BFS"}, category: "search"},
-    {slug: "dijkstra", title: {en: "Dijkstra", ko: "Dijkstra"}, category: "search"},
+    {
+        slug: "bfs",
+        title: {en: "BFS", ko: "BFS"},
+        category: "search",
+        supportedExample: {python: true, "c++": true},
+        contents: lazy(() => import("./global/search/Bfs")),
+        sections: [
+            {en: "The Idea", ko: "아이디어"},
+            {en: "Properties and Complexity", ko: "성질과 복잡도"},
+            {en: "The Algorithm", ko: "알고리즘"},
+            {en: "When Hops Lie", ko: "최소 hop 이 최단이 아닐 때"},
+            {en: "Demo", ko: "Demo"},
+            {en: "Implementation", ko: "Implementation"},
+            {en: "References", ko: "References"},
+        ],
+    },
+    {
+        slug: "dijkstra",
+        title: {en: "Dijkstra", ko: "Dijkstra"},
+        category: "search",
+        supportedExample: {python: true, "c++": true},
+        contents: lazy(() => import("./global/search/Dijkstra")),
+        sections: [
+            {en: "From BFS to Dijkstra", ko: "BFS에서 Dijkstra로"},
+            {en: "Properties and Complexity", ko: "성질과 복잡도"},
+            {en: "The Algorithm", ko: "알고리즘"},
+            {en: "Why Greedy Works", ko: "Greedy가 왜 통하는가"},
+            {en: "Demo", ko: "Demo"},
+            {en: "Implementation", ko: "Implementation"},
+            {en: "References", ko: "References"},
+        ],
+    },
     {
         slug: "astar",
         title: {en: "A*", ko: "A*"},
@@ -18,13 +48,12 @@ const data: IAlgoData[] = [
         contents: lazy(() => import("./global/search/Astar")),
         sections: [
             {en: "From Dijkstra to A*", ko: "Dijkstra에서 A*로"},
+            {en: "Properties and Complexity", ko: "성질과 복잡도"},
             {en: "The Algorithm", ko: "알고리즘"},
             {en: "Heuristics", ko: "Heuristic"},
+            {en: "Why A* Is Optimal", ko: "A*는 왜 최적인가"},
             {en: "Demo", ko: "Demo"},
             {en: "Implementation", ko: "Implementation"},
-            {en: "Why A* Is Optimal", ko: "A*는 왜 최적인가"},
-            {en: "Properties and Complexity", ko: "성질과 복잡도"},
-            {en: "Parameters", ko: "Parameters"},
             {en: "References", ko: "References"},
         ],
     },

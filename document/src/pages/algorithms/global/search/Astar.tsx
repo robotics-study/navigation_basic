@@ -2,8 +2,9 @@ import {ReactNode} from "react";
 import {T, useTr} from "../../../../libs/i18n";
 import {BlockMath, InlineMath} from "../../../../components/math/Tex";
 import AStarSandbox from "../../../../components/panels/global/astar/AStarSandbox";
-import AStarReplay from "../../../../components/panels/global/astar/AStarReplay";
+import TraceReplay from "../../../../components/panels/global/TraceReplay";
 import CodeTabs from "../../../../components/CodeTabs";
+import Pseudocode from "../../../../components/Pseudocode";
 import astarPy from "../../../../../../python/navigation/global_planning/search/astar.py?raw";
 import bestFirstPy from "../../../../../../python/navigation/global_planning/search/_bestfirst.py?raw";
 import astarCpp from "../../../../../../cpp/src/global_planning/search/astar.cpp?raw";
@@ -73,7 +74,7 @@ const Astar = () => {
                     <p>
                         Dijkstra 알고리즘에서 출발하자. Dijkstra 는 시작점에서 frontier 를 바깥으로
                         키워 가며, 항상 시작점부터의 비용 <InlineMath math="g(n)"/> 이 가장 작은
-                        노드를 확장한다. 최적성은 증명되지만, 장님 탐색이다. frontier 가 모든
+                        노드를 확장한다. 최적성은 증명되지만, 맹목 탐색이다. frontier 가 모든
                         방향으로 동심원처럼 퍼지면서, 목표에서 <em>멀어지는</em> 노드에도 똑같이
                         공을 들인다. 정렬 기준 어디에도 목표가 어디 있는지에 대한 정보가 없기
                         때문이다.
@@ -97,62 +98,87 @@ const Astar = () => {
                 </>}
             />
 
-            <h2>{t("The Algorithm", "알고리즘")}</h2>
+            <h2>{t("Properties and Complexity", "성질과 복잡도")}</h2>
             <T
                 en={<>
-                    <p>
-                        A* keeps two bookkeeping structures: an <strong>OPEN</strong> set — a priority
-                        queue of discovered-but-unexpanded nodes keyed by <InlineMath math="f"/> — and
-                        a <strong>CLOSED</strong> set of already-expanded nodes. Each node remembers
-                        its best-known <InlineMath math="g"/> and its parent, from which the final path
-                        is reconstructed.
-                    </p>
-                    <ol>
-                        <li>Put the start node in OPEN with <InlineMath math="g = 0"/>, <InlineMath math="f = h(\text{start})"/>.</li>
-                        <li>Pop the node <InlineMath math="n"/> with the smallest <InlineMath math="f"/> from OPEN and move it to CLOSED.</li>
-                        <li>If <InlineMath math="n"/> is the goal, follow parents back to the start and return the path.</li>
-                        <li>Otherwise, for each neighbor <InlineMath math="n'"/> with edge cost <InlineMath math="c(n, n')"/>:
-                            if <InlineMath math="g(n) + c(n, n') < g(n')"/>, record the better{" "}
-                            <InlineMath math="g(n')"/> and parent, and (re)insert <InlineMath math="n'"/> into OPEN
-                            with <InlineMath math="f(n') = g(n') + h(n')"/>.</li>
-                        <li>If OPEN empties without reaching the goal, no path exists.</li>
-                    </ol>
-                    <p>
-                        One practical detail matters more than it looks: <strong>tie-breaking</strong>.
-                        On a uniform grid many nodes share the same <InlineMath math="f"/>, and a naive
-                        queue may expand entire plateaus of them. Preferring the node with the
-                        larger <InlineMath math="g"/> (deeper along its path) among equal{" "}
-                        <InlineMath math="f"/> breaks these plateaus and is what keeps A* visibly
-                        beating Dijkstra in the demo below.
-                    </p>
+                    <ul>
+                        <li><strong>Complete</strong> on finite graphs: if a path exists, A* finds one.</li>
+                        <li><strong>Optimal</strong> with an admissible <InlineMath math="h"/>; cost at
+                            most <InlineMath math="w \cdot C^*"/> with weight <InlineMath math="w > 1"/>.</li>
+                        <li><strong>Optimally efficient</strong>: with a consistent heuristic, no other
+                            optimal algorithm using the same heuristic information expands fewer nodes
+                            up to tie-breaking (Dechter &amp; Pearl, 1985).</li>
+                        <li><strong>Cost</strong>: worst-case time and memory are{" "}
+                            <InlineMath math="O(b^d)"/> in branching factor <InlineMath math="b"/> and
+                            solution depth <InlineMath math="d"/> — the heuristic shrinks the constant
+                            enormously but not the asymptotics, and memory is usually what runs out
+                            first. That limit is what motivates the iterative and incremental variants
+                            (ARA*, D* Lite) covered in later pages.</li>
+                    </ul>
                 </>}
                 ko={<>
-                    <p>
-                        A*는 두 개의 장부를 유지한다. 발견됐지만 아직 확장되지 않은 노드를{" "}
-                        <InlineMath math="f"/> 순으로 담는 우선순위 큐 <strong>OPEN</strong> 과,
-                        이미 확장된 노드의 집합 <strong>CLOSED</strong> 다. 각 노드는 지금까지 알려진
-                        최선의 <InlineMath math="g"/> 값과 부모를 기억하고, 최종 경로는 부모를
-                        거슬러 올라가 복원한다.
-                    </p>
-                    <ol>
-                        <li>시작 노드를 <InlineMath math="g = 0"/>, <InlineMath math="f = h(\text{start})"/> 로 OPEN 에 넣는다.</li>
-                        <li>OPEN 에서 <InlineMath math="f"/> 가 가장 작은 노드 <InlineMath math="n"/> 을 꺼내 CLOSED 로 옮긴다.</li>
-                        <li><InlineMath math="n"/> 이 목표면 부모를 따라 시작점까지 되짚어 경로를 반환한다.</li>
-                        <li>아니면 각 이웃 <InlineMath math="n'"/> (간선 비용 <InlineMath math="c(n, n')"/>)에 대해:
-                            <InlineMath math="g(n) + c(n, n') < g(n')"/> 이면 더 나은{" "}
-                            <InlineMath math="g(n')"/> 과 부모를 기록하고, <InlineMath math="f(n') = g(n') + h(n')"/> 로
-                            OPEN 에 (다시) 넣는다.</li>
-                        <li>목표에 닿기 전에 OPEN 이 비면 경로가 없는 것이다.</li>
-                    </ol>
-                    <p>
-                        보기보다 중요한 실전 디테일이 하나 있다: <strong>tie-breaking</strong>. 균일
-                        비용 grid 에서는 많은 노드가 같은 <InlineMath math="f"/> 를 가져, 순진한
-                        큐는 그 평원 전체를 확장해 버린다. <InlineMath math="f"/> 동률일 때{" "}
-                        <InlineMath math="g"/> 가 큰(경로를 따라 더 깊이 간) 노드를 우선하면 이
-                        평원이 깨진다. 아래 demo 에서 A*가 Dijkstra 를 눈에 띄게 이기는 것도 이
-                        덕분이다.
-                    </p>
+                    <ul>
+                        <li><strong>완전성</strong>: 유한 그래프에서 경로가 존재하면 반드시 찾는다.</li>
+                        <li><strong>최적성</strong>: admissible <InlineMath math="h"/> 에서 최적;
+                            가중치 <InlineMath math="w > 1"/> 에서는 비용이 최대{" "}
+                            <InlineMath math="w \cdot C^*"/>.</li>
+                        <li><strong>최적 효율성</strong>: consistent heuristic 에서, 같은 heuristic
+                            정보를 쓰는 어떤 최적 알고리즘도 tie-breaking 차이를 빼면 A* 보다 적게
+                            확장할 수 없다 (Dechter &amp; Pearl, 1985).</li>
+                        <li><strong>비용</strong>: 최악의 경우 시간·메모리 모두 분기 계수{" "}
+                            <InlineMath math="b"/> 와 해 깊이 <InlineMath math="d"/> 에 대해{" "}
+                            <InlineMath math="O(b^d)"/> 다. heuristic 은 상수를 크게 줄이지만 점근
+                            차수는 못 줄이고, 보통 메모리가 먼저 바닥난다. 이 한계가 뒤 페이지에서
+                            다루는 반복·증분 변형(ARA*, D* Lite)의 동기다.</li>
+                    </ul>
                 </>}
+            />
+
+            <h2>{t("The Algorithm", "알고리즘")}</h2>
+            <T
+                en={<p>
+                    A* keeps two bookkeeping structures: an <strong>OPEN</strong> set, a priority
+                    queue of discovered-but-unexpanded nodes keyed by <InlineMath math="f"/>, and
+                    a <strong>CLOSED</strong> set of already-expanded nodes. Each node remembers
+                    its best-known <InlineMath math="g"/> and its parent, from which the final path
+                    is reconstructed.
+                </p>}
+                ko={<p>
+                    A*는 두 개의 장부를 유지한다. 발견됐지만 아직 확장되지 않은 노드를{" "}
+                    <InlineMath math="f"/> 순으로 담는 우선순위 큐 <strong>OPEN</strong> 과,
+                    이미 확장된 노드의 집합 <strong>CLOSED</strong> 다. 각 노드는 지금까지 알려진
+                    최선의 <InlineMath math="g"/> 값과 부모를 기억하고, 최종 경로는 부모를
+                    거슬러 올라가 복원한다.
+                </p>}
+            />
+            <Pseudocode code={`OPEN ← min-heap keyed by f;  g[start] ← 0;  push (h(start), start)
+while OPEN is not empty:
+    n ← pop_min(OPEN);  move n to CLOSED
+    if n = goal:
+        return reconstruct(parent, goal)
+    for each neighbor n' with edge cost c(n, n'):
+        if g[n] + c(n, n') < g[n']:          # relaxation
+            g[n'] ← g[n] + c(n, n');  parent[n'] ← n
+            f[n'] ← g[n'] + h(n')
+            push (f[n'], n') into OPEN
+return failure`}/>
+            <T
+                en={<p>
+                    One practical detail matters more than it looks: <strong>tie-breaking</strong>.
+                    On a uniform grid many nodes share the same <InlineMath math="f"/>, and a naive
+                    queue may expand entire plateaus of them. Preferring the node with the
+                    larger <InlineMath math="g"/> (deeper along its path) among equal{" "}
+                    <InlineMath math="f"/> breaks these plateaus and is what keeps A* visibly
+                    beating Dijkstra in the demo below.
+                </p>}
+                ko={<p>
+                    보기보다 중요한 실전 디테일이 하나 있다: <strong>tie-breaking</strong>. 균일
+                    비용 grid 에서는 많은 노드가 같은 <InlineMath math="f"/> 를 가져, 순진한
+                    큐는 그 평원 전체를 확장해 버린다. <InlineMath math="f"/> 동률일 때{" "}
+                    <InlineMath math="g"/> 가 큰(경로를 따라 더 깊이 간) 노드를 우선하면 이
+                    평원이 깨진다. 아래 demo 에서 A*가 Dijkstra 를 눈에 띄게 이기는 것도 이
+                    덕분이다.
+                </p>}
             />
 
             <h2>{t("Heuristics", "Heuristic")}</h2>
@@ -234,6 +260,99 @@ const Astar = () => {
                 </>}
             />
 
+            <h2>{t("Why A* Is Optimal", "A*는 왜 최적인가")}</h2>
+            <T
+                en={<p>
+                    With an admissible heuristic, the first time A* pops the goal from OPEN, the path
+                    it has found is optimal. The intuition: any not-yet-expanded prefix of a better
+                    path would carry an <InlineMath math="f"/> value no larger than that better path's
+                    cost — so it would have been popped first. The formal statements follow; expand
+                    them if you want the details.
+                </p>}
+                ko={<p>
+                    admissible heuristic 이라면, A*가 목표를 OPEN 에서 처음 꺼내는 순간 찾은 경로는
+                    최적이다. 직관은 이렇다: 더 나은 경로가 있다면 그 경로의 아직 확장되지 않은
+                    접두부는 그 경로 비용 이하의 <InlineMath math="f"/> 값을 갖고 있어, 목표보다
+                    먼저 꺼내졌을 것이다. 형식적 서술은 아래에 접어 두었으니, 자세히 보고 싶으면
+                    펼쳐 보라.
+                </p>}
+            />
+            <Proof title={t("Theorem (optimality of A*)", "정리 (A*의 최적성)")}>
+                <T
+                    en={<>
+                        <p>
+                            <strong>Setup.</strong> <InlineMath math="h"/> admissible, edge costs
+                            positive. Suppose the goal pops with{" "}
+                            <InlineMath math="g(\text{goal}) > C^*"/>.
+                        </p>
+                        <p>
+                            Take an optimal path <InlineMath math="\sigma"/> — some node of it is
+                            always in OPEN; let <InlineMath math="n"/> be the first. Everything on{" "}
+                            <InlineMath math="\sigma"/> before <InlineMath math="n"/> is settled
+                            optimally, so <InlineMath math="g(n) = g^*(n)"/> and:
+                        </p>
+                        <BlockMath math="f(n) = g^*(n) + h(n) \;\overset{\text{admissible}}{\le}\; g^*(n) + h^*(n) \;=\; C^* \;<\; g(\text{goal}) = f(\text{goal})"/>
+                        <p>
+                            <InlineMath math="\Rightarrow n"/> pops before the goal — contradiction.{" "}
+                            <InlineMath math="\blacksquare"/>
+                        </p>
+                    </>}
+                    ko={<>
+                        <p>
+                            <strong>가정.</strong> <InlineMath math="h"/> 는 admissible, 간선 비용은
+                            양수. 귀류법으로 목표가 <InlineMath math="g(\text{goal}) > C^*"/> 로
+                            꺼내졌다고 하자.
+                        </p>
+                        <p>
+                            최적 경로 <InlineMath math="\sigma"/> 를 잡으면 그 노드 중 하나는 항상
+                            OPEN 에 있다. 그중 첫 노드를 <InlineMath math="n"/> 이라 하면{" "}
+                            <InlineMath math="n"/> 앞은 전부 최적으로 settle 되어{" "}
+                            <InlineMath math="g(n) = g^*(n)"/> 이고:
+                        </p>
+                        <BlockMath math="f(n) = g^*(n) + h(n) \;\overset{\text{admissible}}{\le}\; g^*(n) + h^*(n) \;=\; C^* \;<\; g(\text{goal}) = f(\text{goal})"/>
+                        <p>
+                            <InlineMath math="\Rightarrow n"/> 이 목표보다 먼저 꺼내진다. 모순.{" "}
+                            <InlineMath math="\blacksquare"/>
+                        </p>
+                    </>}
+                />
+            </Proof>
+            <Proof title={t("Lemma (consistency ⇒ no re-expansion)", "보조정리 (consistency ⇒ 재확장 불필요)")}>
+                <T
+                    en={<>
+                        <p>
+                            <strong>Setup.</strong> Consistency:{" "}
+                            <InlineMath math="h(n) \le c(n, n') + h(n')"/> on every edge. Then along
+                            any expansion:
+                        </p>
+                        <BlockMath math="f(n') = g(n) + c(n, n') + h(n') \;\overset{\text{consistency}}{\ge}\; g(n) + h(n) = f(n)"/>
+                        <p>
+                            <InlineMath math="\Rightarrow f"/> never decreases along explored paths{" "}
+                            <InlineMath math="\Rightarrow"/> expansion order is non-decreasing in{" "}
+                            <InlineMath math="f"/> <InlineMath math="\Rightarrow"/> a node's first
+                            expansion already carries its optimal <InlineMath math="g"/>. No
+                            reopening; a plain CLOSED set suffices.{" "}
+                            <InlineMath math="\blacksquare"/>
+                        </p>
+                    </>}
+                    ko={<>
+                        <p>
+                            <strong>가정.</strong> consistency:{" "}
+                            <InlineMath math="h(n) \le c(n, n') + h(n')"/> 이 모든 간선에서 성립.
+                            그러면 임의의 확장에서:
+                        </p>
+                        <BlockMath math="f(n') = g(n) + c(n, n') + h(n') \;\overset{\text{consistency}}{\ge}\; g(n) + h(n) = f(n)"/>
+                        <p>
+                            <InlineMath math="\Rightarrow f"/> 는 탐색 경로를 따라 감소하지 않는다{" "}
+                            <InlineMath math="\Rightarrow"/> 확장 순서는 <InlineMath math="f"/> 비감소{" "}
+                            <InlineMath math="\Rightarrow"/> 노드의 첫 확장이 이미 최적{" "}
+                            <InlineMath math="g"/> 를 가진다. 재확장이 없고, 단순한 CLOSED 집합이면
+                            충분하다. <InlineMath math="\blacksquare"/>
+                        </p>
+                    </>}
+                />
+            </Proof>
+
             <h2>Demo</h2>
             <T
                 en={<p>
@@ -257,22 +376,23 @@ const Astar = () => {
             <T
                 en={<p>
                     The player below is different in kind: it replays <em>recorded traces</em> emitted
-                    by this repository's actual C++ and Python implementations running on the
-                    benchmark maps. Every algorithm in the repository emits the same JSON event
+                    by this repository's actual implementations running on the benchmark maps. Every algorithm in the repository emits the same JSON event
                     stream (<code>node_expanded</code>, <code>edge_added</code>,{" "}
                     <code>path_found</code>, …), so this one player can replay any of them — the
                     visualization layer never touches algorithm internals.
                 </p>}
                 ko={<p>
-                    아래 플레이어는 종류가 다르다: 이 저장소의 실제 C++/Python 구현이 벤치마크 맵
-                    위에서 실행되며 방출한 <em>기록된 trace</em> 를 재생한다. 저장소의 모든
+                    아래 플레이어는 종류가 다르다: 이 저장소의 실제 구현이 벤치마크 맵 위에서 실행되며 방출한 <em>기록된 trace</em> 를 재생한다. 저장소의 모든
                     알고리즘이 같은 JSON 이벤트 스트림(<code>node_expanded</code>,{" "}
                     <code>edge_added</code>, <code>path_found</code>, …)을 방출하므로 이 플레이어
                     하나로 무엇이든 재생할 수 있다. 시각화 계층은 알고리즘 내부를 전혀 만지지
                     않는다.
                 </p>}
             />
-            <AStarReplay/>
+            <TraceReplay algo="astar" maps={["maze01", "open01"]} label={t(
+                "Replaying a real trace emitted by the repository's A* demo — the same JSON event stream drives this player",
+                "저장소의 A* demo 가 실제로 방출한 trace 재생. 이 플레이어는 그 JSON 이벤트 스트림을 그대로 소비한다",
+            )}/>
 
             <h2>Implementation</h2>
             <T
@@ -329,182 +449,6 @@ const Astar = () => {
                     "공유 best-first 코어와 A* subclass. 저장소 소스를 그대로 embed 한 것이다",
                 )}
             />
-
-            <h2>{t("Why A* Is Optimal", "A*는 왜 최적인가")}</h2>
-            <T
-                en={<p>
-                    With an admissible heuristic, the first time A* pops the goal from OPEN, the path
-                    it has found is optimal. The intuition: any not-yet-expanded prefix of a better
-                    path would carry an <InlineMath math="f"/> value no larger than that better path's
-                    cost — so it would have been popped first. The formal statements follow; expand
-                    them if you want the details.
-                </p>}
-                ko={<p>
-                    admissible heuristic 이라면, A*가 목표를 OPEN 에서 처음 꺼내는 순간 찾은 경로는
-                    최적이다. 직관은 이렇다: 더 나은 경로가 있다면 그 경로의 아직 확장되지 않은
-                    접두부는 그 경로 비용 이하의 <InlineMath math="f"/> 값을 갖고 있어, 목표보다
-                    먼저 꺼내졌을 것이다. 형식적 서술은 아래에 접어 두었으니, 자세히 보고 싶으면
-                    펼쳐 보라.
-                </p>}
-            />
-            <Proof title={t("Theorem (optimality of A*)", "정리 (A*의 최적성)")}>
-                <T
-                    en={<>
-                        <p>
-                            <em>Claim.</em> If <InlineMath math="h"/> is admissible and edge costs are
-                            positive, then when A* first selects the goal node for expansion, the path
-                            found has cost <InlineMath math="C^*"/>, the optimal cost.
-                        </p>
-                        <p>
-                            <em>Proof.</em> Suppose A* pops the goal with recorded
-                            cost <InlineMath math="g(\text{goal}) > C^*"/>. Consider an optimal
-                            path <InlineMath math="\sigma"/> from start to goal. At any moment before
-                            the goal is popped, some node of <InlineMath math="\sigma"/> sits in OPEN;
-                            let <InlineMath math="n"/> be the first such node
-                            along <InlineMath math="\sigma"/>. Because every node
-                            of <InlineMath math="\sigma"/> before <InlineMath math="n"/> was expanded
-                            with its optimal cost, <InlineMath math="g(n) = g^*(n)"/>, and by
-                            admissibility
-                        </p>
-                        <BlockMath math="f(n) = g^*(n) + h(n) \;\le\; g^*(n) + h^*(n) \;=\; C^* \;<\; g(\text{goal}) = f(\text{goal})."/>
-                        <p>
-                            So OPEN contains a node with strictly smaller <InlineMath math="f"/> than
-                            the goal, contradicting that the goal was popped first. Hence the pop
-                            happens with <InlineMath math="g(\text{goal}) = C^*"/>. <InlineMath math="\blacksquare"/>
-                        </p>
-                    </>}
-                    ko={<>
-                        <p>
-                            <em>주장.</em> <InlineMath math="h"/> 가 admissible 하고 간선 비용이
-                            양수이면, A*가 목표 노드를 처음 확장 대상으로 선택하는 시점에 찾은
-                            경로의 비용은 최적 비용 <InlineMath math="C^*"/> 다.
-                        </p>
-                        <p>
-                            <em>증명.</em> A*가 목표를{" "}
-                            <InlineMath math="g(\text{goal}) > C^*"/> 로 꺼냈다고 가정하자. 시작에서
-                            목표로 가는 최적 경로 <InlineMath math="\sigma"/> 를 생각한다. 목표가
-                            꺼내지기 전 어느 시점에든 <InlineMath math="\sigma"/> 의 노드 중 하나는
-                            OPEN 에 있다; <InlineMath math="\sigma"/> 를 따라 그중 첫 노드를{" "}
-                            <InlineMath math="n"/> 이라 하자. <InlineMath math="\sigma"/> 에서{" "}
-                            <InlineMath math="n"/> 앞의 노드는 전부 최적 비용으로 확장되었으므로{" "}
-                            <InlineMath math="g(n) = g^*(n)"/> 이고, admissibility 에 의해
-                        </p>
-                        <BlockMath math="f(n) = g^*(n) + h(n) \;\le\; g^*(n) + h^*(n) \;=\; C^* \;<\; g(\text{goal}) = f(\text{goal})."/>
-                        <p>
-                            즉 OPEN 에 목표보다 <InlineMath math="f"/> 가 순증적으로 작은 노드가
-                            있으므로, 목표가 먼저 꺼내졌다는 가정과 모순이다. 따라서 목표는{" "}
-                            <InlineMath math="g(\text{goal}) = C^*"/> 로 꺼내진다. <InlineMath math="\blacksquare"/>
-                        </p>
-                    </>}
-                />
-            </Proof>
-            <Proof title={t("Lemma (consistency ⇒ no re-expansion)", "보조정리 (consistency ⇒ 재확장 불필요)")}>
-                <T
-                    en={<>
-                        <p>
-                            If <InlineMath math="h"/> is consistent, then along any edge{" "}
-                            <InlineMath math="(n, n')"/>,
-                        </p>
-                        <BlockMath math="f(n') = g(n) + c(n, n') + h(n') \;\ge\; g(n) + h(n) = f(n),"/>
-                        <p>
-                            so <InlineMath math="f"/> is non-decreasing along every path A* explores.
-                            Nodes are therefore expanded in non-decreasing order
-                            of <InlineMath math="f"/>, and when a node is first expanded
-                            its <InlineMath math="g"/> is already optimal — it never needs to be
-                            reopened. This is why implementations with consistent heuristics can use a
-                            plain CLOSED set. <InlineMath math="\blacksquare"/>
-                        </p>
-                    </>}
-                    ko={<>
-                        <p>
-                            <InlineMath math="h"/> 가 consistent 하면 임의의 간선{" "}
-                            <InlineMath math="(n, n')"/> 을 따라
-                        </p>
-                        <BlockMath math="f(n') = g(n) + c(n, n') + h(n') \;\ge\; g(n) + h(n) = f(n),"/>
-                        <p>
-                            즉 A*가 탐색하는 모든 경로를 따라 <InlineMath math="f"/> 는 감소하지
-                            않는다. 따라서 노드는 <InlineMath math="f"/> 의 비감소 순서로 확장되고,
-                            노드가 처음 확장될 때 그 <InlineMath math="g"/> 는 이미 최적이라 다시
-                            열 필요가 없다. consistent heuristic 을 쓰는 구현이 단순한 CLOSED 집합만
-                            으로 충분한 이유다. <InlineMath math="\blacksquare"/>
-                        </p>
-                    </>}
-                />
-            </Proof>
-
-            <h2>{t("Properties and Complexity", "성질과 복잡도")}</h2>
-            <T
-                en={<>
-                    <ul>
-                        <li><strong>Complete</strong> on finite graphs: if a path exists, A* finds one.</li>
-                        <li><strong>Optimal</strong> with an admissible <InlineMath math="h"/>; cost at
-                            most <InlineMath math="w \cdot C^*"/> with weight <InlineMath math="w > 1"/>.</li>
-                        <li><strong>Optimally efficient</strong>: with a consistent heuristic, no other
-                            optimal algorithm using the same heuristic information expands fewer nodes
-                            up to tie-breaking (Dechter &amp; Pearl, 1985).</li>
-                        <li><strong>Cost</strong>: worst-case time and memory are{" "}
-                            <InlineMath math="O(b^d)"/> in branching factor <InlineMath math="b"/> and
-                            solution depth <InlineMath math="d"/> — the heuristic shrinks the constant
-                            enormously but not the asymptotics, and memory is usually what runs out
-                            first. That limit is what motivates the iterative and incremental variants
-                            (ARA*, D* Lite) covered in later pages.</li>
-                    </ul>
-                </>}
-                ko={<>
-                    <ul>
-                        <li><strong>완전성</strong>: 유한 그래프에서 경로가 존재하면 반드시 찾는다.</li>
-                        <li><strong>최적성</strong>: admissible <InlineMath math="h"/> 에서 최적;
-                            가중치 <InlineMath math="w > 1"/> 에서는 비용이 최대{" "}
-                            <InlineMath math="w \cdot C^*"/>.</li>
-                        <li><strong>최적 효율성</strong>: consistent heuristic 에서, 같은 heuristic
-                            정보를 쓰는 어떤 최적 알고리즘도 tie-breaking 차이를 빼면 A* 보다 적게
-                            확장할 수 없다 (Dechter &amp; Pearl, 1985).</li>
-                        <li><strong>비용</strong>: 최악의 경우 시간·메모리 모두 분기 계수{" "}
-                            <InlineMath math="b"/> 와 해 깊이 <InlineMath math="d"/> 에 대해{" "}
-                            <InlineMath math="O(b^d)"/> 다. heuristic 은 상수를 크게 줄이지만 점근
-                            차수는 못 줄이고, 보통 메모리가 먼저 바닥난다. 이 한계가 뒤 페이지에서
-                            다루는 반복·증분 변형(ARA*, D* Lite)의 동기다.</li>
-                    </ul>
-                </>}
-            />
-
-            <h2>Parameters</h2>
-            <T
-                en={<p>
-                    Parameters are declared per algorithm and loaded
-                    from <code>configs/global_planning/astar.yaml</code> — the same file is read by
-                    both the C++ and Python implementations, and values are validated against the
-                    declared range at load time.
-                </p>}
-                ko={<p>
-                    파라미터는 알고리즘별로 선언되고 <code>configs/global_planning/astar.yaml</code>{" "}
-                    에서 로드된다 — C++/Python 구현이 같은 파일을 읽으며, 로드 시점에 선언된 범위로
-                    검증된다.
-                </p>}
-            />
-            <table>
-                <thead>
-                <tr>
-                    <th>{t("name", "이름")}</th>
-                    <th>{t("type", "타입")}</th>
-                    <th>{t("default", "기본값")}</th>
-                    <th>{t("range", "범위")}</th>
-                    <th>{t("meaning", "의미")}</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr>
-                    <td><code>heuristic_weight</code></td>
-                    <td>float</td>
-                    <td>1.0</td>
-                    <td>[1.0, 5.0]</td>
-                    <td><T
-                        en="weight w in f = g + w·h; 1.0 keeps optimality, larger trades cost bound for speed"
-                        ko="f = g + w·h 의 w; 1.0 은 최적 보장, 그보다 크면 속도를 얻고 비용 한계를 내준다"
-                    /></td>
-                </tr>
-                </tbody>
-            </table>
 
             <h2>References</h2>
             <ol>

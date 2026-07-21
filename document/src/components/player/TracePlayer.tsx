@@ -5,9 +5,8 @@ import GridCanvas, {PATH_COLOR} from "../2d/GridCanvas";
 import {useTr} from "../../libs/i18n";
 import cn from "../../libs/cn";
 
-const SPEEDS = [0.5, 1, 2, 4];
-// 1× 재생으로 타임라인 전체를 도는 목표 시간. 이벤트 수와 무관하게 체감 속도를 맞춘다.
-const BASE_DURATION_MS = 6000;
+// 타임라인 전체를 도는 목표 시간. 이벤트 수와 무관하게 체감 속도를 맞춘다 (고정 배속).
+const BASE_DURATION_MS = 3000;
 const TICK_MS = 30;
 
 interface TracePlayerProps {
@@ -45,7 +44,6 @@ const TracePlayer = ({
     const t = useTr()
     const [step, setStep] = useState(autoPlay ? 0 : timeline.steps)
     const [playing, setPlaying] = useState(autoPlay)
-    const [speed, setSpeed] = useState(1)
     const timer = useRef<number>()
 
     // 타임라인이 바뀌면(입력 변경/트레이스 교체) 처음부터 다시 재생한다.
@@ -56,7 +54,7 @@ const TracePlayer = ({
 
     useEffect(() => {
         if (!playing) return
-        const perTick = Math.max(1, Math.round(timeline.steps / (BASE_DURATION_MS / TICK_MS))) * speed
+        const perTick = Math.max(1, Math.round(timeline.steps / (BASE_DURATION_MS / TICK_MS)))
         timer.current = window.setInterval(() => {
             setStep((s) => {
                 if (s >= timeline.steps) {
@@ -67,7 +65,7 @@ const TracePlayer = ({
             })
         }, TICK_MS)
         return () => window.clearInterval(timer.current)
-    }, [playing, speed, timeline])
+    }, [playing, timeline])
 
     const expandedCount = useMemo(
         () => timeline.expanded.filter((e) => e.step <= step).length,
@@ -106,11 +104,6 @@ const TracePlayer = ({
                        }}
                        className="flex-1 accent-[var(--accent)]"
                        aria-label={t("search progress", "탐색 진행")}/>
-                {SPEEDS.map((s) => (
-                    <Btn key={s} onClick={() => setSpeed(s)} label={`${s}x`} active={speed === s}>
-                        <span className="tabular-nums">{s}×</span>
-                    </Btn>
-                ))}
             </div>
 
             <div className="text-xs text-muted text-center tabular-nums">

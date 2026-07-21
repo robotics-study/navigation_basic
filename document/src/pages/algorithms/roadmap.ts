@@ -8,6 +8,24 @@ export interface AlgoBlurb {
 
 export const ALGO_BLURBS: AlgoBlurb[] = [
     {
+        slug: "bfs",
+        blurb: {
+            en: "Search in waves with a FIFO queue: the fewest-edge path on any graph, " +
+                "and the seed every other planner in this section grows from.",
+            ko: "FIFO 큐로 파도처럼 훑는 탐색. 어떤 그래프에서든 최소 edge 경로를 찾고, " +
+                "이 섹션의 모든 planner 가 여기서 자라난다.",
+        },
+    },
+    {
+        slug: "dijkstra",
+        blurb: {
+            en: "Swap BFS's FIFO for a priority queue on g and fewest-edge becomes " +
+                "cheapest-cost: optimal for any non-negative edge costs.",
+            ko: "BFS 의 FIFO 를 g 기준 priority queue 로 바꾸면 최소 edge 가 최소 비용이 " +
+                "된다. 음수 아닌 모든 edge 비용에서 최적.",
+        },
+    },
+    {
         slug: "astar",
         blurb: {
             en: "Dijkstra plus a compass: order the frontier by g + h and an admissible " +

@@ -19,3 +19,15 @@ export function pocketMap(): GridMap {
     for (let r = 10; r <= 18; r++) set(r, 7)
     return map
 }
+
+// maps/grid/bfs_hopcost01 과 같은 배치 — 벽 두 칸이 hop-최단 경로를 대각선 지그재그로
+// 밀어 넣어, BFS(최소 hop)와 Dijkstra(최소 비용)의 경로 비용이 갈라진다.
+export const HOPCOST_START: Cell = [0, 4];
+export const HOPCOST_GOAL: Cell = [11, 8];
+
+export function hopcostMap(): GridMap {
+    const map = emptyGrid("hopcost", 12, 13)
+    map.occupied[1 * 12 + 4] = true
+    map.occupied[3 * 12 + 3] = true
+    return map
+}

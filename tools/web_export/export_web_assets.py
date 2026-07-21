@@ -107,7 +107,8 @@ def run_demo(algo: str, map_name: str, impl: str, trace_path: Path) -> bool:
 
 
 def export_traces(algo: str, map_name: str) -> None:
-    for impl in ("py", "cpp"):
+    # C++/Python 데모는 동일 이벤트 열을 방출하므로 웹 자산은 py 한 벌만 만든다.
+    for impl in ("py",):
         with tempfile.TemporaryDirectory() as tmp:
             trace = Path(tmp) / "trace.jsonl"
             if not run_demo(algo, map_name, impl, trace):
