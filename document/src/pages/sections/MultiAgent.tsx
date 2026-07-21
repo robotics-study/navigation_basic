@@ -1,6 +1,8 @@
 import {T, useTr} from "../../libs/i18n";
 import {InlineMath} from "../../components/math/Tex";
 import SpaceTimeConflict from "../../components/panels/intro/SpaceTimeConflict";
+import MultiCorridorPriority from "../../components/panels/intro/MultiCorridorPriority";
+import MultiConstraintTree from "../../components/panels/intro/MultiConstraintTree";
 
 const MultiAgent = () => {
     const t = useTr()
@@ -64,6 +66,23 @@ const MultiAgent = () => {
                 </p>}
             />
 
+            <T
+                en={<p>
+                    The joint space is not just large, it is full of traps. Two robots whose
+                    shortest paths point straight at each other in a one-wide corridor cannot both
+                    win: someone must give way. The cheapest fix is an <strong>order</strong> —
+                    decide who has priority, and let the loser treat the winner as a moving obstacle
+                    it must route around.
+                </p>}
+                ko={<p>
+                    joint 공간은 넓기만 한 게 아니라 함정투성이다. 폭 1 통로에서 최단 경로가 서로를
+                    정면으로 겨누는 두 로봇은 둘 다 이길 수 없다. 누군가는 비켜야 한다. 가장 값싼
+                    해법은 <strong>순서</strong>를 정하는 것이다. 우선순위를 정하고, 진 쪽이 이긴
+                    쪽을 돌아가야 할 움직이는 장애물로 취급하게 한다.
+                </p>}
+            />
+            <MultiCorridorPriority/>
+
             <h2>{t("Decoupled, Coupled, and In Between", "Decoupled, Coupled, 그리고 그 사이")}</h2>
             <T
                 en={<>
@@ -113,6 +132,26 @@ const MultiAgent = () => {
                     </ul>
                 </>}
             />
+
+            <T
+                en={<p>
+                    CBS is worth seeing as a picture. Its high-level search is a binary tree of
+                    constraints: the root plans every agent alone, and whenever two agents collide
+                    at some cell and time, it splits into two children — one forbidding the first
+                    agent from that cell-time, the other forbidding the second. Each child replans
+                    only the constrained agent. The tree grows solely along branches that still
+                    have conflicts, which is why CBS couples agents only when they actually
+                    interfere.
+                </p>}
+                ko={<p>
+                    CBS는 그림으로 보면 이해가 빠르다. high-level 탐색은 제약의 이진 트리다. root는
+                    모든 agent를 각자 계획하고, 두 agent가 어떤 칸·시각에서 충돌하면 두 자식으로
+                    갈라진다. 한쪽은 첫 번째 agent를, 다른쪽은 두 번째 agent를 그 칸·시각에서
+                    금지한다. 각 자식은 제약이 걸린 agent만 다시 계획한다. 트리는 아직 충돌이 남은
+                    가지를 따라서만 자라며, 그래서 CBS는 실제로 간섭하는 agent만 결합한다.
+                </p>}
+            />
+            <MultiConstraintTree/>
 
             <h2>{t("What Is Coming", "구현 예정")}</h2>
             <T

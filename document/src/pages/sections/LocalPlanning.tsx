@@ -1,6 +1,9 @@
 import {T, useTr} from "../../libs/i18n";
-import {InlineMath} from "../../components/math/Tex";
+import {BlockMath, InlineMath} from "../../components/math/Tex";
+import Terms from "../../components/math/Terms";
 import ArcCandidates from "../../components/panels/intro/ArcCandidates";
+import LocalVelocityWindow from "../../components/panels/intro/LocalVelocityWindow";
+import LocalPursuitGeometry from "../../components/panels/intro/LocalPursuitGeometry";
 
 const LocalPlanning = () => {
     const t = useTr()
@@ -136,6 +139,65 @@ const LocalPlanning = () => {
                     </ul>
                 </>}
             />
+
+            <h2>{t("Two Geometries Up Close", "두 기하를 가까이서")}</h2>
+            <T
+                en={<p>
+                    The arc fan above lives in the <em>workspace</em> — the paths the robot could
+                    trace on the floor. DWA does its actual choosing in <em>command</em> space, the
+                    plane of velocities <InlineMath math="(v, \omega)"/>. The trick that makes it
+                    real-time is that it never considers every velocity: from the current velocity
+                    it can only reach a small box in one control cycle, bounded by the acceleration
+                    limits. That box is the <strong>dynamic window</strong>.
+                </p>}
+                ko={<p>
+                    위의 부채꼴 호들은 <em>작업 공간</em>, 곧 로봇이 바닥에 그릴 수 있는 경로에
+                    산다. DWA가 실제로 고르는 곳은 속도 <InlineMath math="(v, \omega)"/>의 평면인{" "}
+                    <em>명령 공간</em>이다. 실시간을 가능하게 하는 요령은 모든 속도를 보지 않는
+                    데 있다. 현재 속도에서 한 제어 주기에 도달할 수 있는 범위는 가속 한계가 두른
+                    작은 상자뿐이고, 그 상자가 <strong>dynamic window</strong>다.
+                </p>}
+            />
+            <BlockMath math="V_d = \{\,(v,\omega) : v \in [v_c - a_v\Delta t,\; v_c + a_v\Delta t],\;\; \omega \in [\omega_c - a_\omega\Delta t,\; \omega_c + a_\omega\Delta t]\,\}"/>
+            <Terms items={[
+                ["V_d", t("the dynamic window — velocities reachable within one cycle",
+                    "dynamic window, 한 주기에 도달 가능한 속도 집합")],
+                ["v,\\ \\omega", t("a candidate translational / angular velocity",
+                    "후보 병진 속도 / 각속도")],
+                ["v_c,\\ \\omega_c", t("the robot's current translational / angular velocity",
+                    "로봇의 현재 병진 속도 / 각속도")],
+                ["a_v,\\ a_\\omega", t("translational / angular acceleration limits",
+                    "병진 / 각 가속 한계")],
+                ["\\Delta t", t("one control cycle", "한 제어 주기")],
+            ]}/>
+            <LocalVelocityWindow/>
+
+            <T
+                en={<p>
+                    Pure Pursuit needs no such search. It assumes the reference path is good and
+                    only asks how to steer toward it: draw a circle of
+                    radius <InlineMath math="L_a"/> around the robot, take the point where it
+                    crosses the path, and follow the one arc that passes through that point. The
+                    whole controller is a single curvature.
+                </p>}
+                ko={<p>
+                    Pure Pursuit에는 그런 탐색이 없다. 참조 경로가 좋다고 가정하고 그쪽으로 어떻게
+                    조향할지만 묻는다. 로봇을 중심으로 반경 <InlineMath math="L_a"/>의 원을 그려
+                    경로와 만나는 점을 잡고, 그 점을 지나는 유일한 원호를 따라간다. 제어기 전체가
+                    곡률 하나다.
+                </p>}
+            />
+            <BlockMath math="\kappa = \frac{2\,\sin\alpha}{L_a}, \qquad R = \frac{1}{\kappa}"/>
+            <Terms items={[
+                ["\\kappa", t("curvature of the arc the robot follows",
+                    "로봇이 따라가는 원호의 곡률")],
+                ["R", t("radius of that arc (= 1/\\kappa)", "그 원호의 반경 (= 1/κ)")],
+                ["L_a", t("lookahead distance — radius of the lookahead circle",
+                    "lookahead 거리, lookahead 원의 반경")],
+                ["\\alpha", t("angle between the robot's heading and the lookahead point",
+                    "로봇의 진행 방향과 lookahead 점 사이 각")],
+            ]}/>
+            <LocalPursuitGeometry/>
 
             <h2>{t("What Is Coming", "구현 예정")}</h2>
             <T
