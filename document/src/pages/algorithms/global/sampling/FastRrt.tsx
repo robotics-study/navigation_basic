@@ -79,7 +79,7 @@ const FastRrt = () => {
                         ["q_{\\text{new}}", "the candidate new node produced by a random probe"],
                         ["q_{\\text{near}}", <>the tree node nearest to the sample, from which the extension is attempted</>],
                         ["\\eta", "the step size: the fixed extension distance of one steer"],
-                        ["\\theta", <><strong>the new term</strong>: a random heading drawn uniformly in <InlineMath math="[0, 2\\pi)"/>, retried up to a bounded count until the step is collision-free</>],
+                        ["\\theta", <><strong>the new term</strong>: a random heading drawn uniformly in <InlineMath math="[0, 2\pi)"/>, retried up to a bounded count until the step is collision-free</>],
                     ]}/>
                     <p>
                         <strong>Fast-Optimal.</strong> Once a node reaches the goal region,
@@ -118,7 +118,7 @@ const FastRrt = () => {
                         ["q_{\\text{new}}", "무작위 탐침이 만든 후보 새 노드"],
                         ["q_{\\text{near}}", <>표본에 가장 가까운 트리 노드. 확장을 시도하는 출발점이다</>],
                         ["\\eta", "step size. steer 한 번의 고정 확장 거리"],
-                        ["\\theta", <><strong>새로 추가된 항</strong>: <InlineMath math="[0, 2\\pi)"/>에서 균일하게 뽑는 무작위 방향. 스텝이 충돌 없을 때까지 상한 횟수만큼 재시도한다</>],
+                        ["\\theta", <><strong>새로 추가된 항</strong>: <InlineMath math="[0, 2\pi)"/>에서 균일하게 뽑는 무작위 방향. 스텝이 충돌 없을 때까지 상한 횟수만큼 재시도한다</>],
                     ]}/>
                     <p>
                         <strong>Fast-Optimal.</strong> 노드가 goal 영역에 닿으면 추출된
@@ -273,7 +273,7 @@ repeat max_iterations times:
                     </>}
                     ko={<>
                         <p>
-                            <strong>가정.</strong> 지름길은 waypoint 들의 한 구간{" "}
+                            <strong>가정.</strong> 지름길은 waypoint들의 한 구간{" "}
                             <InlineMath math="p_i, p_{i+1}, \dots, p_j"/>를 하나의 직선 현{" "}
                             <InlineMath math="p_i \to p_j"/>로 바꾸며, 그 현이 충돌 없을
                             때에만 그렇게 한다. 그 길이는 제거되는 폴리라인과 삼각 부등식을

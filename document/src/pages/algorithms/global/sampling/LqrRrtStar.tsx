@@ -25,8 +25,8 @@ const LqrRrtStar = () => {
         <>
             <T
                 en={<p>
-                    SST on the previous page threw the steering function away and grew the
-                    tree by firing <em>random</em> controls forward. That keeps planning
+                    SST threw the steering function away and grew the tree by firing{" "}
+                    <em>random</em> controls forward. That keeps planning
                     possible under dynamics, but it wastes the one thing RRT* is good at:
                     connecting a new state to the <em>best</em> nearby node. To rewire, RRT*
                     needs two hand-designed primitives it takes for granted on a geometric
@@ -40,8 +40,8 @@ const LqrRrtStar = () => {
                     at construction, and the full RRT* rewiring machinery runs on top.
                 </p>}
                 ko={<p>
-                    앞 페이지의 SST는 steering function을 버리고 <em>랜덤</em> control을
-                    정방향으로 쏴 트리를 키웠다. 그러면 동역학 아래에서도 계획이 되지만,
+                    SST는 steering function을 버리고 <em>랜덤</em> control을 정방향으로 쏴
+                    트리를 키웠다. 그러면 동역학 아래에서도 계획이 되지만,
                     RRT*이 가장 잘하는 것 하나를 버린다. 새 상태를 근방의 <em>가장 나은</em>{" "}
                     노드에 잇는 일이다. rewire하려면 RRT*은 기하 맵에서는 당연하게 여기는 손으로
                     설계한 두 원시 연산, 거리 metric과 steering function이 필요한데, 동역학이

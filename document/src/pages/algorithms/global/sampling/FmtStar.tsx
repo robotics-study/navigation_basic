@@ -169,8 +169,8 @@ loop:
         if y* exists and motion y* → x is collision-free:          # 4
             cost[x] ← cost[y*] + ‖y* − x‖;  parent[x] ← y*;  add x to Open
     remove z from Open                            # 5
-    z ← lowest-cost node in Open
     if Open is empty: return failure              # 6
+    z ← lowest-cost node in Open
     if z = goal: return path(goal)                # 7`}/>
             <T
                 en={<ol>

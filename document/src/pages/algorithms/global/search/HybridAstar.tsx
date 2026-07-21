@@ -46,8 +46,8 @@ const HybridAstar = () => {
                     </p>
                     <BlockMath math="\theta' = \theta + \kappa \ell, \qquad x' = x + \tfrac{\sin\theta' - \sin\theta}{\kappa}, \qquad y' = y - \tfrac{\cos\theta' - \cos\theta}{\kappa}"/>
                     <Terms items={[
-                        ["(x, y, \\theta)", <>the current pose: position plus heading — <InlineMath math="\\theta"/> is <strong>the new state dimension</strong> grid planners never had</>],
-                        ["\\kappa", <>curvature of the arc, the steering command; bounded by <InlineMath math="|\\kappa| \\le 1/R_{\\min}"/> (minimum turn radius)</>],
+                        ["(x, y, \\theta)", <>the current pose: position plus heading — <InlineMath math="\theta"/> is <strong>the new state dimension</strong> grid planners never had</>],
+                        ["\\kappa", <>curvature of the arc, the steering command; bounded by <InlineMath math="|\kappa| \le 1/R_{\min}"/> (minimum turn radius)</>],
                         ["\\ell", "signed arc length driven along the primitive (negative = reverse)"],
                         ["(x', y', \\theta')", <>the pose after driving the arc — the successor state</>],
                     ]}/>
@@ -69,8 +69,8 @@ const HybridAstar = () => {
                     </p>
                     <BlockMath math="\theta' = \theta + \kappa \ell, \qquad x' = x + \tfrac{\sin\theta' - \sin\theta}{\kappa}, \qquad y' = y - \tfrac{\cos\theta' - \cos\theta}{\kappa}"/>
                     <Terms items={[
-                        ["(x, y, \\theta)", <>현재 pose. 위치에 heading이 더해진 것으로, <InlineMath math="\\theta"/>가 grid planner에는 없던 <strong>새 상태 차원</strong>이다</>],
-                        ["\\kappa", <>arc의 곡률, 즉 조향 명령. <InlineMath math="|\\kappa| \\le 1/R_{\\min}"/> (최소 회전 반경)으로 유계</>],
+                        ["(x, y, \\theta)", <>현재 pose. 위치에 heading이 더해진 것으로, <InlineMath math="\theta"/>가 grid planner에는 없던 <strong>새 상태 차원</strong>이다</>],
+                        ["\\kappa", <>arc의 곡률, 즉 조향 명령. <InlineMath math="|\kappa| \le 1/R_{\min}"/> (최소 회전 반경)으로 유계</>],
                         ["\\ell", "primitive를 따라 달리는 부호 있는 arc 길이 (음수 = 후진)"],
                         ["(x', y', \\theta')", "arc를 달린 뒤의 pose, 곧 successor 상태"],
                     ]}/>
@@ -126,7 +126,7 @@ const HybridAstar = () => {
                 </p>}
                 ko={<p>
                     bin 위의 A*에 연속 pose가 함께 실려 다닌다. 충돌 검사는 각 arc를 footprint
-                    disc 들이 겹칠 만큼 촘촘히 나눠 본다:
+                    disc들이 겹칠 만큼 촘촘히 나눠 본다:
                 </p>}
             />
             <Pseudocode code={`g[bin(start)] ← 0;  pose_of[bin(start)] ← start;  push with key h(start)
@@ -156,11 +156,11 @@ while OPEN is not empty:
                         endpoint pose.</li>
                 </ol>}
                 ko={<ol>
-                    <li>bin의 중심이 아니라 <em>최선의 연속 pose</em>를 확장한다. arc 들이 bin
+                    <li>bin의 중심이 아니라 <em>최선의 연속 pose</em>를 확장한다. arc들이 bin
                         을 넘나들며 이어져도 주행 가능함을 지키는 장치다.</li>
                     <li>허용 오차 있는 goal 검사. 정확한 연속 pose는 measure-zero라 "위치와
                         heading이 충분히 가깝다"가 옳은 개념이다.</li>
-                    <li>부표본 간격을 footprint 반지름에 묶어 disc 들이 겹치게 한다. arc가 표본
+                    <li>부표본 간격을 footprint 반지름에 묶어 disc들이 겹치게 한다. arc가 표본
                         사이의 얇은 벽을 뚫고 지나갈 수 없다.</li>
                     <li>비용이 행동을 빚는다. 후진에 벌점, 조향에 벌점. planner는 가능하면 곧게
                         전진하는 쪽을 고른다.</li>

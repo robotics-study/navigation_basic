@@ -252,28 +252,36 @@ const GlobalPlanning = () => {
             <T
                 en={<>
                     <p>
-                        The pages build on each other. A sensible path through graph search:{" "}
-                        <strong>BFS → Dijkstra → A*</strong> establishes costs and heuristics; then
-                        anytime/incremental variants (<strong>ARA*, D* Lite, AD*</strong>) relax
-                        "plan once, perfectly"; any-angle methods (<strong>Theta*, Anya</strong>)
-                        remove the grid's 45° artifacts; <strong>JPS</strong> exploits grid symmetry
-                        for speed; <strong>Hybrid A*</strong> adds vehicle kinematics. For sampling:{" "}
-                        <strong>RRT → RRT-Connect → RRT*</strong> builds the core ideas, then
-                        informed and batch variants (<strong>Informed RRT*, FMT*, BIT*</strong> and
-                        successors) sharpen them.
+                        The pages build on each other, and the sidebar lists them in exactly this
+                        order. Graph search: <strong>BFS → Dijkstra → A*</strong> establishes costs
+                        and heuristics; <strong>JPS</strong> exploits grid symmetry for speed;
+                        any-angle methods (<strong>Theta* → Lazy Theta* → Visibility A* →
+                        Anya</strong>) remove the grid's 45° artifacts; incremental/anytime variants
+                        (<strong>D* Lite → ARA* → AD*</strong>) relax "plan once, perfectly"; and{" "}
+                        <strong>Hybrid A*</strong> adds vehicle kinematics. Sampling:{" "}
+                        <strong>PRM → PRM*</strong> builds roadmaps, <strong>RRT →
+                        RRT-Connect</strong> grows trees, <strong>RRT* → Informed RRT* →
+                        Fast-RRT</strong> makes them optimal, the batch family (<strong>FMT* →
+                        BIT* → ABIT* → AIT* → EIT* → FCIT*</strong>) sharpens the search, and the
+                        kinodynamic trio (<strong>SST → Kinodynamic RRT* → LQR-RRT*</strong>)
+                        plans for bodies with momentum.
                     </p>
                 </>}
                 ko={<>
                     <p>
-                        각 페이지는 앞 내용을 전제로 한다. graph search 는{" "}
-                        <strong>BFS → Dijkstra → A*</strong>로 비용과 heuristic을 다지고,
-                        anytime/incremental 변형(<strong>ARA*, D* Lite, AD*</strong>)이 "한 번에
-                        완벽하게"라는 가정을 풀고, any-angle 계열(<strong>Theta*, Anya</strong>)이
-                        격자 특유의 45° 꺾임을 없애고, <strong>JPS</strong>는 격자 대칭성으로 속도를
-                        얻고, <strong>Hybrid A*</strong>는 차량 기구학을 더한다. sampling 은{" "}
-                        <strong>RRT → RRT-Connect → RRT*</strong>로 핵심 아이디어를 세운 뒤
-                        informed·batch 변형(<strong>Informed RRT*, FMT*, BIT*</strong>와 후속들)이
-                        그것을 다듬는다.
+                        각 페이지는 앞 내용을 전제로 하고, 사이드바가 정확히 이 순서로 나열한다.
+                        graph search는 <strong>BFS → Dijkstra → A*</strong>로 비용과 heuristic을
+                        다지고, <strong>JPS</strong>가 격자 대칭성으로 속도를 얻고, any-angle
+                        계열(<strong>Theta* → Lazy Theta* → Visibility A* → Anya</strong>)이 격자
+                        특유의 45° 꺾임을 없애고, incremental·anytime 변형(<strong>D* Lite →
+                        ARA* → AD*</strong>)이 "한 번에 완벽하게"라는 가정을 풀고,{" "}
+                        <strong>Hybrid A*</strong>가 차량 기구학을 더한다. sampling은{" "}
+                        <strong>PRM → PRM*</strong>이 roadmap을 세우고, <strong>RRT →
+                        RRT-Connect</strong>가 트리를 키우고, <strong>RRT* → Informed RRT* →
+                        Fast-RRT</strong>가 최적으로 끌어올리고, batch 계열(<strong>FMT* → BIT* →
+                        ABIT* → AIT* → EIT* → FCIT*</strong>)이 탐색을 벼리고, kinodynamic
+                        삼형제(<strong>SST → Kinodynamic RRT* → LQR-RRT*</strong>)가 관성을 가진
+                        몸을 위해 계획한다.
                     </p>
                 </>}
             />

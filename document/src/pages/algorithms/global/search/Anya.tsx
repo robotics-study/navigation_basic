@@ -83,7 +83,7 @@ const Anya = () => {
                         실이 곧 최단 경로이고, 실이 꺾이는 곳은 펴지는 것을 물리적으로 막는
                         지점, 곧 <em>볼록 장애물 모서리</em>뿐이다. grid 맵에서 그 모서리는
                         free 셀과 blocked 셀이 만나는 정수 <InlineMath math="(x, y)"/> 격자점이다.
-                        어떤 셀 중심도 모서리 위에 있지 않다. 셀 중심 planner 들이 길이를 조금씩
+                        어떤 셀 중심도 모서리 위에 있지 않다. 셀 중심 planner들이 길이를 조금씩
                         흘리는 이유가 정확히 이것이다.
                     </p>
                     <p>
@@ -136,7 +136,7 @@ const Anya = () => {
                         밀어붙인 셈이다. 큐 작업은 거의 없고, 전부 기하다.</li>
                     <li><strong>튜닝 손잡이가 없다</strong>: 유일한 파라미터는 corner/pinch
                         판정용 float 허용오차다. 최적성은 그 값에 의존하지 않는다.</li>
-                    <li>이 저장소의 변형은 모서리를 탐색 노드로 삼고 interval sweep 을
+                    <li>이 저장소의 변형은 모서리를 탐색 노드로 삼고 interval sweep을
                         successor 생성에 쓴다. 논문의 Anya는 한 걸음 더 나아가 (interval,
                         root) 쌍 자체를 노드로 삼아 모서리 열거까지 미룬다.</li>
                 </ul>}
@@ -259,9 +259,9 @@ while OPEN is not empty:
                 </p>}
                 ko={<p>
                     먼저 턴 하나의 해부도부터. 모서리와 셀 중심은 반 셀 차이다. 다음은
-                    sandbox다. 빨간 경로가 블록의 격자 모서리에서 정확히 꺾이고, readout 은
+                    sandbox다. 빨간 경로가 블록의 격자 모서리에서 정확히 꺾이고, readout은
                     같은 문제에서 any-angle planner 셋을 맞붙인다. 아래 replay는 벤치마크 맵
-                    위의 저장소 demo다. grid planner 들이 수백 셀을 만지던 곳에서 모서리 확장
+                    위의 저장소 demo다. grid planner들이 수백 셀을 만지던 곳에서 모서리 확장
                     몇 번이면 끝난다.
                 </p>}
             />

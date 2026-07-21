@@ -21,7 +21,7 @@ interface GridCanvasProps {
     // 비교용 보조 경로 (점선, muted) — any-angle vs grid 경로 대조 등에 쓴다.
     overlayPath?: Cell[];
     // 최종 경로의 참 기하 (연속 (row, col) 꼭짓점). 있으면 셀 스냅된 timeline 경로
-    // 대신 이것을 그린다 — Anya 처럼 turning point 가 셀 중심이 아닌 경우용.
+    // 대신 이것을 그린다 — Anya처럼 turning point가 셀 중심이 아닌 경우용.
     truePath?: Cell[];
     // 비교용 배경 셀 집합 (muted 반투명) — 다른 알고리즘의 확장 영역 대조 등에 쓴다.
     shadowCells?: Cell[];
@@ -81,7 +81,7 @@ const GridCanvas = ({
     }, [timeline, firstSeen, step, map.width])
     const edgesVisible = useMemo(() => {
         if (!showTree || !timeline) return []
-        // rewire 는 같은 자식의 새 간선을 덧붙이므로, 자식별로 마지막 간선만 남겨
+        // rewire는 같은 자식의 새 간선을 덧붙이므로, 자식별로 마지막 간선만 남겨
         // 현재 트리를 그린다 (낡은 부모 간선이 화면에 남지 않게).
         const latest = new Map<string, (typeof timeline.edges)[number]>()
         for (const e of timeline.edges) {
@@ -117,15 +117,13 @@ const GridCanvas = ({
     )
 
     // 벽 페인팅: pointer down 시 첫 셀의 반전값을 붓 값으로 삼아 드래그 내내 유지한다.
-    // 연속 모드에서는 start/goal 이 world 좌표라, 가드 비교 전에 셀 인덱스로 바꾼다.
-    const markerCell = (c: Cell): Cell => timeline?.continuous
-        ? [map.height - 1 - Math.floor((c[1] - map.originY) / map.resolution),
-           Math.floor((c[0] - map.originX) / map.resolution)]
-        : c
-    const sameCell = (a: Cell | undefined, c: Cell): boolean => {
+    // start/goal 가드는 셀 일치가 아니라 픽셀 거리로 잰다 — 마커가 셀 경계에 걸치면
+    // 클릭 셀과 마커 셀이 어긋나, 마커를 잡으려는 클릭이 페인팅으로 새기 때문이다.
+    // (center는 아래에서 정의되지만 이 함수는 이벤트 시점에만 호출된다.)
+    const nearMarker = (a: Cell | undefined, px: number, py: number): boolean => {
         if (!a) return false
-        const m = markerCell(a)
-        return m[0] === c[0] && m[1] === c[1]
+        const [mx, my] = center(a)
+        return Math.hypot(px - mx, py - my) <= cell * 0.75
     }
     const paintValue = useRef<boolean | null>(null)
     const cellAt = (stage: Konva.Stage | null): Cell | null => {
@@ -138,7 +136,9 @@ const GridCanvas = ({
     }
     const paint = (c: Cell) => {
         if (!onPaintCell || paintValue.current === null) return
-        if (sameCell(start, c) || sameCell(goal, c)) return
+        const px = (c[1] + 0.5) * cell
+        const py = (c[0] + 0.5) * cell
+        if (nearMarker(start, px, py) || nearMarker(goal, px, py)) return
         onPaintCell(c[0], c[1], paintValue.current)
     }
 
@@ -175,6 +175,7 @@ const GridCanvas = ({
         return <Circle
             x={x} y={y} radius={cell * 0.36} fill={fill}
             stroke={colors.bg} strokeWidth={Math.max(1, cell * 0.06)}
+            hitStrokeWidth={cell * 0.9}
             draggable={!!onMove}
             onDragEnd={(e) => {
                 const col = Math.floor(e.target.x() / cell)
@@ -196,8 +197,9 @@ const GridCanvas = ({
                    if (!onPaintCell) return
                    const c = cellAt(e.target.getStage())
                    if (!c) return
-                   // 시작/골 위에서 드래그를 시작하면 페인팅이 아니라 endpoint 이동이다.
-                   if (sameCell(start, c) || sameCell(goal, c)) return
+                   // 시작/골 근처에서 드래그를 시작하면 페인팅이 아니라 endpoint 이동이다.
+                   const pos = e.target.getStage()?.getPointerPosition()
+                   if (pos && (nearMarker(start, pos.x, pos.y) || nearMarker(goal, pos.x, pos.y))) return
                    paintValue.current = !map.occupied[c[0] * map.width + c[1]]
                    paint(c)
                }}
@@ -214,7 +216,7 @@ const GridCanvas = ({
                     <Rect key={`sh${i}`} x={c[1] * cell} y={c[0] * cell}
                           width={cell} height={cell} fill={colors.muted} opacity={0.22}/>
                 ))}
-                {/* 표본 (sampling planner) — 정점 후보 점, 한 Shape 로 배치 드로잉 */}
+                {/* 표본 (sampling planner) — 정점 후보 점, 한 Shape로 배치 드로잉 */}
                 {samplesVisible.length > 0 && (
                     <Shape listening={false}
                            sceneFunc={(ctx, shape) => {
@@ -261,7 +263,7 @@ const GridCanvas = ({
                     <Line key={`gh${k}`} points={[0, k * cell, stageW, k * cell]}
                           stroke={colors.border} strokeWidth={0.5} opacity={0.6}/>
                 ))}
-                {/* 탐색 트리 (sampling 계열용) — 간선 수천 개를 한 Shape 로 배치 드로잉 */}
+                {/* 탐색 트리 (sampling 계열용) — 간선 수천 개를 한 Shape로 배치 드로잉 */}
                 {edgesVisible.length > 0 && (
                     <Shape listening={false}
                            sceneFunc={(ctx, shape) => {
@@ -283,7 +285,7 @@ const GridCanvas = ({
                           dash={[cell * 0.5, cell * 0.4]} lineCap="round" lineJoin="round"
                           opacity={0.85}/>
                 )}
-                {/* 발표된 최신 경로 (truePath 가 있으면 참 기하로 대체) */}
+                {/* 발표된 최신 경로 (truePath가 있으면 참 기하로 대체) */}
                 {visiblePath && (
                     <Line points={(truePath ?? visiblePath).flatMap((c) => center(c))}
                           stroke={PATH_COLOR} strokeWidth={Math.max(2.5, cell * 0.28)}
@@ -302,8 +304,8 @@ const GridCanvas = ({
                             stroke={colors.bg} strokeWidth={Math.max(1, cell * 0.06)}/>
                 )}
                 {/* 시작/목표 — 차량 pose가 주어지면 원 마커 대신 차로 그린다 */}
-                {start && !carPose && endpoint(start, colors.accent, onMoveStart)}
-                {goal && !goalPose && endpoint(goal, PATH_COLOR, onMoveGoal)}
+                {start && (!carPose || onMoveStart) && endpoint(start, colors.accent, onMoveStart)}
+                {goal && (!goalPose || onMoveGoal) && endpoint(goal, PATH_COLOR, onMoveGoal)}
                 {goalPose && car(goalPose, {stroke: PATH_COLOR, dash: [cell * 0.3, cell * 0.24]})}
                 {carPose && car(carPose, {fill: colors.accent2, stroke: colors.bg})}
             </Layer>
