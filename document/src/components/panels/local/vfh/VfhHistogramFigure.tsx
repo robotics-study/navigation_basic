@@ -71,6 +71,18 @@ const Scene = () => {
         }
         return best
     }, [valleys])
+    // 조향 방향 — VFH 규칙: goal 방향 sector가 열린 valley 안이면 goal 로 직행,
+    // 밖이면 valley 의 goal 쪽 경계에서 안쪽으로 살짝 들어간 방향.
+    const steerIdx = useMemo(() => {
+        if (!selected) return null
+        if (contains(selected, GOAL_SECTOR)) return GOAL_SECTOR
+        const inset = Math.min(2, (selected.width - 1) / 2)
+        const dStart = circularDist(selected.start, GOAL_SECTOR)
+        const dEnd = circularDist(selected.end, GOAL_SECTOR)
+        return dStart <= dEnd
+            ? (selected.start + inset + N) % N
+            : (selected.end - inset + N) % N
+    }, [selected])
 
     const sector = (2 * Math.PI) / N
     // world CCW 각(sector 0 = +x) → canvas 각: y축 반전 때문에 부호가 반대.
@@ -80,19 +92,23 @@ const Scene = () => {
         <div className="flex flex-col items-center gap-2">
             <Stage width={SIZE} height={SIZE} className="bg-surface border border-border rounded-lg overflow-hidden">
                 <Layer>
-                    {/* 히스토그램 wedge */}
-                    <Shape listening={false} sceneFunc={(ctx, shape) => {
-                        ctx.beginPath()
-                        for (let k = 0; k < N; k++) {
-                            const r = BASE_R + (MAX_R - BASE_R) * (bins[k] / maxBin)
-                            const a0 = -(k + 1) * sector
-                            const a1 = -k * sector
-                            ctx.moveTo(CENTER, CENTER)
-                            ctx.arc(CENTER, CENTER, r, a0, a1, false)
-                            ctx.closePath()
-                        }
-                        ctx.fillStrokeShape(shape)
-                    }} fill={colors.muted} opacity={0.4} stroke={colors.border} strokeWidth={0.5}/>
+                    {/* 히스토그램 wedge — threshold 이상(막힘)은 경고색, 미만(valley)은 회색 */}
+                    {[false, true].map((blocked) => (
+                        <Shape key={`w${blocked}`} listening={false} sceneFunc={(ctx, shape) => {
+                            ctx.beginPath()
+                            for (let k = 0; k < N; k++) {
+                                if ((bins[k] >= threshold) !== blocked) continue
+                                const r = BASE_R + (MAX_R - BASE_R) * (bins[k] / maxBin)
+                                const a0 = -(k + 1) * sector
+                                const a1 = -k * sector
+                                ctx.moveTo(CENTER, CENTER)
+                                ctx.arc(CENTER, CENTER, r, a0, a1, false)
+                                ctx.closePath()
+                            }
+                            ctx.fillStrokeShape(shape)
+                        }} fill={blocked ? PATH_COLOR : colors.muted} opacity={blocked ? 0.35 : 0.4}
+                               stroke={colors.border} strokeWidth={0.5}/>
+                    ))}
                     {/* 선택된 valley 강조(부채꼴) */}
                     {selected && (
                         <Shape listening={false} sceneFunc={(ctx, shape) => {
@@ -117,10 +133,9 @@ const Scene = () => {
                         CENTER + Math.sin(angleOf(GOAL_SECTOR)) * MAX_R * 1.18,
                     ]} stroke={colors.accent} fill={colors.accent} strokeWidth={2}
                            pointerLength={8} pointerWidth={7} dash={[1, 3]} opacity={0.9}/>
-                    {/* 선택 방향 화살표 */}
-                    {selected && (() => {
-                        const idx = (selected.start + (selected.width - 1) / 2 + N) % N
-                        const a = angleOf(idx)
+                    {/* 조향 방향 화살표 — goal 이 valley 안이면 goal 과 겹친다 */}
+                    {steerIdx !== null && (() => {
+                        const a = angleOf(steerIdx)
                         return <Arrow points={[
                             CENTER, CENTER, CENTER + Math.cos(a) * MAX_R * 1.32, CENTER + Math.sin(a) * MAX_R * 1.32,
                         ]} stroke={colors.accent2} fill={colors.accent2} strokeWidth={2.5}
@@ -143,8 +158,10 @@ const Scene = () => {
                 </span>
                 {" · "}
                 {selected
-                    ? t("raise threshold to shrink or split the open valley", "threshold를 올리면 valley가 좁아지거나 갈라진다")
-                    : t("no valley is open — every sector is at or above threshold", "열린 valley가 없다 — 모든 sector가 threshold 이상")}
+                    ? t("lower the threshold and the open valleys narrow, split, then close",
+                        "threshold를 내리면 열린 valley가 좁아지고 갈라지다 결국 닫힌다")
+                    : t("no valley is open — every sector's density is at or above the threshold",
+                        "열린 valley가 없다 — 모든 sector의 밀도가 threshold 이상이다")}
             </div>
         </div>
     )
@@ -154,8 +171,8 @@ const VfhHistogramFigure = () => {
     const t = useTr()
     return <CanvasFigure
         label={t(
-            "Two obstacle clusters carve two dips into the polar histogram. Raise the threshold (dashed ring) and the dips shrink into valleys, then close outright — VFH steers for whichever open valley sits closest to the goal bearing.",
-            "장애물 뭉치 둘이 폴라 히스토그램에 골 두 개를 낸다. threshold(점선 원)를 올리면 그 골이 valley로 좁아지다가 결국 닫힌다. VFH는 goal 방향에 가장 가까운 열린 valley로 조향한다.",
+            "Two obstacle clusters raise two humps in the polar histogram; sectors whose density stays below the threshold (dashed ring) form open valleys. VFH steers into the valley nearest the goal bearing — straight at the goal when its sector is open, otherwise just inside the valley's near border. Lower the threshold and the valleys narrow and close.",
+            "장애물 뭉치 둘이 폴라 히스토그램에 봉우리 두 개를 세운다. 밀도가 threshold(점선 원) 미만인 sector들이 열린 valley다. VFH는 goal 방향에 가장 가까운 valley로 조향한다. goal sector가 열려 있으면 goal로 직행하고, 아니면 valley의 goal 쪽 경계 안쪽을 겨눈다. threshold를 내리면 valley가 좁아지다 닫힌다.",
         )}
         tight bodyClassName="w-fit" className="w-full"
         modal={<Scene/>}

@@ -80,7 +80,7 @@ const K_V = 1.0
 const K_OMEGA = 4.0
 const MAX_SPEED = 0.8
 const MAX_OMEGA = 5.0
-const FOOTPRINT_RADIUS = 0.2
+const FOOTPRINT_RADIUS = 0.35
 const CONTROL_DT = 0.1
 const MAX_STEPS = 1000
 const GOAL_TOLERANCE = 0.3
@@ -121,7 +121,7 @@ const PotentialFieldsScene = ({panel = 340}: {panel?: number}) => {
         })
     }
     return (
-        <LocalTracePlayer
+        <LocalTracePlayer footprintRadius={FOOTPRINT_RADIUS}
             map={map} events={events} panel={panel}
             startPose={start} goal={goal}
             onPaintCell={paintCell}

@@ -13,36 +13,9 @@ import cn from "../../../../libs/cn";
 // reference_path를 그대로 미러한다 -- start만 경로 첫 점에서 측방 1.5m 오프셋을 둬
 // crosstrack 수렴을 시연한다(python 시나리오는 1.2m 오프셋, 여기서는 pure_pursuit.ts의
 // S-curve 맵 정의를 이 파일이 독립적으로 소유하는 관례와 같은 이유로 다시 적는다).
-const S_CURVE_ROWS = [
-    "####################",
-    "#..................#",
-    "#..................#",
-    "#..................#",
-    "#....####..........#",
-    "#....####..........#",
-    "#....####....###...#",
-    "#....####....###...#",
-    "#....####....###...#",
-    "#............###...#",
-    "#..................#",
-    "#..........#####...#",
-    "#..........#####...#",
-    "#..........#####...#",
-    "#..........#####...#",
-    "#..........#####...#",
-    "#..................#",
-    "#..................#",
-    "#..................#",
-    "####################",
-]
-const sCurveMap = (): GridMap => {
-    const width = 20, height = 20
-    const occupied = new Array(width * height).fill(false)
-    S_CURVE_ROWS.forEach((row, r) => {
-        for (let c = 0; c < width; c++) occupied[r * width + c] = row[c] === "#"
-    })
-    return {name: "open01", width, height, occupied, resolution: 0.5, originX: 0, originY: 0}
-}
+// 추종 데모는 장애물 없는 빈 맵(0.5 m/셀) — Stanley 는 회피 능력이 없는 추종기다.
+const openHalfGrid = (name: string): GridMap => ({...emptyGrid(name, 20, 20), resolution: 0.5})
+
 const OFFSET_PATH: Point[] = [
     [1.0, 1.0], [2.0, 1.0], [3.5, 1.2], [5.0, 1.5], [5.0, 3.5],
     [5.0, 6.0], [5.0, 8.5], [7.0, 8.8], [8.7, 9.0], [9.0, 9.0],
@@ -64,12 +37,12 @@ interface Preset { map: () => GridMap; path: Point[]; start: Pose; goal: [number
 // 크게 잡아 -- Stanley의 알려진 한계인 진동(overshoot → 반대편 overshoot)을 정직하게
 // 드러낸다. 다른 두 프리셋의 gain은 configs/local_planning/stanley.yaml 기본값(2.5).
 const PRESETS: Record<PresetId, Preset> = {
-    offset_start: {map: sCurveMap, path: OFFSET_PATH, start: OFFSET_START, goal: OFFSET_GOAL, kGain: 2.5},
+    offset_start: {map: () => openHalfGrid("s_curve"), path: OFFSET_PATH, start: OFFSET_START, goal: OFFSET_GOAL, kGain: 2.5},
     sharp_corner: {
-        map: () => emptyGrid("sharp_turn", 20, 20), path: SHARP_PATH, start: SHARP_START,
+        map: () => openHalfGrid("sharp_turn"), path: SHARP_PATH, start: SHARP_START,
         goal: SHARP_GOAL, kGain: 2.5,
     },
-    high_gain: {map: sCurveMap, path: OFFSET_PATH, start: OFFSET_START, goal: OFFSET_GOAL, kGain: 14},
+    high_gain: {map: () => openHalfGrid("s_curve"), path: OFFSET_PATH, start: OFFSET_START, goal: OFFSET_GOAL, kGain: 14},
 }
 
 // configs/local_planning/stanley.yaml의 공유 폐루프 시뮬레이터 블록 기본값
@@ -77,7 +50,7 @@ const PRESETS: Record<PresetId, Preset> = {
 // 낮춰 sandbox 재생 성능을 지킨다.
 const SIM_DEFAULTS = {
     maxSteer: 1.2, maxSpeed: 0.8, maxOmega: 1.5, slowRadius: 0.5, controlDt: 0.1, maxSteps: 400,
-    goalTolerance: 0.3, footprintRadius: 0.2, stallWindow: 20, stallDistance: 0.05,
+    goalTolerance: 0.3, footprintRadius: 0.35, stallWindow: 20, stallDistance: 0.05,
 }
 
 const StanleyScene = ({panel = 340}: {panel?: number}) => {
@@ -110,7 +83,7 @@ const StanleyScene = ({panel = 340}: {panel?: number}) => {
     }
 
     return (
-        <LocalTracePlayer
+        <LocalTracePlayer footprintRadius={SIM_DEFAULTS.footprintRadius} showCrosstrack
             map={map} events={events} startPose={start} goal={preset.goal}
             referencePath={preset.path} panel={panel}
             onPaintCell={paintCell}

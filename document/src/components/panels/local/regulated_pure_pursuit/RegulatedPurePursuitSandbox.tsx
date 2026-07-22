@@ -95,7 +95,7 @@ const PRESETS: Record<PresetId, Preset> = {
 const FIXED = {
     minLookahead: 0.25, maxLookahead: 1.0, minRegulatedSpeed: 0.1, collisionCheckStep: 0.05,
     maxSpeed: 0.8, maxOmega: 1.5, slowRadius: 0.5,
-    controlDt: 0.1, maxSteps: 400, goalTolerance: 0.3, footprintRadius: 0.2,
+    controlDt: 0.1, maxSteps: 400, goalTolerance: 0.3, footprintRadius: 0.35,
     stallWindow: 20, stallDistance: 0.05,
 }
 
@@ -137,7 +137,7 @@ const RegulatedPurePursuitScene = ({panel = 340}: {panel?: number}) => {
     })[id]
 
     return (
-        <LocalTracePlayer
+        <LocalTracePlayer footprintRadius={FIXED.footprintRadius} showLookahead
             map={map} events={events} startPose={start} goal={preset.goal}
             referencePath={preset.path} panel={panel}
             onPaintCell={paintCell}

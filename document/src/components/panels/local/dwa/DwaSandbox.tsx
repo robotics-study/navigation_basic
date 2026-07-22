@@ -102,7 +102,7 @@ const HEADING_WEIGHT = 0.15
 const VELOCITY_WEIGHT = 0.23
 const CLEARANCE_LIMIT = 0.68
 const SLOW_RADIUS = 0.5
-const FOOTPRINT_RADIUS = 0.2
+const FOOTPRINT_RADIUS = 0.35
 const CONTROL_DT = 0.1
 const MAX_STEPS = 400
 const GOAL_TOLERANCE = 0.3
@@ -152,7 +152,7 @@ const DwaScene = ({panel = 340}: {panel?: number}) => {
     })[id]
 
     return (
-        <LocalTracePlayer
+        <LocalTracePlayer footprintRadius={FOOTPRINT_RADIUS}
             map={map} events={events} startPose={start} goal={goal} panel={panel}
             onPaintCell={paintCell}
             onMoveStart={(xy) => setStart([xy[0], xy[1], start[2]])}
