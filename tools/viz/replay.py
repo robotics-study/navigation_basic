@@ -79,6 +79,10 @@ _ROLLOUT_ALPHA_REJECTED = 0.12
 # Kinodynamic (Hybrid A*) path headings + local planning current-pose heading: a dark
 # slate distinct from the path gradient + every ramp.
 _HEADING_COLOR = "#1e293b"
+# Elastic Bands / TEB band overlay: the deformable band's bubble/pose state, latest
+# tick only. Warm gold keeps it clear of the marks it always coexists with (robot
+# trail teal, path gradient purple/magenta/red, reference-path/heading slate).
+_BAND_COLOR = "#ca8a04"
 
 
 def _clamped_vec(v: Point, max_len: float) -> Point:
@@ -148,6 +152,12 @@ class Scene:
     # each entry: (pos, bins, threshold)
     histograms: list[tuple[Point, list[float], float]] = field(default_factory=list)
     histogram_orders: list[int] = field(default_factory=list)
+    # Local planning (Elastic Bands / TEB): the deformable band's bubble/pose state at
+    # the pose in band order, one band_updated event per control tick. Each entry is
+    # the raw `band` array: item length 3 = [x, y, radius] (EB bubble), length 4 =
+    # [x, y, theta, dt] (TEB pose).
+    bands: list[list[list[float]]] = field(default_factory=list)
+    band_orders: list[int] = field(default_factory=list)
     # Local planning (Pure Pursuit lookahead point / VFH valley candidates). Global
     # search's own candidate_evaluated flood is excluded in build_scene (see there),
     # so this stays empty for every non-local trace.
@@ -299,6 +309,10 @@ def build_scene(
             threshold = float(data.get("threshold", 0.0))
             scene.histograms.append((to_world(ev["state"]), bins, threshold))
             scene.histogram_orders.append(order)
+            order += 1
+        elif name == "band_updated" and ev.get("band"):
+            scene.bands.append([[float(v) for v in item] for item in ev["band"]])
+            scene.band_orders.append(order)
             order += 1
         elif name == "candidate_evaluated" and is_local_trace and "state" in ev:
             scene.candidates.append(to_world(ev["state"]))
@@ -476,6 +490,42 @@ def _draw(
         ax.add_collection(
             LineCollection(hist_segments, colors=hist_colors, linewidths=1.6, zorder=6, alpha=0.85)
         )
+    n_band = bisect_right(scene.band_orders, cutoff)
+    if n_band and scene.bands[n_band - 1]:
+        # Latest tick only, same rationale as the force quiver / histogram above.
+        band = scene.bands[n_band - 1]
+        if len(band[0]) == 3:
+            # Elastic Bands: bubble centers as a polyline, each bubble's clearance
+            # radius as a translucent disc with a solid outline.
+            from matplotlib.colors import to_rgba
+            from matplotlib.patches import Circle
+
+            ax.plot(
+                [item[0] for item in band], [item[1] for item in band], color=_BAND_COLOR,
+                linewidth=1.2, alpha=0.9, zorder=5.2,
+            )
+            face = to_rgba(_BAND_COLOR, 0.15)
+            for x, y, radius in band:
+                ax.add_patch(
+                    Circle((x, y), radius, facecolor=face, edgecolor=_BAND_COLOR,
+                           linewidth=1.0, zorder=5.1)
+                )
+        else:
+            # TEB: per-segment linewidth encodes the segment's ΔT (thicker = slower),
+            # plus a small marker at each pose.
+            dts = [item[3] for item in band]
+            max_dt = max(dts) or 1.0
+            for i in range(len(band) - 1):
+                dt_i = dts[i + 1]  # entry 0's dt=0 is a placeholder (no prior segment)
+                lw = 0.8 + 3.0 * (dt_i / max_dt)
+                ax.plot(
+                    [band[i][0], band[i + 1][0]], [band[i][1], band[i + 1][1]],
+                    color=_BAND_COLOR, linewidth=lw, alpha=0.9, zorder=5.2,
+                )
+            ax.scatter(
+                [item[0] for item in band], [item[1] for item in band],
+                s=10, color=_BAND_COLOR, edgecolors="white", linewidths=0.4, zorder=5.3,
+            )
     # Current-tick candidates only (those emitted since the previous robot move), so a
     # long PP/VFH run doesn't smear every historical probe on top of each other.
     tick_candidates: list[Point] = []
@@ -543,7 +593,7 @@ def _draw(
         ax, expanded_shown=n_expanded > 0, samples_shown=n_samples > 0, path_shown=drew_path,
         robot_shown=n_robot > 0, revealed_shown=n_revealed > 0, headings_shown=drew_headings,
         reference_path_shown=reference_path_shown, force_shown=n_force > 0,
-        histogram_shown=n_hist > 0, candidate_shown=bool(tick_candidates),
+        histogram_shown=n_hist > 0, band_shown=n_band > 0, candidate_shown=bool(tick_candidates),
         rollout_shown=rollouts_shown,
     )
 
@@ -628,7 +678,7 @@ def _draw_legend(
     ax: Any, *, expanded_shown: bool, samples_shown: bool, path_shown: bool,
     robot_shown: bool = False, revealed_shown: bool = False, headings_shown: bool = False,
     reference_path_shown: bool = False, force_shown: bool = False,
-    histogram_shown: bool = False, candidate_shown: bool = False,
+    histogram_shown: bool = False, band_shown: bool = False, candidate_shown: bool = False,
     rollout_shown: bool = False,
 ) -> None:
     from matplotlib.lines import Line2D
@@ -659,6 +709,9 @@ def _draw_legend(
     if histogram_shown:
         handles.append(Line2D([0], [0], color=_HIST_COLOR_BLOCKED, linewidth=1.8))
         labels.append("histogram (bin ∝ density)")
+    if band_shown:
+        handles.append(Line2D([0], [0], color=_BAND_COLOR, linewidth=1.8))
+        labels.append("band")
     if rollout_shown:
         handles.append(Line2D([0], [0], color=_ROLLOUT_COLOR, linewidth=1.2))
         labels.append("rollout (selected = amber)")
