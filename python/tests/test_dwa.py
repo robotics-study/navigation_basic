@@ -127,6 +127,42 @@ def test_admissible_bound_forces_deceleration_facing_a_close_wall(tmp_path: Path
     assert cmd.v <= bound + 1e-9
 
 
+# --- (d2) no admissible candidate at all: maximum-braking fallback -------------
+def test_all_candidates_colliding_falls_back_to_maximum_braking(tmp_path: Path) -> None:
+    # Wall so close (gap 0.25 m vs footprint 0.2 m) that every candidate's very
+    # first rollout pose already collides: the window's v floor is positive at
+    # this speed, so no candidate can stand still and none survives scoring.
+    params = _config(tmp_path)
+    resolution = 0.02
+    pixels = np.full((300, 300), 255, dtype=np.uint16)
+    x0, y0 = 3.0, 3.0
+    wall_col = int(round((x0 + 0.25) / resolution - 0.5))
+    pixels[:, wall_col:] = 0
+    grid = OccupancyGrid2D(pixels=pixels, resolution=resolution, origin=(0.0, 0.0, 0.0))
+
+    planner = Dwa(params)
+    dt = params.get_float("control_dt")
+    v_a = params.get_float("max_speed")
+    omega_a = 1.0
+    state = RobotState(pose=(x0, y0, 0.0), v=v_a, omega=omega_a)
+    task = LocalTask(goal=(x0 + 100.0, y0, 0.0))
+
+    buf = io.StringIO()
+    recorder = TraceRecorder(buf)
+    cmd = planner.compute_command(grid, state, task, dt, recorder)
+
+    # Braking at the kinematic limits: v drops by exactly one tick's accel
+    # budget and omega decays toward zero without flipping sign.
+    assert cmd.v == pytest.approx(v_a - params.get_float("accel") * dt)
+    expected_omega = omega_a - min(omega_a, params.get_float("accel_omega") * dt)
+    assert cmd.omega == pytest.approx(expected_omega)
+    assert 0.0 <= cmd.omega < omega_a
+    events = [json.loads(line) for line in buf.getvalue().splitlines()]
+    candidates = [e for e in events if e["event"] == "candidate_evaluated"]
+    assert candidates and all(e["data"]["admissible"] == 0.0 for e in candidates)
+    assert all(e["data"]["selected"] == 0.0 for e in candidates)
+
+
 # --- (e) dynamic window: stopped robot cannot exceed one tick's accel budget ---
 def test_dynamic_window_caps_acceleration_from_a_stop(tmp_path: Path) -> None:
     params = _config(tmp_path)
