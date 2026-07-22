@@ -184,7 +184,7 @@ const Stanley = () => {
                 </>}
                 ko={<>
                     <ul>
-                        <li><strong>비용: tick당 상환 <InlineMath math="O(1)"/>.</strong> Pure Pursuit와
+                        <li><strong>비용: tick당 상환 <InlineMath math="O(1)"/>.</strong> Pure Pursuit과
                             마찬가지로 전륜축 progress index는 앞으로만 훑으므로, 전체 실행을 통틀어
                             경로 구간마다 한 번씩만 닿는다. tick마다 경로 전체를 다시 훑지 않는다.</li>
                         <li><strong>설계상 장애물을 보지 못한다.</strong> Pure Pursuit과 같은 한계다.

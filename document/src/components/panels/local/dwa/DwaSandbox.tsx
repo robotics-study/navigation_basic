@@ -4,7 +4,7 @@ import LocalTracePlayer from "../LocalTracePlayer";
 import ParamSlider from "../../../player/ParamSlider";
 import {runDwa} from "../../../../libs/algorithms/dwa";
 import {Pose} from "../../../../libs/algorithms/local_sim";
-import {GridMap} from "../../../../libs/grid";
+import {GridMap, gridFromPgmRows} from "../../../../libs/grid";
 import {useTr} from "../../../../libs/i18n";
 import cn from "../../../../libs/cn";
 
@@ -50,19 +50,9 @@ const CLUTTER_ROWS: Rows = [
 ]
 const CLUTTER_START: Pose = [0.75, 0.75, 0]
 const CLUTTER_GOAL: [number, number] = [9.25, 9.25]
-const gridFromRows = (name: string, rows: Rows, resolution: number): GridMap => {
-    const width = rows[0].trim().split(/\s+/).length
-    const height = rows.length
-    const occupied: boolean[] = []
-    for (const row of rows) {
-        for (const tok of row.trim().split(/\s+/)) occupied.push(tok !== "255")
-    }
-    return {name, width, height, occupied, resolution, originX: 0, originY: 0}
-}
-
 // "dead end" 프리셋: 저장소 pf_trap01 맵(maps/grid/pf_trap01.pgm) 그대로 -- ㄷ자 함정의
 // 등 쪽에 goal을 두어, dynamic window 전체가 admissible을 잃고 STALLED로 끝나는 한계를
-// 정직하게 보여준다(§6 test_dwa.py의 local-minima 케이스와 같은 시나리오).
+// 정직하게 보여준다(python/tests/test_dwa.py의 local-minima 케이스와 같은 시나리오).
 const TRAP_ROWS: Rows = [
     "255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255",
     "255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255",
@@ -94,8 +84,8 @@ interface Preset { map: () => GridMap; start: Pose; goal: [number, number] }
 
 const PRESETS: Record<PresetId, Preset> = {
     sudden_wall: {map: suddenWallMap, start: SUDDEN_WALL_START, goal: SUDDEN_WALL_GOAL},
-    clutter: {map: () => gridFromRows("clutter01", CLUTTER_ROWS, 0.5), start: CLUTTER_START, goal: CLUTTER_GOAL},
-    dead_end: {map: () => gridFromRows("pf_trap01", TRAP_ROWS, 0.5), start: TRAP_START, goal: TRAP_GOAL},
+    clutter: {map: () => gridFromPgmRows("clutter01", CLUTTER_ROWS, 0.5), start: CLUTTER_START, goal: CLUTTER_GOAL},
+    dead_end: {map: () => gridFromPgmRows("pf_trap01", TRAP_ROWS, 0.5), start: TRAP_START, goal: TRAP_GOAL},
 }
 
 // configs/local_planning/dwa.yaml 기본값 -- sandbox 슬라이더가 없는 나머지 파라미터와

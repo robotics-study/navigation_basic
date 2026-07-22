@@ -94,7 +94,7 @@ function buildLocalTimeline(events: TraceEvent[]): LocalTimeline {
                         // 간주해 마커가 기존 불투명도를 유지한다.
                         admissible: ev.data?.admissible !== 0,
                         rollout: ev.rollout
-                            ?.filter((p): p is number[] => Array.isArray(p) && p.length >= 2)
+                            ?.filter((p) => p.length >= 2)
                             .map((p): [number, number] => [p[0], p[1]]),
                     })
                 }
@@ -323,14 +323,21 @@ const LocalTracePlayer = ({
     // 롤아웃 폴리라인(직전 tick): 비선택은 muted 얇게(기각 후보는 더 옅게), 선택 후보는
     // accent2 굵게 — 선택 arc가 항상 위에 오도록 나중에 그린다.
     const rolloutLines = currentCandidates
-        .filter((c) => c.rollout && c.rollout.length > 1)
-        .sort((a, b) => Number(a.selected) - Number(b.selected))
-        .map((c, i) => (
+        .flatMap((c) => {
+            // flatMap 으로 rollout 이 실재하는 후보만 남긴다 — filter 는 optional 필드를
+            // 타입으로 좁혀 주지 못해 뒤에서 non-null 단언이 필요해진다.
+            const rollout = c.rollout
+            return rollout && rollout.length > 1 ? [{candidate: c, rollout}] : []
+        })
+        .sort((a, b) => Number(a.candidate.selected) - Number(b.candidate.selected))
+        .map(({candidate, rollout}, i) => (
             <Line key={`roll${i}`}
-                  points={c.rollout!.flatMap(([x, y]) => toPixel(x, y))}
-                  stroke={c.selected ? colors.accent2 : colors.muted}
-                  strokeWidth={c.selected ? Math.max(2, cellPx * 0.18) : Math.max(1, cellPx * 0.07)}
-                  opacity={c.selected ? 0.95 : c.admissible ? 0.4 : 0.15}
+                  points={rollout.flatMap(([x, y]) => toPixel(x, y))}
+                  stroke={candidate.selected ? colors.accent2 : colors.muted}
+                  strokeWidth={candidate.selected
+                      ? Math.max(2, cellPx * 0.18)
+                      : Math.max(1, cellPx * 0.07)}
+                  opacity={candidate.selected ? 0.95 : candidate.admissible ? 0.4 : 0.15}
                   lineCap="round" lineJoin="round" listening={false}/>
         ))
 

@@ -111,14 +111,24 @@ const Dwa = () => {
                 </p>}
             />
             <BlockMath math="G(v, \omega) = \alpha \cdot H(v, \omega) + \beta \cdot C(v, \omega) + \gamma \cdot V(v, \omega)"/>
-            <Terms items={[
-                ["G", <>후보 <InlineMath math="(v, \omega)"/>의 총점 — admissible 후보 중 이 값이 가장
-                    큰 것을 명령으로 낸다</>],
-                ["H", "목표 방위 정합도 — 롤아웃 종점에서 목표를 바라보는 방향에 가까울수록 1에 가깝다"],
-                ["C", "정규화된 clearance — 롤아웃을 따라 가장 가까웠던 장애물까지의 거리(상한 클램프)"],
-                ["V", "정규화된 속도 — 빠를수록 점수가 높아, 제자리에서 맴도는 대신 전진을 선호한다"],
-                ["\\alpha,\\ \\beta,\\ \\gamma", "세 항의 가중치 — 튜닝 손잡이는 이 셋뿐이다"],
-            ]}/>
+            <T
+                en={<Terms items={[
+                    ["G", <>the candidate's total score for <InlineMath math="(v, \omega)"/> — the
+                        admissible candidate with the highest value becomes the command</>],
+                    ["H", "goal-heading alignment — closer to 1 the more the rollout endpoint faces the goal"],
+                    ["C", "normalized clearance — the closest obstacle distance sampled along the rollout, clamped above"],
+                    ["V", "normalized speed — faster candidates score higher, favoring progress over idling in place"],
+                    ["\\alpha,\\ \\beta,\\ \\gamma", "the three term weights — the only tuning knobs in the objective"],
+                ]}/>}
+                ko={<Terms items={[
+                    ["G", <>후보 <InlineMath math="(v, \omega)"/>의 총점. admissible 후보 중 이 값이 가장
+                        큰 것을 명령으로 낸다</>],
+                    ["H", "목표 방위 정합도. 롤아웃 종점에서 목표를 바라보는 방향에 가까울수록 1에 가깝다"],
+                    ["C", "정규화된 clearance. 롤아웃을 따라 가장 가까웠던 장애물까지의 거리(상한 클램프)"],
+                    ["V", "정규화된 속도. 빠를수록 점수가 높아, 제자리에서 맴도는 대신 전진을 선호한다"],
+                    ["\\alpha,\\ \\beta,\\ \\gamma", "세 항의 가중치. 튜닝 손잡이는 이 셋뿐이다"],
+                ]}/>}
+            />
             <T
                 en={<p>
                     Every candidate is scored on its own, with no reference to the rest of the batch — the
@@ -304,9 +314,9 @@ return (best.v, best.omega)                                          # 15`}/>
                         </p>
                         <BlockMath math="d_{\text{stop}} = \frac{v^2}{2\dot v_b}"/>
                         <Terms items={[
-                            ["d_{\\text{stop}}", "최대 감속으로 정지할 때까지 이동하는 거리"],
-                            ["v", "제동을 시작하는 현재 전진 속도"],
-                            ["\\dot v_b", "선가속 한계의 크기 — 낼 수 있는 최대 감속률"],
+                            ["d_{\\text{stop}}", "distance covered before the robot comes to a stop under maximum braking"],
+                            ["v", "current forward speed at the moment braking begins"],
+                            ["\\dot v_b", "magnitude of the linear acceleration limit — the hardest the robot can brake"],
                         ]}/>
                         <p>
                             <strong>Requirement.</strong> For the candidate to be safe, this stopping
@@ -315,8 +325,8 @@ return (best.v, best.omega)                                          # 15`}/>
                         </p>
                         <BlockMath math="\frac{v^2}{2\dot v_b} \le \text{dist}"/>
                         <Terms items={[
-                            ["\\text{dist}", "롤아웃을 따라 표본화한 최소 clearance — 최근접 장애물까지 남은 여유"],
-                            ["v,\\ \\dot v_b", "위와 동일: 현재 속도와 선가속 한계"],
+                            ["\\text{dist}", "minimum clearance sampled along the rollout — the margin left to the nearest obstacle"],
+                            ["v,\\ \\dot v_b", "as above: current speed and the linear acceleration limit"],
                         ]}/>
                         <p>
                             Multiply through by <InlineMath math="2\dot v_b"/> and take the positive square
@@ -324,8 +334,8 @@ return (best.v, best.omega)                                          # 15`}/>
                         </p>
                         <BlockMath math="v \le \sqrt{2 \cdot \text{dist} \cdot \dot v_b}"/>
                         <Terms items={[
-                            ["v", "이 부등식을 만족해야 admissible한 전진 속도"],
-                            ["\\text{dist},\\ \\dot v_b", "위와 동일"],
+                            ["v", "forward speed a candidate must keep within this bound to be admissible"],
+                            ["\\text{dist},\\ \\dot v_b", "as above"],
                         ]}/>
                         <p>
                             The identical argument applied to the turn rate, with angular deceleration limit
@@ -334,9 +344,9 @@ return (best.v, best.omega)                                          # 15`}/>
                         </p>
                         <BlockMath math="|\omega| \le \sqrt{2 \cdot \text{dist} \cdot \dot\omega_b}"/>
                         <Terms items={[
-                            ["\\omega", "이 부등식을 만족해야 admissible한 회전율"],
-                            ["\\dot\\omega_b", "각가속 한계의 크기 — 낼 수 있는 최대 각감속률"],
-                            ["\\text{dist}", "위와 동일 — 두 부등식이 같은 clearance를 공유한다"],
+                            ["\\omega", "turn rate a candidate must keep within this bound (in magnitude) to be admissible"],
+                            ["\\dot\\omega_b", "magnitude of the angular acceleration limit — the hardest the turn rate can brake"],
+                            ["\\text{dist}", "as above — both inequalities share the same clearance"],
                         ]}/>
                         <p>
                             A candidate passes admissibility only if both hold at once. Note what this does

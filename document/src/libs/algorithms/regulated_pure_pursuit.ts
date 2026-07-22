@@ -10,9 +10,9 @@ import {EmitFn, Pose, RobotState3, VelocityCommand, runClosedLoop, wrapToPi} fro
 // 단순 lookahead-원호 조향(pure_pursuit.ts와 같은 기하)에 세 규제를 얹는다 — 속도에
 // 비례하는 adaptive lookahead(Campbell 2007), 곡률에 반비례하는 속도 상한, 장애물
 // 근접도에 비례하는 속도 상한. 명령 원호를 앞서 걸어보고 충돌이 예측되면 아예 정지한다.
-// 경로 기하(progress index/lookahead 점)는 pure_pursuit.ts와 같은 식이지만, python의
-// _path 공유 설계(§3)와 달리 TS 엔진은 페이지 단위로 파일이 완결되는 기존 관례를 따라
-// 이 파일 안에 자체 보유한다 — pure_pursuit.ts에서 import하지 않는다.
+// 경로 기하(progress index/lookahead 점)는 pure_pursuit.ts와 같은 식이다. python 쪽은
+// tracking/_path 공용 모듈로 공유하지만, TS 엔진은 페이지 단위로 파일이 완결되는 기존
+// 관례를 따라 이 파일 안에 자체 보유한다 — pure_pursuit.ts에서 import하지 않는다.
 export interface RegulatedPurePursuitOptions {
     map: GridMap;
     startPose: Pose;
