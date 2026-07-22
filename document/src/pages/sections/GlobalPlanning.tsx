@@ -223,50 +223,6 @@ const GlobalPlanning = () => {
             />
             <SearchVsSampleLive/>
 
-            <h2>{t("How This Repository Abstracts It", "이 저장소의 추상화")}</h2>
-            <T
-                en={<>
-                    <p>
-                        Every algorithm here is implemented twice — independently in C++ and Python —
-                        against the same abstractions, so the two implementations can be compared
-                        event-for-event:
-                    </p>
-                    <ul>
-                        <li><strong>Capabilities, not map types.</strong> A planner declares what it
-                            needs (<code>DiscreteSpace</code> for search,{" "}
-                            <code>SamplingSpace</code> for sampling planners) and any map that
-                            supports the capability works. Adding a map type touches no algorithm
-                            code.</li>
-                        <li><strong>Declared parameters.</strong> Each algorithm declares its
-                            parameters with types, defaults, and valid ranges; values load
-                            from <code>configs/</code> yaml shared by both languages.</li>
-                        <li><strong>Trace events.</strong> Planners emit a JSON event stream
-                            (<code>node_expanded</code>, <code>sample_drawn</code>,{" "}
-                            <code>path_found</code>, …). The demos on these pages replay exactly that
-                            stream — the visualizations never reach into algorithm internals.</li>
-                    </ul>
-                </>}
-                ko={<>
-                    <p>
-                        여기의 모든 알고리즘은 같은 추상화 위에서 C++/Python으로 각각 독립적으로
-                        구현된다. 그래서 두 구현을 이벤트 단위로 비교할 수 있다:
-                    </p>
-                    <ul>
-                        <li><strong>맵 타입이 아니라 capability.</strong> planner는 자기가 필요한
-                            것(search는 <code>DiscreteSpace</code>, sampling 은{" "}
-                            <code>SamplingSpace</code>)을 선언하고, 그 capability를 지원하는 맵은
-                            무엇이든 붙는다. 맵 타입을 추가해도 알고리즘 코드는 안 바뀐다.</li>
-                        <li><strong>선언된 parameter.</strong> 각 알고리즘은 parameter를 타입·기본값·
-                            유효 범위와 함께 선언하고, 값은 두 언어가 공유하는{" "}
-                            <code>configs/</code> yaml에서 로드된다.</li>
-                        <li><strong>Trace 이벤트.</strong> planner는 JSON 이벤트 스트림
-                            (<code>node_expanded</code>, <code>sample_drawn</code>,{" "}
-                            <code>path_found</code>, …)을 방출한다. 이 페이지들의 demo는 정확히 그
-                            스트림을 재생한다. 시각화는 알고리즘 내부를 만지지 않는다.</li>
-                    </ul>
-                </>}
-            />
-
             <h2>{t("Suggested Reading Order", "권장 읽기 순서")}</h2>
             <T
                 en={<>

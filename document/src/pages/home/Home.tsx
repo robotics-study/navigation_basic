@@ -69,10 +69,10 @@ const Home = () => {
                 <h1>navigation<span className="wm-dim"> study</span></h1>
                 <p className="sub">
                     {t(
-                        "A study of path-planning algorithms — each one derived, proven, run live in your " +
-                        "browser, and shown as the real C++ and Python source that implements it.",
-                        "path-planning 알고리즘을 하나하나 유도하고 증명하고, 브라우저에서 라이브로 돌려 보며, " +
-                        "그것을 구현한 실제 C++·Python 소스까지 함께 읽는 학습 사이트.",
+                        "A study of path-planning algorithms — each one derived, proven, " +
+                        "and shown as the real C++ and Python source that implements it.",
+                        "path-planning 알고리즘을 하나하나 유도하고 증명하고, " +
+                        "그것을 구현한 실제 C++·Python 소스까지 함께 읽는 학습 노트.",
                     )}
                 </p>
                 <div className="lander-chips">

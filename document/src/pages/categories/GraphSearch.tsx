@@ -50,8 +50,8 @@ const GraphSearch = () => {
             <T
                 en={<>
                     <p>
-                        Every algorithm in this category runs on the same four-method interface (the
-                        repository's <code>DiscreteSpace</code> capability): enumerate{" "}
+                        Every algorithm in this category runs on the same four-method interface:
+                        enumerate{" "}
                         <code>neighbors(state)</code> with edge costs, and optionally
                         estimate <code>heuristic(a, b)</code>. The planners are all instances of one
                         skeleton — keep a frontier of discovered states, repeatedly take the "best"
@@ -73,8 +73,8 @@ const GraphSearch = () => {
                 </>}
                 ko={<>
                     <p>
-                        이 카테고리의 모든 알고리즘은 같은 4-메서드 인터페이스(저장소의{" "}
-                        <code>DiscreteSpace</code> capability) 위에서 돈다. 간선 비용과 함께{" "}
+                        이 카테고리의 모든 알고리즘은 같은 4-메서드 인터페이스 위에서 돈다.
+                        간선 비용과 함께{" "}
                         <code>neighbors(state)</code>를 열거하고, 선택적으로{" "}
                         <code>heuristic(a, b)</code>를 추정한다. planner들은 모두 같은 뼈대 위의
                         변형이다. 발견한 상태의 frontier를 유지하고, "최선"을 반복해서 꺼내고,

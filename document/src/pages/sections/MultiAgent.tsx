@@ -157,17 +157,13 @@ const MultiAgent = () => {
             <T
                 en={<p>
                     Planned for this section: <strong>Prioritized A*</strong>,{" "}
-                    <strong>Joint-space A*</strong>, and <strong>CBS</strong>, in C++ and Python,
-                    with traces that carry per-agent events (<code>agent</code> field,{" "}
-                    <code>constraint_added</code>, <code>conflict_found</code>) so the demos can
-                    replay multi-robot runs the same way the single-robot pages do.
+                    <strong>Joint-space A*</strong>, and <strong>CBS</strong>, each with the same
+                    derivations, proofs, and multi-robot replay demos as the single-robot pages.
                 </p>}
                 ko={<p>
-                    이 섹션의 구현 예정: <strong>Prioritized A*</strong>,{" "}
-                    <strong>Joint-space A*</strong>, <strong>CBS</strong>를 C++/Python으로
-                    구현한다. trace는 agent 별 이벤트(<code>agent</code> 필드,{" "}
-                    <code>constraint_added</code>, <code>conflict_found</code>)를 담아, 단일 로봇
-                    페이지와 같은 방식으로 다중 로봇 실행을 재생한다.
+                    이 섹션의 예정 페이지: <strong>Prioritized A*</strong>,{" "}
+                    <strong>Joint-space A*</strong>, <strong>CBS</strong>. 각각 단일 로봇
+                    페이지와 같은 유도·증명과 다중 로봇 재생 데모로 다룬다.
                 </p>}
             />
         </>
