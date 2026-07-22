@@ -46,7 +46,7 @@ std::unique_ptr<core::MapBase> load_map(const std::string& path, unsigned seed, 
 Scenario load_scenario(const std::string& path) {
   YamlNode root = core::parse_yaml_file(path);
   // Multi-agent scenarios (an `agents` field) belong to the multi_agent category,
-  // not single-agent global planning; reject them rather than silently ignoring.
+  // not this single-agent loader; reject them rather than silently ignoring.
   if (root.has("agents")) {
     throw std::runtime_error("load_scenario: multi-agent scenarios are out of scope");
   }
@@ -59,6 +59,13 @@ Scenario load_scenario(const std::string& path) {
   // Optional headings (radians, world) — backward compatible; default 0.
   if (root.has("start_theta")) sc.start_theta = root.at("start_theta").as_double();
   if (root.has("goal_theta")) sc.goal_theta = root.at("goal_theta").as_double();
+  // Optional reference path (world points), tracking planners only. Backward
+  // compatible: absent -> empty vector, same as an unset field elsewhere here.
+  if (root.has("reference_path")) {
+    for (const YamlNode& pt : root.at("reference_path").seq) {
+      sc.reference_path.push_back({pt.seq.at(0).as_double(), pt.seq.at(1).as_double()});
+    }
+  }
   return sc;
 }
 

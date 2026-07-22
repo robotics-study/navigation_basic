@@ -77,13 +77,14 @@ def test_capabilities_and_supports() -> None:
         Capability.LINE_OF_SIGHT_SPACE,
         Capability.DYNAMIC_GRID_SPACE,
         Capability.SE2_COLLISION_SPACE,
+        Capability.OBSTACLE_QUERY,
     }
     assert grid.supports(Capability.DISCRETE_SPACE)
     assert grid.supports(Capability.SAMPLING_SPACE)
     assert grid.supports(Capability.LINE_OF_SIGHT_SPACE)
     assert grid.supports(Capability.DYNAMIC_GRID_SPACE)
     assert grid.supports(Capability.SE2_COLLISION_SPACE)
-    assert not grid.supports(Capability.OBSTACLE_QUERY)
+    assert grid.supports(Capability.OBSTACLE_QUERY)
 
 
 def test_sampling_validity_and_motion() -> None:
@@ -125,3 +126,74 @@ def test_motion_degenerate_and_gridline_segments() -> None:
 def test_invalid_connectivity_rejected() -> None:
     with pytest.raises(ValueError):
         open_grid(3, 3, connectivity=6)
+
+
+# --- ObstacleQuery: distance_to_nearest ------------------------------------
+# 7x7 grid, single obstacle at (3,3) -> world center (3.5, 3.5). Reused across
+# cases so the hand-computed geometry (obstacle vs. border source) stays comparable.
+_OBSTACLE_ROWS = [
+    ".......",
+    ".......",
+    ".......",
+    "...#...",
+    ".......",
+    ".......",
+    ".......",
+]
+
+
+def test_distance_to_nearest_obstacle_adjacent() -> None:
+    grid = grid_from(_OBSTACLE_ROWS)
+    # (3,2) is one cell left of the obstacle (distance 1) and far from every
+    # border (distance 3), so the obstacle -- not the map edge -- is nearest.
+    query = grid.cell_to_world(3, 2)
+    assert grid.distance_to_nearest(query) == pytest.approx(1.0)
+
+
+def test_distance_to_nearest_far_from_obstacle() -> None:
+    # 11x11 grid, obstacle at (5,9) (not itself on the edge). Query at the exact
+    # center (5,5): obstacle distance 4.0 < border distance 6.0 on every side.
+    rows = ["." * 11 for _ in range(11)]
+    rows[5] = "." * 9 + "#" + "."
+    grid = grid_from(rows)
+    query = grid.cell_to_world(5, 5)
+    assert grid.distance_to_nearest(query) == pytest.approx(4.0)
+
+
+def test_distance_to_nearest_near_boundary_beats_farther_obstacle() -> None:
+    # (0,3) sits on the top edge: the map boundary (distance 1, treated as a non-free
+    # source) is nearer than the real obstacle at (3,3) (distance 3), so the border
+    # branch -- not the obstacle branch -- decides the answer.
+    grid = grid_from(_OBSTACLE_ROWS)
+    query = grid.cell_to_world(0, 3)
+    assert grid.distance_to_nearest(query) == pytest.approx(1.0)
+
+
+def test_distance_to_nearest_point_outside_grid_is_zero() -> None:
+    # A point outside the grid is itself in a non-free (out-of-bounds) cell, so it
+    # is its own nearest non-free cell.
+    grid = open_grid(3, 3)
+    assert grid.distance_to_nearest((-5.0, -5.0)) == 0.0
+
+
+def test_distance_to_nearest_inside_occupied_cell_is_zero() -> None:
+    grid = grid_from(_OBSTACLE_ROWS)
+    query = grid.cell_to_world(3, 3)  # the occupied cell's own center
+    assert grid.distance_to_nearest(query) == 0.0
+
+
+# --- ObstacleQuery: occupied_within ------------------------------------------
+def test_occupied_within_includes_out_of_bounds_and_respects_radius_and_order() -> None:
+    grid = grid_from(["...", ".#.", "..."])
+    center = grid.cell_to_world(0, 0)  # top-left free cell
+    # Axis-aligned neighbors of (0,0) sit at distance 1.0 (within radius 1.2); the
+    # diagonal neighbors (including the occupied (1,1)) sit at sqrt(2) (excluded).
+    # Only the out-of-bounds axis-aligned neighbors are non-free -> row asc, col asc.
+    result = grid.occupied_within(center, radius=1.2)
+    assert result == [grid.cell_to_world(-1, 0), grid.cell_to_world(0, -1)]
+
+
+def test_occupied_within_empty_when_nothing_in_radius() -> None:
+    grid = open_grid(7, 7)  # fully free, no obstacles
+    center = grid.cell_to_world(3, 3)  # center cell, 4 cells from any border
+    assert grid.occupied_within(center, radius=0.5) == []

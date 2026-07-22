@@ -15,7 +15,8 @@ add_compile_options(-Wall -Wextra -Wpedantic)
 file(GLOB_RECURSE NAVIGATION_SOURCES CONFIGURE_DEPENDS
   ${CMAKE_CURRENT_SOURCE_DIR}/src/core/*.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/maps/*.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/global_planning/*.cpp)
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/global_planning/*.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/local_planning/*.cpp)
 
 add_library(navigation ${NAVIGATION_SOURCES})
 target_include_directories(navigation PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)

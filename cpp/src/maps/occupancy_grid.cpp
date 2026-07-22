@@ -6,6 +6,83 @@
 #include <stdexcept>
 
 namespace navigation::maps {
+namespace {
+
+// Sentinel for "no source seen yet" in the 1D transform below. Squared cell
+// distances on any map we load are tiny by comparison, so this never collides
+// with a real value.
+constexpr double kEdtInf = 1e18;
+
+// Exact 1D squared-distance transform, in place: f[i] = 0 marks a source, any
+// other value is replaced by the squared distance (in index units) to the
+// nearest source. Lower-envelope-of-parabolas algorithm (Felzenszwalb &
+// Huttenlocher 2004, "Distance Transforms of Sampled Functions") — O(n), exact
+// (integer-valued results, only the caller's final sqrt is inexact).
+void edt_1d(std::vector<double>& f) {
+  const int n = static_cast<int>(f.size());
+  std::vector<int> v(n, 0);
+  std::vector<double> z(static_cast<size_t>(n) + 1);
+  std::vector<double> d(n);
+  int k = 0;
+  v[0] = 0;
+  z[0] = -kEdtInf;
+  z[1] = kEdtInf;
+  for (int q = 1; q < n; ++q) {
+    double s = ((f[q] + static_cast<double>(q) * q) -
+                (f[v[k]] + static_cast<double>(v[k]) * v[k])) /
+               (2.0 * (q - v[k]));
+    while (s <= z[k]) {
+      --k;
+      s = ((f[q] + static_cast<double>(q) * q) -
+           (f[v[k]] + static_cast<double>(v[k]) * v[k])) /
+          (2.0 * (q - v[k]));
+    }
+    ++k;
+    v[k] = q;
+    z[k] = s;
+    z[k + 1] = kEdtInf;
+  }
+  k = 0;
+  for (int q = 0; q < n; ++q) {
+    while (z[k + 1] < q) ++k;
+    double diff = q - v[static_cast<size_t>(k)];
+    d[q] = diff * diff + f[static_cast<size_t>(v[k])];
+  }
+  f = std::move(d);
+}
+
+// Squared-distance-to-nearest-source grid, in cell units, over a (rows+2) x
+// (cols+2) padded grid: the outer 1-cell ring is entirely source (models "out
+// of bounds" as immediately adjacent, matching is_collision's occupied-OR-out-
+// of-bounds rule); interior cells are source iff occupied. Row-major, size
+// (rows+2)*(cols+2). Two 1D passes (columns then rows) give the exact 2D
+// Euclidean squared-distance transform.
+std::vector<double> compute_edt(int rows, int cols, const std::vector<bool>& free) {
+  const int pr = rows + 2, pc = cols + 2;
+  std::vector<double> g(static_cast<size_t>(pr) * pc);
+  for (int i = 0; i < pr; ++i) {
+    for (int j = 0; j < pc; ++j) {
+      bool source = i == 0 || i == pr - 1 || j == 0 || j == pc - 1 ||
+                    !free[static_cast<size_t>(i - 1) * cols + (j - 1)];
+      g[static_cast<size_t>(i) * pc + j] = source ? 0.0 : kEdtInf;
+    }
+  }
+  std::vector<double> col(pr);
+  for (int j = 0; j < pc; ++j) {
+    for (int i = 0; i < pr; ++i) col[i] = g[static_cast<size_t>(i) * pc + j];
+    edt_1d(col);
+    for (int i = 0; i < pr; ++i) g[static_cast<size_t>(i) * pc + j] = col[i];
+  }
+  std::vector<double> row(pc);
+  for (int i = 0; i < pr; ++i) {
+    for (int j = 0; j < pc; ++j) row[j] = g[static_cast<size_t>(i) * pc + j];
+    edt_1d(row);
+    for (int j = 0; j < pc; ++j) g[static_cast<size_t>(i) * pc + j] = row[j];
+  }
+  return g;
+}
+
+}  // namespace
 
 OccupancyGrid2D::OccupancyGrid2D(int rows, int cols, double resolution, double origin_x,
                                  double origin_y, std::vector<bool> free_cells, int connectivity,
@@ -41,8 +118,9 @@ OccupancyGrid2D OccupancyGrid2D::from_image(const PgmImage& img, double resoluti
 }
 
 std::set<Capability> OccupancyGrid2D::capabilities() const {
-  return {Capability::DISCRETE_SPACE, Capability::SAMPLING_SPACE, Capability::LINE_OF_SIGHT_SPACE,
-          Capability::DYNAMIC_GRID_SPACE, Capability::SE2_COLLISION_SPACE};
+  return {Capability::DISCRETE_SPACE,      Capability::SAMPLING_SPACE,
+          Capability::LINE_OF_SIGHT_SPACE, Capability::DYNAMIC_GRID_SPACE,
+          Capability::SE2_COLLISION_SPACE, Capability::OBSTACLE_QUERY};
 }
 
 bool OccupancyGrid2D::in_bounds(int row, int col) const {
@@ -135,6 +213,40 @@ bool OccupancyGrid2D::is_collision(const Footprint& fp, const Pose& pose) const 
     }
   }
   return false;
+}
+
+double OccupancyGrid2D::distance_to_nearest(const Point& p) const {
+  if (!edt_) edt_ = compute_edt(rows_, cols_, free_);
+  const Cell c = world_to_cell(p.x, p.y);
+  // Padded index = grid index + 1 (the added border ring). is_free() already
+  // treats every out-of-bounds cell as non-free regardless of how far out it
+  // is, so a cell beyond the ring is itself a source — clamping into the ring
+  // yields exactly that (distance 0), while also keeping the lookup in bounds.
+  const int pr = std::clamp(c.row + 1, 0, rows_ + 1);
+  const int pc = std::clamp(c.col + 1, 0, cols_ + 1);
+  const double d2 = (*edt_)[static_cast<size_t>(pr) * (cols_ + 2) + pc];
+  return std::sqrt(d2) * resolution_;
+}
+
+std::vector<Point> OccupancyGrid2D::occupied_within(const Point& center, double radius) const {
+  // Same bounding-box-then-filter shape as is_collision: convert the world
+  // radius to a cell-index box via world_to_cell, then keep non-free cells
+  // whose center actually falls within radius. Row ascending, then column
+  // ascending (outer/inner loop order) — enumeration order is part of the
+  // capability contract (core/capabilities.hpp), not an implementation detail.
+  const double r2 = radius * radius;
+  const Cell lo = world_to_cell(center.x - radius, center.y + radius);  // y+r -> smaller row
+  const Cell hi = world_to_cell(center.x + radius, center.y - radius);
+  std::vector<Point> out;
+  for (int row = lo.row; row <= hi.row; ++row) {
+    for (int col = lo.col; col <= hi.col; ++col) {
+      if (is_free(row, col)) continue;                 // in-bounds & free -> skip
+      const Point c = cell_to_world(Cell{row, col});    // occupied OR out-of-bounds
+      const double dx = c.x - center.x, dy = c.y - center.y;
+      if (dx * dx + dy * dy <= r2) out.push_back(c);
+    }
+  }
+  return out;
 }
 
 bool OccupancyGrid2D::is_free_uv(int iu, int iv) const {

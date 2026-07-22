@@ -2,6 +2,7 @@
 #include <filesystem>
 #include <sstream>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include <gtest/gtest.h>
@@ -70,14 +71,14 @@ TEST(Params, WrongTypeAccessThrows) {
 
 // --- Capabilities ------------------------------------------------------------
 
-TEST(Capabilities, GridSupportsDiscreteSamplingLineOfSightDynamicGridAndSE2Collision) {
+TEST(Capabilities, GridSupportsDiscreteSamplingLineOfSightDynamicGridSE2CollisionAndObstacleQuery) {
   auto g = test::make_grid({"..", ".."});
   EXPECT_TRUE(g.supports(core::Capability::DISCRETE_SPACE));
   EXPECT_TRUE(g.supports(core::Capability::SAMPLING_SPACE));
   EXPECT_TRUE(g.supports(core::Capability::LINE_OF_SIGHT_SPACE));
   EXPECT_TRUE(g.supports(core::Capability::DYNAMIC_GRID_SPACE));
   EXPECT_TRUE(g.supports(core::Capability::SE2_COLLISION_SPACE));
-  EXPECT_FALSE(g.supports(core::Capability::OBSTACLE_QUERY));
+  EXPECT_TRUE(g.supports(core::Capability::OBSTACLE_QUERY));
 }
 
 // --- Grid geometry + thresholding -------------------------------------------
@@ -115,6 +116,47 @@ TEST(Grid, EightConnPreventsCornerCutting) {
   for (const auto& [c, w] : nbrs) {
     (void)w;
     EXPECT_FALSE(c.row == 0 && c.col == 1) << "corner-cut diagonal must be excluded";
+  }
+}
+
+// --- ObstacleQuery: distance_to_nearest / occupied_within ---------------------
+
+TEST(Grid, DistanceToNearestIsCloserOfObstacleOrOutOfBoundsBorder) {
+  // 5x5, resolution 0.5 (test::make_grid default), origin (0,0): cell (r,c)
+  // center = (0.5c+0.25, 2.25-0.5r). Single occupied cell at the map center,
+  // far from every edge.
+  auto g = test::make_grid({".....", ".....", "..#..", ".....", "....."});
+  // Occupied cell's own center: distance is 0 (interior of a non-free cell).
+  EXPECT_DOUBLE_EQ(g.distance_to_nearest(core::Point{1.25, 1.25}), 0.0);
+  // One cell left of the obstacle: the obstacle (1 cell away) is much closer
+  // than any grid edge (2+ cells away in every direction).
+  EXPECT_DOUBLE_EQ(g.distance_to_nearest(core::Point{0.75, 1.25}), 0.5);
+  // Top-left corner cell: nearest non-free cell is the out-of-bounds border (1
+  // cell away, orthogonally), not the center obstacle (sqrt(8) cells away).
+  EXPECT_DOUBLE_EQ(g.distance_to_nearest(core::Point{0.25, 2.25}), 0.5);
+}
+
+TEST(Grid, OccupiedWithinExcludesEverythingBeyondRadius) {
+  auto g = test::make_grid({"..", ".."});  // fully free 2x2, resolution 0.5
+  EXPECT_TRUE(g.occupied_within(core::Point{0.5, 0.5}, 0.6).empty());
+}
+
+TEST(Grid, OccupiedWithinReturnsOutOfBoundsCellsRowThenColumnAscending) {
+  // Fully free 2x2 grid queried from its center with a radius that reaches past
+  // every edge but not past any corner — isolates the row/col enumeration order
+  // the capability contract fixes (core/capabilities.hpp).
+  auto g = test::make_grid({"..", ".."});
+  auto pts = g.occupied_within(core::Point{0.5, 0.5}, 0.8);
+  const std::vector<std::pair<double, double>> expected = {
+      {0.25, 1.25}, {0.75, 1.25},   // row -1
+      {-0.25, 0.75}, {1.25, 0.75},  // row 0
+      {-0.25, 0.25}, {1.25, 0.25},  // row 1
+      {0.25, -0.25}, {0.75, -0.25}, // row 2
+  };
+  ASSERT_EQ(pts.size(), expected.size());
+  for (size_t i = 0; i < expected.size(); ++i) {
+    EXPECT_DOUBLE_EQ(pts[i].x, expected[i].first) << "index " << i;
+    EXPECT_DOUBLE_EQ(pts[i].y, expected[i].second) << "index " << i;
   }
 }
 

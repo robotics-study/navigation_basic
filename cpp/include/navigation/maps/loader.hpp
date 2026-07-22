@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "navigation/core/capabilities.hpp"
 #include "navigation/core/types.hpp"
@@ -18,6 +19,9 @@ struct Scenario {
   // Defaulted so existing scenarios (no theta) load unchanged; discrete/sampling ignore.
   double start_theta = 0.0;
   double goal_theta = 0.0;
+  // Optional reference path (world points) for path-tracking local planners.
+  // Empty = no reference path; defaulted so existing scenarios load unchanged.
+  std::vector<core::Point> reference_path;
 };
 
 // Dispatches on the yaml `type` field. Only occupancy_grid is implemented in
