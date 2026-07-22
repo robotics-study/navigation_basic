@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://robotics-study.github.io/navigation/sitemap.xml
