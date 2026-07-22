@@ -92,10 +92,14 @@ const PRESETS: Record<PresetId, Preset> = {
 // configs/local_planning/regulated_pure_pursuit.yaml의 공유 폐루프 시뮬레이터 블록 +
 // 슬라이더로 노출하지 않는 알고리즘 파라미터는 이 값으로 고정한다. max_steps는 yaml
 // 기본(1000)보다 낮춰 sandbox 재생 이벤트 수를 억제한다(다른 local sandbox와 같은 관례).
+// footprintRadius는 yaml 기본값(0.2)을 그대로 쓴다 -- 0.35로 키우면 narrow_gap 프리셋의
+// 시작점(0.75, 0.75)이 경계 벽면(x=0.5)까지 0.25m 여유뿐이라 discCollides가 첫 tick부터
+// 즉시 충돌로 판정한다(hairpin/plain_pursuit는 벽 없는 맵이라 이 값 변경의 영향이 없음을
+// 실행 검증으로 확인했다).
 const FIXED = {
     minLookahead: 0.25, maxLookahead: 1.0, minRegulatedSpeed: 0.1, collisionCheckStep: 0.05,
     maxSpeed: 0.8, maxOmega: 1.5, slowRadius: 0.5,
-    controlDt: 0.1, maxSteps: 400, goalTolerance: 0.3, footprintRadius: 0.35,
+    controlDt: 0.1, maxSteps: 400, goalTolerance: 0.3, footprintRadius: 0.2,
     stallWindow: 20, stallDistance: 0.05,
 }
 
