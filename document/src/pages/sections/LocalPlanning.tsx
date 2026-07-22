@@ -202,16 +202,23 @@ const LocalPlanning = () => {
             <h2>{t("What Is Coming", "구현 예정")}</h2>
             <T
                 en={<p>
-                    Planned for this section: <strong>DWA</strong>, <strong>Pure Pursuit</strong>,{" "}
-                    <strong>VFH</strong>, and <strong>MPC</strong> — one representative per family —
-                    with the same derivations, proofs, and live demos as the global planners.
-                    Trajectory-optimization variants such as TEB are natural follow-ups.
+                    <strong>Potential Fields</strong>, <strong>VFH</strong>,
+                    and <strong>Pure Pursuit</strong> are now written, one representative each
+                    for reactive force fields, histogram-based steering, and geometric path
+                    tracking. The rest of the lineage follows: <strong>DWA</strong> rounds out
+                    sampling in command space, Stanley and Regulated Pure Pursuit sharpen
+                    geometric tracking, EB and TEB deform an elastic band in time, and MPC, MPPI,
+                    and CBF-constrained control close the section with full trajectory
+                    optimization.
                 </p>}
                 ko={<p>
-                    이 섹션의 예정 페이지: <strong>DWA</strong>, <strong>Pure Pursuit</strong>,{" "}
-                    <strong>VFH</strong>, <strong>MPC</strong>, 이렇게 계열별 대표 하나씩을 global
-                    planner 페이지와 같은 유도·증명·라이브 데모로 다룬다. TEB 같은 궤적 최적화
-                    변형이 자연스러운 후속이다.
+                    이제 <strong>Potential Fields</strong>, <strong>VFH</strong>,{" "}
+                    <strong>Pure Pursuit</strong> 세 페이지가 채워졌다. 순서대로 반발력,
+                    히스토그램 조향, 기하학적 경로 추종 계열의 대표다. 남은 계보는 이렇게
+                    이어진다. 명령 공간 sampling은 <strong>DWA</strong>로 마무리되고, 기하학적
+                    추종은 Stanley와 Regulated Pure Pursuit로 다듬어지며, 시간 축 위 elastic
+                    band 변형은 EB와 TEB가 맡고, 궤적 최적화는 MPC, MPPI, CBF 제약 제어로
+                    완성된다.
                 </p>}
             />
         </>
