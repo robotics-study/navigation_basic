@@ -29,4 +29,6 @@ export {runDwa} from "../src/libs/algorithms/dwa";
 export {runPurePursuit} from "../src/libs/algorithms/pure_pursuit";
 export {runStanley} from "../src/libs/algorithms/stanley";
 export {runRegulatedPurePursuit} from "../src/libs/algorithms/regulated_pure_pursuit";
+export {runElasticBands} from "../src/libs/algorithms/elastic_bands";
+export {runTeb} from "../src/libs/algorithms/teb";
 export {parseGridMap} from "../src/libs/grid";
