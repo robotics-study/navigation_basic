@@ -41,7 +41,7 @@ function clearance(c: Vec): number {
     return Math.min(best, RHO_MAX)
 }
 
-// elastic_bands.py의 §1.2 식 그대로: 내부 수축력(양 이웃 방향 단위벡터 합) + 외부
+// elastic_bands.py의 힘 계산식 그대로: 내부 수축력(양 이웃 방향 단위벡터 합) + 외부
 // 반발력(rho_influence 내 occupied 점 합산) + 접선 제거는 반발력에만.
 function forcesAt(i: number): {fc: Vec; frRaw: Vec; frDetangented: Vec; resultant: Vec} {
     const c = CENTERS[i]
@@ -129,8 +129,8 @@ const BandForcesFigure = () => {
     const t = useTr()
     return <CanvasFigure
         label={t(
-            "Contraction (blue), repulsion after tangent removal (red), and their sum f̃ (black) computed from §1.2 on a fixed toy band — bubbles far from the obstacle cluster (left) feel almost pure contraction, the one grazing it (right of center) gets pushed clear by repulsion",
-            "§1.2 식 그대로 고정 toy 밴드 위에서 계산한 수축력(파랑), 접선 제거 후 반발력(빨강), 그 합 f̃(검정). 장애물 뭉치에서 먼 bubble(왼쪽)은 거의 순수한 수축력만 느끼고, 뭉치를 스치는 bubble(가운데 오른쪽)은 반발력에 밀려난다",
+            "Contraction (blue), repulsion after tangent removal (red), and their sum f̃ (black) computed with the force equations above on a fixed toy band — bubbles far from the obstacle cluster (left) feel almost pure contraction, the one grazing it (right of center) gets pushed clear by repulsion",
+            "위 힘 수식 그대로 고정 toy 밴드 위에서 계산한 수축력(파랑), 접선 제거 후 반발력(빨강), 그 합 f̃(검정). 장애물 뭉치에서 먼 bubble(왼쪽)은 거의 순수한 수축력만 느끼고, 뭉치를 스치는 bubble(가운데 오른쪽)은 반발력에 밀려난다",
         )}
         tight bodyClassName="w-fit" className="w-full"
         modal={<Scene/>}

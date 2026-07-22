@@ -201,7 +201,7 @@ const ElasticBands = () => {
                 en={<>
                     <ul>
                         <li><strong>Cost: <InlineMath math="O(N \cdot \text{deform\_iterations})"/> per
-                            tick.</strong> Every one of the fixed <InlineMath math="\text{deform\_iterations}"/>
+                            tick.</strong> Every one of the fixed <InlineMath math="\text{deform\_iterations}"/>{" "}
                             passes touches every interior bubble once, and each touch queries the map for
                             occupied cells within the influence radius — cheap, and independent of how far the
                             band is from the goal.</li>
