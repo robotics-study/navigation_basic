@@ -1,0 +1,171 @@
+algorithm: teb
+category: local_planning
+params:
+  - name: w_path
+    type: float
+    default: 1.0
+    min: 0.0
+    max: 100.0
+    description: reference 경로 추종 가중치. (Rösmann et al. 2012/2017)
+  - name: w_obstacle
+    type: float
+    default: 15.0
+    min: 0.0
+    max: 200.0
+    description: 장애물 페널티 가중치.
+  - name: w_velocity
+    type: float
+    default: 10.0
+    min: 0.0
+    max: 200.0
+    description: 속도 한계 가중치.
+  - name: w_acceleration
+    type: float
+    default: 5.0
+    min: 0.0
+    max: 200.0
+    description: 가속 한계 가중치.
+  - name: w_time
+    type: float
+    default: 1.0
+    min: 0.0
+    max: 100.0
+    description: 시간 최적성 가중치.
+  - name: w_kinematics
+    type: float
+    default: 50.0
+    min: 0.0
+    max: 1000.0
+    description: 비홀로노믹(two-pose arc) 제약 가중치.
+  - name: v_max
+    type: float
+    default: 0.8
+    min: 0.1
+    max: 2.0
+    description: 최대 전진 속도 (m/s).
+  - name: omega_max
+    type: float
+    default: 1.5
+    min: 0.1
+    max: 5.0
+    description: 최대 각속도 (rad/s).
+  - name: a_max
+    type: float
+    default: 1.5
+    min: 0.1
+    max: 10.0
+    description: 병진 가속 한계 (m/s^2).
+  - name: min_obstacle_dist
+    type: float
+    default: 0.8
+    min: 0.1
+    max: 3.0
+    description: >-
+      장애물 페널티가 활성화되는 거리 (meters). 최근접 occupied cell까지의 거리는 cell
+      center 기준이라 실제 clearance를 최대 반 cell 대각(res 0.5 기준 약 0.35 m) 과대평가한다.
+  - name: dt_ref
+    type: float
+    default: 0.85
+    min: 0.05
+    max: 1.0
+    description: >-
+      목표 구간 시간 (resize 기준, seconds). 재초기화 시 첫 구간은 항상 즉시 resize에
+      의해 절반으로 쪼개지므로(초기 ΔT_i = ell_i/(0.5*v_max) = 2*dt_ref는 언제나
+      1.5*dt_ref를 넘는다), dt_ref가 너무 작으면(예: 0.3) 첫 구간이 지나치게 짧아져
+      로봇의 초기 heading과 경로 방향이 크게 어긋난 clutter01_s2 시작점에서 전후진
+      부호(σ) 판정이 매 tick 진동한다. 0.85는 실측 폐루프 테스트로 검증된 안정 구간
+      [0.8, 0.95] 안의 값.
+
+  - name: dt_min
+    type: float
+    default: 0.05
+    min: 0.01
+    max: 0.5
+    description: 구간 시간 ΔT 하한 (seconds).
+  - name: horizon
+    type: float
+    default: 4.0
+    min: 1.0
+    max: 20.0
+    description: reference 경로 clip arc-length (meters).
+  - name: iterations
+    type: int
+    default: 40
+    min: 1
+    max: 200
+    description: tick당 gradient descent 반복 횟수 (고정, early-exit 없음).
+  - name: step_alpha
+    type: float
+    default: 0.02
+    min: 0.0001
+    max: 1.0
+    description: gradient descent 학습률.
+  - name: max_step_xy
+    type: float
+    default: 0.05
+    min: 0.005
+    max: 0.5
+    description: 위치 성분(x, y) 1회 반복 step clamp (meters).
+  - name: max_step_theta
+    type: float
+    default: 0.1
+    min: 0.005
+    max: 1.0
+    description: 각 성분(theta) 1회 반복 step clamp (radians).
+  - name: max_step_dt
+    type: float
+    default: 0.02
+    min: 0.001
+    max: 0.2
+    description: 구간 시간(ΔT) 1회 반복 step clamp (seconds).
+  - name: max_poses
+    type: int
+    default: 40
+    min: 5
+    max: 200
+    description: pose 수 상한 (resize).
+  - name: reinit_distance
+    type: float
+    default: 1.0
+    min: 0.1
+    max: 5.0
+    description: 밴드 끝점이 local goal에서 이 이상 벗어나면 재초기화 (meters).
+  # --- shared closed-loop simulator block (identical defaults across every
+  # local_planning algo; param_schema.json has no separate "sim" section, so
+  # these live as ordinary params entries like the algorithm params above) ---
+  - name: control_dt
+    type: float
+    default: 0.1
+    min: 0.001
+    max: 1.0
+    description: 제어 주기 (seconds).
+  - name: max_steps
+    type: int
+    default: 1000
+    min: 1
+    max: 100000
+    description: 최대 tick 수 (소진 시 TIMEOUT).
+  - name: goal_tolerance
+    type: float
+    default: 0.3
+    min: 0.01
+    max: 5.0
+    description: goal 도달 판정 반경 (meters).
+  - name: footprint_radius
+    type: float
+    default: 0.2
+    min: 0.01
+    max: 5.0
+    description: 로봇 충돌 footprint 반경 (meters).
+  - name: stall_window
+    type: int
+    default: 20
+    min: 1
+    max: 100000
+    description: 정체 판정 sliding window 길이 (ticks).
+  - name: stall_distance
+    type: float
+    default: 0.05
+    min: 0.0
+    max: 5.0
+    description: stall_window 구간 순변위가 이 이하이면 STALLED (meters).

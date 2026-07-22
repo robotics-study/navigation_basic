@@ -9,5 +9,6 @@ precedent for per-family shared machinery.
 from __future__ import annotations
 
 from .elastic_bands import ElasticBandsPlanner
+from .teb import TebPlanner
 
-__all__ = ["ElasticBandsPlanner"]
+__all__ = ["ElasticBandsPlanner", "TebPlanner"]
