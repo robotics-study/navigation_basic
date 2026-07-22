@@ -10,7 +10,7 @@ import {ISectionIntro} from "../pages/sections";
 import {ICategoryIntro} from "../pages/categories";
 
 const ORIGIN = "https://robotics-study.github.io";
-const BASE_PATH = "/navigation/";
+const BASE_PATH = "/navigation_basic/";
 
 const SITE: Record<Lang, string> = {
     en: "Navigation · Study",
