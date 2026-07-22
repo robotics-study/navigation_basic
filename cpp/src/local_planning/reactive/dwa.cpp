@@ -42,27 +42,26 @@ DwaPlanner::DwaPlanner(core::ParamSet params)
       slow_radius_(params_.get_float("slow_radius")),
       footprint_radius_(params_.get_float("footprint_radius")) {}
 
-std::vector<core::Pose> DwaPlanner::rollout(const core::Pose& pose, double v, double omega) const {
+void DwaPlanner::rollout(const core::Pose& pose, double v, double omega,
+                         std::vector<core::Pose>& out) const {
   // Each candidate is scored by holding (v, omega) constant for sim_time,
   // sampled at sim_steps equally spaced instants (Fox 1997's circular-arc
   // trajectory prediction) -- every point is computed directly from the start
   // pose (not chained step-to-step), which is exact for a constant command
   // and matches simulation.cpp's per-tick integrate_unicycle.
   const double x = pose.x, y = pose.y, theta = pose.theta;
-  std::vector<core::Pose> poses;
-  poses.reserve(static_cast<size_t>(sim_steps_));
+  out.clear();  // keeps capacity: no per-candidate allocation in the hot loop
   for (int k = 1; k <= sim_steps_; ++k) {
     const double t = sim_time_ * static_cast<double>(k) / static_cast<double>(sim_steps_);
     if (std::fabs(omega) < kOmegaEps) {
-      poses.push_back(core::Pose{x + v * t * std::cos(theta), y + v * t * std::sin(theta), theta});
+      out.push_back(core::Pose{x + v * t * std::cos(theta), y + v * t * std::sin(theta), theta});
       continue;
     }
     const double new_theta = theta + omega * t;
     const double px = x + (v / omega) * (std::sin(new_theta) - std::sin(theta));
     const double py = y - (v / omega) * (std::cos(new_theta) - std::cos(theta));
-    poses.push_back(core::Pose{px, py, wrap_to_pi(new_theta)});
+    out.push_back(core::Pose{px, py, wrap_to_pi(new_theta)});
   }
-  return poses;
 }
 
 DwaPlanner::Score DwaPlanner::score(core::ObstacleQuery& space, const core::Footprint& footprint,
@@ -152,6 +151,10 @@ core::VelocityCommand DwaPlanner::compute_command(core::ObstacleQuery& space,
     const double v_step = v_samples_ > 1 ? (v_hi - v_lo) / (v_samples_ - 1) : 0.0;
     const double omega_step = omega_samples_ > 1 ? (omega_hi - omega_lo) / (omega_samples_ - 1) : 0.0;
     int candidate_index = 0;
+    // One rollout buffer reused across every candidate in the tick (clear()
+    // keeps capacity), so the hot loop performs no per-candidate allocation.
+    std::vector<core::Pose> candidate_rollout;
+    candidate_rollout.reserve(static_cast<size_t>(sim_steps_));
     // Deterministic uniform grid (never random sampling): fixed traversal
     // order (v outer, omega inner) keeps py/cpp/TS scoring and tie-breaking
     // bit-identical.
@@ -159,7 +162,7 @@ core::VelocityCommand DwaPlanner::compute_command(core::ObstacleQuery& space,
       const double v = v_lo + v_step * static_cast<double>(i);
       for (int j = 0; j < omega_samples_; ++j) {
         const double omega = omega_lo + omega_step * static_cast<double>(j);
-        std::vector<core::Pose> candidate_rollout = rollout(core::Pose{x, y, theta}, v, omega);
+        rollout(core::Pose{x, y, theta}, v, omega, candidate_rollout);
         Score s = score(space, footprint, candidate_rollout, v, omega, goal_x, goal_y);
         if (s.admissible && (!have_best || s.cost > best_cost)) {
           have_best = true;

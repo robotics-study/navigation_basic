@@ -52,24 +52,25 @@ class Dwa(ObstacleLocalPlanner):
     def required_capabilities(self) -> set[Capability]:
         return {Capability.OBSTACLE_QUERY}
 
-    def _rollout(self, pose: Pose, v: float, omega: float) -> list[Pose]:
+    def _rollout(self, pose: Pose, v: float, omega: float, out: list[Pose]) -> None:
         # Each candidate is scored by holding (v, omega) constant for sim_time,
         # sampled at sim_steps equally spaced instants (Fox 1997's circular-arc
         # trajectory prediction) -- every point is computed directly from the
         # start pose (not chained step-to-step), which is exact for a constant
         # command and matches simulation.py's per-tick integrate_unicycle.
+        # Fills the caller's buffer instead of returning a fresh list so the
+        # candidate loop reuses one allocation per tick (hot path).
         x, y, theta = pose
-        poses: list[Pose] = []
+        out.clear()
         for k in range(1, self._sim_steps + 1):
             t = self._sim_time * k / self._sim_steps
             if abs(omega) < _OMEGA_EPS:
-                poses.append((x + v * t * math.cos(theta), y + v * t * math.sin(theta), theta))
+                out.append((x + v * t * math.cos(theta), y + v * t * math.sin(theta), theta))
                 continue
             new_theta = theta + omega * t
             px = x + (v / omega) * (math.sin(new_theta) - math.sin(theta))
             py = y - (v / omega) * (math.cos(new_theta) - math.cos(theta))
-            poses.append((px, py, wrap_to_pi(new_theta)))
-        return poses
+            out.append((px, py, wrap_to_pi(new_theta)))
 
     def _score(
         self,
@@ -164,6 +165,9 @@ class Dwa(ObstacleLocalPlanner):
             n_omega = self._omega_samples
             omega_step = (omega_hi - omega_lo) / (n_omega - 1) if n_omega > 1 else 0.0
             candidate_index = 0
+            # One rollout buffer reused across every candidate in the tick, so
+            # the hot loop performs no per-candidate list allocation.
+            rollout: list[Pose] = []
             # Deterministic uniform grid (never random sampling): fixed
             # traversal order (v outer, omega inner) keeps py/cpp/TS scoring
             # and tie-breaking bit-identical.
@@ -171,7 +175,7 @@ class Dwa(ObstacleLocalPlanner):
                 v = v_lo + v_step * i
                 for j in range(self._omega_samples):
                     omega = omega_lo + omega_step * j
-                    rollout = self._rollout((x, y, theta), v, omega)
+                    self._rollout((x, y, theta), v, omega, rollout)
                     cost, heading, clearance, velocity, admissible = self._score(
                         space, footprint, rollout, v, omega, goal_x, goal_y
                     )

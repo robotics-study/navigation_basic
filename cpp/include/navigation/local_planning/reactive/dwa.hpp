@@ -32,8 +32,10 @@ class DwaPlanner final : public core::ObstacleLocalPlanner {
 
  private:
   // Predicted trajectory for one candidate (v, omega) held constant over
-  // sim_time, sampled at sim_steps equally spaced instants.
-  std::vector<core::Pose> rollout(const core::Pose& pose, double v, double omega) const;
+  // sim_time, sampled at sim_steps equally spaced instants. Fills the
+  // caller's buffer instead of returning a fresh vector so the candidate
+  // loop reuses one allocation per tick (hot path).
+  void rollout(const core::Pose& pose, double v, double omega, std::vector<core::Pose>& out) const;
 
   // Scores one candidate. Returns (cost, heading, clearance, velocity,
   // admissible); a colliding rollout is rejected outright (all four numeric

@@ -168,9 +168,9 @@ class RegulatedPurePursuit(ObstacleLocalPlanner):
                 break
             s += collision_check_step
 
-        # Trace dict is only ever built inside this closure, which itself only
-        # runs when recorder is not None -- keeps the hot path allocation-free
-        # when tracing is off, same as every other planner's recorder guard.
+        # The per-tick trace dict is only built when a recorder is attached;
+        # the helper itself is a constant-cost construction that lets the two
+        # exit paths (blocked stop / normal command) share one emission site.
         def emit(blocked_value: float) -> None:
             if recorder is not None:
                 recorder.candidate_evaluated(
