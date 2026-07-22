@@ -64,3 +64,11 @@ export const cellCenterWorld = (map: GridMap, c: [number, number]): [number, num
     map.originX + (c[1] + 0.5) * map.resolution,
     map.originY + (map.height - 1 - c[0] + 0.5) * map.resolution,
 ]
+
+// world (x, y) → 정수 셀 인덱스 (row, col) — 저장소 OccupancyGrid2D.world_to_cell 미러.
+// worldToCellUnits(연속 렌더용, 반올림 없음)와 달리 충돌/거리 질의가 요구하는 정확한
+// floor 셀 인덱스를 낸다. occupancy 질의(충돌 검사, EDT, 근방 열거)가 전부 공유한다.
+export const worldToCellIndex = (map: GridMap, x: number, y: number): [number, number] => [
+    map.height - 1 - Math.floor((y - map.originY) / map.resolution),
+    Math.floor((x - map.originX) / map.resolution),
+]
