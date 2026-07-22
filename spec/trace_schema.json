@@ -27,6 +27,8 @@
         "conflict_found",
         "robot_moved",
         "obstacle_revealed",
+        "force_computed",
+        "histogram_updated",
         "path_found",
         "planning_finished"
       ]
@@ -38,7 +40,7 @@
     },
     "state": {
       "$ref": "#/$defs/state",
-      "description": "이벤트의 주 대상 상태 (expanded node, drawn sample 등)."
+      "description": "이벤트의 주 대상 상태 (expanded node, drawn sample, force_computed/histogram_updated 의 현재 로봇 pose, robot_moved 의 local 폐루프 실행 pose 등)."
     },
     "parent": {
       "$ref": "#/$defs/state",
@@ -46,7 +48,7 @@
     },
     "cost": {
       "type": "number",
-      "description": "이벤트 시점의 관련 비용 (g-value, edge cost, candidate score 등)."
+      "description": "이벤트 시점의 관련 비용 (g-value, edge cost, candidate score 등; local candidate_evaluated 에서는 Pure Pursuit 곡률 κ 또는 VFH 후보의 목표각 편차)."
     },
     "path": {
       "type": "array",
@@ -65,18 +67,27 @@
       "type": "object",
       "description": "planning_started 전용: 실행에 사용된 파라미터 값 스냅샷."
     },
+    "scenario": {
+      "type": "string",
+      "description": "planning_started 선택: 시나리오 yaml 경로 (repo 상대). local demo 가 참조 경로/goal 재현용."
+    },
     "success": {
       "type": "boolean",
       "description": "planning_finished 전용."
     },
     "metrics": {
       "type": "object",
-      "description": "planning_finished 전용: runtime_sec, path_cost, expanded_nodes, samples, sum_of_costs, makespan 등 공통 metric.",
+      "description": "planning_finished 전용: runtime_sec, path_cost, expanded_nodes, samples, sum_of_costs, makespan 등 공통 metric. local planning 은 time_to_goal, distance_traveled, min_clearance, steps, collided(0|1), stalled(0|1) 을 추가로 담는다.",
       "additionalProperties": { "type": "number" }
     },
     "data": {
       "type": "object",
-      "description": "알고리즘 고유 부가 정보 (viz 는 알아도 되고 몰라도 되는 값만). 공통 필드로 표현 가능한 정보를 여기에 넣지 않는다."
+      "description": "알고리즘 고유 부가 정보 (viz 는 알아도 되고 몰라도 되는 값만). 공통 필드로 표현 가능한 정보를 여기에 넣지 않는다. 예: robot_moved 의 {v, omega}, force_computed 의 {fx_att, fy_att, fx_rep, fy_rep, fx, fy}, histogram_updated 의 {threshold, target_direction, selected_direction}."
+    },
+    "bins": {
+      "type": "array",
+      "items": { "type": "number" },
+      "description": "histogram_updated 전용: 폴라 히스토그램 sector 값 (index 0 = world +x, 반시계)."
     }
   },
   "$defs": {

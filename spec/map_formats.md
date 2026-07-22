@@ -82,6 +82,11 @@ goal: [9.5, 9.5]
 # --- SE(2) heading (선택, kinodynamic planner 용) ---
 start_theta: 0.0            # start 방향 (라디안, world). 생략 시 0.0 (하위호환)
 goal_theta: 0.0            # goal 방향 (라디안, world). 생략 시 0.0
+# --- reference path (선택, 추종 계열 local planner 용) ---
+# reference_path:
+#   - [0.5, 0.5]
+#   - [2.0, 3.0]
+#   - [9.5, 9.5]
 # --- multi-agent 형식 ---
 # agents:
 #   - { start: [0.5, 0.5], goal: [9.5, 9.5] }
@@ -89,3 +94,4 @@ goal_theta: 0.0            # goal 방향 (라디안, world). 생략 시 0.0
 ```
 
 - `start_theta`/`goal_theta` 는 선택. Hybrid A\* 같은 SE(2) kinodynamic planner 만 사용하며, discrete/sampling planner 는 무시한다. 생략 시 heading 0.0 으로 로드된다.
+- `reference_path` 는 선택: world 좌표 웨이포인트 리스트 `[[x, y], ...]`. Pure Pursuit 같은 추종(tracking) 계열 local planner 만 사용하며, 생략 시 참조 경로 없음(goal-seek 전용)으로 로드된다.

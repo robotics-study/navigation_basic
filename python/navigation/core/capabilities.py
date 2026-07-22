@@ -11,7 +11,7 @@ import enum
 from abc import ABC, abstractmethod
 from typing import Protocol, TypeVar
 
-from .types import Footprint, Pose  # same core layer; types.py does not import capabilities.py
+from .types import Footprint, Point, Pose  # same core layer; types.py doesn't import this module
 
 StateT = TypeVar("StateT")
 # SE2CollisionSpace consumes its state only as a method argument (never returns it), so
@@ -22,7 +22,7 @@ StateT_contra = TypeVar("StateT_contra", contravariant=True)
 class Capability(enum.Enum):
     DISCRETE_SPACE = "discrete_space"
     SAMPLING_SPACE = "sampling_space"
-    # Declared for future local planners; no map here implements it (no dead impl).
+    # Reactive/tracking local planners' obstacle-proximity query; OccupancyGrid2D implements it.
     OBSTACLE_QUERY = "obstacle_query"
     LINE_OF_SIGHT_SPACE = "line_of_sight_space"
     DYNAMIC_GRID_SPACE = "dynamic_grid_space"
@@ -74,6 +74,25 @@ class SE2CollisionSpace(Protocol[StateT_contra]):
     satisfies this and the discrete/sampling views without a class hierarchy."""
 
     def is_collision(self, footprint: Footprint, pose: StateT_contra) -> bool: ...
+
+
+class ObstacleQuery(SE2CollisionSpace[Pose], Protocol):
+    """Local-planner obstacle query: footprint collision (inherited) + nearest
+    clearance + nearby-occupancy enumeration.
+
+    Used only on world SE(2) (a local planner never carries a grid state), so this
+    binds SE2CollisionSpace to Pose directly instead of parameterizing by StateT.
+    """
+
+    def distance_to_nearest(self, p: Point) -> float:
+        """Euclidean distance (m) from p to the nearest non-free (occupied or
+        out-of-bounds) cell center."""
+        ...
+
+    def occupied_within(self, center: Point, radius: float) -> list[Point]:
+        """Non-free cell centers (world) within radius of center, including
+        out-of-bounds cells. Ordered row ascending, then column ascending."""
+        ...
 
 
 class SamplingSpace(Protocol[StateT]):

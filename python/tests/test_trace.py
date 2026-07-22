@@ -88,3 +88,51 @@ def test_null_recorder_is_zero_cost() -> None:
     grid = open_grid(5, 5)
     result = AStar(config("astar")).plan(grid, (4, 0), (0, 4), None)
     assert result.success
+
+
+def test_robot_moved_data_is_optional_and_changes_output() -> None:
+    # data=None keeps the historical (pre-local-planning) trace byte-identical;
+    # only passing data adds the field.
+    buf = io.StringIO()
+    rec = TraceRecorder(buf)
+    rec.robot_moved((1.0, 1.0, 0.0))
+    rec.robot_moved((2.0, 2.0, 0.0), data={"v": 0.5, "omega": 0.1})
+    lines = [json.loads(line) for line in buf.getvalue().splitlines()]
+    assert "data" not in lines[0]
+    assert lines[1]["data"] == {"v": 0.5, "omega": 0.1}
+
+
+def test_force_computed_emits_state_and_data() -> None:
+    buf = io.StringIO()
+    rec = TraceRecorder(buf)
+    force_data = {"fx_att": 1.0, "fy_att": 0.5, "fx_rep": -0.2, "fy_rep": 0.1, "fx": 0.8, "fy": 0.6}
+    rec.force_computed((1.0, 2.0, 0.0), data=force_data)
+    event = json.loads(buf.getvalue())
+    assert event["event"] == "force_computed"
+    assert event["state"] == [1.0, 2.0, 0.0]
+    assert event["data"] == force_data
+
+
+def test_histogram_updated_emits_bins_array() -> None:
+    buf = io.StringIO()
+    rec = TraceRecorder(buf)
+    rec.histogram_updated((0.0, 0.0, 0.0), bins=[0.1, 0.2, 0.3], data={"threshold": 0.5})
+    event = json.loads(buf.getvalue())
+    assert event["event"] == "histogram_updated"
+    assert event["bins"] == [0.1, 0.2, 0.3]
+    assert event["data"] == {"threshold": 0.5}
+
+
+def test_planning_started_scenario_field_present_only_when_given() -> None:
+    buf = io.StringIO()
+    rec = TraceRecorder(buf)
+    rec.planning_started("potential_fields", "maps/grid/clutter01.yaml", {"k_att": 1.0})
+    rec.planning_started(
+        "pure_pursuit",
+        "maps/grid/open01.yaml",
+        {"lookahead_distance": 0.6},
+        scenario="maps/scenarios/open01_s2.yaml",
+    )
+    lines = [json.loads(line) for line in buf.getvalue().splitlines()]
+    assert "scenario" not in lines[0]
+    assert lines[1]["scenario"] == "maps/scenarios/open01_s2.yaml"

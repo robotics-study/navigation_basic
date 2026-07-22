@@ -21,6 +21,13 @@ class TraceRecorder {
 
   void planning_started(const std::string& algorithm, const std::string& map_path,
                         const std::map<std::string, ParamValue>& params);
+  // Local-planning demo variant: also records the scenario yaml (repo-relative)
+  // so replay can reload reference_path/goal without the trace duplicating
+  // coordinates. Omitted from the base overload above so existing (global) demo
+  // traces stay byte-identical.
+  void planning_started(const std::string& algorithm, const std::string& map_path,
+                        const std::map<std::string, ParamValue>& params,
+                        const std::string& scenario);
   void planning_finished(bool success, const std::map<std::string, double>& metrics);
 
   // `data` (spec/trace_schema.json) carries optional algorithm-specific extra info
@@ -45,14 +52,32 @@ class TraceRecorder {
     ev_state("candidate_evaluated", to_trace(s), &cost, ptr(data));
   }
   // Dynamic replanning (D* Lite): the robot's new executed cell, and a cell newly
-  // sensed as blocked (revealed obstacle). No cost field.
+  // sensed as blocked (revealed obstacle). No cost field. Reused by the local-
+  // planning closed-loop simulator for each control tick's executed pose — same
+  // "robot's new executed state" meaning; `data` there carries the command
+  // {v, omega} that produced it. `data` defaults empty so the pre-existing D*
+  // Lite call sites (no data) stay byte-identical.
   template <class State>
-  void robot_moved(const State& s) {
-    ev_state("robot_moved", to_trace(s), nullptr, nullptr);
+  void robot_moved(const State& s, const EventData& data = {}) {
+    ev_state("robot_moved", to_trace(s), nullptr, ptr(data));
   }
   template <class State>
   void obstacle_revealed(const State& s) {
     ev_state("obstacle_revealed", to_trace(s), nullptr, nullptr);
+  }
+  // Potential Fields: attractive/repulsive force decomposition at the current
+  // pose (Khatib 1986). `data` carries {fx_att, fy_att, fx_rep, fy_rep, fx, fy}.
+  template <class State>
+  void force_computed(const State& s, const EventData& data = {}) {
+    ev_state("force_computed", to_trace(s), nullptr, ptr(data));
+  }
+  // VFH: smoothed polar histogram at the current pose (Borenstein & Koren 1991).
+  // bins[k] is sector k's density (k=0 -> world +x, counterclockwise); `data`
+  // typically carries {threshold, target_direction, selected_direction}.
+  template <class State>
+  void histogram_updated(const State& s, const std::vector<double>& bins,
+                         const EventData& data = {}) {
+    ev_bins("histogram_updated", to_trace(s), bins, ptr(data));
   }
   template <class State>
   void edge_added(const State& s, const State& parent, const EventData& data = {}) {
@@ -80,7 +105,14 @@ class TraceRecorder {
                 const EventData* data);
   void ev_edge(const char* event, const std::vector<double>& s, const std::vector<double>& parent,
                const double* cost, const EventData* data);
+  void ev_bins(const char* event, const std::vector<double>& s, const std::vector<double>& bins,
+               const EventData* data);
   void ev_path(const std::vector<std::vector<double>>& path);
+  // Shared prefix of both planning_started overloads (algorithm/map/params),
+  // left open (no end_event()) so the scenario-carrying overload can append its
+  // extra field before closing the event — avoids duplicating the params loop.
+  void begin_planning_started(const std::string& algorithm, const std::string& map_path,
+                              const std::map<std::string, ParamValue>& params);
   void begin_event(const char* event);
   void end_event();
 

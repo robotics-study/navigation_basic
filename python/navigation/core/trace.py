@@ -62,9 +62,18 @@ class TraceRecorder:
 
     # --- events -----------------------------------------------------------
     def planning_started(
-        self, algorithm: str, map_path: str, params: dict[str, ParamValue]
+        self,
+        algorithm: str,
+        map_path: str,
+        params: dict[str, ParamValue],
+        scenario: str | None = None,
     ) -> None:
-        self._emit("planning_started", {"algorithm": algorithm, "map": map_path, "params": params})
+        fields: dict[str, object] = {"algorithm": algorithm, "map": map_path, "params": params}
+        # scenario is local-demo only (replay recovers reference_path/goal from it); omit
+        # rather than emit null so existing global-planning traces stay byte-identical.
+        if scenario is not None:
+            fields["scenario"] = scenario
+        self._emit("planning_started", fields)
 
     def node_expanded(
         self, state: State, cost: float | None = None, data: EventData | None = None
@@ -101,9 +110,30 @@ class TraceRecorder:
         _add_data(fields, data)
         self._emit("candidate_evaluated", fields)
 
-    def robot_moved(self, state: State) -> None:
-        # Dynamic replanning (D* Lite): the robot's new executed cell.
-        self._emit("robot_moved", {"state": list(state)})
+    def robot_moved(self, state: State, data: EventData | None = None) -> None:
+        # Dynamic replanning (D* Lite): the robot's new executed cell. Also reused by
+        # the local-planning simulator for every closed-loop tick's executed pose,
+        # where `data` optionally carries the (v, omega) command that produced it.
+        fields: dict[str, object] = {"state": list(state)}
+        _add_data(fields, data)
+        self._emit("robot_moved", fields)
+
+    def force_computed(self, state: State, data: EventData | None = None) -> None:
+        # Potential Fields (Khatib 1986): attractive/repulsive/resultant force
+        # components at the current pose, one event per control tick.
+        fields: dict[str, object] = {"state": list(state)}
+        _add_data(fields, data)
+        self._emit("force_computed", fields)
+
+    def histogram_updated(
+        self, state: State, bins: Sequence[float], data: EventData | None = None
+    ) -> None:
+        # VFH (Borenstein & Koren 1991): polar obstacle-density histogram. `bins` is
+        # an array, which the numeric-only `data` map cannot carry, so it is a
+        # dedicated top-level field.
+        fields: dict[str, object] = {"state": list(state), "bins": list(bins)}
+        _add_data(fields, data)
+        self._emit("histogram_updated", fields)
 
     def obstacle_revealed(self, state: State) -> None:
         # Dynamic replanning (D* Lite): a cell newly sensed as blocked.
