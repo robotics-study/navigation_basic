@@ -154,6 +154,37 @@ const RUNNERS = {
         steerPenalty: p.steer_penalty, goalPosTolerance: p.goal_pos_tolerance,
         goalHeadingTolerance: p.goal_heading_tolerance,
     }),
+    // 폐루프 local planner 3종: start 는 trace 경로(robot_moved 궤적)의 첫 pose를 그대로
+    // 쓴다(RobotState 라 hybrid_astar처럼 goal도 포함된 3-tuple) — goal 은 trace에 없으므로
+    // 시나리오 yaml 값을 하드코딩한다(sst/lqr_rrt_star와 같은 이유).
+    // 시나리오: maps/scenarios/clutter01_s1.yaml (potential_fields·vfh 공용).
+    potential_fields: (m, s, g, p) => engines.runPotentialFields({
+        map: m, start: s, goal: [9.25, 9.25],
+        kAtt: p.k_att, kRep: p.k_rep, influenceRadius: p.influence_radius,
+        kV: p.k_v, kOmega: p.k_omega, maxSpeed: p.max_speed, maxOmega: p.max_omega,
+        footprintRadius: p.footprint_radius, controlDt: p.control_dt, maxSteps: p.max_steps,
+        goalTolerance: p.goal_tolerance, stallWindow: p.stall_window, stallDistance: p.stall_distance,
+    }),
+    vfh: (m, s, g, p) => engines.runVfh({
+        map: m, start: s, goal: [9.25, 9.25],
+        numSectors: p.num_sectors, windowRadius: p.window_radius, threshold: p.threshold,
+        smoothingWindow: p.smoothing_window, wideValleySectors: p.wide_valley_sectors,
+        hM: p.h_m, kOmega: p.k_omega, maxSpeed: p.max_speed, maxOmega: p.max_omega,
+        controlDt: p.control_dt, maxSteps: p.max_steps, goalTolerance: p.goal_tolerance,
+        footprintRadius: p.footprint_radius, stallWindow: p.stall_window, stallDistance: p.stall_distance,
+    }),
+    // 시나리오: maps/scenarios/open01_s2.yaml (goal + reference_path 전부 이 파일 값).
+    pure_pursuit: (m, s, g, p) => engines.runPurePursuit({
+        map: m, startPose: s, goal: [9.0, 9.0],
+        referencePath: [
+            [1.0, 1.0], [2.0, 1.0], [3.5, 1.2], [5.0, 1.5], [5.0, 3.5],
+            [5.0, 6.0], [5.0, 8.5], [7.0, 8.8], [8.7, 9.0], [9.0, 9.0],
+        ],
+        lookaheadDistance: p.lookahead_distance, maxSpeed: p.max_speed, maxOmega: p.max_omega,
+        slowRadius: p.slow_radius, controlDt: p.control_dt, maxSteps: p.max_steps,
+        goalTolerance: p.goal_tolerance, footprintRadius: p.footprint_radius,
+        stallWindow: p.stall_window, stallDistance: p.stall_distance,
+    }),
 };
 
 // exact: 연산 순서·tie-break 까지 py 를 미러 → expanded_nodes 도 일치해야 한다.
@@ -188,6 +219,18 @@ const CHECKS = [
     {algo: "lqr_rrt_star", maps: ["maze01", "open01"], exact: true},
     // sin/cos 가 libm 구현마다 1 ULP 다를 수 있어 비용은 허용 오차로만 비교한다.
     {algo: "hybrid_astar", maps: ["open01", "maze01"], exact: false, costTol: 0.05},
+    // 폐루프 local planner 3종: metricKeys 로 path_cost/expanded_nodes 대신 시뮬레이터
+    // metrics를 비교한다. steps는 valley 선택·stall·goal 판정 등 폐루프의 모든 분기가
+    // 반영된 tick 열이라 tol 0(정수 exact)이 성립한다. distance_traveled는 tick마다
+    // sin/cos/atan2를 호출하는 폐루프라 libm/V8 fdlibm 1 ULP가 수백 tick 누적될 수 있어
+    // hybrid_astar의 costTol과 같은 이유로 1e-3을 둔다. pf_trap01(정체 경계가 ULP
+    // 민감)은 parity에서 제외 — python 테스트가 그 경계를 담당한다.
+    {algo: "potential_fields", maps: ["clutter01"],
+     metricKeys: [{key: "steps", tol: 0}, {key: "distance_traveled", tol: 1e-3}]},
+    {algo: "vfh", maps: ["clutter01"],
+     metricKeys: [{key: "steps", tol: 0}, {key: "distance_traveled", tol: 1e-3}]},
+    {algo: "pure_pursuit", maps: ["open01"],
+     metricKeys: [{key: "steps", tol: 0}, {key: "distance_traveled", tol: 1e-3}]},
 ];
 
 let failures = 0;
@@ -213,21 +256,38 @@ for (const check of CHECKS) {
         if (Boolean(got.success) !== Boolean(expected.success)) {
             problems.push(`success ${got.success} != ${expected.success}`);
         }
-        const costA = got.metrics?.path_cost ?? 0;
+        // metricKeys 모드(local planner): path_cost/expanded_nodes 대신 시뮬레이터
+        // metrics(steps, distance_traveled 등)를 지정된 허용 오차로 비교한다.
+        if (check.metricKeys) {
+            for (const {key, tol} of check.metricKeys) {
+                const a = got.metrics?.[key];
+                const b = expected.metrics?.[key];
+                if (a === undefined || b === undefined || Math.abs(a - b) > tol) {
+                    problems.push(`${key} ${a} != ${b}`);
+                }
+            }
+        }
         const costB = expected.metrics?.path_cost ?? 0;
-        const costTol = check.costTol ?? 1e-6;
-        if (Math.abs(costA - costB) > costTol) {
-            problems.push(`path_cost ${costA} != ${costB}`);
+        if (!check.metricKeys) {
+            const costA = got.metrics?.path_cost ?? 0;
+            const costTol = check.costTol ?? 1e-6;
+            if (Math.abs(costA - costB) > costTol) {
+                problems.push(`path_cost ${costA} != ${costB}`);
+            }
+            if (exact) {
+                const expA = got.metrics?.expanded_nodes ?? -1;
+                const expB = expected.metrics?.expanded_nodes ?? -2;
+                if (expA !== expB) problems.push(`expanded ${expA} != ${expB}`);
+            }
         }
-        if (exact) {
-            const expA = got.metrics?.expanded_nodes ?? -1;
-            const expB = expected.metrics?.expanded_nodes ?? -2;
-            if (expA !== expB) problems.push(`expanded ${expA} != ${expB}`);
-        }
-        const tag = `${algo} × ${name}${exact ? " [exact]" : ""}`;
+        const tag = `${algo} × ${name}${exact ? " [exact]" : ""}${check.metricKeys ? " [metrics]" : ""}`;
         if (problems.length) {
             failures++;
             console.log(`FAIL ${tag}: ${problems.join("; ")}`);
+        } else if (check.metricKeys) {
+            const summary = check.metricKeys
+                .map(({key}) => `${key}=${expected.metrics?.[key]}`).join(" ");
+            console.log(`ok   ${tag}  ${summary}`);
         } else {
             console.log(`ok   ${tag}  cost=${costB.toFixed(4)} expanded=${expected.metrics?.expanded_nodes}`);
         }
