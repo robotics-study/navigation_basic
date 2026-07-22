@@ -1,0 +1,138 @@
+algorithm: elastic_bands
+category: local_planning
+params:
+  - name: k_contraction
+    type: float
+    default: 1.0
+    min: 0.0
+    max: 10.0
+    description: 내부 수축력 게인. (Quinlan & Khatib 1993)
+  - name: k_repulsion
+    type: float
+    default: 2.0
+    min: 0.0
+    max: 10.0
+    description: 외부 반발력 게인.
+  - name: rho_max
+    type: float
+    default: 1.5
+    min: 0.2
+    max: 5.0
+    description: clearance 상한 (bubble 최대 반경, meters).
+  - name: rho_influence
+    type: float
+    default: 1.0
+    min: 0.1
+    max: 5.0
+    description: 반발력이 활성화되는 clearance 반경 (meters).
+  - name: rho_min
+    type: float
+    default: 0.35
+    min: 0.05
+    max: 2.0
+    description: 단절 판정 최소 반경 (meters). 폐루프 sim footprint_radius 0.2에 여유를 더한 값.
+  - name: step_size
+    type: float
+    default: 0.2
+    min: 0.01
+    max: 1.0
+    description: 변형 1회 반복의 step 크기.
+  - name: deform_iterations
+    type: int
+    default: 5
+    min: 1
+    max: 50
+    description: tick당 변형 반복 횟수 (고정, early-exit 없음).
+  - name: repair_iterations
+    type: int
+    default: 20
+    min: 1
+    max: 100
+    description: 초기화 직후 repair 변형 반복 횟수 (관통 bubble 탈출용).
+  - name: repair_step
+    type: float
+    default: 0.2
+    min: 0.01
+    max: 1.0
+    description: 이동량 clamp 하한 (ρ=0 bubble 동결 방지).
+  - name: overlap_factor
+    type: float
+    default: 0.7
+    min: 0.3
+    max: 0.95
+    description: overlap 판정 계수 λ.
+  - name: max_bubbles
+    type: int
+    default: 80
+    min: 10
+    max: 300
+    description: bubble 수 상한.
+  - name: bubble_spacing
+    type: float
+    default: 0.4
+    min: 0.1
+    max: 2.0
+    description: 초기화 재샘플 간격 (meters).
+  - name: lookahead_distance
+    type: float
+    default: 0.7
+    min: 0.1
+    max: 3.0
+    description: 명령 추출 목표점의 arc-length 거리 (meters).
+  - name: heading_gain
+    type: float
+    default: 2.0
+    min: 0.1
+    max: 10.0
+    description: heading 비례 제어 게인.
+  - name: v_max
+    type: float
+    default: 0.8
+    min: 0.1
+    max: 2.0
+    description: 최대 전진 속도 (m/s).
+  - name: omega_max
+    type: float
+    default: 1.5
+    min: 0.1
+    max: 5.0
+    description: 최대 각속도 (rad/s).
+  # --- shared closed-loop simulator block (identical defaults across every
+  # local_planning algo; param_schema.json has no separate "sim" section, so
+  # these live as ordinary params entries like the algorithm params above) ---
+  - name: control_dt
+    type: float
+    default: 0.1
+    min: 0.001
+    max: 1.0
+    description: 제어 주기 (seconds).
+  - name: max_steps
+    type: int
+    default: 1000
+    min: 1
+    max: 100000
+    description: 최대 tick 수 (소진 시 TIMEOUT).
+  - name: goal_tolerance
+    type: float
+    default: 0.3
+    min: 0.01
+    max: 5.0
+    description: goal 도달 판정 반경 (meters).
+  - name: footprint_radius
+    type: float
+    default: 0.2
+    min: 0.01
+    max: 5.0
+    description: 로봇 충돌 footprint 반경 (meters).
+  - name: stall_window
+    type: int
+    default: 20
+    min: 1
+    max: 100000
+    description: 정체 판정 sliding window 길이 (ticks).
+  - name: stall_distance
+    type: float
+    default: 0.05
+    min: 0.0
+    max: 5.0
+    description: stall_window 구간 순변위가 이 이하이면 STALLED (meters).

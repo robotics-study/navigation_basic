@@ -7,3 +7,7 @@ precedent for per-family shared machinery.
 """
 
 from __future__ import annotations
+
+from .elastic_bands import ElasticBandsPlanner
+
+__all__ = ["ElasticBandsPlanner"]
