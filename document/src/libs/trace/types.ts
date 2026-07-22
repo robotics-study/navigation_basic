@@ -37,4 +37,7 @@ export interface TraceEvent {
     data?: Record<string, unknown>;
     // histogram_updated 전용: 폴라 히스토그램 sector 값 (index 0 = world +x, 반시계).
     bins?: number[];
+    // candidate_evaluated 선택: 후보 명령을 짧은 horizon 동안 적분한 예측 궤적 폴리라인
+    // (DWA 등 롤아웃 채점 계열). data는 스칼라 맵이라 배열을 담지 못해 bins처럼 top-level.
+    rollout?: number[][];
 }

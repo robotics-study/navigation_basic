@@ -22,7 +22,15 @@ type Pose = [number, number, number];
 interface RobotTick { step: number; pose: Pose }
 interface ForceTick { step: number; pos: [number, number]; att: [number, number]; rep: [number, number] }
 interface HistogramTick { step: number; pos: [number, number]; bins: number[]; threshold?: number }
-interface CandidateTick { step: number; pos: [number, number]; selected: boolean }
+interface CandidateTick {
+    step: number;
+    pos: [number, number];
+    selected: boolean;
+    // 롤아웃 채점 계열(DWA)의 예측 궤적 폴리라인·admissible 플래그. 방출하지 않는
+    // 엔진(PF/VFH/추종 계열)에서는 rollout이 없어 기존 렌더가 그대로 유지된다.
+    admissible: boolean;
+    rollout?: [number, number][];
+}
 
 interface LocalTimeline {
     steps: number;
@@ -79,7 +87,16 @@ function buildLocalTimeline(events: TraceEvent[]): LocalTimeline {
             case "candidate_evaluated": {
                 const s = ev.state
                 if (s && s.length >= 2) {
-                    timeline.candidates.push({step, pos: [s[0], s[1]], selected: ev.data?.selected === 1})
+                    timeline.candidates.push({
+                        step, pos: [s[0], s[1]],
+                        selected: ev.data?.selected === 1,
+                        // 플래그가 없는 엔진(PP의 단일 lookahead 점 등)은 admissible로
+                        // 간주해 마커가 기존 불투명도를 유지한다.
+                        admissible: ev.data?.admissible !== 0,
+                        rollout: ev.rollout
+                            ?.filter((p): p is number[] => Array.isArray(p) && p.length >= 2)
+                            .map((p): [number, number] => [p[0], p[1]]),
+                    })
                 }
                 break
             }
@@ -300,8 +317,22 @@ const LocalTracePlayer = ({
         const [px, py] = toPixel(c.pos[0], c.pos[1])
         return <Circle key={`cand${i}`} x={px} y={py} radius={Math.max(1.5, cellPx * 0.12)}
                        fill={c.selected ? colors.accent2 : colors.muted}
-                       opacity={c.selected ? 0.95 : 0.55}/>
+                       opacity={c.selected ? 0.95 : c.admissible ? 0.55 : 0.25}/>
     })
+
+    // 롤아웃 폴리라인(직전 tick): 비선택은 muted 얇게(기각 후보는 더 옅게), 선택 후보는
+    // accent2 굵게 — 선택 arc가 항상 위에 오도록 나중에 그린다.
+    const rolloutLines = currentCandidates
+        .filter((c) => c.rollout && c.rollout.length > 1)
+        .sort((a, b) => Number(a.selected) - Number(b.selected))
+        .map((c, i) => (
+            <Line key={`roll${i}`}
+                  points={c.rollout!.flatMap(([x, y]) => toPixel(x, y))}
+                  stroke={c.selected ? colors.accent2 : colors.muted}
+                  strokeWidth={c.selected ? Math.max(2, cellPx * 0.18) : Math.max(1, cellPx * 0.07)}
+                  opacity={c.selected ? 0.95 : c.admissible ? 0.4 : 0.15}
+                  lineCap="round" lineJoin="round" listening={false}/>
+        ))
 
     const statusLabel = (s: SimStatus): string => ({
         reached: t("reached", "도달"),
@@ -356,6 +387,8 @@ const LocalTracePlayer = ({
                     )}
                     {/* histogram rose (VFH, 최신 tick) */}
                     {latestHistogram && histogramRose(latestHistogram)}
+                    {/* 롤아웃 폴리라인(DWA, 직전 tick) — candidate 마커 아래 */}
+                    {rolloutLines}
                     {/* candidate 마커(직전 tick) */}
                     {candidateMarkers}
                     {/* force 화살표(PF, 최신 tick 1건만) */}
