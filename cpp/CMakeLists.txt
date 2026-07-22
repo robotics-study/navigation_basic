@@ -10,6 +10,11 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 add_compile_options(-Wall -Wextra -Wpedantic)
+# Python and the TypeScript engines round every multiply/add separately; letting
+# the compiler fuse a*b+c into one FMA gives differently-rounded results that
+# drift over iterative planners, breaking the cross-language bit-identical
+# closed-loop contract. Keep C++ on the same separate-rounding semantics.
+add_compile_options(-ffp-contract=off)
 
 # --- core + maps library ---
 file(GLOB_RECURSE NAVIGATION_SOURCES CONFIGURE_DEPENDS
