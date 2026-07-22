@@ -88,6 +88,13 @@ class TraceRecorder {
                          const EventData& data = {}) {
     ev_bins("histogram_updated", to_trace(s), bins, ptr(data));
   }
+  // Elastic Bands / TEB (spec/trace_schema.json `band`): the deformed
+  // bubble-chain or timed-pose-chain state, one event per control tick. No
+  // `state` field -- unlike candidate_evaluated/histogram_updated, the band
+  // itself *is* the event's subject, not an annotation on a robot pose.
+  void band_updated(const std::vector<std::vector<double>>& band, const EventData& data = {}) {
+    ev_band(band, ptr(data));
+  }
   template <class State>
   void edge_added(const State& s, const State& parent, const EventData& data = {}) {
     ev_edge("edge_added", to_trace(s), to_trace(parent), nullptr, ptr(data));
@@ -118,6 +125,7 @@ class TraceRecorder {
                const double* cost, const EventData* data);
   void ev_bins(const char* event, const std::vector<double>& s, const std::vector<double>& bins,
                const EventData* data);
+  void ev_band(const std::vector<std::vector<double>>& band, const EventData* data);
   void ev_path(const std::vector<std::vector<double>>& path);
   // Shared prefix of both planning_started overloads (algorithm/map/params),
   // left open (no end_event()) so the scenario-carrying overload can append its

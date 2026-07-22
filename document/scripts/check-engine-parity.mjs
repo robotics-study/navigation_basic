@@ -227,6 +227,40 @@ const RUNNERS = {
         footprintRadius: p.footprint_radius, stallWindow: p.stall_window,
         stallDistance: p.stall_distance,
     }),
+    // 시나리오: maps/scenarios/clutter01_s3.yaml (Elastic Bands 전용 -- 준대각 경로가
+    // 장애물 블록 5곳을 중심에서 비켜 관통해 밴드가 밀려 우회함을 시연).
+    elastic_bands: (m, s, g, p) => engines.runElasticBands({
+        map: m, startPose: s, goal: [9.25, 9.25],
+        referencePath: [[0.75, 0.75], [3.0, 3.0], [5.4, 4.9], [7.7, 7.9], [9.25, 9.25]],
+        kContraction: p.k_contraction, kRepulsion: p.k_repulsion, rhoMax: p.rho_max,
+        rhoInfluence: p.rho_influence, rhoMin: p.rho_min, stepSize: p.step_size,
+        deformIterations: p.deform_iterations, repairIterations: p.repair_iterations,
+        repairStep: p.repair_step, overlapFactor: p.overlap_factor, maxBubbles: p.max_bubbles,
+        bubbleSpacing: p.bubble_spacing, lookaheadDistance: p.lookahead_distance,
+        headingGain: p.heading_gain, maxSpeed: p.v_max, maxOmega: p.omega_max,
+        controlDt: p.control_dt, maxSteps: p.max_steps, goalTolerance: p.goal_tolerance,
+        footprintRadius: p.footprint_radius, stallWindow: p.stall_window,
+        stallDistance: p.stall_distance,
+    }),
+    // 시나리오: maps/scenarios/clutter01_s2.yaml (regulated_pure_pursuit과 공유 -- 장애물
+    // 상단을 스치는 경로. goal_theta는 시나리오에 없어 0.0으로 기본).
+    teb: (m, s, g, p) => engines.runTeb({
+        map: m, startPose: s, goal: [9.25, 9.25, 0],
+        referencePath: [
+            [0.75, 0.75], [1.0, 4.0], [1.0, 7.5], [1.6, 8.6],
+            [4.0, 8.75], [7.3, 8.75], [9.25, 9.25],
+        ],
+        wPath: p.w_path, wObstacle: p.w_obstacle, wVelocity: p.w_velocity,
+        wAcceleration: p.w_acceleration, wTime: p.w_time, wKinematics: p.w_kinematics,
+        maxSpeed: p.v_max, maxOmega: p.omega_max, aMax: p.a_max,
+        minObstacleDist: p.min_obstacle_dist, dtRef: p.dt_ref, dtMin: p.dt_min,
+        horizon: p.horizon, iterations: p.iterations, stepAlpha: p.step_alpha,
+        maxStepXy: p.max_step_xy, maxStepTheta: p.max_step_theta, maxStepDt: p.max_step_dt,
+        maxPoses: p.max_poses, reinitDistance: p.reinit_distance,
+        controlDt: p.control_dt, maxSteps: p.max_steps, goalTolerance: p.goal_tolerance,
+        footprintRadius: p.footprint_radius, stallWindow: p.stall_window,
+        stallDistance: p.stall_distance,
+    }),
 };
 
 // exact: 연산 순서·tie-break 까지 py 를 미러 → expanded_nodes 도 일치해야 한다.
@@ -279,6 +313,22 @@ const CHECKS = [
      metricKeys: [{key: "steps", tol: 0}, {key: "distance_traveled", tol: 1e-3}]},
     {algo: "regulated_pure_pursuit", maps: ["clutter01"],
      metricKeys: [{key: "steps", tol: 0}, {key: "distance_traveled", tol: 1e-3}]},
+    {algo: "elastic_bands", maps: ["clutter01"],
+     metricKeys: [{key: "steps", tol: 0}, {key: "distance_traveled", tol: 1e-3}]},
+    // TEB만 tol을 완화한다: 매 tick 40회 damped gradient descent를 돌리고, 그 안의
+    // kinematics 항이 매 반복마다 모든 내부 pose의 sin/cos를 재계산한다 -- 위 3종보다
+    // 자릿수 앞자리로 몇 단위 더 많은 sin/cos 호출이 한 tick 안에 몰려 있다. 실측
+    // 확인: 동일 theta 5000개를 넣고 비교하면 V8 Math.sin/cos이 Python math.sin/cos와
+    // 약 2.5%의 입력에서 1ULP 어긋난다(둘 다 IEEE 754를 지키지만 서로 다른 다항식
+    // 근사를 쓴다). 단일 gradient_step 반복은 이 스크립트로 직접 대조해 입력이 같으면
+    // 출력도 bit-identical함을 확인했으므로 수식 자체는 정확한 미러다 -- 하지만
+    // resize()의 dt_i > 1.5*dt_ref 같은 이산 분기가 tick당 40회 x 최대 40개 pose에
+    // 걸쳐 그 1ULP 오차를 반복 통과시키다 보면 어느 tick에서 분기 하나가 반대로
+    // 갈리고, 그 뒤로는 서로 다르지만 둘 다 유효한 궤적으로 갈라진다(둘 다 REACHED,
+    // 스텝 수 근접). tol 0은 이 알고리즘 규모에서 재현 불가능하므로, 무관한 회귀(경로
+    // 미도달·스텝 수 급변·NaN)는 잡아내되 이 계층적 ULP 분기는 통과시킬 여유를 둔다.
+    {algo: "teb", maps: ["clutter01"],
+     metricKeys: [{key: "steps", tol: 8}, {key: "distance_traveled", tol: 0.2}]},
 ];
 
 let failures = 0;

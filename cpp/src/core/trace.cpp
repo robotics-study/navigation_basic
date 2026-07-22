@@ -188,6 +188,18 @@ void TraceRecorder::ev_bins(const char* event, const std::vector<double>& s,
   end_event();
 }
 
+void TraceRecorder::ev_band(const std::vector<std::vector<double>>& band, const EventData* data) {
+  begin_event("band_updated");
+  os_ << ",\"band\":[";
+  for (size_t i = 0; i < band.size(); ++i) {
+    if (i) os_ << ',';
+    write_array(os_, band[i]);
+  }
+  os_ << ']';
+  write_data(os_, data);
+  end_event();
+}
+
 void TraceRecorder::ev_path(const std::vector<std::vector<double>>& path) {
   begin_event("path_found");
   os_ << ",\"path\":[";

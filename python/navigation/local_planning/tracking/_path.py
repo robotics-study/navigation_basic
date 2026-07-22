@@ -1,10 +1,11 @@
-"""Shared reference-path geometry for tracking planners.
+"""Reference-path lookahead geometry for tracking planners.
 
-Path trackers (Pure Pursuit and its descendants) all need the same primitives:
-project a probe point onto the path, advance a monotonic progress index along
-it, and intersect a lookahead circle with the polyline. Kept as free functions
-so each planner owns its progress state while sharing the geometry. Mirrors the
-C++ `local_planning/tracking/path.hpp`.
+Path trackers (Pure Pursuit and its descendants) additionally need to
+intersect a lookahead circle with the polyline -- kept here as a tracking-only
+free function. The point-projection/progress-index primitives this family
+shares with the band family live in `local_planning/_geometry.py` and are
+re-exported below so existing `from ._path import ...` call sites keep
+working unchanged. Mirrors the C++ `local_planning/tracking/path.hpp`.
 """
 
 from __future__ import annotations
@@ -12,21 +13,19 @@ from __future__ import annotations
 import math
 
 from navigation.core.types import Point
+from navigation.local_planning._geometry import (
+    advance_progress_index,
+    closest_point_on_segment,
+    sq_dist,
+)
 
-
-def closest_point_on_segment(p: Point, a: Point, b: Point) -> Point:
-    ax, ay = a
-    bx, by = b
-    dx, dy = bx - ax, by - ay
-    seg_len_sq = dx * dx + dy * dy
-    if seg_len_sq < 1e-12:
-        return a
-    t = max(0.0, min(1.0, ((p[0] - ax) * dx + (p[1] - ay) * dy) / seg_len_sq))
-    return (ax + t * dx, ay + t * dy)
-
-
-def sq_dist(a: Point, b: Point) -> float:
-    return (a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2
+__all__ = [
+    "advance_progress_index",
+    "closest_point_on_segment",
+    "lookahead_point",
+    "segment_circle_forward_t",
+    "sq_dist",
+]
 
 
 def segment_circle_forward_t(p: Point, a: Point, b: Point, radius: float) -> float | None:
@@ -54,28 +53,6 @@ def segment_circle_forward_t(p: Point, a: Point, b: Point, radius: float) -> flo
         if 0.0 <= t <= 1.0:
             return t
     return None
-
-
-def advance_progress_index(path: tuple[Point, ...], probe: Point, start_index: int) -> int:
-    """Nearest-segment index at or after ``start_index`` -- monotonic forward-only
-    so a self-crossing path never snaps tracking backward to an earlier,
-    geometrically-closer crossing."""
-    if len(path) < 2:
-        return start_index
-    best_index = start_index
-    best_sq_dist = float("inf")
-    for i in range(start_index, len(path) - 1):
-        closest = closest_point_on_segment(probe, path[i], path[i + 1])
-        d = sq_dist(probe, closest)
-        # <=, not <: consecutive segments share their joint endpoint, so a
-        # probe sitting exactly at a corner ties every segment ending/starting
-        # there. Preferring the later (more forward) segment on a tie keeps
-        # progress advancing through the corner instead of latching onto the
-        # segment just traveled.
-        if d <= best_sq_dist:
-            best_sq_dist = d
-            best_index = i
-    return best_index
 
 
 def lookahead_point(

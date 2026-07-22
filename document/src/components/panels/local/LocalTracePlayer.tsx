@@ -22,6 +22,9 @@ type Pose = [number, number, number];
 interface RobotTick { step: number; pose: Pose; v?: number }
 interface ForceTick { step: number; pos: [number, number]; att: [number, number]; rep: [number, number] }
 interface HistogramTick { step: number; pos: [number, number]; bins: number[]; threshold?: number }
+// Elastic Bands/TEB의 band_updated 원본을 그대로 나른다 — 항목 길이 3 = [x, y, radius]
+// (bubble), 길이 4 = [x, y, theta, dt] (pose + 직전 세그먼트 ΔT)로 렌더 시점에 판별한다.
+interface BandTick { step: number; band: number[][] }
 interface CandidateTick {
     step: number;
     pos: [number, number];
@@ -37,6 +40,7 @@ interface LocalTimeline {
     robot: RobotTick[];
     forces: ForceTick[];
     histograms: HistogramTick[];
+    bands: BandTick[];
     candidates: CandidateTick[];
     path: Pose[] | null;
     success?: boolean;
@@ -53,7 +57,7 @@ const numField = (data: Record<string, unknown> | undefined, key: string): numbe
 // candidate_evaluated/robot_moved)만 다룬다.
 function buildLocalTimeline(events: TraceEvent[]): LocalTimeline {
     const timeline: LocalTimeline = {
-        steps: events.length, robot: [], forces: [], histograms: [], candidates: [], path: null,
+        steps: events.length, robot: [], forces: [], histograms: [], bands: [], candidates: [], path: null,
     }
     events.forEach((ev, step) => {
         switch (ev.event) {
@@ -87,6 +91,12 @@ function buildLocalTimeline(events: TraceEvent[]): LocalTimeline {
                         step, pos: [s[0], s[1]], bins: ev.bins,
                         threshold: typeof threshold === "number" ? threshold : undefined,
                     })
+                }
+                break
+            }
+            case "band_updated": {
+                if (ev.band && ev.band.length > 0) {
+                    timeline.bands.push({step, band: ev.band})
                 }
                 break
             }
@@ -154,6 +164,10 @@ export interface LocalTracePlayerProps {
     showLookahead?: boolean;
     // Stanley: 로봇→참조 경로 최근접점 crosstrack 선분을 그린다.
     showCrosstrack?: boolean;
+    // Elastic Bands/TEB: 최신 tick의 band_updated(bubble/pose 열)를 그린다. band_updated를
+    // 방출하지 않는 엔진에서는 latestBand가 없어 자연히 미표시되므로, 페이지가 명시적으로
+    // 끌 때만 false로 둔다.
+    showBand?: boolean;
     panel?: number;
     autoPlay?: boolean;
     onPaintCell?: (row: number, col: number, occupied: boolean) => void;
@@ -165,7 +179,7 @@ export interface LocalTracePlayerProps {
 
 const LocalTracePlayer = ({
                               map, events, startPose, goal, referencePath, footprintRadius,
-                              showLookahead, showCrosstrack, panel = 340,
+                              showLookahead, showCrosstrack, showBand = true, panel = 340,
                               autoPlay = true, onPaintCell, onMoveStart, onMoveGoal, onReset, footer,
                           }: LocalTracePlayerProps) => {
     const t = useTr()
@@ -253,6 +267,11 @@ const LocalTracePlayer = ({
     const latestHistogram = useMemo(() => {
         let latest: HistogramTick | undefined
         for (const h of timeline.histograms) { if (h.step <= step) latest = h; else break }
+        return latest
+    }, [timeline, step])
+    const latestBand = useMemo(() => {
+        let latest: BandTick | undefined
+        for (const b of timeline.bands) { if (b.step <= step) latest = b; else break }
         return latest
     }, [timeline, step])
     const currentCandidates = useMemo(() => {
@@ -407,6 +426,54 @@ const LocalTracePlayer = ({
         </Group>
     }
 
+    // band 오버레이 (Elastic Bands bubble 열 / TEB pose 열) — 항목 길이로 자동 판별.
+    // 길이 3 = [x, y, radius] (bubble): 중심 폴리라인 + 저알파 채움/실선 테두리 원.
+    // 길이 4 = [x, y, theta, dt] (pose): 세그먼트 굵기로 ΔT(시간 간격)를 인코딩 + pose 점.
+    const bandOverlay = (b: BandTick) => {
+        const band = b.band
+        if (band.length === 0) return null
+        if (band[0].length >= 4) {
+            const dts = band.map((p) => p[3] ?? 0)
+            const dtMax = Math.max(...dts, 0)
+            const segments = []
+            for (let i = 0; i < band.length - 1; i++) {
+                // entry 0의 dt=0은 placeholder(이전 세그먼트 없음)이므로 세그먼트 i는
+                // 그 종점(i+1)의 dt를 굵기로 쓴다.
+                const dt = dts[i + 1] ?? 0
+                const sw = dtMax > 0 ? 1 + 3 * (dt / dtMax) : 1
+                const [x0, y0] = toPixel(band[i][0], band[i][1])
+                const [x1, y1] = toPixel(band[i + 1][0], band[i + 1][1])
+                segments.push(<Line key={`bseg${i}`} points={[x0, y0, x1, y1]}
+                                     stroke={colors.accent} strokeWidth={sw} opacity={0.9}
+                                     lineCap="round" listening={false}/>)
+            }
+            const poses = band.map((p, i) => {
+                const [px, py] = toPixel(p[0], p[1])
+                return <Circle key={`bpose${i}`} x={px} y={py} radius={Math.max(1.5, cellPx * 0.1)}
+                                fill={colors.accent} opacity={0.9} listening={false}/>
+            })
+            return <Group key="band" listening={false}>{segments}{poses}</Group>
+        }
+        const centers = band.flatMap(([x, y]) => toPixel(x, y))
+        const bubbles = band.flatMap(([x, y, radius], i) => {
+            const [px, py] = toPixel(x, y)
+            const rPx = radius * pxPerWorld
+            // Konva의 opacity는 fill/stroke에 함께 적용되므로, 저알파 채움과 불투명 테두리를
+            // 따로 그린다(replay.py의 facecolor/edgecolor 분리와 같은 이유).
+            return [
+                <Circle key={`bfill${i}`} x={px} y={py} radius={rPx} fill={colors.accent}
+                        opacity={0.15} listening={false}/>,
+                <Circle key={`bedge${i}`} x={px} y={py} radius={rPx} stroke={colors.accent}
+                        strokeWidth={1} opacity={0.9} listening={false}/>,
+            ]
+        })
+        return <Group key="band" listening={false}>
+            <Line points={centers} stroke={colors.accent} strokeWidth={Math.max(1.2, cellPx * 0.08)}
+                  opacity={0.9} lineCap="round" lineJoin="round" listening={false}/>
+            {bubbles}
+        </Group>
+    }
+
     const candidateMarkers = currentCandidates.map((c, i) => {
         const [px, py] = toPixel(c.pos[0], c.pos[1])
         return <Circle key={`cand${i}`} x={px} y={py} radius={Math.max(1.5, cellPx * 0.12)}
@@ -492,6 +559,8 @@ const LocalTracePlayer = ({
                         {candidateMarkers}
                         {/* force 화살표(PF, 최신 tick 1건만) */}
                         {latestForce && forceArrows(latestForce)}
+                        {/* band 오버레이(Elastic Bands/TEB, 최신 tick 1건만) */}
+                        {showBand && latestBand && bandOverlay(latestBand)}
                         {/* lookahead 원 (추종 계열): 로봇 중심, 이번 tick 후보점을 지나는 원 */}
                         {showLookahead && currentCandidates.length > 0 && (() => {
                             const cand = currentCandidates[currentCandidates.length - 1]

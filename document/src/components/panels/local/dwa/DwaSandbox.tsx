@@ -102,7 +102,11 @@ const HEADING_WEIGHT = 0.15
 const VELOCITY_WEIGHT = 0.23
 const CLEARANCE_LIMIT = 0.68
 const SLOW_RADIUS = 0.5
-const FOOTPRINT_RADIUS = 0.35
+// yaml 기본값(0.2)과 다르게 0.35로 키워 두면, clutter 프리셋의 시작점(0.75, 0.75)이
+// 경계 벽면(x=0.5)까지 0.25m 여유뿐이라 discCollides가 첫 tick부터 즉시 충돌로
+// 판정한다 -- yaml 기본값으로 되돌려 해결한다(sudden_wall/dead_end 결과는 fr=0.2에서도
+// 동일하게 REACHED/STALLED임을 실행 검증으로 확인했다).
+const FOOTPRINT_RADIUS = 0.2
 const CONTROL_DT = 0.1
 const MAX_STEPS = 400
 const GOAL_TOLERANCE = 0.3

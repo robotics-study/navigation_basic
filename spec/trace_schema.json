@@ -29,6 +29,7 @@
         "obstacle_revealed",
         "force_computed",
         "histogram_updated",
+        "band_updated",
         "path_found",
         "planning_finished"
       ]
@@ -82,7 +83,7 @@
     },
     "data": {
       "type": "object",
-      "description": "알고리즘 고유 부가 정보 (viz 는 알아도 되고 몰라도 되는 값만). 공통 필드로 표현 가능한 정보를 여기에 넣지 않는다. 예: robot_moved 의 {v, omega}, force_computed 의 {fx_att, fy_att, fx_rep, fy_rep, fx, fy}, histogram_updated 의 {threshold, target_direction, selected_direction}, DWA candidate_evaluated 의 {v, omega, heading, clearance, velocity, admissible, selected}, Stanley candidate_evaluated 의 {e, psi, v}, Regulated Pure Pursuit candidate_evaluated 의 {alpha, lookahead, curvature_scale, proximity_scale, blocked}."
+      "description": "알고리즘 고유 부가 정보 (viz 는 알아도 되고 몰라도 되는 값만). 공통 필드로 표현 가능한 정보를 여기에 넣지 않는다. 예: robot_moved 의 {v, omega}, force_computed 의 {fx_att, fy_att, fx_rep, fy_rep, fx, fy}, histogram_updated 의 {threshold, target_direction, selected_direction}, DWA candidate_evaluated 의 {v, omega, heading, clearance, velocity, admissible, selected}, Stanley candidate_evaluated 의 {e, psi, v}, Regulated Pure Pursuit candidate_evaluated 의 {alpha, lookahead, curvature_scale, proximity_scale, blocked}, Elastic Bands band_updated 의 {iterations, bubbles, broken}, TEB band_updated 의 {iterations, poses, total_cost, horizon_time}."
     },
     "bins": {
       "type": "array",
@@ -93,6 +94,11 @@
       "type": "array",
       "items": { "$ref": "#/$defs/state" },
       "description": "candidate_evaluated 선택 필드: 후보 명령을 짧은 horizon 동안 적분한 예측 궤적 폴리라인 (DWA 등 롤아웃 채점 계열). data 는 스칼라 맵이라 배열을 담을 수 없으므로 bins 와 같은 top-level 배열로 둔다."
+    },
+    "band": {
+      "type": "array",
+      "items": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 4 },
+      "description": "band_updated 전용: 탄성 밴드 상태 열. 항목 길이 3 = [x, y, radius] (Elastic Bands bubble: world 중심 + clearance 반경), 길이 4 = [x, y, theta, dt] (TEB pose + 직전 구간 ΔT초; 첫 항목의 dt = 0). data 는 스칼라 맵이라 배열을 담을 수 없으므로 bins/rollout 과 같은 top-level 배열로 둔다."
     }
   },
   "$defs": {

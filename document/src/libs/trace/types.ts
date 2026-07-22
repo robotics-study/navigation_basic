@@ -13,6 +13,7 @@ export type TraceEventType =
     | "obstacle_revealed"
     | "force_computed"
     | "histogram_updated"
+    | "band_updated"
     | "path_found"
     | "planning_finished";
 
@@ -40,4 +41,8 @@ export interface TraceEvent {
     // candidate_evaluated 선택: 후보 명령을 짧은 horizon 동안 적분한 예측 궤적 폴리라인
     // (DWA 등 롤아웃 채점 계열). data는 스칼라 맵이라 배열을 담지 못해 bins처럼 top-level.
     rollout?: number[][];
+    // band_updated 전용: 탄성 밴드 상태 열. 항목 길이 3 = [x, y, radius] (Elastic Bands
+    // bubble), 길이 4 = [x, y, theta, dt] (TEB pose + 직전 구간 dt). data는 스칼라 맵이라
+    // 배열을 담지 못해 bins/rollout처럼 top-level.
+    band?: number[][];
 }
