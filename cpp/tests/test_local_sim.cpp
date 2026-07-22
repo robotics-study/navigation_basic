@@ -30,9 +30,8 @@ using local_planning::simulate;
 
 namespace {
 
-// --- minimal script planners (test-internal only; a fixture, not a production
-// algorithm -- principles.md's "no production-code changes for tests" rule does
-// not apply to helper classes that live inside the test file itself) ---------
+// --- minimal script planners: fixtures that live inside the test file, not
+// production algorithms, so they relax no visibility on the real planners -----
 
 // Constant forward speed, no turning -- exercises integrate_unicycle's straight
 // branch (omega == 0) and the REACHED / COLLISION / TIMEOUT termination paths.
@@ -87,9 +86,9 @@ class ZeroPlanner : public ObstacleLocalPlanner {
 };
 
 // Turns for the first `turn_ticks_` calls (mutating `ticks_`), then drives
-// straight. Used to prove simulate() calls planner.reset() at episode start
-// (spec §3 step 1): re-running the SAME instance twice must not let the first
-// episode's counter leak into the second.
+// straight. Used to prove simulate() calls planner.reset() at episode start:
+// re-running the SAME instance twice must not let the first episode's counter
+// leak into the second.
 class CountingPlanner : public ObstacleLocalPlanner {
  public:
   explicit CountingPlanner(int turn_ticks)

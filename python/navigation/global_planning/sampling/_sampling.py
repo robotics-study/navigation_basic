@@ -199,7 +199,7 @@ def insert_best_parent(
         if not space.is_motion_valid(tree.points[j], q_new):
             continue
         # candidate_evaluated carries the neighbor and its route-through cost, so it
-        # is emitted only once the edge is known feasible (DESIGN §7).
+        # is emitted only once the edge is known feasible.
         c = tree.cost[j] + space.distance(tree.points[j], q_new)
         if recorder is not None:
             recorder.candidate_evaluated(tree.points[j], c)
