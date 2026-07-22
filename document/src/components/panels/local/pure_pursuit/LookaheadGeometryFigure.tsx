@@ -1,5 +1,5 @@
 import {Arrow, Circle, Layer, Line, Shape, Stage, Text} from "react-konva";
-import CanvasFigure from "../../../CanvasFigure";
+import CanvasFigure, {modalScale} from "../../../CanvasFigure";
 import {useCanvasColors} from "../../../../libs/useTheme";
 import {useTr} from "../../../../libs/i18n";
 
@@ -21,7 +21,7 @@ const drawMinorArc = (
     ctx.arc(cx, cy, r, a1, a1 + diff, diff < 0)
 }
 
-const Scene = () => {
+const Scene = ({scale = 1}: {scale?: number}) => {
     const colors = useCanvasColors()
 
     const alpha = (ALPHA_DEG * Math.PI) / 180
@@ -49,9 +49,9 @@ const Scene = () => {
     ]
 
     return (
-        <Stage width={PANEL} height={PANEL}
+        <Stage width={PANEL * scale} height={PANEL * scale}
                className="bg-surface border border-border rounded-lg overflow-hidden">
-            <Layer>
+            <Layer scaleX={scale} scaleY={scale}>
                 {/* 참조 경로 (파선) */}
                 <Line points={pathPts} stroke={colors.muted} strokeWidth={2} dash={[7, 5]}
                       lineCap="round" lineJoin="round" tension={0.35}/>
@@ -107,7 +107,7 @@ const LookaheadGeometryFigure = () => {
             "접선-현 구성. 로봇의 heading에 접하면서 lookahead 점도 지나는 유일한 원 -- 그 반지름이 R = L_d / (2 sin α)다",
         )}
         tight bodyClassName="w-fit" className="w-full"
-        modal={<Scene/>}
+        modal={<Scene scale={modalScale(PANEL, PANEL)}/>}
     >
         <Scene/>
     </CanvasFigure>

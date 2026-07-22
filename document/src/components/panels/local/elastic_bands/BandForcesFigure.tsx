@@ -1,6 +1,6 @@
 import {Fragment} from "react";
 import {Arrow, Circle, Layer, Line, Rect, Stage} from "react-konva";
-import CanvasFigure from "../../../CanvasFigure";
+import CanvasFigure, {modalScale} from "../../../CanvasFigure";
 import {useCanvasColors} from "../../../../libs/useTheme";
 import {useTr} from "../../../../libs/i18n";
 
@@ -71,7 +71,7 @@ const MARGIN_X = 24
 const MARGIN_Y = 30
 const toPx = (v: Vec): Vec => [MARGIN_X + v[0] * SCALE, H - MARGIN_Y - v[1] * SCALE]
 
-const Scene = () => {
+const Scene = ({scale = 1}: {scale?: number}) => {
     const colors = useCanvasColors()
     const interior = [1, 2, 3, 4, 5]
     const forces = interior.map((i) => ({i, ...forcesAt(i)}))
@@ -89,8 +89,8 @@ const Scene = () => {
     }
 
     return (
-        <Stage width={W} height={H} className="bg-surface border border-border rounded-lg overflow-hidden">
-            <Layer>
+        <Stage width={W * scale} height={H * scale} className="bg-surface border border-border rounded-lg overflow-hidden">
+            <Layer scaleX={scale} scaleY={scale}>
                 {OBSTACLES.map(([x, y], i) => {
                     const [px, py] = toPx([x, y])
                     return <Rect key={`o${i}`} x={px - 8} y={py - 8} width={16} height={16}
@@ -133,7 +133,7 @@ const BandForcesFigure = () => {
             "위 힘 수식 그대로 고정 toy 밴드 위에서 계산한 수축력(파랑), 접선 제거 후 반발력(빨강), 그 합 f̃(검정). 장애물 뭉치에서 먼 bubble(왼쪽)은 거의 순수한 수축력만 느끼고, 뭉치를 스치는 bubble(가운데 오른쪽)은 반발력에 밀려난다",
         )}
         tight bodyClassName="w-fit" className="w-full"
-        modal={<Scene/>}
+        modal={<Scene scale={modalScale(W, H)}/>}
     >
         <Scene/>
     </CanvasFigure>

@@ -1,6 +1,6 @@
 import {useMemo} from "react";
 import {Circle, Layer, Line, Stage} from "react-konva";
-import CanvasFigure from "../../../CanvasFigure";
+import CanvasFigure, {modalScale} from "../../../CanvasFigure";
 import {runTeb} from "../../../../libs/algorithms/teb";
 import {GridMap} from "../../../../libs/grid";
 import {Point} from "../../../../libs/algorithms/sampling_space";
@@ -48,15 +48,19 @@ function firstBand(iterations: number): number[][] {
 
 const W = 300
 const H = 300
-const SCALE = 60
-const MARGIN = 24
-const toPx = (x: number, y: number): [number, number] => [MARGIN + x * SCALE, H - MARGIN - y * SCALE]
+// 콘텐츠(0.75~3.5 코너 경로 + 밴드 흔들림 여유)를 캔버스에 꽉 차게 맞춘 world 창.
+const WORLD_MIN = 0.35
+const WORLD_MAX = 3.9
+const MARGIN = 16
+const SCALE = (W - 2 * MARGIN) / (WORLD_MAX - WORLD_MIN)
+const toPx = (x: number, y: number): [number, number] =>
+    [MARGIN + (x - WORLD_MIN) * SCALE, H - MARGIN - (y - WORLD_MIN) * SCALE]
 
 // 세 반복 횟수의 band는 테마와 무관한 순수 계산이므로, 컴포넌트 밖에서 한 번만 구한다
 // (테마 토글마다 runTeb를 다시 돌릴 이유가 없다).
 const BANDS_BY_ITERATIONS = [0, 10, 40].map((iterations) => ({iterations, band: firstBand(iterations)}))
 
-const Scene = () => {
+const Scene = ({scale = 1}: {scale?: number}) => {
     const colors = useCanvasColors()
     const bands = useMemo(() => ([
         {...BANDS_BY_ITERATIONS[0], color: colors.muted},
@@ -65,8 +69,8 @@ const Scene = () => {
     ]), [colors])
 
     return (
-        <Stage width={W} height={H} className="bg-surface border border-border rounded-lg overflow-hidden">
-            <Layer>
+        <Stage width={W * scale} height={H * scale} className="bg-surface border border-border rounded-lg overflow-hidden">
+            <Layer scaleX={scale} scaleY={scale}>
                 <Line points={TOY_PATH.flatMap(([x, y]) => toPx(x, y))} stroke={colors.muted}
                       strokeWidth={1.4} dash={[5, 4]} opacity={0.6}/>
                 {bands.map(({iterations, band, color}) => {
@@ -99,7 +103,7 @@ const TebOptimizationFigure = () => {
             "실제 teb.ts 솔버로 같은 90도 toy 코너를 gradient descent 0회(회색)/10회(청록)/40회(밝음, 기본값) 반복 최적화한 결과. 수렴할수록 pose 열이 코너 안쪽으로 당겨지고 세그먼트 굵기(∝ΔT)가 줄어든다",
         )}
         tight bodyClassName="w-fit" className="w-full"
-        modal={<Scene/>}
+        modal={<Scene scale={modalScale(W, H)}/>}
     >
         <Scene/>
     </CanvasFigure>

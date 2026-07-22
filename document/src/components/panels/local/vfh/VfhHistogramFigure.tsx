@@ -1,6 +1,6 @@
 import {useMemo, useState} from "react";
 import {Arrow, Circle, Layer, Shape, Stage} from "react-konva";
-import CanvasFigure from "../../../CanvasFigure";
+import CanvasFigure, {modalScale} from "../../../CanvasFigure";
 import {useCanvasColors} from "../../../../libs/useTheme";
 import {useTr} from "../../../../libs/i18n";
 import {PATH_COLOR} from "../../../2d/GridCanvas";
@@ -52,7 +52,7 @@ function findValleys(below: boolean[]): Valley[] {
 const circularDist = (a: number, b: number) => Math.min(((a - b) % N + N) % N, ((b - a) % N + N) % N)
 const contains = (v: Valley, k: number) => (((k - v.start) % N + N) % N) < v.width
 
-const Scene = () => {
+const Scene = ({scale = 1}: {scale?: number}) => {
     const t = useTr()
     const colors = useCanvasColors()
     const [threshold, setThreshold] = useState(0.4)
@@ -90,8 +90,8 @@ const Scene = () => {
 
     return (
         <div className="flex flex-col items-center gap-2">
-            <Stage width={SIZE} height={SIZE} className="bg-surface border border-border rounded-lg overflow-hidden">
-                <Layer>
+            <Stage width={SIZE * scale} height={SIZE * scale} className="bg-surface border border-border rounded-lg overflow-hidden">
+                <Layer scaleX={scale} scaleY={scale}>
                     {/* 히스토그램 wedge — threshold 이상(막힘)은 경고색, 미만(valley)은 회색 */}
                     {[false, true].map((blocked) => (
                         <Shape key={`w${blocked}`} listening={false} sceneFunc={(ctx, shape) => {
@@ -143,14 +143,14 @@ const Scene = () => {
                     })()}
                 </Layer>
             </Stage>
-            <label className="flex items-center gap-2 text-xs text-muted w-full" style={{maxWidth: SIZE}}>
+            <label className="flex items-center gap-2 text-xs text-muted w-full" style={{maxWidth: SIZE * scale}}>
                 <span className="whitespace-nowrap">{t("threshold", "threshold")}</span>
                 <input type="range" min={0.05} max={maxBin * 0.95} step={0.01} value={threshold}
                        onChange={(e) => setThreshold(parseFloat(e.target.value))}
                        className="flex-1 accent-[var(--accent)]"
                        aria-label={t("valley threshold", "valley threshold")}/>
             </label>
-            <div className="text-xs text-muted text-center" style={{maxWidth: SIZE}}>
+            <div className="text-xs text-muted text-center" style={{maxWidth: SIZE * scale}}>
                 <span style={{color: "var(--accent)"}} className="font-semibold">{t("goal", "goal")}</span>
                 {" · "}
                 <span style={{color: "var(--accent-2)"}} className="font-semibold">
@@ -175,7 +175,7 @@ const VfhHistogramFigure = () => {
             "장애물 뭉치 둘이 폴라 히스토그램에 봉우리 두 개를 세운다. 밀도가 threshold(점선 원) 미만인 sector들이 열린 valley다. VFH는 goal 방향에 가장 가까운 valley로 조향한다. goal sector가 열려 있으면 goal로 직행하고, 아니면 valley의 goal 쪽 경계 안쪽을 겨눈다. threshold를 내리면 valley가 좁아지다 닫힌다.",
         )}
         tight bodyClassName="w-fit" className="w-full"
-        modal={<Scene/>}
+        modal={<Scene scale={modalScale(SIZE, SIZE)}/>}
     >
         <Scene/>
     </CanvasFigure>

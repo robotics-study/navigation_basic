@@ -27,6 +27,13 @@ export const modalCanvasSize = (aspect = 1) => {
     return {width, height: Math.round(width / aspect)};
 };
 
+// 고정 픽셀 크기 Konva figure를 모달에서 크게 채우기 위한 배율. 네이티브 (w, h)를
+// 뷰포트에 맞춘 modalCanvasSize 폭에 대응시켜 배율을 구한다. Scene은 이 값을 Stage
+// 크기와 Layer scaleX/scaleY에 곱해 벡터 그대로 선명하게 확대한다(래스터 CSS 확대와
+// 달리 흐려지지 않는다). cap으로 과확대를 막는다.
+export const modalScale = (w: number, h: number, cap = 2.6) =>
+    Math.min(cap, modalCanvasSize(w / h).width / w);
+
 const ZoomIcon = () => (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
          strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
