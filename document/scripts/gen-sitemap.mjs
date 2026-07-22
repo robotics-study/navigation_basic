@@ -8,7 +8,7 @@ import {fileURLToPath} from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const ORIGIN = "https://robotics-study.github.io";
-const BASE = "/navigation/";
+const BASE = "/navigation_basic/";
 
 const indexTs = readFileSync(join(root, "src/pages/algorithms/index.ts"), "utf-8");
 const slugs = indexTs

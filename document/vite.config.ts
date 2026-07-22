@@ -3,7 +3,7 @@ import {defineConfig} from 'vite';
 
 export default defineConfig(({mode}) => {
     return {
-        base: mode == 'production' ? '/navigation' : '/',
+        base: mode == 'production' ? '/navigation_basic' : '/',
         server: {
             host: true,
             port: 3000,
