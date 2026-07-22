@@ -156,6 +156,48 @@ TEST(Dwa, AdmissibleBoundForcesDecelerationFacingACloseWall) {
   EXPECT_LE(cmd.v, bound + 1e-9);
 }
 
+// (d2) no admissible candidate at all: maximum-braking fallback -----------------
+TEST(Dwa, AllCandidatesCollidingFallsBackToMaximumBraking) {
+  // Wall so close (gap 0.25 m vs footprint 0.2 m) that every candidate's very
+  // first rollout pose already collides: the window's v floor is positive at
+  // this speed, so no candidate can stand still and none survives scoring.
+  auto params = real_config();
+  const double resolution = 0.02;
+  const int cols = 300, rows = 300;
+  const double x0 = 3.0, y0 = 3.0;
+  const int wall_col = static_cast<int>(std::round((x0 + 0.25) / resolution - 0.5));
+  std::vector<bool> free_cells(static_cast<size_t>(rows) * cols, true);
+  for (int r = 0; r < rows; ++r) {
+    for (int c = wall_col; c < cols; ++c) free_cells[static_cast<size_t>(r) * cols + c] = false;
+  }
+  maps::OccupancyGrid2D grid(rows, cols, resolution, 0.0, 0.0, std::move(free_cells));
+
+  DwaPlanner planner(params);
+  const double dt = params.get_float("control_dt");
+  const double v_a = params.get_float("max_speed");
+  const double omega_a = 1.0;
+  RobotState state{Pose{x0, y0, 0.0}, v_a, omega_a};
+  LocalTask task{Pose{x0 + 100.0, y0, 0.0}, {}};
+
+  std::ostringstream os;
+  TraceRecorder rec(os);
+  core::VelocityCommand cmd = planner.compute_command(grid, state, task, dt, &rec);
+
+  // Braking at the kinematic limits: v drops by exactly one tick's accel
+  // budget and omega decays toward zero without flipping sign.
+  EXPECT_NEAR(cmd.v, v_a - params.get_float("accel") * dt, 1e-9);
+  const double expected_omega = omega_a - std::min(omega_a, params.get_float("accel_omega") * dt);
+  EXPECT_NEAR(cmd.omega, expected_omega, 1e-9);
+  EXPECT_GE(cmd.omega, 0.0);
+  EXPECT_LT(cmd.omega, omega_a);
+  std::vector<std::string> candidates = lines_with_event(split_lines(os.str()), "candidate_evaluated");
+  ASSERT_FALSE(candidates.empty());
+  for (const std::string& line : candidates) {
+    EXPECT_DOUBLE_EQ(find_data_value(line, "admissible"), 0.0);
+    EXPECT_DOUBLE_EQ(find_data_value(line, "selected"), 0.0);
+  }
+}
+
 // (e) dynamic window: stopped robot cannot exceed one tick's accel budget -------
 TEST(Dwa, DynamicWindowCapsAccelerationFromAStop) {
   auto params = real_config();

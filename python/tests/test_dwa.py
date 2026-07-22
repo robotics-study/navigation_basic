@@ -81,14 +81,8 @@ def test_dead_end_trap_stalls_without_colliding(tmp_path: Path) -> None:
 
 # --- (c) v_samples below the declared minimum fails load-time validation -------
 def test_v_samples_below_min_rejected_at_load_time(tmp_path: Path) -> None:
-    doc = yaml.safe_load(_CONFIG_PATH.read_text())
-    for entry in doc["params"]:
-        if entry["name"] == "v_samples":
-            entry["default"] = 0
-    bad = tmp_path / f"{_ALGO}.yaml"
-    bad.write_text(yaml.safe_dump(doc), encoding="utf-8")
     with pytest.raises(ParamError):
-        ParamSet.from_yaml(bad)
+        _config(tmp_path, v_samples=0)
 
 
 # --- (d) admissibility: a close head-on wall forces a slower, bounded command --
