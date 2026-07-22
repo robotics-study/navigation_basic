@@ -362,3 +362,82 @@ def test_rollout_arcs_drawn_by_flag() -> None:
     assert len(selected_lines) == 1
     assert len(selected_lines[0].get_xdata()) == 3  # full rollout polyline
     plt.close(fig)
+
+
+def _band_events(bands: list[list[list[float]]]) -> list[dict[str, object]]:
+    """Minimal band-planner trace: one band_updated + robot_moved per tick."""
+    events: list[dict[str, object]] = [
+        {"seq": 0, "event": "planning_started", "algorithm": "elastic_bands",
+         "map": "maps/grid/open01.yaml", "params": {}},
+    ]
+    seq = 1
+    x = 0.75
+    for band in bands:
+        events.append({
+            "seq": seq, "event": "band_updated", "band": band,
+            "data": {"iterations": 5.0, "bubbles": float(len(band)), "broken": 0.0},
+        })
+        seq += 1
+        x += 0.2
+        events.append({
+            "seq": seq, "event": "robot_moved", "state": [x, 0.75, 0.0],
+            "data": {"v": 0.5, "omega": 0.0},
+        })
+        seq += 1
+    return events
+
+
+def test_build_scene_loads_band_events() -> None:
+    grid = load_map(REPO_ROOT / "maps" / "grid" / "open01.yaml")
+    first = [[0.75, 0.75, 0.4], [1.5, 0.9, 0.6], [2.4, 0.8, 0.5]]
+    second = [[0.95, 0.75, 0.4], [1.7, 0.9, 0.6]]
+    scene = replay.build_scene(_band_events([first, second]), grid)
+    assert scene.bands == [first, second]
+    assert scene.band_orders == sorted(scene.band_orders)  # replayable prefix-cut
+
+
+def test_band_overlay_draws_latest_tick_only() -> None:
+    # Elastic Bands shape: one translucent clearance disc per bubble, and only
+    # the band of the newest tick at or before the cutoff should be visible.
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    from matplotlib.patches import Circle
+
+    grid = load_map(REPO_ROOT / "maps" / "grid" / "open01.yaml")
+    first = [[0.75, 0.75, 0.4], [1.5, 0.9, 0.6], [2.4, 0.8, 0.5]]
+    second = [[0.95, 0.75, 0.4], [1.7, 0.9, 0.6]]
+    scene = replay.build_scene(_band_events([first, second]), grid)
+
+    def band_discs(cutoff: int) -> list[Circle]:
+        fig, ax = plt.subplots()
+        replay._draw(ax, scene, cutoff, show_path=False)
+        discs = [p for p in ax.patches if isinstance(p, Circle)]
+        plt.close(fig)
+        return discs
+
+    assert len(band_discs(scene.total_ops)) == len(second)  # latest band only
+    assert len(band_discs(scene.band_orders[0])) == len(first)  # before tick 2
+
+
+def test_teb_band_segment_width_encodes_dt() -> None:
+    # TEB shape: each segment's linewidth grows with its ΔT (thicker = slower);
+    # entry 0's dt is a placeholder, so segment i uses entry i+1's dt.
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    grid = load_map(REPO_ROOT / "maps" / "grid" / "open01.yaml")
+    band = [[0.75, 0.75, 0.0, 0.0], [1.5, 0.9, 0.1, 0.2], [2.4, 0.8, 0.2, 0.4]]
+    scene = replay.build_scene(_band_events([band]), grid)
+    fig, ax = plt.subplots()
+    replay._draw(ax, scene, scene.total_ops, show_path=False)
+    widths = sorted(
+        ln.get_linewidth()
+        for ln in ax.lines
+        if ln.get_color() == replay._BAND_COLOR and len(ln.get_xdata()) == 2
+    )
+    assert widths == pytest.approx([0.8 + 3.0 * (0.2 / 0.4), 0.8 + 3.0 * (0.4 / 0.4)])
+    plt.close(fig)
