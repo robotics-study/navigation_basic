@@ -12,13 +12,15 @@ import json
 from collections.abc import Callable
 
 from navigation.core.params import ParamSet
-from navigation.core.planner import GlobalPlanner
+from navigation.core.planner import GlobalPlanner, LocalPlanner
 from navigation.core.trace import open_trace
-from navigation.core.types import Cell, PlanResult, Point, Pose
+from navigation.core.types import Cell, LocalTask, PlanResult, Point, Pose, RobotState
+from navigation.local_planning.simulation import SimConfig, simulate
 from navigation.maps.loader import load_map, load_scenario
 from navigation.maps.occupancy_grid import OccupancyGrid2D
 
 PlannerFactory = Callable[[ParamSet], GlobalPlanner]
+LocalPlannerFactory = Callable[[ParamSet], LocalPlanner]
 
 
 def _parse_args(name: str) -> argparse.Namespace:
@@ -75,6 +77,49 @@ def run_sampling(name: str, factory: PlannerFactory) -> None:
         recorder.planning_started(planner.name, args.map, params.values())
         result = planner.plan(grid, start, goal, recorder)
     _report(planner.name, result)
+
+
+def run_local(name: str, factory: LocalPlannerFactory) -> None:
+    # Local planners have no `plan()` result to summarize -- assembly instead
+    # wires a closed-loop SimConfig (from the yaml's shared sim-params block)
+    # and hands the run to the simulator, which owns tick order + termination.
+    args = _parse_args(name)
+    params = ParamSet.from_yaml(args.params)
+    seed = params.get_int("seed") if params.has("seed") else args.seed
+    grid = load_map(args.map, seed=seed, connectivity=args.connectivity)
+    assert isinstance(grid, OccupancyGrid2D)
+    scenario = load_scenario(args.scenario)
+    planner = factory(params)
+    task = LocalTask(
+        goal=(scenario.goal[0], scenario.goal[1], scenario.goal_theta),
+        reference_path=scenario.reference_path,
+    )
+    if planner.requires_reference_path() and not task.reference_path:
+        raise ValueError(
+            f"{planner.name} requires a reference_path, but {args.scenario} declares none"
+        )
+    config = SimConfig(
+        control_dt=params.get_float("control_dt"),
+        max_steps=params.get_int("max_steps"),
+        goal_tolerance=params.get_float("goal_tolerance"),
+        footprint_radius=params.get_float("footprint_radius"),
+        stall_window=params.get_int("stall_window"),
+        stall_distance=params.get_float("stall_distance"),
+    )
+    start = RobotState(pose=(scenario.start[0], scenario.start[1], scenario.start_theta))
+    with open_trace(args.trace) as recorder:
+        recorder.planning_started(planner.name, args.map, params.values(), scenario=args.scenario)
+        result = simulate(planner, grid, start, task, config, recorder)
+    summary = {
+        "algorithm": planner.name,
+        "status": result.status.value,
+        "success": result.success,
+        "time_to_goal": round(result.time_to_goal, 4),
+        "distance_traveled": round(result.distance_traveled, 4),
+        "min_clearance": round(result.min_clearance, 4),
+        "steps": result.steps,
+    }
+    print(json.dumps(summary))
 
 
 def run_kinodynamic(name: str, factory: PlannerFactory) -> None:
