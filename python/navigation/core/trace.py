@@ -145,6 +145,15 @@ class TraceRecorder:
         _add_data(fields, data)
         self._emit("histogram_updated", fields)
 
+    def band_updated(self, band: Sequence[Sequence[float]], data: EventData | None = None) -> None:
+        # Elastic Bands / TEB (spec/trace_schema.json `band`): the deformed
+        # bubble-chain or timed-pose-chain state, one event per control tick. No
+        # `state` field -- unlike candidate_evaluated/histogram_updated, the band
+        # itself *is* the event's subject, not an annotation on a robot pose.
+        fields: dict[str, object] = {"band": [list(b) for b in band]}
+        _add_data(fields, data)
+        self._emit("band_updated", fields)
+
     def obstacle_revealed(self, state: State) -> None:
         # Dynamic replanning (D* Lite): a cell newly sensed as blocked.
         self._emit("obstacle_revealed", {"state": list(state)})
