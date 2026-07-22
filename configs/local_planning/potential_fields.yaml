@@ -1,0 +1,90 @@
+algorithm: potential_fields
+category: local_planning
+params:
+  - name: k_att
+    type: float
+    default: 0.5
+    min: 0.001
+    max: 100.0
+    description: >-
+      목표 인력 게인 (Khatib 1986). F_att = k_att * (goal - p) 는 거리에 정규화 없이
+      선형 비례하므로, 먼 목표에서도 근접 장애물의 반발력이 묻히지 않도록 k_rep 대비
+      낮게 잡는다.
+  - name: k_rep
+    type: float
+    default: 3.0
+    min: 0.0
+    max: 100.0
+    description: FIRAS 반발 게인 (Khatib 1986). 0 이면 반발력 없이 인력만 작동.
+  - name: influence_radius
+    type: float
+    default: 0.7
+    min: 0.05
+    max: 20.0
+    description: >-
+      반발력이 미치는 최대 거리 (meters, rho_0). 이 밖의 장애물은 무시한다. 접촉
+      반경 위주로 좁게 잡아 원거리 인력에 묻히지 않게 한다.
+  - name: k_v
+    type: float
+    default: 1.0
+    min: 0.001
+    max: 100.0
+    description: 합력 크기를 유효 속도로 바꾸는 게인 (v_eff = min(max_speed, k_v * |F|)).
+  - name: k_omega
+    type: float
+    default: 4.0
+    min: 0.001
+    max: 100.0
+    description: heading 오차를 각속도 명령으로 바꾸는 게인.
+  - name: max_speed
+    type: float
+    default: 0.8
+    min: 0.01
+    max: 10.0
+    description: 최대 선속도 (m/s).
+  - name: max_omega
+    type: float
+    default: 5.0
+    min: 0.01
+    max: 20.0
+    description: >-
+      최대 각속도 (rad/s). 좁은 통로 근처에서 heading 오차가 90도에 가까워지면
+      heading_command 의 cos 게이트가 전진 속도를 거의 0 으로 만드는데, 회전 자체가
+      느리면 고정 크기의 stall_window 안에서 헤딩을 회복하지 못해 진짜 진행 중인
+      회피 회전이 정체로 오판된다. 빠른 회전 한계로 이를 피한다.
+  - name: control_dt
+    type: float
+    default: 0.1
+    min: 0.001
+    max: 1.0
+    description: 제어 주기 (seconds). 시뮬레이터가 소비하는 공용 sim 파라미터.
+  - name: max_steps
+    type: int
+    default: 1000
+    min: 1
+    max: 100000
+    description: 에피소드 최대 tick 수. 소진 시 TIMEOUT.
+  - name: goal_tolerance
+    type: float
+    default: 0.3
+    min: 0.01
+    max: 5.0
+    description: 목표 도달 판정 반경 (meters).
+  - name: footprint_radius
+    type: float
+    default: 0.2
+    min: 0.01
+    max: 5.0
+    description: 로봇 충돌 반경 (meters). PF 의 반발항 최소 거리 클램프(d_min)로도 재사용.
+  - name: stall_window
+    type: int
+    default: 20
+    min: 1
+    max: 100000
+    description: 정체 판정 sliding window 크기 (tick 수).
+  - name: stall_distance
+    type: float
+    default: 0.05
+    min: 0.0
+    max: 5.0
+    description: window 내 순변위가 이 값 미만이면 STALLED (local minimum 등 정체로 판정).
