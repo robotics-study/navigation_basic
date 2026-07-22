@@ -443,8 +443,9 @@ const data: IAlgoData[] = [
         ],
     },
     // ---- Local planning ----
-    // 계보순: 반응형 힘장(potential_fields) → 히스토그램 조향(vfh) → 기하학적 경로 추종
-    // (pure_pursuit) → 명령 공간 sampling(dwa, 구현 예정) → 궤적 최적화(mpc, 구현 예정).
+    // 계보순: 반응형 힘장(potential_fields) → 히스토그램 조향(vfh) → 명령 공간 sampling
+    // (dwa) → 기하학적 경로 추종(pure_pursuit) → 오차 기반 조향(stanley) → 실무형 규제
+    // 추종(regulated_pure_pursuit) → 궤적 최적화(mpc, 구현 예정).
     {
         slug: "potential_fields",
         title: {en: "Potential Fields", ko: "Potential Fields"},
@@ -478,6 +479,22 @@ const data: IAlgoData[] = [
         ],
     },
     {
+        slug: "dwa",
+        title: {en: "DWA", ko: "DWA"},
+        category: "local",
+        supportedExample: {python: true, "c++": true},
+        contents: lazy(() => import("./local/Dwa")),
+        sections: [
+            {en: "Sampling the Velocity Space", ko: "속도 공간을 샘플링한다"},
+            {en: "Properties and Complexity", ko: "성질과 복잡도"},
+            {en: "The Algorithm", ko: "알고리즘"},
+            {en: "The Admissible Velocity Bound", ko: "Admissible 속도의 유도"},
+            {en: "Demo", ko: "Demo"},
+            {en: "Implementation", ko: "Implementation"},
+            {en: "References", ko: "References"},
+        ],
+    },
+    {
         slug: "pure_pursuit",
         title: {en: "Pure Pursuit", ko: "Pure Pursuit"},
         category: "local",
@@ -493,7 +510,40 @@ const data: IAlgoData[] = [
             {en: "References", ko: "References"},
         ],
     },
-    {slug: "dwa", title: {en: "DWA", ko: "DWA"}, category: "local"},
+    {
+        slug: "stanley",
+        title: {en: "Stanley", ko: "Stanley"},
+        category: "local",
+        supportedExample: {python: true, "c++": true},
+        contents: lazy(() => import("./local/Stanley")),
+        sections: [
+            {en: "Two Errors, One Steering Law", ko: "두 오차, 하나의 조향 법칙"},
+            {en: "From Bicycle to Unicycle", ko: "자전거 모델에서 차동 구동으로"},
+            {en: "Properties and Complexity", ko: "성질과 복잡도"},
+            {en: "The Algorithm", ko: "알고리즘"},
+            {en: "Why the Crosstrack Error Converges", ko: "Crosstrack 오차의 수렴 증명"},
+            {en: "Demo", ko: "Demo"},
+            {en: "Implementation", ko: "Implementation"},
+            {en: "References", ko: "References"},
+        ],
+    },
+    {
+        slug: "regulated_pure_pursuit",
+        title: {en: "Regulated Pure Pursuit", ko: "Regulated Pure Pursuit"},
+        category: "local",
+        supportedExample: {python: true, "c++": true},
+        contents: lazy(() => import("./local/RegulatedPurePursuit")),
+        sections: [
+            {en: "Pure Pursuit Meets the Real World", ko: "Pure Pursuit의 실전 한계 손보기"},
+            {en: "The Three Regulations", ko: "세 가지 규제"},
+            {en: "Properties and Complexity", ko: "성질과 복잡도"},
+            {en: "The Algorithm", ko: "알고리즘"},
+            {en: "Where the Curvature Bound Comes From", ko: "곡률 규제식의 유도"},
+            {en: "Demo", ko: "Demo"},
+            {en: "Implementation", ko: "Implementation"},
+            {en: "References", ko: "References"},
+        ],
+    },
     {slug: "mpc", title: {en: "MPC", ko: "MPC"}, category: "local"},
     // ---- Multi-agent (구현 예정) ----
     {slug: "prioritized_astar", title: {en: "Prioritized A*", ko: "Prioritized A*"}, category: "multi"},

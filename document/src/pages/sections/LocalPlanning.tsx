@@ -202,23 +202,23 @@ const LocalPlanning = () => {
             <h2>{t("What Is Coming", "구현 예정")}</h2>
             <T
                 en={<p>
-                    <strong>Potential Fields</strong>, <strong>VFH</strong>,
-                    and <strong>Pure Pursuit</strong> are now written, one representative each
-                    for reactive force fields, histogram-based steering, and geometric path
-                    tracking. The rest of the lineage follows: <strong>DWA</strong> rounds out
-                    sampling in command space, Stanley and Regulated Pure Pursuit sharpen
-                    geometric tracking, EB and TEB deform an elastic band in time, and MPC, MPPI,
-                    and CBF-constrained control close the section with full trajectory
+                    <strong>Potential Fields</strong>, <strong>VFH</strong>, <strong>DWA</strong>,{" "}
+                    <strong>Pure Pursuit</strong>, <strong>Stanley</strong>,
+                    and <strong>Regulated Pure Pursuit</strong> are now written — reactive force
+                    fields, histogram steering, command-space sampling, and the full geometric
+                    tracking branch from the plain lookahead arc to its regulated, obstacle-aware
+                    descendant. What remains is the optimization lineage: EB and TEB deform an
+                    elastic band in time, and MPC and MPPI close the section with full trajectory
                     optimization.
                 </p>}
                 ko={<p>
                     이제 <strong>Potential Fields</strong>, <strong>VFH</strong>,{" "}
-                    <strong>Pure Pursuit</strong> 세 페이지가 채워졌다. 순서대로 반발력,
-                    히스토그램 조향, 기하학적 경로 추종 계열의 대표다. 남은 계보는 이렇게
-                    이어진다. 명령 공간 sampling은 <strong>DWA</strong>로 마무리되고, 기하학적
-                    추종은 Stanley와 Regulated Pure Pursuit로 다듬어지며, 시간 축 위 elastic
-                    band 변형은 EB와 TEB가 맡고, 궤적 최적화는 MPC, MPPI, CBF 제약 제어로
-                    완성된다.
+                    <strong>DWA</strong>, <strong>Pure Pursuit</strong>, <strong>Stanley</strong>,{" "}
+                    <strong>Regulated Pure Pursuit</strong> 여섯 페이지가 채워졌다. 반발력,
+                    히스토그램 조향, 명령 공간 sampling, 그리고 lookahead 원호에서 규제형
+                    확장까지 이어지는 기하학적 추종 가지가 모두 갖춰진 셈이다. 남은 계보는
+                    최적화 계열이다. 시간 축 위 elastic band 변형은 EB와 TEB가 맡고, 궤적
+                    최적화는 MPC와 MPPI로 완성된다.
                 </p>}
             />
         </>
