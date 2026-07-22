@@ -51,6 +51,18 @@ export function emptyGrid(name: string, width: number, height: number): GridMap 
     }
 }
 
+// PGM 밝기 행(공백 구분 토큰)에서 GridMap 을 만든다 — 255(흰색)만 자유, 나머지는 점유.
+// local 데모 sandbox 들이 저장소 pgm 맵을 인라인 프리셋으로 쓸 때 공유한다.
+export function gridFromPgmRows(name: string, rows: string[], resolution: number): GridMap {
+    const width = rows[0].trim().split(/\s+/).length
+    const height = rows.length
+    const occupied: boolean[] = []
+    for (const row of rows) {
+        for (const tok of row.trim().split(/\s+/)) occupied.push(tok !== "255")
+    }
+    return {name, width, height, occupied, resolution, originX: 0, originY: 0}
+}
+
 // world (x, y) → grid 단위 좌표 (연속 상태 planner 렌더용). u는 col 방향(0..width),
 // v는 row 방향(0..height, 위가 0). world y는 아래가 원점이라 뒤집는다.
 export const worldToCellUnits = (map: GridMap, x: number, y: number): [number, number] => [
@@ -63,4 +75,12 @@ export const worldToCellUnits = (map: GridMap, x: number, y: number): [number, n
 export const cellCenterWorld = (map: GridMap, c: [number, number]): [number, number] => [
     map.originX + (c[1] + 0.5) * map.resolution,
     map.originY + (map.height - 1 - c[0] + 0.5) * map.resolution,
+]
+
+// world (x, y) → 정수 셀 인덱스 (row, col) — 저장소 OccupancyGrid2D.world_to_cell 미러.
+// worldToCellUnits(연속 렌더용, 반올림 없음)와 달리 충돌/거리 질의가 요구하는 정확한
+// floor 셀 인덱스를 낸다. occupancy 질의(충돌 검사, EDT, 근방 열거)가 전부 공유한다.
+export const worldToCellIndex = (map: GridMap, x: number, y: number): [number, number] => [
+    map.height - 1 - Math.floor((y - map.originY) / map.resolution),
+    Math.floor((x - map.originX) / map.resolution),
 ]

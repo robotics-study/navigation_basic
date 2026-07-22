@@ -44,7 +44,7 @@ _ARC_WAYPOINT_SPACING = 0.2
 _SST_STAR_SHRINK = 0.9
 
 
-class SST(_SamplingPlanner):
+class SST(_SamplingPlanner["SamplingSE2Space[Point]"]):
     @property
     def name(self) -> str:
         return "sst"
@@ -54,7 +54,7 @@ class SST(_SamplingPlanner):
 
     def plan(
         self,
-        space: "SamplingSE2Space[Point]",
+        space: SamplingSE2Space[Point],
         start: Point,
         goal: Point,
         recorder: TraceRecorder | None = None,

@@ -44,6 +44,9 @@ class Scenario:
     # Defaulted so existing scenarios (no theta) load unchanged; discrete/sampling ignore.
     start_theta: float = 0.0
     goal_theta: float = 0.0
+    # Optional reference path (world waypoints) for tracking-family local planners.
+    # Defaulted to empty so existing scenarios (no field) load unchanged.
+    reference_path: tuple[Point, ...] = ()
 
 
 def load_scenario(path: str | Path) -> Scenario:
@@ -51,14 +54,23 @@ def load_scenario(path: str | Path) -> Scenario:
     with open(path, encoding="utf-8") as fh:
         raw = yaml.safe_load(fh)
     if "agents" in raw:
-        raise ValueError("multi-agent scenarios are out of scope for global_planning")
+        # reference_path only extends the single-agent problem definition, so this
+        # rejection is unrelated to it and applies to every category, not just one.
+        raise ValueError("multi-agent scenarios are not supported by load_scenario")
     map_path = (path.parent / raw["map"]).resolve()
     start = raw["start"]
     goal = raw["goal"]
+    raw_reference_path = raw.get("reference_path")
+    reference_path: tuple[Point, ...] = (
+        tuple((float(pt[0]), float(pt[1])) for pt in raw_reference_path)
+        if raw_reference_path is not None
+        else ()
+    )
     return Scenario(
         map_path=str(map_path),
         start=(float(start[0]), float(start[1])),
         goal=(float(goal[0]), float(goal[1])),
         start_theta=float(raw.get("start_theta", 0.0)),
         goal_theta=float(raw.get("goal_theta", 0.0)),
+        reference_path=reference_path,
     )

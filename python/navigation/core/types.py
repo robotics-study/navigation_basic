@@ -41,3 +41,27 @@ class PlanResult(Generic[StateT]):
     path: list[StateT] = field(default_factory=list)
     cost: float = 0.0
     stats: PlanStats = field(default_factory=PlanStats)
+
+
+# --- local planning: one control tick, always on a fixed SE(2) RobotState -----
+@dataclass(frozen=True)
+class VelocityCommand:
+    v: float  # m/s, forward positive
+    omega: float  # rad/s, counter-clockwise positive
+
+
+@dataclass(frozen=True)
+class RobotState:
+    pose: Pose
+    # Currently-executing linear/angular velocity. Unused in wave 1, but a dynamic
+    # window is defined around the *current* velocity (Fox et al. 1997 DWA), so this
+    # is included now rather than breaking the signature later.
+    v: float = 0.0
+    omega: float = 0.0
+
+
+@dataclass(frozen=True)
+class LocalTask:
+    goal: Pose
+    # Reference-path waypoints (world). Empty tuple = no reference path (goal-seek only).
+    reference_path: tuple[Point, ...] = ()

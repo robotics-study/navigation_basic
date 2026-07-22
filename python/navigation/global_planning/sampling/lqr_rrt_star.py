@@ -211,7 +211,7 @@ class LQRRRTStar(GlobalPlanner[Point, "SamplingSE2Space[Point]"]):
         return {Capability.SAMPLING_SPACE, Capability.SE2_COLLISION_SPACE}
 
     def _sample(
-        self, space: "SamplingSE2Space[Point]", goal: State4, rng: np.random.Generator
+        self, space: SamplingSE2Space[Point], goal: State4, rng: np.random.Generator
     ) -> State4:
         # Goal-biasing draws the goal rest-state directly (LaValle 1998); otherwise a
         # free position with a random velocity so the LQR nearest metric is full-state.
@@ -234,7 +234,7 @@ class LQRRRTStar(GlobalPlanner[Point, "SamplingSE2Space[Point]"]):
         return (x_from[0] + dx * scale, x_from[1] + dy * scale, 0.0, 0.0)
 
     def _roll(
-        self, space: "SamplingSE2Space[Point]", x_from: State4, target: State4
+        self, space: SamplingSE2Space[Point], x_from: State4, target: State4
     ) -> tuple[float, list[Point]] | None:
         """Integrate the LQR feedback u=−K(x−target), clamped, from ``x_from`` until
         it reaches ``target`` (rest) or the horizon. Returns (edge_cost, dense (x, y)
@@ -313,7 +313,7 @@ class LQRRRTStar(GlobalPlanner[Point, "SamplingSE2Space[Point]"]):
 
     def _choose_parent(
         self,
-        space: "SamplingSE2Space[Point]",
+        space: SamplingSE2Space[Point],
         tree: _LqrTree,
         x_new: State4,
         near_idx: int,
@@ -353,7 +353,7 @@ class LQRRRTStar(GlobalPlanner[Point, "SamplingSE2Space[Point]"]):
 
     def _rewire(
         self,
-        space: "SamplingSE2Space[Point]",
+        space: SamplingSE2Space[Point],
         tree: _LqrTree,
         new_idx: int,
         neighborhood: list[int],
@@ -375,7 +375,7 @@ class LQRRRTStar(GlobalPlanner[Point, "SamplingSE2Space[Point]"]):
 
     def plan(
         self,
-        space: "SamplingSE2Space[Point]",
+        space: SamplingSE2Space[Point],
         start: Point,
         goal: Point,
         recorder: TraceRecorder | None = None,
@@ -452,7 +452,7 @@ class LQRRRTStar(GlobalPlanner[Point, "SamplingSE2Space[Point]"]):
 
     def _goal_arrival(
         self,
-        space: "SamplingSE2Space[Point]",
+        space: SamplingSE2Space[Point],
         tree: _LqrTree,
         new_idx: int,
         x_new: State4,

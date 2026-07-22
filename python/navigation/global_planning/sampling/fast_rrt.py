@@ -43,7 +43,7 @@ from ._sampling import (
 )
 
 
-class FastRRT(_SamplingPlanner):
+class FastRRT(_SamplingPlanner["SamplingSpace[Point]"]):
     @property
     def name(self) -> str:
         return "fast_rrt"

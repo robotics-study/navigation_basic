@@ -38,6 +38,31 @@ struct Footprint {
   double inscribed_radius = 0.0;  // meters
 };
 
+// Local-planner control output for one control tick.
+struct VelocityCommand {
+  double v = 0.0;      // m/s, forward positive
+  double omega = 0.0;  // rad/s, counterclockwise positive
+};
+
+// Robot state fed into a local planner each tick: world pose plus the velocity
+// currently being executed. wave 1 planners are stateless w.r.t. (v, omega), but
+// dynamic-window planners (Fox, Burgard & Thrun 1997) center their reachable
+// command set on the current velocity, so the field is here now to keep this
+// signature stable when that planner arrives.
+struct RobotState {
+  Pose pose;
+  double v = 0.0;
+  double omega = 0.0;
+};
+
+// Local planning problem for one episode: a goal pose (always required —
+// termination + steering apply even without a reference path) plus an optional
+// path to track (empty = no reference path; only tracking planners consume it).
+struct LocalTask {
+  Pose goal;
+  std::vector<Point> reference_path;
+};
+
 struct PlanStats {
   int expanded_nodes = 0;
   int samples = 0;

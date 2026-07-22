@@ -11,6 +11,8 @@ export type TraceEventType =
     | "conflict_found"
     | "robot_moved"
     | "obstacle_revealed"
+    | "force_computed"
+    | "histogram_updated"
     | "path_found"
     | "planning_finished";
 
@@ -26,8 +28,13 @@ export interface TraceEvent {
     algorithm?: string;
     map?: string;
     params?: Record<string, unknown>;
+    // planning_started 선택: local demo 가 참조 경로/goal 재현에 쓰는 시나리오 yaml 경로.
+    scenario?: string;
     success?: boolean;
     metrics?: Record<string, number>;
-    // 알고리즘별 부가 정보 (예: visibility A*의 interval run) — 렌더러는 몰라도 된다.
+    // 알고리즘별 부가 정보 (예: visibility A*의 interval run, robot_moved의 {v, omega},
+    // force_computed의 {fx_att, fy_att, fx_rep, fy_rep, fx, fy}) — 렌더러는 몰라도 된다.
     data?: Record<string, unknown>;
+    // histogram_updated 전용: 폴라 히스토그램 sector 값 (index 0 = world +x, 반시계).
+    bins?: number[];
 }

@@ -13,7 +13,8 @@ from types import ModuleType
 from typing import Any
 
 import numpy as np
-from conftest import REPO_ROOT
+import pytest
+from conftest import REPO_ROOT, grid_from
 from PIL import Image
 
 from navigation.maps.loader import load_map
@@ -52,6 +53,61 @@ def _scene() -> Any:
     # referenced statically; Any is the honest type here.
     grid = load_map(REPO_ROOT / "maps" / "grid" / "open01.yaml")
     return replay.build_scene(_synthetic_events(), grid)
+
+
+def _local_events(scenario_path: str | None = None) -> list[dict[str, object]]:
+    """A minimal closed-loop local-planning trace: force_computed + histogram_updated
+    + candidate_evaluated + robot_moved per tick, mirroring the simulator's tick order
+    (compute_command's events, then the executed robot_moved)."""
+    started: dict[str, object] = {
+        "seq": 0, "event": "planning_started", "algorithm": "potential_fields",
+        "map": "maps/grid/open01.yaml", "params": {},
+    }
+    if scenario_path is not None:
+        started["scenario"] = scenario_path
+    events: list[dict[str, object]] = [started]
+    seq = 1
+    x, y, theta = 0.75, 0.75, 0.3
+    for _ in range(4):
+        events.append({
+            "seq": seq, "event": "force_computed", "state": [x, y, theta],
+            "data": {"fx_att": 0.6, "fy_att": 0.1, "fx_rep": -0.1, "fy_rep": 0.0},
+        })
+        seq += 1
+        events.append({
+            "seq": seq, "event": "histogram_updated", "state": [x, y, theta],
+            "bins": [0.1, 0.9, 0.2, 0.0], "data": {"threshold": 0.5},
+        })
+        seq += 1
+        events.append({
+            "seq": seq, "event": "candidate_evaluated", "state": [x + 0.2, y], "cost": 0.1,
+        })
+        seq += 1
+        x += 0.2
+        theta += 0.02
+        events.append({
+            "seq": seq, "event": "robot_moved", "state": [x, y, theta],
+            "data": {"v": 0.5, "omega": 0.1},
+        })
+        seq += 1
+    events.append({
+        "seq": seq, "event": "planning_finished", "success": False,
+        "metrics": {"time_to_goal": 0.0, "distance_traveled": 0.8, "steps": 4.0,
+                    "collided": 0.0, "stalled": 1.0},
+    })
+    return events
+
+
+def _dstar_like_events() -> list[dict[str, object]]:
+    """Minimal D* Lite-shaped trace: 2-element cell robot_moved + obstacle_revealed,
+    the one combination that must still trigger the belief/fog background mode."""
+    return [
+        {"seq": 0, "event": "planning_started", "algorithm": "dstar_lite",
+         "map": "maps/grid/open01.yaml", "params": {}},
+        {"seq": 1, "event": "robot_moved", "state": [2, 2]},
+        {"seq": 2, "event": "obstacle_revealed", "state": [2, 3]},
+        {"seq": 3, "event": "robot_moved", "state": [1, 2]},
+    ]
 
 
 def test_build_scene_counts_ops_and_path() -> None:
@@ -141,3 +197,95 @@ def test_path_gradient_draws_only_revealed_prefix() -> None:
     assert all(len(c.get_segments()) == 3 for c in lines)
     assert len(markers) == 2  # start + goal
     plt.close(fig)
+
+
+def test_build_scene_loads_local_planning_events() -> None:
+    grid = load_map(REPO_ROOT / "maps" / "grid" / "open01.yaml")
+    scene = replay.build_scene(_local_events(), grid)
+    assert len(scene.robot) == 4
+    assert len(scene.robot_headings) == 4
+    assert len(scene.forces) == 4
+    assert len(scene.histograms) == 4
+    # candidate_evaluated collected: robot_moved is present in this trace (local).
+    assert len(scene.candidates) == 4
+    pos, f_att, f_rep = scene.forces[0]
+    assert pos == pytest.approx((0.75, 0.75))
+    assert f_att == pytest.approx((0.6, 0.1))
+    assert f_rep == pytest.approx((-0.1, 0.0))
+    _, bins, threshold = scene.histograms[0]
+    assert bins == pytest.approx([0.1, 0.9, 0.2, 0.0])
+    assert threshold == pytest.approx(0.5)
+
+
+def test_candidate_evaluated_ignored_without_robot_moved() -> None:
+    # Regression guard: global search's own candidate_evaluated flood (e.g. A*'s
+    # per-neighbor scoring) must stay excluded from Scene.candidates (local only).
+    grid = load_map(REPO_ROOT / "maps" / "grid" / "open01.yaml")
+    events = [*_synthetic_events(), {"seq": 7, "event": "candidate_evaluated",
+                                      "state": [10, 10], "cost": 1.0}]
+    scene = replay.build_scene(events, grid)
+    assert scene.candidates == []
+
+
+def test_build_scene_loads_scenario_reference_path_and_goal() -> None:
+    scenario = str(REPO_ROOT / "maps" / "scenarios" / "open01_s2.yaml")
+    grid = load_map(REPO_ROOT / "maps" / "grid" / "open01.yaml")
+    scene = replay.build_scene(_local_events(scenario), grid)
+    assert scene.goal == pytest.approx((9.0, 9.0))
+    assert len(scene.reference_path) == 10
+    assert scene.reference_path[0] == pytest.approx((1.0, 1.0))
+
+
+def test_dynamic_background_ignores_robot_moved_alone() -> None:
+    # Regression: local planners execute on a KNOWN map, so robot_moved with no
+    # obstacle_revealed must render the ground-truth background, not D* Lite's
+    # all-free belief. A map with an obstacle makes the two backgrounds distinguishable.
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    grid = grid_from(["....#", ".....", "....."])
+    scene = replay.build_scene(_local_events(), grid)
+    assert scene.robot and not scene.revealed
+
+    fig, ax = plt.subplots()
+    replay._draw(ax, scene, scene.total_ops, show_path=False)
+    background = np.asarray(ax.images[0].get_array())
+    np.testing.assert_array_equal(background, np.where(grid.free_mask(), 1.0, 0.0))
+    plt.close(fig)
+
+
+def test_dynamic_background_still_fogs_for_dstar_lite() -> None:
+    # Regression: the fix must not disturb D* Lite's existing belief/fog mode, which
+    # is driven by obstacle_revealed (present here alongside robot_moved).
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    grid = grid_from(["....#", ".....", "....."])
+    scene = replay.build_scene(_dstar_like_events(), grid)
+    assert scene.robot and scene.revealed
+
+    fig, ax = plt.subplots()
+    replay._draw(ax, scene, scene.total_ops, show_path=False)
+    background = np.asarray(ax.images[0].get_array())
+    np.testing.assert_array_equal(background, np.ones(grid.free_mask().shape))
+    plt.close(fig)
+
+
+def test_local_trace_gif_and_snapshots_render(tmp_path: Path) -> None:
+    grid = load_map(REPO_ROOT / "maps" / "grid" / "open01.yaml")
+    scene = replay.build_scene(_local_events(), grid)
+
+    gif_out = str(tmp_path / "local.gif")
+    frames = replay.save_gif(scene, gif_out, fps=6, events_per_frame=1)
+    assert frames > 1
+    with Image.open(gif_out) as im:
+        assert getattr(im, "n_frames", 1) > 1
+
+    snaps_dir = str(tmp_path / "snaps")
+    paths = replay.save_snapshots(scene, snaps_dir, count=2)
+    assert len(paths) == 3
+    assert all(Path(p).stat().st_size > 0 for p in paths)

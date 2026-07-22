@@ -17,7 +17,7 @@ visualization, interactive in-browser demos, and a benchmark matrix.*
 ![C++20](https://img.shields.io/badge/C%2B%2B-20-blue.svg)
 ![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB.svg)
 ![CMake](https://img.shields.io/badge/CMake-%E2%89%A53.20-064F8C.svg)
-![Tests](https://img.shields.io/badge/tests-652%20py%20%2B%20114%20cpp-brightgreen.svg)
+![Tests](https://img.shields.io/badge/tests-704%20py%20%2B%20141%20cpp-brightgreen.svg)
 
 | A* (1968) | RRT* (2011) | Fast-RRT (2021) |
 |:---:|:---:|:---:|
@@ -102,9 +102,10 @@ visualization, interactive in-browser demos, and a benchmark matrix.*
 | global_planning | EIT* | ✅ | ✅ | Strub & Gammell (2022) |
 | global_planning | FCIT* | ✅ | ✅ | Wilson, Thomason, Kingston, Kavraki & Gammell (2025) |
 | global_planning | Fast-RRT | ✅ | ✅ | Wu et al. (2021) |
+| local_planning | Potential Fields | ✅ | ✅ | Khatib (1986) |
+| local_planning | VFH | ✅ | ✅ | Borenstein & Koren (1991) |
+| local_planning | Pure Pursuit | ✅ | ✅ | Coulter (1992) |
 | local_planning | DWA | ⬜ | ⬜ | Fox, Burgard & Thrun (1997) |
-| local_planning | Pure Pursuit | ⬜ | ⬜ | Coulter (1992) |
-| local_planning | VFH | ⬜ | ⬜ | Borenstein & Koren (1991) |
 | local_planning | MPC | ⬜ | ⬜ | — |
 | multi_agent | Prioritized A* | ⬜ | ⬜ | Erdmann & Lozano-Pérez (1987) |
 | multi_agent | Joint-space A* | ⬜ | ⬜ | — |

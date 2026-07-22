@@ -8,6 +8,7 @@
 #include "navigation/core/params.hpp"
 #include "navigation/core/planner.hpp"
 #include "navigation/core/trace.hpp"
+#include "navigation/local_planning/simulation.hpp"
 #include "navigation/maps/loader.hpp"
 #include "navigation/maps/occupancy_grid.hpp"
 
@@ -134,6 +135,66 @@ inline int run_kinodynamic(const Args& a, const navigation::core::ParamSet& para
             << (res.success ? "true" : "false") << ",\"path_cost\":" << res.cost
             << ",\"path_len\":" << res.path.size() << ",\"expanded_nodes\":"
             << res.stats.expanded_nodes << "}\n";
+  return 0;
+}
+
+// `SimStatus` is exhaustively matched (no default:) so adding a new terminal
+// status trips -Wswitch here as a forcing function to update this table.
+inline const char* sim_status_str(navigation::local_planning::SimStatus status) {
+  using navigation::local_planning::SimStatus;
+  switch (status) {
+    case SimStatus::REACHED: return "reached";
+    case SimStatus::COLLISION: return "collision";
+    case SimStatus::STALLED: return "stalled";
+    case SimStatus::TIMEOUT: return "timeout";
+  }
+  return "timeout";
+}
+
+// Local-planning demo assembly. Unlike run_discrete/run_sampling/run_kinodynamic
+// (which receive an already-parsed Args and an already-constructed planner,
+// because the planner's constructor needs the loaded ParamSet before the caller
+// gets here), run_local parses argv and builds the planner itself via `factory`
+// -- the closed-loop episode has no plan() result to summarize, so assembly
+// instead wires a SimConfig from the yaml's shared sim-params block and hands
+// the run to simulate(), which owns tick order and termination. `Factory` is any
+// callable `(const ParamSet&) -> ConcretePlanner` (deduced, not std::function)
+// so a demo main() stays a one-line call with no type to spell out.
+template <class Factory>
+inline int run_local(int argc, char** argv, const std::string& name, Factory factory) {
+  Args a = parse_args(argc, argv);
+  auto params = navigation::core::ParamSet::from_yaml(a.params);
+  auto map = navigation::maps::load_map(a.map, resolve_seed(a, params), a.connectivity);
+  auto& grid = as_grid(*map);
+  navigation::maps::Scenario sc = navigation::maps::load_scenario(a.scenario);
+  auto planner = factory(params);
+
+  navigation::core::LocalTask task{
+      navigation::core::Pose{sc.goal.x, sc.goal.y, sc.goal_theta}, sc.reference_path};
+  if (planner.requires_reference_path() && task.reference_path.empty()) {
+    throw std::runtime_error(name + " requires a reference_path, but " + a.scenario +
+                             " declares none");
+  }
+
+  navigation::local_planning::SimConfig config{
+      params.get_float("control_dt"),     params.get_int("max_steps"),
+      params.get_float("goal_tolerance"), params.get_float("footprint_radius"),
+      params.get_int("stall_window"),     params.get_float("stall_distance")};
+  navigation::core::RobotState start{
+      navigation::core::Pose{sc.start.x, sc.start.y, sc.start_theta}, 0.0, 0.0};
+
+  std::ofstream fs(a.trace);
+  if (!fs) throw std::runtime_error("demo: cannot open trace file " + a.trace);
+  navigation::core::TraceRecorder rec(fs);
+  rec.planning_started(name, a.map, params.values(), a.scenario);
+  auto result = navigation::local_planning::simulate(planner, grid, start, task, config, &rec);
+
+  std::cout << "{\"algorithm\":\"" << name << "\",\"status\":\"" << sim_status_str(result.status)
+            << "\",\"success\":" << (result.success ? "true" : "false")
+            << ",\"time_to_goal\":" << result.time_to_goal
+            << ",\"distance_traveled\":" << result.distance_traveled
+            << ",\"min_clearance\":" << result.min_clearance << ",\"steps\":" << result.steps
+            << "}\n";
   return 0;
 }
 

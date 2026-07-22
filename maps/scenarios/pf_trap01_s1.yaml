@@ -1,0 +1,3 @@
+map: ../grid/pf_trap01.yaml   # scenario file 기준 상대 경로
+start: [1.25, 4.75]           # world 좌표, U opening 쪽 (서쪽), 함정 내부와 같은 row
+goal: [8.75, 4.75]            # world 좌표, U의 닫힌 back wall 너머 (동쪽) — 직선 인력이 벽에서 멈춤

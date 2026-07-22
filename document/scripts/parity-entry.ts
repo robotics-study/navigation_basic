@@ -23,4 +23,7 @@ export {runSST} from "../src/libs/algorithms/sst";
 export {runKinodynamicRRTStar} from "../src/libs/algorithms/kinodynamic_rrt_star";
 export {runLQRRRTStar} from "../src/libs/algorithms/lqr_rrt_star";
 export {runHybridAStar} from "../src/libs/algorithms/hybrid_astar";
+export {runPotentialFields} from "../src/libs/algorithms/potential_fields";
+export {runVfh} from "../src/libs/algorithms/vfh";
+export {runPurePursuit} from "../src/libs/algorithms/pure_pursuit";
 export {parseGridMap} from "../src/libs/grid";

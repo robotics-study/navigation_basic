@@ -8,8 +8,6 @@
 
 namespace navigation::core {
 
-// OBSTACLE_QUERY is declared for future local planners but implemented by no map
-// here; OccupancyGrid2D must not advertise it.
 enum class Capability {
   DISCRETE_SPACE,
   SAMPLING_SPACE,
@@ -79,8 +77,10 @@ class DynamicGridSpace {
 // Thrun, Montemerlo & Diebel 2008). Standalone — extends nothing: the planner
 // generates its own motion primitives + heuristic and needs ONLY a footprint
 // collision test at a continuous world pose. World<->cell conversion stays in the
-// map. Distinct from the reserved OBSTACLE_QUERY (local planners; adds a clearance
-// query). Only maps with real occupancy geometry can answer it.
+// map. Distinct from ObstacleQuery below (local planners; adds a clearance
+// query) even though ObstacleQuery extends this class — kinodynamic planners
+// only ever need collision, never clearance. Only maps with real occupancy
+// geometry can answer it.
 template <class State>
 class SE2CollisionSpace {
  public:
@@ -88,6 +88,27 @@ class SE2CollisionSpace {
   // True iff the footprint placed at world pose `pose` overlaps any occupied or
   // out-of-bounds cell. Continuous pose in; grid conversion happens in the map.
   virtual bool is_collision(const Footprint& footprint, const State& pose) const = 0;
+};
+
+// Local-planner obstacle view: footprint collision (inherited from
+// SE2CollisionSpace) + nearest-obstacle clearance + neighborhood occupancy
+// enumeration. Non-template, unlike the other capabilities above — local
+// planners always run in world SE(2) (RobotState), so there is no discrete
+// state type to parametrize over. Extends SE2CollisionSpace<Pose> instead of
+// redeclaring is_collision, mirroring the LineOfSightSpace : DiscreteSpace
+// extension above.
+class ObstacleQuery : public SE2CollisionSpace<Pose> {
+ public:
+  virtual ~ObstacleQuery() = default;
+  // Euclidean distance (meters) from p's cell center to the center of the
+  // nearest non-free (occupied or out-of-bounds) cell.
+  virtual double distance_to_nearest(const Point& p) const = 0;
+  // Centers (world) of every non-free cell within `radius` of `center`,
+  // including out-of-bounds cells, in row-ascending then column-ascending
+  // order. The order is part of the contract: potential-field force summation
+  // and VFH histogram accumulation both fold over this sequence, and their
+  // floating-point sums depend on fold order for cross-language parity.
+  virtual std::vector<Point> occupied_within(const Point& center, double radius) const = 0;
 };
 
 class MapBase {

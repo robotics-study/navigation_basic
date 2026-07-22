@@ -1,4 +1,5 @@
-"""FCIT* — Fully Connected Informed Trees (Wilson, Thomason, Kingston, Kavraki & Gammell 2025, ICRA).
+"""FCIT* — Fully Connected Informed Trees
+(Wilson, Thomason, Kingston, Kavraki & Gammell 2025, ICRA).
 
 FCIT* observes that modern collision-checking is cheap enough that a batch
 planner need not restrict its candidate graph to a shrinking radius-neighbour RGG

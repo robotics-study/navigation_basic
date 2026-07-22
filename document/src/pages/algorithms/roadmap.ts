@@ -274,6 +274,37 @@ export const ALGO_BLURBS: AlgoBlurb[] = [
                 "heuristic 만으로 같은 최적 경로를 훨씬 적은 노드 확장으로 찾는다.",
         },
     },
+    {
+        slug: "potential_fields",
+        blurb: {
+            en: "Sum a pull toward the goal and a push from every nearby wall, then follow " +
+                "the resultant force — beautifully simple, and honestly shown getting " +
+                "trapped in a U-shaped dead end.",
+            ko: "goal로 당기는 힘과 주변 벽이 미는 힘을 더해 그 합력을 따라간다. 단순함이 " +
+                "매력이고, U자 막다른 길에 갇히는 한계까지 demo로 정직하게 보여준다.",
+        },
+    },
+    {
+        slug: "vfh",
+        blurb: {
+            en: "Compress the nearby obstacle field into a polar histogram, threshold it " +
+                "into open valleys, and steer for the valley closest to the goal — " +
+                "direction-wise density instead of one blended force.",
+            ko: "주변 장애물을 폴라 히스토그램으로 눌러 담고, threshold로 열린 valley를 " +
+                "가른 뒤 goal에 가장 가까운 valley로 조향한다. 하나로 뭉갠 힘 대신 방향별 " +
+                "밀도를 본다.",
+        },
+    },
+    {
+        slug: "pure_pursuit",
+        blurb: {
+            en: "Anchor a lookahead circle on the robot and chase the point where it meets " +
+                "the reference path with a single arc — a whole tracker that is one " +
+                "curvature, blind to obstacles by design.",
+            ko: "로봇에 lookahead 원을 걸고 그 원이 참조 경로와 만나는 점을 원호 하나로 " +
+                "쫓는다. 제어기 전체가 곡률 하나이고, 설계상 장애물은 보지 않는다.",
+        },
+    },
 ];
 
 // 중분류 — 알고리즘 계열. 페이지 eyebrow·홈 sub-heading·사이드바 sub-label이 공유한다.
@@ -311,9 +342,9 @@ export const SECTIONS: Array<{
         title: {en: "Local Planning", ko: "Local Planning"},
         desc: {
             en: "Following the global path in the here-and-now: reactive avoidance and " +
-                "local trajectory optimization — DWA, Pure Pursuit, VFH, MPC.",
-            ko: "전역 경로를 지금-여기서 따라가는 계획: 반응형 회피와 지역 궤적 최적화 — " +
-                "DWA, Pure Pursuit, VFH, MPC.",
+                "local trajectory optimization — Potential Fields, VFH, Pure Pursuit, DWA, MPC.",
+            ko: "전역 경로를 지금 여기서 따라가는 계획. 반응형 회피와 지역 궤적 최적화를 다룬다. " +
+                "Potential Fields, VFH, Pure Pursuit, DWA, MPC.",
         },
         categories: ["local"],
     },

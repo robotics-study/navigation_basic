@@ -8,6 +8,7 @@ dynamics and only queries (x, y) validity), so it reuses the sampling demo flow.
 from __future__ import annotations
 
 from demo_common import run_sampling
+
 from navigation.global_planning import LQRRRTStar
 
 if __name__ == "__main__":

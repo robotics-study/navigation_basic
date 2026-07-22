@@ -28,6 +28,7 @@ const data: ISectionIntro[] = [
             {en: "Why a Second Planner", ko: "왜 planner가 하나 더 필요한가"},
             {en: "The Problem", ko: "문제 정의"},
             {en: "Families of Local Planners", ko: "Local planner의 계열"},
+            {en: "Two Geometries Up Close", ko: "두 기하를 가까이서"},
             {en: "What Is Coming", ko: "구현 예정"},
         ],
     },

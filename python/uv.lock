@@ -832,7 +832,7 @@ wheels = [
 ]
 
 [[package]]
-name = "nav-study"
+name = "navigation"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [

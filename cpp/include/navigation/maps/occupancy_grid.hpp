@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cmath>
+#include <optional>
 #include <random>
 #include <set>
 #include <utility>
@@ -28,7 +29,10 @@ class OccupancyGrid2D final : public core::MapBase,
                               public core::SamplingSpace<Point>,
                               // Sibling add (State = Pose is a third state type, shares no base
                               // subobject with the Cell/Point bases) → no diamond, no virtual base.
-                              public core::SE2CollisionSpace<Pose> {
+                              // ObstacleQuery itself extends SE2CollisionSpace<Pose>, so existing
+                              // dynamic_cast<SE2CollisionSpace<Pose>*> upcasts still resolve
+                              // through this single path — no algorithm code changes.
+                              public core::ObstacleQuery {  // was SE2CollisionSpace<Pose>
  public:
   OccupancyGrid2D(int rows, int cols, double resolution, double origin_x, double origin_y,
                   std::vector<bool> free_cells, int connectivity = 8, unsigned seed = 0);
@@ -53,6 +57,8 @@ class OccupancyGrid2D final : public core::MapBase,
   bool is_blocked(const Cell& s) const override;
 
   bool is_collision(const Footprint& footprint, const Pose& pose) const override;
+  double distance_to_nearest(const Point& p) const override;
+  std::vector<Point> occupied_within(const Point& center, double radius) const override;
 
   Point sample() override;
   bool is_state_valid(const Point& p) const override;
@@ -111,6 +117,11 @@ class OccupancyGrid2D final : public core::MapBase,
   std::vector<bool> free_;  // rows_*cols_, row-major, row 0 = top
   int connectivity_;
   std::mt19937 rng_;
+  // Exact squared-distance transform over a (rows_+2)x(cols_+2) grid (1-cell
+  // out-of-bounds border added on every side, source cells = occupied + border),
+  // computed lazily on the first distance_to_nearest() call so maps/tests that
+  // never query ObstacleQuery pay nothing for it.
+  mutable std::optional<std::vector<double>> edt_;
 };
 
 }  // namespace navigation::maps

@@ -1,0 +1,66 @@
+algorithm: pure_pursuit
+category: local_planning
+params:
+  - name: lookahead_distance
+    type: float
+    default: 0.3
+    min: 0.01
+    max: 100.0
+    description: lookahead 원의 반경 L_d (meters). (Coulter 1992)
+  - name: max_speed
+    type: float
+    default: 0.8
+    min: 0.01
+    max: 10.0
+    description: 최대 전진 속도 (m/s).
+  - name: max_omega
+    type: float
+    default: 1.5
+    min: 0.01
+    max: 20.0
+    description: 최대 각속도 (rad/s). 곡률 명령 클램프 한계.
+  - name: slow_radius
+    type: float
+    default: 0.5
+    min: 0.001
+    max: 100.0
+    description: goal 로부터 이 반경 이내에서 속도를 선형 감속 (meters).
+  # --- shared closed-loop simulator block (identical defaults across every
+  # local_planning algo; param_schema.json has no separate "sim" section, so
+  # these live as ordinary params entries like the algorithm params above) ---
+  - name: control_dt
+    type: float
+    default: 0.1
+    min: 0.001
+    max: 1.0
+    description: 제어 주기 (seconds).
+  - name: max_steps
+    type: int
+    default: 1000
+    min: 1
+    max: 100000
+    description: 최대 tick 수 (소진 시 TIMEOUT).
+  - name: goal_tolerance
+    type: float
+    default: 0.3
+    min: 0.01
+    max: 5.0
+    description: goal 도달 판정 반경 (meters).
+  - name: footprint_radius
+    type: float
+    default: 0.2
+    min: 0.01
+    max: 5.0
+    description: 로봇 충돌 footprint 반경 (meters).
+  - name: stall_window
+    type: int
+    default: 20
+    min: 1
+    max: 100000
+    description: 정체 판정 sliding window 길이 (ticks).
+  - name: stall_distance
+    type: float
+    default: 0.05
+    min: 0.0
+    max: 5.0
+    description: stall_window 구간 순변위가 이 이하이면 STALLED (meters).

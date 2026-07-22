@@ -30,7 +30,7 @@ from ._sampling import (
 )
 
 
-class InformedRRTStar(_SamplingPlanner):
+class InformedRRTStar(_SamplingPlanner["SamplingSpace[Point]"]):
     @property
     def name(self) -> str:
         return "informed_rrt_star"

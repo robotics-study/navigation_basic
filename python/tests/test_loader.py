@@ -43,3 +43,23 @@ def test_multiagent_scenario_rejected(tmp_path: Path) -> None:
     p.write_text("map: ../grid/maze01.yaml\nagents: []\n", encoding="utf-8")
     with pytest.raises(ValueError):
         load_scenario(p)
+
+
+def test_load_scenario_reference_path_absent_defaults_empty() -> None:
+    assert load_scenario(_SCENARIO).reference_path == ()
+
+
+def test_load_scenario_reference_path_present(tmp_path: Path) -> None:
+    p = tmp_path / "s.yaml"
+    p.write_text(
+        f"map: {_MAZE}\n"
+        "start: [0.5, 0.5]\n"
+        "goal: [9.5, 9.5]\n"
+        "reference_path:\n"
+        "  - [0.5, 0.5]\n"
+        "  - [1.0, 2.0]\n"
+        "  - [9.5, 9.5]\n",
+        encoding="utf-8",
+    )
+    scenario = load_scenario(p)
+    assert scenario.reference_path == ((0.5, 0.5), (1.0, 2.0), (9.5, 9.5))

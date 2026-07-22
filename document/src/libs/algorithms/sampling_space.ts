@@ -1,4 +1,4 @@
-import {GridMap} from "../grid";
+import {GridMap, worldToCellIndex} from "../grid";
 import {NumpyRandom} from "./numpy_rng";
 
 // 저장소 OccupancyGrid2D의 SamplingSpace capability 미러. sampling 계열 라이브
@@ -11,14 +11,10 @@ export type Point = [number, number];
 export function discCollides(map: GridMap, radius: number, x: number, y: number): boolean {
     const res = map.resolution
     const half = res * 0.5
-    const worldToCell = (wx: number, wy: number): [number, number] => [
-        map.height - 1 - Math.floor((wy - map.originY) / res),
-        Math.floor((wx - map.originX) / res),
-    ]
     const freeCell = (r: number, c: number) =>
         r >= 0 && r < map.height && c >= 0 && c < map.width && !map.occupied[r * map.width + c]
-    const [loRow, loCol] = worldToCell(x - radius, y + radius)   // y+r → 작은 row
-    const [hiRow, hiCol] = worldToCell(x + radius, y - radius)
+    const [loRow, loCol] = worldToCellIndex(map, x - radius, y + radius)   // y+r → 작은 row
+    const [hiRow, hiCol] = worldToCellIndex(map, x + radius, y - radius)
     const r2 = radius * radius
     for (let row = loRow; row <= hiRow; row++) {
         for (let col = loCol; col <= hiCol; col++) {

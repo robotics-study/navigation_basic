@@ -442,10 +442,58 @@ const data: IAlgoData[] = [
             {en: "References", ko: "References"},
         ],
     },
-    // ---- Local planning (구현 예정) ----
+    // ---- Local planning ----
+    // 계보순: 반응형 힘장(potential_fields) → 히스토그램 조향(vfh) → 기하학적 경로 추종
+    // (pure_pursuit) → 명령 공간 sampling(dwa, 구현 예정) → 궤적 최적화(mpc, 구현 예정).
+    {
+        slug: "potential_fields",
+        title: {en: "Potential Fields", ko: "Potential Fields"},
+        category: "local",
+        supportedExample: {python: true, "c++": true},
+        contents: lazy(() => import("./local/PotentialFields")),
+        sections: [
+            {en: "The Goal Pulls, the Walls Push", ko: "목표가 끌고, 벽이 민다"},
+            {en: "Properties and Complexity", ko: "성질과 복잡도"},
+            {en: "The Algorithm", ko: "알고리즘"},
+            {en: "The Local Minimum Trap", ko: "Local minimum 함정"},
+            {en: "Demo", ko: "Demo"},
+            {en: "Implementation", ko: "Implementation"},
+            {en: "References", ko: "References"},
+        ],
+    },
+    {
+        slug: "vfh",
+        title: {en: "VFH", ko: "VFH"},
+        category: "local",
+        supportedExample: {python: true, "c++": true},
+        contents: lazy(() => import("./local/Vfh")),
+        sections: [
+            {en: "From Forces to a Histogram", ko: "힘에서 히스토그램으로"},
+            {en: "Properties and Complexity", ko: "성질과 복잡도"},
+            {en: "The Algorithm", ko: "알고리즘"},
+            {en: "Valleys, Wide and Narrow", ko: "넓은 valley, 좁은 valley"},
+            {en: "Demo", ko: "Demo"},
+            {en: "Implementation", ko: "Implementation"},
+            {en: "References", ko: "References"},
+        ],
+    },
+    {
+        slug: "pure_pursuit",
+        title: {en: "Pure Pursuit", ko: "Pure Pursuit"},
+        category: "local",
+        supportedExample: {python: true, "c++": true},
+        contents: lazy(() => import("./local/PurePursuit")),
+        sections: [
+            {en: "Chasing a Point on the Path", ko: "경로 위의 점을 쫓는다"},
+            {en: "Properties and Complexity", ko: "성질과 복잡도"},
+            {en: "The Algorithm", ko: "알고리즘"},
+            {en: "The Lookahead Circle", ko: "Lookahead 원의 기하"},
+            {en: "Demo", ko: "Demo"},
+            {en: "Implementation", ko: "Implementation"},
+            {en: "References", ko: "References"},
+        ],
+    },
     {slug: "dwa", title: {en: "DWA", ko: "DWA"}, category: "local"},
-    {slug: "pure_pursuit", title: {en: "Pure Pursuit", ko: "Pure Pursuit"}, category: "local"},
-    {slug: "vfh", title: {en: "VFH", ko: "VFH"}, category: "local"},
     {slug: "mpc", title: {en: "MPC", ko: "MPC"}, category: "local"},
     // ---- Multi-agent (구현 예정) ----
     {slug: "prioritized_astar", title: {en: "Prioritized A*", ko: "Prioritized A*"}, category: "multi"},

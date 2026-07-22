@@ -18,7 +18,7 @@ from navigation.core.types import PlanResult, PlanStats, Point
 from ._sampling import Tree, _SamplingPlanner, path_length
 
 
-class RRT(_SamplingPlanner):
+class RRT(_SamplingPlanner["SamplingSpace[Point]"]):
     @property
     def name(self) -> str:
         return "rrt"

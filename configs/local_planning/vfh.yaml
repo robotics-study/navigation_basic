@@ -1,0 +1,108 @@
+algorithm: vfh
+category: local_planning
+params:
+  - name: num_sectors
+    type: int
+    default: 60
+    min: 8
+    max: 720
+    description: >-
+      폴라 히스토그램 sector 개수 n (sector 0 = world +x, 반시계). (Borenstein & Koren 1991)
+      60(6°/sector)은 clutter01 스케일(장애물 간격 0.5~1m)에서 valley 경계를 충분히 세밀하게
+      구분하면서 노이즈에 민감해지지 않는 절충점으로 튜닝.
+  - name: window_radius
+    type: float
+    default: 1.32
+    min: 0.1
+    max: 20.0
+    description: >-
+      히스토그램에 반영할 장애물 탐색 반경 (meters). 너무 크면(2m+) 근처 벽/장애물이 여러 sector에
+      걸쳐 서로 다른 방향으로 낮은 밀도를 흩뿌려 valley 경계가 threshold 근방에서 흔들리므로,
+      로봇 footprint·맵 스케일에 맞춰 1.3m 부근으로 튜닝(구현 보고 참조).
+  - name: threshold
+    type: float
+    default: 0.041
+    min: 0.0
+    max: 1000.0
+    description: >-
+      valley 판정 임계값 — smoothed histogram 값이 이 미만인 연속 sector 구간을 통행 가능 valley 로
+      본다. smoothing_window 로 나눈 뒤 값 스케일이 작아지므로(원 밀도 대비) 그에 맞춰 낮게 튜닝.
+  - name: smoothing_window
+    type: int
+    default: 3
+    min: 1
+    max: 31
+    description: 원형 이동평균 폭 (sector 수, 홀수 필수 — 짝수면 로드 시 에러).
+  - name: wide_valley_sectors
+    type: int
+    default: 20
+    min: 1
+    max: 720
+    description: >-
+      이 값 이상 폭의 valley 를 wide 로 판정 (Borenstein & Koren 1991 §IV) — wide 면 near border
+      에서 opening 쪽으로 절반만큼 들어간 지점, narrow 면 valley 중심을 조향 방향으로 택한다.
+      값이 작으면 코너 근접 시 안전 여유(half-width offset)가 줄어 코너를 스치므로 넉넉하게 튜닝.
+  - name: h_m
+    type: float
+    default: 0.0905
+    min: 0.001
+    max: 1000.0
+    description: >-
+      밀도 비례 감속의 기준 히스토그램 값 — 선택 sector 밀도가 이 값에 가까울수록 속도를 줄인다.
+      window_radius/threshold 튜닝에 맞춰 실제 관측되는 smoothed 값 스케일(0~0.3 대) 에 맞게 튜닝.
+  - name: k_omega
+    type: float
+    default: 1.54
+    min: 0.001
+    max: 100.0
+    description: 조향 오차 -> 각속도 비례 게인.
+  - name: max_speed
+    type: float
+    default: 0.44
+    min: 0.01
+    max: 10.0
+    description: >-
+      최대 선속도 (m/s). clutter01 처럼 장애물 간격이 촘촘한 맵에서 매 tick 재계산되는 회피 방향을
+      따라잡을 시간을 벌기 위해 낮춰 튜닝(느릴수록 tick 당 이동 거리가 짧아 코너 스침 위험이 준다).
+  - name: max_omega
+    type: float
+    default: 2.86
+    min: 0.01
+    max: 20.0
+    description: 최대 각속도 (rad/s) — max_speed 를 낮춘 만큼 회전 반응성을 높여 좁은 valley 진입을 돕는다.
+  - name: control_dt
+    type: float
+    default: 0.1
+    min: 0.001
+    max: 1.0
+    description: 제어 주기 (seconds).
+  - name: max_steps
+    type: int
+    default: 1000
+    min: 1
+    max: 100000
+    description: 에피소드 최대 스텝 수 (TIMEOUT 상한).
+  - name: goal_tolerance
+    type: float
+    default: 0.3
+    min: 0.01
+    max: 5.0
+    description: 목표 도달 판정 반경 (meters).
+  - name: footprint_radius
+    type: float
+    default: 0.2
+    min: 0.01
+    max: 5.0
+    description: 로봇 충돌 footprint 반경 (meters).
+  - name: stall_window
+    type: int
+    default: 20
+    min: 1
+    max: 100000
+    description: STALLED 판정에 쓰는 이동 거리 슬라이딩 윈도우 폭 (steps).
+  - name: stall_distance
+    type: float
+    default: 0.05
+    min: 0.0
+    max: 5.0
+    description: stall_window 구간 동안 이 거리 미만 이동 시 STALLED 로 판정 (meters).

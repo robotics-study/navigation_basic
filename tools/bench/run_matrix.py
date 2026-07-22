@@ -56,20 +56,64 @@ _REQUIRED: dict[str, Capability] = {
     "lqr_rrt_star": Capability.SAMPLING_SPACE,
     "kinodynamic_rrt_star": Capability.SAMPLING_SPACE,
     "sst": Capability.SAMPLING_SPACE,
+    # OBSTACLE_QUERY extends SE2_COLLISION_SPACE (core/capabilities.py), so a map that
+    # only supports collision queries (no OccupancyGrid2D EDT/enumeration) is already
+    # correctly marked incompatible for these three.
+    "potential_fields": Capability.OBSTACLE_QUERY,
+    "vfh": Capability.OBSTACLE_QUERY,
+    "pure_pursuit": Capability.OBSTACLE_QUERY,
 }
 _ORDER = ["bfs", "dijkstra", "astar", "ara_star", "jps", "ad_star", "dstar_lite", "theta_star",
           "lazy_theta_star", "visibility_astar", "anya", "hybrid_astar",
           "rrt", "rrt_connect", "rrt_star", "prm_star", "lqr_rrt_star", "kinodynamic_rrt_star",
           "informed_rrt_star", "prm", "fmt_star", "bit_star", "abit_star", "sst",
-          "ait_star", "fast_rrt", "eit_star", "fcit_star"]
+          "ait_star", "fast_rrt", "eit_star", "fcit_star",
+          "potential_fields", "vfh", "pure_pursuit"]
+# Pure Pursuit tracks a given reference path rather than seeking a bare goal, so a
+# scenario without one is a shape mismatch (not a capability mismatch) — reported the
+# same "incompatible" way, from a static table so bench still never imports algorithms.
+_NEEDS_PATH = {"pure_pursuit"}
 
 
 @dataclass
 class Row:
     scenario: str
     algorithm: str
-    status: str  # "ok" | "incompatible" | "no_path" | "error"
+    # global: "ok"|"incompatible"|"no_path"|"error"; local adds "collision"|"stalled"|"timeout"
+    status: str
     metrics: dict[str, float]
+
+
+def _is_local_algo(algo: str) -> bool:
+    """True iff `algo` is a local planner. Reuses _REQUIRED (the one existing
+    per-algorithm fact table) instead of adding a second category map — local
+    planners are exactly the ones that need the obstacle-proximity capability."""
+    return _REQUIRED.get(algo) is Capability.OBSTACLE_QUERY
+
+
+def _local_status(metrics: dict[str, float]) -> str:
+    """Local planning's granular outcome, reconstructed from the simulator's numeric
+    collided/stalled flags: `metrics` is a plain number map (spec/trace_schema.json),
+    so the simulator cannot emit a string status directly."""
+    if metrics.get("success", 0.0) >= 1.0:
+        return "ok"
+    if metrics.get("collided", 0.0) >= 1.0:
+        return "collision"
+    if metrics.get("stalled", 0.0) >= 1.0:
+        return "stalled"
+    return "timeout"
+
+
+def _is_local_row(row: Row) -> bool:
+    """Classify a result row as local vs. global planning from trace facts, not a
+    second algorithm->category map. A row with metrics is classified by the presence
+    of `time_to_goal` (a local-only metric key); a row with none (incompatible/error,
+    where no trace was even produced) falls back to the algorithm's own capability."""
+    if "time_to_goal" in row.metrics:
+        return True
+    if row.metrics:
+        return False
+    return _is_local_algo(row.algorithm)
 
 
 def _final_metrics(trace_path: Path) -> dict[str, float] | None:
@@ -89,15 +133,26 @@ def _final_metrics(trace_path: Path) -> dict[str, float] | None:
     return result
 
 
+def _config_path(configs_dirs: list[Path], algo: str) -> Path | None:
+    """First existing `<dir>/<algo>.yaml` across the given config dirs (algorithm
+    filenames don't collide across categories, so first match is unambiguous)."""
+    for d in configs_dirs:
+        candidate = d / f"{algo}.yaml"
+        if candidate.exists():
+            return candidate
+    return None
+
+
 def _run_one(
-    py: str, demos_dir: Path, configs_dir: Path, scenario_path: Path, algo: str
+    py: str, demos_dir: Path, config: Path, scenario_path: Path, algo: str
 ) -> Row:
     scenario = load_scenario(scenario_path)
     grid = load_map(scenario.map_path)
     if not grid.supports(_REQUIRED[algo]):
         return Row(scenario_path.name, algo, "incompatible", {})
+    if algo in _NEEDS_PATH and not scenario.reference_path:
+        return Row(scenario_path.name, algo, "incompatible", {})
 
-    config = configs_dir / f"{algo}.yaml"
     demo = demos_dir / f"demo_{algo}.py"
     with tempfile.NamedTemporaryFile("w", suffix=".jsonl", delete=False) as tmp:
         trace_path = Path(tmp.name)
@@ -108,18 +163,25 @@ def _run_one(
         "--params", str(config),
         "--trace", str(trace_path),
     ]
-    proc = subprocess.run(cmd, capture_output=True, text=True)
-    if proc.returncode != 0:
-        return Row(scenario_path.name, algo, "error", {})
-    metrics = _final_metrics(trace_path)
-    trace_path.unlink(missing_ok=True)
+    try:
+        proc = subprocess.run(cmd, capture_output=True, text=True)
+        if proc.returncode != 0:
+            return Row(scenario_path.name, algo, "error", {})
+        metrics = _final_metrics(trace_path)
+    finally:
+        # Pre-existing leak fix: a failed subprocess used to skip this cleanup and
+        # leave the temp trace file behind (harmless individually, but bench runs a
+        # full matrix per invocation).
+        trace_path.unlink(missing_ok=True)
     if metrics is None:
         return Row(scenario_path.name, algo, "error", {})
-    status = "ok" if metrics.get("success", 0.0) >= 1.0 else "no_path"
+    status = _local_status(metrics) if _is_local_algo(algo) else (
+        "ok" if metrics.get("success", 0.0) >= 1.0 else "no_path"
+    )
     return Row(scenario_path.name, algo, status, metrics)
 
 
-def _render(rows: list[Row]) -> str:
+def _render_global(rows: list[Row]) -> str:
     header = (
         "| scenario | algorithm | status | path_cost | expanded | samples | tree | runtime_sec |\n"
         "|---|---|---|---|---|---|---|---|\n"
@@ -136,13 +198,58 @@ def _render(rows: list[Row]) -> str:
             f"{int(m.get('samples', 0))} | {int(m.get('tree_size', 0))} | "
             f"{m.get('runtime_sec', 0.0):.5f} |\n"
         )
-    return "# navigation benchmark matrix\n\n" + "".join(lines)
+    return "".join(lines)
+
+
+def _render_local(rows: list[Row]) -> str:
+    header = (
+        "| scenario | algorithm | status | time_to_goal | distance | min_clearance "
+        "| steps | runtime_sec |\n"
+        "|---|---|---|---|---|---|---|---|\n"
+    )
+    lines = [header]
+    for r in rows:
+        m = r.metrics
+        if r.status in ("incompatible", "error"):
+            lines.append(f"| {r.scenario} | {r.algorithm} | {r.status} | - | - | - | - | - |\n")
+            continue
+        lines.append(
+            f"| {r.scenario} | {r.algorithm} | {r.status} | "
+            f"{m.get('time_to_goal', 0.0):.3f} | {m.get('distance_traveled', 0.0):.3f} | "
+            f"{m.get('min_clearance', 0.0):.3f} | {int(m.get('steps', 0))} | "
+            f"{m.get('runtime_sec', 0.0):.5f} |\n"
+        )
+    return "".join(lines)
+
+
+def _render(rows: list[Row]) -> str:
+    # Split by trace facts (see _is_local_row), not a category map. When a run only
+    # touches one category (e.g. the historical global_planning-only invocation), the
+    # report stays a single table — byte-identical to the pre-local-planning format.
+    local_rows = [r for r in rows if _is_local_row(r)]
+    global_rows = [r for r in rows if not _is_local_row(r)]
+    title = "# navigation benchmark matrix\n\n"
+    if global_rows and local_rows:
+        return (
+            title
+            + "## Global planning\n\n" + _render_global(global_rows) + "\n"
+            + "## Local planning\n\n" + _render_local(local_rows)
+        )
+    if local_rows:
+        return title + _render_local(local_rows)
+    return title + _render_global(global_rows)
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="navigation benchmark matrix runner")
     parser.add_argument("--scenarios", default=str(_REPO_ROOT / "maps" / "scenarios"))
-    parser.add_argument("--configs", default=str(_REPO_ROOT / "configs" / "global_planning"))
+    parser.add_argument(
+        "--configs", nargs="+",
+        default=[str(_REPO_ROOT / "configs" / "global_planning"),
+                 str(_REPO_ROOT / "configs" / "local_planning")],
+        help="one or more algorithm-config dirs (algo id -> <dir>/<algo>.yaml); "
+             "a single path is accepted for backward compatibility",
+    )
     parser.add_argument("--demos", default=str(_REPO_ROOT / "python" / "demos"))
     parser.add_argument("--out", default=str(_REPO_ROOT / "out" / "report.md"))
     parser.add_argument("--python", default=sys.executable)
@@ -150,15 +257,19 @@ def main() -> None:
     args = parser.parse_args()
 
     scenarios_dir = Path(args.scenarios)
-    configs_dir = Path(args.configs)
+    configs_dirs = [Path(p) for p in args.configs]
     demos_dir = Path(args.demos)
-    algos = args.algos or [a for a in _ORDER if (configs_dir / f"{a}.yaml").exists()]
+    algos = args.algos or [a for a in _ORDER if _config_path(configs_dirs, a) is not None]
 
     scenario_paths = sorted(scenarios_dir.glob("*.yaml"))
     rows: list[Row] = []
     for scenario_path in scenario_paths:
         for algo in algos:
-            rows.append(_run_one(args.python, demos_dir, configs_dir, scenario_path, algo))
+            # Falls back to the first dir even when missing, so an explicit --algos
+            # request with no matching config still reports "error" via the demo
+            # subprocess (same behavior as the old single-dir CLI), not a silent skip.
+            config = _config_path(configs_dirs, algo) or configs_dirs[0] / f"{algo}.yaml"
+            rows.append(_run_one(args.python, demos_dir, config, scenario_path, algo))
             print(f"ran {scenario_path.name} x {algo} -> {rows[-1].status}", file=sys.stderr)
 
     out_path = Path(args.out)

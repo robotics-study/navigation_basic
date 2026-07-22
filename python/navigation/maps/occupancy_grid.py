@@ -15,6 +15,60 @@ from navigation.core.capabilities import Capability, MapBase
 from navigation.core.types import Cell, Footprint, Point, Pose
 
 _SQRT2 = math.sqrt(2.0)
+# Sentinel "infinity" for the 1D distance transform below. Must stay finite (an
+# actual inf would produce a 0/0 -> nan in the lower-envelope intersection formula)
+# but far larger than any squared distance a real grid can produce.
+_EDT_INF = 1e15
+
+
+def _dt_1d(f: np.ndarray) -> np.ndarray:
+    """Exact 1D squared-distance lower envelope (Felzenszwalb & Huttenlocher 2004,
+    "Distance Transforms of Sampled Functions", §2). `f[q]` is 0 at a source and
+    `_EDT_INF` elsewhere; returns, for every q, min_{q'} (q-q')^2 + f[q'].
+    """
+    n = f.shape[0]
+    d = np.empty(n, dtype=np.float64)
+    v = np.zeros(n, dtype=np.int64)  # q-indices of parabolas kept in the envelope
+    z = np.empty(n + 1, dtype=np.float64)  # envelope boundaries between kept parabolas
+    k = 0
+    v[0] = 0
+    z[0] = -_EDT_INF
+    z[1] = _EDT_INF
+    for q in range(1, n):
+        while True:
+            s = ((f[q] + q * q) - (f[v[k]] + v[k] * v[k])) / (2.0 * q - 2.0 * v[k])
+            if s <= z[k]:
+                k -= 1
+            else:
+                break
+        k += 1
+        v[k] = q
+        z[k] = s
+        z[k + 1] = _EDT_INF
+    k = 0
+    for q in range(n):
+        while z[k + 1] < q:
+            k += 1
+        d[q] = float((q - v[k]) ** 2) + f[v[k]]
+    return d
+
+
+def _squared_edt(non_free: np.ndarray) -> np.ndarray:
+    """2-pass exact squared Euclidean distance transform to the `non_free` mask
+    (Felzenszwalb & Huttenlocher 2004): 1D transform along each column, then along
+    each row of the result. Distances are in cell units (squared); the caller scales
+    by resolution and takes sqrt once, so cross-language results agree bit-for-bit
+    up to that single final sqrt.
+    """
+    h, w = non_free.shape
+    f = np.where(non_free, 0.0, _EDT_INF)
+    partial = np.empty_like(f)
+    for col in range(w):
+        partial[:, col] = _dt_1d(f[:, col])
+    out = np.empty_like(f)
+    for row in range(h):
+        out[row, :] = _dt_1d(partial[row, :])
+    return out
 # 8-connected moves; diagonals cost sqrt(2), orthogonals 1.0.
 _MOVES_8 = [
     (-1, 0, 1.0),
@@ -55,6 +109,10 @@ class OccupancyGrid2D(MapBase):
         self._free = occ <= free_thresh
         self._moves = _MOVES_8 if connectivity == 8 else _MOVES_4
         self._rng = np.random.default_rng(seed)
+        # Lazy EDT cache (cell-unit squared distances): computed on first
+        # distance_to_nearest() call so the existing global_planning suite, which
+        # never touches ObstacleQuery, pays nothing for it.
+        self._edt_sq: np.ndarray | None = None
 
     # --- dimensions -------------------------------------------------------
     @property
@@ -98,6 +156,7 @@ class OccupancyGrid2D(MapBase):
             Capability.LINE_OF_SIGHT_SPACE,
             Capability.DYNAMIC_GRID_SPACE,
             Capability.SE2_COLLISION_SPACE,
+            Capability.OBSTACLE_QUERY,
         }
 
     # --- DiscreteSpace[Cell] ---------------------------------------------
@@ -191,6 +250,46 @@ class OccupancyGrid2D(MapBase):
                 if dx * dx + dy * dy <= r2:
                     return True
         return False
+
+    # --- ObstacleQuery (extends SE2CollisionSpace[Pose]) -------------------
+    def _edt(self) -> np.ndarray:
+        if self._edt_sq is None:
+            h, w = self._height, self._width
+            # 1-cell non-free border padding makes the map edge itself a source, so
+            # a reactive planner near the boundary sees it as an obstacle (occupied
+            # OR out-of-bounds already means "non-free" everywhere else in this class).
+            padded = np.ones((h + 2, w + 2), dtype=bool)
+            padded[1 : h + 1, 1 : w + 1] = ~self._free
+            self._edt_sq = _squared_edt(padded)[1 : h + 1, 1 : w + 1]
+        return self._edt_sq
+
+    def distance_to_nearest(self, p: Point) -> float:
+        row, col = self.world_to_cell(p[0], p[1])
+        if not self.in_bounds(row, col):
+            # p's own cell is itself non-free (out of bounds), so it is its own
+            # nearest non-free cell.
+            return 0.0
+        # Squared distances are integer cell-unit values; sqrt is the only
+        # floating-point step, so C++/Python agree up to that single rounding.
+        return math.sqrt(self._edt()[row, col]) * self._resolution
+
+    def occupied_within(self, center: Point, radius: float) -> list[Point]:
+        # Same bounding-box convention as is_collision: world_to_cell(x-r, y+r) is
+        # the lower row/col corner because +y maps to a smaller row index.
+        x, y = center
+        r2 = radius * radius
+        lo_row, lo_col = self.world_to_cell(x - radius, y + radius)
+        hi_row, hi_col = self.world_to_cell(x + radius, y - radius)
+        out: list[Point] = []
+        for row in range(lo_row, hi_row + 1):  # row asc, col asc: fixes summation
+            for col in range(lo_col, hi_col + 1):  # order for PF/VFH force/bin sums
+                if self.is_free_cell(row, col):  # in-bounds & free → not a source
+                    continue
+                cx, cy = self.cell_to_world(row, col)  # occupied OR out-of-bounds
+                dx, dy = cx - x, cy - y
+                if dx * dx + dy * dy <= r2:
+                    out.append((cx, cy))
+        return out
 
     def _is_free_uv(self, iu: int, iv: int) -> bool:
         # (u, v) grid coords count up from the origin (bottom-left); rows count

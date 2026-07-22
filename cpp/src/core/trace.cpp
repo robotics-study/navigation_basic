@@ -69,8 +69,9 @@ void TraceRecorder::begin_event(const char* event) {
 
 void TraceRecorder::end_event() { os_ << "}\n"; }
 
-void TraceRecorder::planning_started(const std::string& algorithm, const std::string& map_path,
-                                     const std::map<std::string, ParamValue>& params) {
+void TraceRecorder::begin_planning_started(const std::string& algorithm,
+                                           const std::string& map_path,
+                                           const std::map<std::string, ParamValue>& params) {
   t0_ = std::chrono::steady_clock::now();
   begin_event("planning_started");
   os_ << ",\"algorithm\":";
@@ -98,6 +99,20 @@ void TraceRecorder::planning_started(const std::string& algorithm, const std::st
         v);
   }
   os_ << '}';
+}
+
+void TraceRecorder::planning_started(const std::string& algorithm, const std::string& map_path,
+                                     const std::map<std::string, ParamValue>& params) {
+  begin_planning_started(algorithm, map_path, params);
+  end_event();
+}
+
+void TraceRecorder::planning_started(const std::string& algorithm, const std::string& map_path,
+                                     const std::map<std::string, ParamValue>& params,
+                                     const std::string& scenario) {
+  begin_planning_started(algorithm, map_path, params);
+  os_ << ",\"scenario\":";
+  write_str(os_, scenario);
   end_event();
 }
 
@@ -141,6 +156,17 @@ void TraceRecorder::ev_edge(const char* event, const std::vector<double>& s,
     os_ << ",\"cost\":";
     write_num(os_, *cost);
   }
+  write_data(os_, data);
+  end_event();
+}
+
+void TraceRecorder::ev_bins(const char* event, const std::vector<double>& s,
+                            const std::vector<double>& bins, const EventData* data) {
+  begin_event(event);
+  os_ << ",\"state\":";
+  write_array(os_, s);
+  os_ << ",\"bins\":";
+  write_array(os_, bins);
   write_data(os_, data);
   end_event();
 }
