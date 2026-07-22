@@ -49,9 +49,11 @@ std::vector<core::Point> resample_polyline(const std::vector<core::Point>& point
     total += std::sqrt(sq_dist(points[i], points[i + 1]));
   }
   if (total < 1e-12) return {points.front(), points.back()};
-  // Same max(1, round(total/spacing)) contract as eit_star.cpp's effort(): keeps
-  // segment-count rounding on the one convention Python/C++ parity already relies on.
-  long n_segments = std::max(1L, std::lround(total / spacing));
+  // Same max(1, round(total/spacing)) contract as _band.py. Python's round() is
+  // half-to-even, and std::lround is half-away-from-zero -- they disagree exactly at
+  // .5 ties, so use nearbyint (FE_TONEAREST default = ties-to-even) to keep the
+  // segment count bit-identical with Python even on that measure-zero boundary.
+  long n_segments = std::max(1L, static_cast<long>(std::nearbyint(total / spacing)));
   double step = total / static_cast<double>(n_segments);
   std::vector<core::Point> out;
   out.reserve(static_cast<size_t>(n_segments) + 1);

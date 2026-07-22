@@ -65,6 +65,16 @@ function pointAtArcLength(points: Point[], s: number): Point {
     return points[points.length - 1]
 }
 
+// python round()의 half-to-even 재현 -- JS Math.round(half-up)는 .5 경계에서 갈린다
+// (eit_star.ts의 pyRound와 같은 이유).
+const pyRound = (x: number): number => {
+    const f = Math.floor(x)
+    const diff = x - f
+    if (diff < 0.5) return f
+    if (diff > 0.5) return f + 1
+    return f % 2 === 0 ? f : f + 1
+}
+
 // 폴리라인을 균등 arc-length 간격으로 재샘플 (시작/끝점 보존). 구간 수는
 // max(1, round(total/spacing)) -- global_planning/sampling 계열과 같은 반올림 계약
 // (py _band.resample_polyline 미러).
@@ -73,7 +83,7 @@ function resamplePolyline(points: Point[], spacing: number): Point[] {
     let total = 0
     for (let i = 0; i < points.length - 1; i++) total += Math.sqrt(sqDist(points[i], points[i + 1]))
     if (total < 1e-12) return [points[0], points[points.length - 1]]
-    const nSegments = Math.max(1, Math.round(total / spacing))
+    const nSegments = Math.max(1, pyRound(total / spacing))
     const step = total / nSegments
     const out: Point[] = [points[0]]
     for (let k = 1; k < nSegments; k++) out.push(pointAtArcLength(points, k * step))
