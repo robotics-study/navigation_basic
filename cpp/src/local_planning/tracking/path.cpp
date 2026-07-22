@@ -1,24 +1,8 @@
 #include "navigation/local_planning/tracking/path.hpp"
 
-#include <algorithm>
 #include <cmath>
-#include <limits>
 
 namespace navigation::local_planning {
-
-core::Point closest_point_on_segment(const core::Point& p, const core::Point& a,
-                                     const core::Point& b) {
-  double dx = b.x - a.x, dy = b.y - a.y;
-  double seg_len_sq = dx * dx + dy * dy;
-  if (seg_len_sq < 1e-12) return a;
-  double t = std::max(0.0, std::min(1.0, ((p.x - a.x) * dx + (p.y - a.y) * dy) / seg_len_sq));
-  return core::Point{a.x + t * dx, a.y + t * dy};
-}
-
-double sq_dist(const core::Point& a, const core::Point& b) {
-  double dx = a.x - b.x, dy = a.y - b.y;
-  return dx * dx + dy * dy;
-}
 
 // Solves |a + t*(b-a) - p|^2 = radius^2 (Coulter 1992 sec. 3: circle-line
 // intersection) and keeps the larger root in range -- the exit point, i.e.
@@ -39,28 +23,6 @@ std::optional<double> segment_circle_forward_t(const core::Point& p, const core:
     if (t >= 0.0 && t <= 1.0) return t;
   }
   return std::nullopt;
-}
-
-int advance_progress_index(const std::vector<core::Point>& path, const core::Point& probe,
-                           int start_index) {
-  if (path.size() < 2) return start_index;
-  int best_index = start_index;
-  double best_sq_dist = std::numeric_limits<double>::infinity();
-  for (int i = start_index; i < static_cast<int>(path.size()) - 1; ++i) {
-    core::Point closest = closest_point_on_segment(probe, path[static_cast<size_t>(i)],
-                                                   path[static_cast<size_t>(i) + 1]);
-    double d = sq_dist(probe, closest);
-    // <=, not <: consecutive segments share their joint endpoint, so a probe
-    // sitting exactly at a corner ties every segment ending/starting there.
-    // Preferring the later (more forward) segment on a tie keeps progress
-    // advancing through the corner instead of latching onto the segment just
-    // traveled.
-    if (d <= best_sq_dist) {
-      best_sq_dist = d;
-      best_index = i;
-    }
-  }
-  return best_index;
 }
 
 core::Point lookahead_point(const std::vector<core::Point>& path, int start_index,
