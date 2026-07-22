@@ -13,7 +13,7 @@ const K_CONTRACTION = 1.0
 const K_REPULSION = 2.0
 const RHO_INFLUENCE = 1.0
 const RHO_MAX = 1.5
-const EPS_SQ = 1e-9
+const EPS_SQ = 1e-12
 
 type Vec = [number, number]
 
@@ -43,7 +43,7 @@ function clearance(c: Vec): number {
 
 // elastic_bands.py의 힘 계산식 그대로: 내부 수축력(양 이웃 방향 단위벡터 합) + 외부
 // 반발력(rho_influence 내 occupied 점 합산) + 접선 제거는 반발력에만.
-function forcesAt(i: number): {fc: Vec; frRaw: Vec; frDetangented: Vec; resultant: Vec} {
+function forcesAt(i: number): {fc: Vec; frDetangented: Vec; resultant: Vec} {
     const c = CENTERS[i]
     let fc: Vec = [0, 0]
     for (const j of [i - 1, i + 1]) fc = add(fc, unit(sub(CENTERS[j], c)))
@@ -61,7 +61,7 @@ function forcesAt(i: number): {fc: Vec; frRaw: Vec; frDetangented: Vec; resultan
     const proj = fr[0] * t[0] + fr[1] * t[1]
     const frDetangented: Vec = norm(t) < 1e-6 ? fr : [fr[0] - proj * t[0], fr[1] - proj * t[1]]
 
-    return {fc, frRaw: fr, frDetangented, resultant: add(fc, frDetangented)}
+    return {fc, frDetangented, resultant: add(fc, frDetangented)}
 }
 
 const W = 340

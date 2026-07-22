@@ -59,7 +59,7 @@ def _run(map_name: str, scenario_name: str, params: ParamSet) -> Any:
         goal=(scenario.goal[0], scenario.goal[1], scenario.goal_theta),
         reference_path=scenario.reference_path,
     )
-    return simulate(planner, grid, start, task, _sim_config(params), None), task
+    return simulate(planner, grid, start, task, _sim_config(params), None)
 
 
 def _band_events(buf: io.StringIO) -> list[dict[str, Any]]:
@@ -71,7 +71,7 @@ def _band_events(buf: io.StringIO) -> list[dict[str, Any]]:
 # --- band routes around all of them without collision -------------------------
 def test_reaches_goal_around_blocking_obstacles(tmp_path: Path) -> None:
     params = _config(tmp_path)
-    result, _task = _run("clutter01", "clutter01_s3", params)
+    result = _run("clutter01", "clutter01_s3", params)
     assert result.status is SimStatus.REACHED
     assert result.success is True
     assert result.min_clearance > 0.0

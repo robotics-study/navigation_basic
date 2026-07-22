@@ -598,7 +598,11 @@ return (v, omega)`}/>
                 <li>
                     C. Rösmann, F. Feiten, T. Wösch, F. Hoffmann, T. Bertram,{" "}
                     <em>Trajectory Modification Considering Dynamic Constraints of Autonomous Robots</em>,
-                    Proceedings of ROBOTIK 2012, 7th German Conference on Robotics.
+                    Proceedings of ROBOTIK 2012, 7th German Conference on Robotics.{" "}
+                    <a href="https://ieeexplore.ieee.org/document/6309484" target="_blank"
+                       rel="noopener noreferrer">
+                        IEEE Xplore 6309484
+                    </a>
                 </li>
                 <li>
                     C. Rösmann, F. Hoffmann, T. Bertram,{" "}
