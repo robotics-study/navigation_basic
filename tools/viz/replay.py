@@ -18,10 +18,11 @@ import json
 import math
 import os
 from bisect import bisect_right
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from functools import lru_cache
+from functools import cache, lru_cache
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from matplotlib.colors import LinearSegmentedColormap
@@ -60,14 +61,14 @@ def _quantize(t: float) -> float:
 
 
 @lru_cache(maxsize=1)
-def _path_cmap() -> "LinearSegmentedColormap":
+def _path_cmap() -> LinearSegmentedColormap:
     from matplotlib.colors import LinearSegmentedColormap
 
     return LinearSegmentedColormap.from_list("nav_path", _PATH_RAMP)
 
 
-@lru_cache(maxsize=None)
-def _ramp_cmap(stops: tuple[str, ...]) -> "LinearSegmentedColormap":
+@cache
+def _ramp_cmap(stops: tuple[str, ...]) -> LinearSegmentedColormap:
     from matplotlib.colors import LinearSegmentedColormap
 
     return LinearSegmentedColormap.from_list("nav_ramp", list(stops))
@@ -81,7 +82,7 @@ class Scene:
     frame showing "the first N ops" is a prefix cut across the per-type lists.
     """
 
-    grid: "OccupancyGrid2D"
+    grid: OccupancyGrid2D
     extent: tuple[float, float, float, float]
     edges: list[tuple[Point, Point]] = field(default_factory=list)
     edge_orders: list[int] = field(default_factory=list)
@@ -129,12 +130,12 @@ def _resolve_map(trace_path: str, events: list[dict[str, Any]], override: str | 
     raise ValueError("no map path in trace; pass --map")
 
 
-def _looks_like_cell(state: list[float], grid: "OccupancyGrid2D") -> bool:
+def _looks_like_cell(state: list[float], grid: OccupancyGrid2D) -> bool:
     row, col = int(state[0]), int(state[1])
     return 0 <= row < grid.height and 0 <= col < grid.width
 
 
-def _to_world_fn(grid: "OccupancyGrid2D") -> Callable[[list[float]], Point]:
+def _to_world_fn(grid: OccupancyGrid2D) -> Callable[[list[float]], Point]:
     def to_world(state: list[float]) -> Point:
         # A 3-element state is always an SE(2) Pose [x, y, theta] (world) — Cells/Points
         # are 2-element. Returning world (x, y) directly also fixes a latent bug where an
@@ -149,7 +150,7 @@ def _to_world_fn(grid: "OccupancyGrid2D") -> Callable[[list[float]], Point]:
     return to_world
 
 
-def _world_extent(grid: "OccupancyGrid2D") -> tuple[float, float, float, float]:
+def _world_extent(grid: OccupancyGrid2D) -> tuple[float, float, float, float]:
     # Bottom-left of image = world origin; derive from corner cell centers.
     x0, y1 = grid.cell_to_world(0, 0)
     x1, y0 = grid.cell_to_world(grid.height - 1, grid.width - 1)
@@ -157,7 +158,7 @@ def _world_extent(grid: "OccupancyGrid2D") -> tuple[float, float, float, float]:
     return (x0 - res / 2, x1 + res / 2, y0 - res / 2, y1 + res / 2)
 
 
-def build_scene(events: list[dict[str, Any]], grid: "OccupancyGrid2D") -> Scene:
+def build_scene(events: list[dict[str, Any]], grid: OccupancyGrid2D) -> Scene:
     to_world = _to_world_fn(grid)
     scene = Scene(grid=grid, extent=_world_extent(grid))
     order = 0
@@ -195,7 +196,7 @@ def build_scene(events: list[dict[str, Any]], grid: "OccupancyGrid2D") -> Scene:
 
 
 def _draw(
-    ax: "Any", scene: Scene, cutoff: int, show_path: bool, path_segments: int | None = None
+    ax: Any, scene: Scene, cutoff: int, show_path: bool, path_segments: int | None = None
 ) -> None:
     """Render the search state after the first ``cutoff`` ops.
 
@@ -246,14 +247,20 @@ def _draw(
         pts = scene.samples[:n_samples]
         sample_cmap = _ramp_cmap(_SAMPLE_RAMP)
         colors = [sample_cmap(_quantize(scene.sample_orders[i] / denom)) for i in range(n_samples)]
-        sc = ax.scatter([p[0] for p in pts], [p[1] for p in pts], s=4, c=colors, alpha=0.4, zorder=3)
+        sc = ax.scatter(
+            [p[0] for p in pts], [p[1] for p in pts], s=4, c=colors, alpha=0.4, zorder=3
+        )
         sc.set_antialiased(False)
     if n_expanded:
         pts = scene.expanded[:n_expanded]
         expanded_cmap = _ramp_cmap(_EXPANDED_RAMP)
-        colors = [expanded_cmap(_quantize(scene.expanded_orders[i] / denom)) for i in range(n_expanded)]
+        colors = [
+            expanded_cmap(_quantize(scene.expanded_orders[i] / denom)) for i in range(n_expanded)
+        ]
         # Expanded nodes are the time map's protagonist: larger, near-opaque, on top.
-        sc = ax.scatter([p[0] for p in pts], [p[1] for p in pts], s=12, c=colors, alpha=0.9, zorder=4)
+        sc = ax.scatter(
+            [p[0] for p in pts], [p[1] for p in pts], s=12, c=colors, alpha=0.9, zorder=4
+        )
         sc.set_antialiased(False)
     n_revealed = 0
     n_robot = 0
@@ -299,7 +306,7 @@ def _draw(
     )
 
 
-def _draw_path_gradient(ax: "Any", path: list[Point], path_segments: int | None = None) -> None:
+def _draw_path_gradient(ax: Any, path: list[Point], path_segments: int | None = None) -> None:
     """Draw the path as a time-ordered color gradient (start->goal) with a halo.
 
     A solid line hides ordering and blends with the tree/walls; the gradient
@@ -342,7 +349,7 @@ _HEADING_COLOR = "#1e293b"
 
 
 def _draw_headings(
-    ax: "Any", path: list[Point], headings: list[float], path_segments: int | None = None
+    ax: Any, path: list[Point], headings: list[float], path_segments: int | None = None
 ) -> None:
     """Overlay SE(2) heading arrows along the path (Hybrid A*).
 
@@ -370,7 +377,7 @@ def _draw_headings(
     )
 
 
-def _mark_proxy(color: tuple[float, float, float, float]) -> "Line2D":
+def _mark_proxy(color: tuple[float, float, float, float]) -> Line2D:
     from matplotlib.lines import Line2D
 
     return Line2D(
@@ -380,13 +387,13 @@ def _mark_proxy(color: tuple[float, float, float, float]) -> "Line2D":
 
 
 def _draw_legend(
-    ax: "Any", *, expanded_shown: bool, samples_shown: bool, path_shown: bool,
+    ax: Any, *, expanded_shown: bool, samples_shown: bool, path_shown: bool,
     robot_shown: bool = False, revealed_shown: bool = False, headings_shown: bool = False,
 ) -> None:
     from matplotlib.lines import Line2D
 
     # Per-mark colors vary by time, so legend swatches use each ramp's midpoint.
-    handles: list["Line2D"] = []
+    handles: list[Line2D] = []
     labels: list[str] = []
     if expanded_shown:
         handles.append(_mark_proxy(_ramp_cmap(_EXPANDED_RAMP)(0.5)))

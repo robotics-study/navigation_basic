@@ -154,7 +154,9 @@ def export_traces(algo: str, map_name: str, overrides: dict[str, str]) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="export web data assets for document/")
-    parser.add_argument("--algos", default="", help="comma-separated algorithm slugs (empty: maps only)")
+    parser.add_argument(
+        "--algos", default="", help="comma-separated algorithm slugs (empty: maps only)"
+    )
     parser.add_argument("--maps", required=True, help="comma-separated grid map names")
     parser.add_argument("--set", action="append", default=[], metavar="KEY=VALUE",
                         help="param default override for the demo run (repeatable)")
