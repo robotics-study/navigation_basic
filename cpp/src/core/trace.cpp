@@ -144,6 +144,23 @@ void TraceRecorder::ev_state(const char* event, const std::vector<double>& s, co
   end_event();
 }
 
+void TraceRecorder::ev_rollout(const std::vector<double>& s, double cost, const EventData* data,
+                               const std::vector<std::vector<double>>& rollout) {
+  begin_event("candidate_evaluated");
+  os_ << ",\"state\":";
+  write_array(os_, s);
+  os_ << ",\"cost\":";
+  write_num(os_, cost);
+  write_data(os_, data);
+  os_ << ",\"rollout\":[";
+  for (size_t i = 0; i < rollout.size(); ++i) {
+    if (i) os_ << ',';
+    write_array(os_, rollout[i]);
+  }
+  os_ << ']';
+  end_event();
+}
+
 void TraceRecorder::ev_edge(const char* event, const std::vector<double>& s,
                             const std::vector<double>& parent, const double* cost,
                             const EventData* data) {
