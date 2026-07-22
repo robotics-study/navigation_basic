@@ -301,7 +301,7 @@ return heading_command(wrap_to_pi(theta_d - theta), k_omega, v, max_omega)  # 7`
                         <p>
                             {t(
                                 "φ is strictly decreasing on (d_min, ρ₀) — both 1/d − 1/ρ₀ and 1/d² shrink as d grows — and it brackets k_att·Δ whenever the trap is tight enough relative to the gains:",
-                                "φ는 (d_min, ρ₀) 위에서 단조 감소한다 — d가 커질수록 1/d − 1/ρ₀와 1/d² 모두 줄어든다 — 그리고 함정이 게인 대비 충분히 좁으면 k_att·Δ를 사이에 둔다:",
+                                "φ는 (d_min, ρ₀) 위에서 단조 감소한다. d가 커질수록 1/d − 1/ρ₀와 1/d² 모두 줄어들기 때문이다. 함정이 게인 대비 충분히 좁으면 φ가 k_att·Δ를 사이에 둔다:",
                             )}
                         </p>
                         <BlockMath math="0 = \varphi(\rho_0) \;<\; k_{\text{att}}\,\Delta \;<\; \varphi(d_{\min}) = k_{\text{rep}}\left(\frac{1}{d_{\min}}-\frac{1}{\rho_0}\right)\frac{1}{d_{\min}^2}"/>
