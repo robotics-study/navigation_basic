@@ -33,6 +33,10 @@ export interface StanleyOptions {
 // (python stanley.py의 _TAN_EPS 미러).
 const TAN_EPS = 1e-9;
 
+// 이보다 짧은(제곱) 세그먼트는 접선 방향이 정의되지 않는다 — closestPointOnSegment의
+// 퇴화 가드와 같은 임계값을 써서 "길이 0 세그먼트" 판정을 일치시킨다 (python/cpp 미러).
+const SEG_EPS_SQ = 1e-12;
+
 // TS 엔진은 페이지 단위 교육 코드라 pure_pursuit.ts처럼 이 파일이 자체 보유한다
 // (저장소 tracking/_path.py를 공용화하지 않는 기존 관례 — 3중 미러 유지비보다 파일
 // 완결성이 우선이라는 판단).
@@ -107,18 +111,39 @@ export function runStanley(opts: StanleyOptions): TraceEvent[] {
         const front: Point = [x + wheelbase * Math.cos(theta), y + wheelbase * Math.sin(theta)]
 
         progressIndex = advanceProgressIndex(referencePath, front, progressIndex)
-        const i = progressIndex
-        const a = referencePath[i], b = referencePath[i + 1]
-        const segLen = Math.hypot(b[0] - a[0], b[1] - a[1])
-        const tx = (b[0] - a[0]) / segLen, ty = (b[1] - a[1]) / segLen
-        const thetaPath = Math.atan2(ty, tx)
+        // 접선은 세그먼트 길이로 나눠 얻는다 — 중복 waypoint(길이 0 세그먼트)나 1점
+        // 경로에서는 접선이 정의되지 않으므로, 진행 인덱스 이후 첫 비퇴화 세그먼트를
+        // 쓰고, 없으면 경로 끝점을 향하는 방향으로 대신한다. NaN 명령이 조용히
+        // 전파되는 대신 유한한 조향을 보장한다 (python/cpp 미러).
+        let segmentIndex = -1
+        for (let j = progressIndex; j < referencePath.length - 1; j++) {
+            if (sqDist(referencePath[j], referencePath[j + 1]) >= SEG_EPS_SQ) {
+                segmentIndex = j
+                break
+            }
+        }
+        let thetaPath: number
+        let foot: Point
+        let e: number
+        if (segmentIndex >= 0) {
+            const a = referencePath[segmentIndex], b = referencePath[segmentIndex + 1]
+            const segLen = Math.hypot(b[0] - a[0], b[1] - a[1])
+            const tx = (b[0] - a[0]) / segLen, ty = (b[1] - a[1]) / segLen
+            thetaPath = Math.atan2(ty, tx)
+            foot = closestPointOnSegment(front, a, b)
+            // 접선과 (front - foot)의 외적: 전륜축이 경로 좌측에 있으면 양수. 논문의 e(우측
+            // 양수) 부호 규약을 거울상으로 뒤집은 것뿐 — 같은 조향 법칙이고 아래 부호만
+            // 다르게 접힌다.
+            e = tx * (front[1] - foot[1]) - ty * (front[0] - foot[0])
+        } else {
+            const end = referencePath[referencePath.length - 1]
+            const dx = end[0] - front[0], dy = end[1] - front[1]
+            // 전륜축이 경로 끝점 바로 위면 맞출 방향조차 없다 — 현재 heading 유지.
+            thetaPath = dx * dx + dy * dy >= SEG_EPS_SQ ? Math.atan2(dy, dx) : theta
+            foot = end
+            e = 0
+        }
         const psi = wrapToPi(thetaPath - theta)
-
-        const foot = closestPointOnSegment(front, a, b)
-        // 접선과 (front - foot)의 외적: 전륜축이 경로 좌측에 있으면 양수. 논문의 e(우측
-        // 양수) 부호 규약을 거울상으로 뒤집은 것뿐 — 같은 조향 법칙이고 아래 부호만
-        // 다르게 접힌다.
-        const e = tx * (front[1] - foot[1]) - ty * (front[0] - foot[0])
 
         const deltaRaw = psi - Math.atan(kGain * e / (kSoft + v))
         const delta = Math.max(-maxSteer, Math.min(maxSteer, deltaRaw))

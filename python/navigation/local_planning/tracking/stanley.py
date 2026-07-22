@@ -16,13 +16,18 @@ from navigation.core.trace import TraceRecorder
 from navigation.core.types import LocalTask, Point, RobotState, VelocityCommand
 
 from .._geometry import wrap_to_pi
-from ._path import advance_progress_index, closest_point_on_segment
+from ._path import advance_progress_index, closest_point_on_segment, sq_dist
 
 # Below this |tan(delta)| the clamp-recompute step (v = omega*L/tan(delta)) would
 # divide by a near-zero denominator. max_steer is declared < pi/2 (see
 # stanley.yaml), so tan(delta) itself never diverges; this only guards the
 # division defensively, mirroring pure_pursuit.py's _KAPPA_EPS.
 _TAN_EPS = 1e-9
+
+# A segment shorter than this (squared) has no defined tangent direction --
+# same degenerate-segment threshold as _path.closest_point_on_segment, so the
+# two guards agree on what counts as a zero-length segment.
+_SEG_EPS_SQ = 1e-12
 
 
 class Stanley(ObstacleLocalPlanner):
@@ -73,19 +78,37 @@ class Stanley(ObstacleLocalPlanner):
         front: Point = (x + wheelbase * math.cos(theta), y + wheelbase * math.sin(theta))
 
         self._progress_index = advance_progress_index(path, front, self._progress_index)
-        i = self._progress_index
-        a, b = path[i], path[i + 1]
-        seg_len = math.hypot(b[0] - a[0], b[1] - a[1])
-        tx, ty = (b[0] - a[0]) / seg_len, (b[1] - a[1]) / seg_len
-        theta_path = math.atan2(ty, tx)
+        # The tangent divides by the segment length, so a duplicated waypoint
+        # (zero-length segment) or a single-point path has no defined tangent:
+        # use the first non-degenerate segment at or after the progress index,
+        # and fall back to aiming at the path's end otherwise -- a finite
+        # command instead of a NaN silently propagating into the simulator
+        # (the path-end fallback mirrors Pure Pursuit's lookahead convention).
+        segment: tuple[Point, Point] | None = None
+        for j in range(self._progress_index, len(path) - 1):
+            if sq_dist(path[j], path[j + 1]) >= _SEG_EPS_SQ:
+                segment = (path[j], path[j + 1])
+                break
+        if segment is not None:
+            a, b = segment
+            seg_len = math.hypot(b[0] - a[0], b[1] - a[1])
+            tx, ty = (b[0] - a[0]) / seg_len, (b[1] - a[1]) / seg_len
+            theta_path = math.atan2(ty, tx)
+            foot = closest_point_on_segment(front, a, b)
+            # Cross product of the tangent with (front - foot): positive when the
+            # front axle sits to the path's left. This is a mirror-image sign
+            # convention from the paper's e (right-positive) -- same steering law,
+            # only the sign folds differently below.
+            e = tx * (front[1] - foot[1]) - ty * (front[0] - foot[0])
+        else:
+            end = path[-1]
+            dx, dy = end[0] - front[0], end[1] - front[1]
+            # If the front axle sits on the path's end there is no direction
+            # left to align with either -- hold the current heading.
+            theta_path = math.atan2(dy, dx) if dx * dx + dy * dy >= _SEG_EPS_SQ else theta
+            foot = end
+            e = 0.0
         psi = wrap_to_pi(theta_path - theta)
-
-        foot = closest_point_on_segment(front, a, b)
-        # Cross product of the tangent with (front - foot): positive when the
-        # front axle sits to the path's left. This is a mirror-image sign
-        # convention from the paper's e (right-positive) -- same steering law,
-        # only the sign folds differently below.
-        e = tx * (front[1] - foot[1]) - ty * (front[0] - foot[0])
 
         k_gain = self.params.get_float("k_gain")
         k_soft = self.params.get_float("k_soft")

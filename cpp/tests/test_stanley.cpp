@@ -132,6 +132,39 @@ TEST(Stanley, LowSpeedLargeCrossTrackErrorYieldsFiniteCommand) {
   EXPECT_LE(std::fabs(cmd.omega), params.get_float("max_omega") + 1e-9);
 }
 
+// (c2) degenerate paths: duplicated waypoints / a single point stay finite ---------
+TEST(Stanley, DegenerateReferencePathsYieldFiniteCommands) {
+  // A duplicated waypoint makes a zero-length segment (no tangent direction)
+  // and a single-point path has no segment at all -- the planner must fall
+  // back to a finite command instead of dividing by zero or indexing past
+  // the path.
+  ParamSet params = ParamSet::from_yaml(config_path());
+  auto map = maps::load_map(test::repo_path("maps/grid/open01.yaml"));
+  auto& grid = demo::as_grid(*map);
+  const double dt = params.get_float("control_dt");
+
+  {
+    StanleyPlanner planner(params);
+    LocalTask task{core::Pose{9.0, 9.0, 0.0},
+                   {Point{1.0, 1.0}, Point{1.0, 1.0}, Point{1.0, 1.0}}};
+    RobotState state{core::Pose{1.0, 1.2, 0.0}, 0.0, 0.0};
+    core::VelocityCommand cmd = planner.compute_command(grid, state, task, dt, nullptr);
+    EXPECT_TRUE(std::isfinite(cmd.v));
+    EXPECT_TRUE(std::isfinite(cmd.omega));
+  }
+  {
+    StanleyPlanner planner(params);
+    LocalTask task{core::Pose{5.0, 5.0, 0.0}, {Point{5.0, 5.0}}};
+    RobotState state{core::Pose{1.0, 1.0, 0.0}, 0.0, 0.0};
+    core::VelocityCommand cmd = planner.compute_command(grid, state, task, dt, nullptr);
+    EXPECT_TRUE(std::isfinite(cmd.v));
+    EXPECT_TRUE(std::isfinite(cmd.omega));
+    // The fallback tangent aims at the path's end, so from below-left of the
+    // point the commanded turn is toward it (counterclockwise, positive).
+    EXPECT_GT(cmd.omega, 0.0);
+  }
+}
+
 // (d) max_steer above the declared range (1.55) fails load-time validation ---------
 TEST(Stanley, MaxSteerAboveRangeRejectedAtLoadTime) {
   std::string bad = test::write_temp(

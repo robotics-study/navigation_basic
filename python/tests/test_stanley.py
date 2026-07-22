@@ -118,6 +118,36 @@ def test_low_speed_large_cross_track_error_yields_finite_command() -> None:
     assert abs(cmd.omega) <= params.get_float("max_omega") + 1e-9
 
 
+# --- (c2) degenerate paths: duplicated waypoints / a single point stay finite ----
+def test_degenerate_reference_paths_yield_finite_commands() -> None:
+    # A duplicated waypoint makes a zero-length segment (no tangent direction)
+    # and a single-point path has no segment at all -- the planner must fall
+    # back to a finite command instead of dividing by zero or indexing past
+    # the path.
+    params = _real_params()
+    grid = load_map(_MAP)
+    dt = params.get_float("control_dt")
+
+    duplicated: tuple[Point, ...] = ((1.0, 1.0), (1.0, 1.0), (1.0, 1.0))
+    planner = Stanley(params)
+    state = RobotState(pose=(1.0, 1.2, 0.0))
+    cmd = planner.compute_command(
+        grid, state, LocalTask(goal=(9.0, 9.0, 0.0), reference_path=duplicated), dt
+    )
+    assert math.isfinite(cmd.v) and math.isfinite(cmd.omega)
+
+    single: tuple[Point, ...] = ((5.0, 5.0),)
+    planner = Stanley(params)
+    state = RobotState(pose=(1.0, 1.0, 0.0))
+    cmd = planner.compute_command(
+        grid, state, LocalTask(goal=(5.0, 5.0, 0.0), reference_path=single), dt
+    )
+    assert math.isfinite(cmd.v) and math.isfinite(cmd.omega)
+    # The fallback tangent aims at the path's end, so from below-left of the
+    # point the commanded turn is toward it (counterclockwise, positive).
+    assert cmd.omega > 0.0
+
+
 # --- (d) max_steer above the declared range (1.55) fails load-time validation ----
 def test_max_steer_above_range_rejected_at_load_time(tmp_path: Path) -> None:
     doc = yaml.safe_load((_LOCAL_CONFIG_DIR / f"{_ALGO}.yaml").read_text())

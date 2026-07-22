@@ -16,6 +16,11 @@ namespace {
 // division defensively, mirroring pure_pursuit.cpp's kKappaEps.
 constexpr double kTanEps = 1e-9;
 
+// A segment shorter than this (squared) has no defined tangent direction --
+// same degenerate-segment threshold as path.cpp's closest_point_on_segment,
+// so the two guards agree on what counts as a zero-length segment.
+constexpr double kSegEpsSq = 1e-12;
+
 }  // namespace
 
 core::VelocityCommand StanleyPlanner::compute_command(core::ObstacleQuery& space,
@@ -41,20 +46,43 @@ core::VelocityCommand StanleyPlanner::compute_command(core::ObstacleQuery& space
   const core::Point front{x + wheelbase * std::cos(theta), y + wheelbase * std::sin(theta)};
 
   progress_index_ = advance_progress_index(path, front, progress_index_);
-  const int i = progress_index_;
-  const core::Point& a = path[static_cast<size_t>(i)];
-  const core::Point& b = path[static_cast<size_t>(i) + 1];
-  const double seg_len = std::hypot(b.x - a.x, b.y - a.y);
-  const double tx = (b.x - a.x) / seg_len, ty = (b.y - a.y) / seg_len;
-  const double theta_path = std::atan2(ty, tx);
+  // The tangent divides by the segment length, so a duplicated waypoint
+  // (zero-length segment) or a single-point path has no defined tangent: use
+  // the first non-degenerate segment at or after the progress index, and fall
+  // back to aiming at the path's end otherwise -- a finite command instead of
+  // a NaN silently propagating into the simulator (the path-end fallback
+  // mirrors Pure Pursuit's lookahead convention).
+  int segment_index = -1;
+  for (int j = progress_index_; j < static_cast<int>(path.size()) - 1; ++j) {
+    if (sq_dist(path[static_cast<size_t>(j)], path[static_cast<size_t>(j) + 1]) >= kSegEpsSq) {
+      segment_index = j;
+      break;
+    }
+  }
+  double theta_path = 0.0, e = 0.0;
+  core::Point foot{};
+  if (segment_index >= 0) {
+    const core::Point& a = path[static_cast<size_t>(segment_index)];
+    const core::Point& b = path[static_cast<size_t>(segment_index) + 1];
+    const double seg_len = std::hypot(b.x - a.x, b.y - a.y);
+    const double tx = (b.x - a.x) / seg_len, ty = (b.y - a.y) / seg_len;
+    theta_path = std::atan2(ty, tx);
+    foot = closest_point_on_segment(front, a, b);
+    // Cross product of the tangent with (front - foot): positive when the
+    // front axle sits to the path's left. This is a mirror-image sign
+    // convention from the paper's e (right-positive) -- same steering law,
+    // only the sign folds differently below.
+    e = tx * (front.y - foot.y) - ty * (front.x - foot.x);
+  } else {
+    const core::Point& end = path.back();
+    const double dx = end.x - front.x, dy = end.y - front.y;
+    // If the front axle sits on the path's end there is no direction left to
+    // align with either -- hold the current heading.
+    theta_path = (dx * dx + dy * dy >= kSegEpsSq) ? std::atan2(dy, dx) : theta;
+    foot = end;
+    e = 0.0;
+  }
   const double psi = wrap_to_pi(theta_path - theta);
-
-  const core::Point foot = closest_point_on_segment(front, a, b);
-  // Cross product of the tangent with (front - foot): positive when the
-  // front axle sits to the path's left. This is a mirror-image sign
-  // convention from the paper's e (right-positive) -- same steering law,
-  // only the sign folds differently below.
-  const double e = tx * (front.y - foot.y) - ty * (front.x - foot.x);
 
   const double k_gain = params_.get_float("k_gain");
   const double k_soft = params_.get_float("k_soft");
