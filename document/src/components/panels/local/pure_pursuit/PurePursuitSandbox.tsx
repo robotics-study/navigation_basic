@@ -9,53 +9,54 @@ import {emptyGrid, GridMap} from "../../../../libs/grid";
 import {useTr} from "../../../../libs/i18n";
 import cn from "../../../../libs/cn";
 
-// S-curve 프리셋: maps/scenarios/open01_s2.yaml이 참조하는 grid(maps/grid/open01.yaml)와
-// reference_path를 그대로 미러한다 -- python demo와 같은 입력이라 결과를 나란히 비교할 수 있다.
-const S_CURVE_PATH: Point[] = [
-    [1.0, 1.0], [2.0, 1.0], [3.5, 1.2], [5.0, 1.5], [5.0, 3.5],
-    [5.0, 6.0], [5.0, 8.5], [7.0, 8.8], [8.7, 9.0], [9.0, 9.0],
-]
-// 추종 데모는 장애물 없는 빈 맵(0.5 m/셀)에서 경로 기하만 보여준다 — pure pursuit 은
+// 추종 데모는 장애물 없는 빈 맵(0.5 m/셀)에서 경로 기하만 보여준다. pure pursuit 은
 // 회피 능력이 없는 추종기라 장애물을 두면 오해를 부른다.
 const openHalfGrid = (name: string): GridMap => ({...emptyGrid(name, 20, 20), resolution: 0.5})
 
-const S_CURVE_START: Pose = [1.0, 1.0, 0]
-const S_CURVE_GOAL: [number, number] = [9.0, 9.0]
+// 코너가 촘촘한 지그재그 경로. 두 프리셋이 이 한 경로를 공유하고 L_d(lookahead)만
+// 바꿔, lookahead 트레이드오프를 나란히 대비시킨다. start heading은 첫 구간(위로 향함)에
+// 맞춰 초기 heading 오차 없이 시작한다.
+const CORNER_PATH: Point[] = [[1, 1], [1, 7], [4, 7], [4, 2], [7, 2], [7, 8], [9, 8]]
+const CORNER_START: Pose = [1, 1, Math.PI / 2]
+const CORNER_GOAL: [number, number] = [9, 8]
 
-// 급커브 프리셋: 벽이 없는 빈 맵 위에 연속된 직각 코너를 둔 경로 -- lookahead가 코너를
-// "잘라가는" 모습(corner cutting)을 L_d를 키우며 보여주기 위한 기하 데모다.
-const SHARP_PATH: Point[] = [[1, 1], [1, 7], [4, 7], [4, 2], [7, 2], [7, 8], [9, 8]]
-const SHARP_START: Pose = [1, 1, 0]
-const SHARP_GOAL: [number, number] = [9, 8]
+// 짧은/긴 L_d는 엔진 스윕으로 고른 값이다. maxSpeed=0.8(yaml 기본)에서 짧은 L_d(0.2)는
+// 코너를 거의 정확히 추종하되 코너마다 속도를 0.15까지 떨어뜨리고, 긴 L_d(1.1)는 속도를
+// 유지한 채 코너를 크게 벌린다 (1.4 이상은 되돌아오는 코너에서 lookahead 가
+// 다음 구간으로 건너뛰어 제자리 orbit 이 생긴다). clamp-recompute 폐루프라 짧은 L_d에서도
+// 오버슈트로 발산하지 않아, 대비는 "바짝 추종+감속" 대 "부드럽지만 코너 컷"으로 나타난다.
+const SHORT_LOOKAHEAD = 0.2
+const LONG_LOOKAHEAD = 1.1
 
-type PresetId = "s_curve" | "sharp";
+type PresetId = "short" | "long";
 
-interface Preset { map: () => GridMap; path: Point[]; start: Pose; goal: [number, number] }
+interface Preset { lookahead: number }
 
 const PRESETS: Record<PresetId, Preset> = {
-    s_curve: {map: () => openHalfGrid("s_curve"), path: S_CURVE_PATH, start: S_CURVE_START, goal: S_CURVE_GOAL},
-    sharp: {map: () => openHalfGrid("sharp_turn"), path: SHARP_PATH, start: SHARP_START, goal: SHARP_GOAL},
+    short: {lookahead: SHORT_LOOKAHEAD},
+    long: {lookahead: LONG_LOOKAHEAD},
 }
 
 // configs/local_planning/pure_pursuit.yaml의 공유 폐루프 시뮬레이터 블록 기본값
 // (lookahead_distance만 sandbox에서 조절한다).
 const SIM_DEFAULTS = {
     maxSpeed: 0.8, maxOmega: 1.5, slowRadius: 0.5, controlDt: 0.1, maxSteps: 1000,
-    goalTolerance: 0.3, footprintRadius: 0.35, stallWindow: 20, stallDistance: 0.05,
+    // goalTolerance 는 긴 L_d 프리셋에서도 goal 을 스쳐 지나 주위를 도는 orbit 이 생기지
+    // 않는 값 — lookahead 원이 goal 을 물고 있는 동안 종료 판정이 잡히게 한다.
+    goalTolerance: 0.55, footprintRadius: 0.35, stallWindow: 20, stallDistance: 0.05,
 }
 
 const PurePursuitScene = ({panel = 340}: {panel?: number}) => {
     const t = useTr()
-    const [presetId, setPresetId] = useState<PresetId>("s_curve")
-    const preset = PRESETS[presetId]
-    const [map, setMap] = useState<GridMap>(preset.map)
-    const [start, setStart] = useState<Pose>(preset.start)
-    const [lookahead, setLookahead] = useState(0.6)
+    const [presetId, setPresetId] = useState<PresetId>("short")
+    const [map, setMap] = useState<GridMap>(() => openHalfGrid("corners"))
+    const [start, setStart] = useState<Pose>(CORNER_START)
+    const [lookahead, setLookahead] = useState(SHORT_LOOKAHEAD)
 
     const events = useMemo(() => runPurePursuit({
-        map, startPose: start, goal: preset.goal, referencePath: preset.path,
+        map, startPose: start, goal: CORNER_GOAL, referencePath: CORNER_PATH,
         lookaheadDistance: lookahead, ...SIM_DEFAULTS,
-    }), [map, start, preset, lookahead])
+    }), [map, start, lookahead])
 
     const paintCell = (row: number, col: number, occupied: boolean) => {
         setMap((prev) => {
@@ -66,14 +67,15 @@ const PurePursuitScene = ({panel = 340}: {panel?: number}) => {
     }
     const switchPreset = (id: PresetId) => {
         setPresetId(id)
-        setMap(PRESETS[id].map())
-        setStart(PRESETS[id].start)
+        setMap(openHalfGrid("corners"))
+        setStart(CORNER_START)
+        setLookahead(PRESETS[id].lookahead)
     }
 
     return (
         <LocalTracePlayer footprintRadius={SIM_DEFAULTS.footprintRadius} showLookahead
-            map={map} events={events} startPose={start} goal={preset.goal}
-            referencePath={preset.path} panel={panel}
+            map={map} events={events} startPose={start} goal={CORNER_GOAL}
+            referencePath={CORNER_PATH} panel={panel}
             onPaintCell={paintCell}
             onMoveStart={(xy) => setStart([xy[0], xy[1], start[2]])}
             onReset={() => switchPreset(presetId)}
@@ -83,7 +85,7 @@ const PurePursuitScene = ({panel = 340}: {panel?: number}) => {
                         <ParamSlider label="L_d" value={lookahead} min={0.1} max={1.5} step={0.05}
                                      onCommit={setLookahead}/>
                         <span className="mx-1" aria-hidden="true">·</span>
-                        {(["s_curve", "sharp"] as const).map((id) => (
+                        {(["short", "long"] as const).map((id) => (
                             <button key={id} type="button" onClick={() => switchPreset(id)}
                                     className={cn(
                                         "px-2 py-0.5 rounded border",
@@ -91,9 +93,17 @@ const PurePursuitScene = ({panel = 340}: {panel?: number}) => {
                                             ? "border-[var(--accent)] text-[var(--accent)] font-semibold"
                                             : "border-border hover:bg-surface",
                                     )}>
-                                {id === "s_curve" ? t("S-curve", "S-곡선") : t("sharp turn", "급커브")}
+                                {id === "short" ? t("short L_d", "짧은 L_d") : t("long L_d", "긴 L_d")}
                             </button>
                         ))}
+                    </div>
+                    <div className="text-xs text-muted text-center max-w-[26rem]">
+                        {t("L_d = how far ahead the robot aims. Raise it for a smoother, faster line that cuts corners wide; lower it to hug the path but slow sharply into each corner.",
+                            "L_d는 로봇이 앞을 얼마나 멀리 겨냥하는지다. 올리면 부드럽고 빠르지만 코너를 크게 벌리고, 내리면 경로에 바짝 붙되 코너마다 크게 감속한다.")}
+                    </div>
+                    <div className="text-xs text-muted text-center tabular-nums">
+                        {t("short L_d hugs every corner and slows into it · long L_d stays fast but cuts corners wide",
+                            "짧은 L_d는 코너마다 바짝 붙어 감속하고, 긴 L_d는 빠르지만 코너를 크게 벌린다")}
                     </div>
                     <div className="text-xs text-muted text-center tabular-nums">
                         {t("drag the robot off the path and watch it converge back",
@@ -110,8 +120,8 @@ const PurePursuitSandbox = () => {
     const t = useTr()
     return <CanvasFigure
         label={t(
-            "Live Pure Pursuit: drag the robot off the reference path and watch the lookahead circle pull it back — raise L_d to see it cut corners wider",
-            "라이브 Pure Pursuit. 로봇을 참조 경로 밖으로 끌면 lookahead 원이 다시 경로로 끌어당긴다. L_d를 올리면 코너를 더 크게 잘라가는 것을 볼 수 있다",
+            "Live Pure Pursuit: the two presets share one path and differ only in L_d — short L_d hugs every corner (slowing into it), long L_d stays smooth and fast but cuts corners wide",
+            "라이브 Pure Pursuit. 두 프리셋은 한 경로를 공유하고 L_d만 다르다. 짧은 L_d는 코너마다 바짝 붙어 감속하고, 긴 L_d는 부드럽고 빠르지만 코너를 크게 벌린다",
         )}
         tight bodyClassName="w-fit" className="w-full"
         modal={<PurePursuitScene panel={Math.min(modalCanvasSize(1).width, 640)}/>}

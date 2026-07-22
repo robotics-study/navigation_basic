@@ -175,11 +175,15 @@ const Stanley = () => {
                             Stanley tracks whatever path it is handed and never queries the map for
                             obstacles. A path through a wall gets driven into the wall exactly as
                             faithfully as any other path.</li>
-                        <li><strong>One gain, two failure modes.</strong> Too small a{" "}
-                            <InlineMath math="k"/> and the crosstrack term barely pulls the robot back
-                            onto the path; too large and it overcorrects past the path on every approach,
-                            producing the oscillation demonstrated in the "high gain" preset below — a
-                            behavior the derivation further down makes precise.</li>
+                        <li><strong>One gain sets the return speed.</strong> Too small a{" "}
+                            <InlineMath math="k"/> and the crosstrack term barely pulls the robot back, so
+                            it drifts onto the path over a long stretch; a larger <InlineMath math="k"/>{" "}
+                            returns it sooner. The derivation further down shows the crosstrack error
+                            decays monotonically in this kinematic model, with a rate that grows
+                            with <InlineMath math="k"/>, so there is no overshoot to trade against. On a
+                            real vehicle, steering lag and actuator dynamics do eventually turn too high a
+                            gain into oscillation, but that lies outside the bicycle kinematics simulated
+                            here.</li>
                     </ul>
                 </>}
                 ko={<>
@@ -190,10 +194,13 @@ const Stanley = () => {
                         <li><strong>설계상 장애물을 보지 못한다.</strong> Pure Pursuit과 같은 한계다.
                             Stanley는 주어진 경로를 추종할 뿐 맵에 장애물을 묻지 않는다. 벽을 관통하는
                             경로를 주면 다른 경로와 똑같이 충실하게 벽으로 걸어 들어간다.</li>
-                        <li><strong>gain 하나에 실패 모드 둘.</strong> <InlineMath math="k"/>가 너무
-                            작으면 crosstrack 항이 로봇을 경로로 거의 끌어당기지 못하고, 너무 크면
-                            접근할 때마다 경로를 지나쳐 과보정한다. 아래 "과대 gain" 프리셋이 보여주는
-                            진동이 바로 이 현상이고, 더 아래 유도가 이를 정밀하게 보인다.</li>
+                        <li><strong>gain 하나가 복귀 속도를 정한다.</strong> <InlineMath math="k"/>가 너무
+                            작으면 crosstrack 항이 로봇을 거의 끌어당기지 못해 긴 거리에 걸쳐 천천히
+                            경로로 붙는다. <InlineMath math="k"/>가 클수록 더 빨리 되돌아온다. 아래 유도는
+                            이 기구학 모델에서 crosstrack 오차가 단조 감소하며 그 감소율이{" "}
+                            <InlineMath math="k"/>에 비례해 커짐을 보인다. 상충할 오버슈트 자체가 없다.
+                            실제 차량에서는 조향 지연과 액추에이터 동역학 때문에 과대 gain이 결국 진동을
+                            부르지만, 그 동역학은 여기서 시뮬레이션하는 bicycle 기구학 범위 밖이다.</li>
                     </ul>
                 </>}
             />
@@ -398,18 +405,18 @@ return (v, omega)                                                     # 12`}/>
             <h2>Demo</h2>
             <T
                 en={<p>
-                    The sandbox below runs Stanley live in your browser. The default preset starts the
-                    robot 1.5 m off the S-curve and lets you watch the crosstrack error pull it back onto
-                    the path; the sharp-corner preset shows both error terms working together through a
-                    string of right angles. Push the gain slider up (or switch to the "high gain" preset)
-                    to see the overcorrection the derivation above predicts.
+                    The sandbox below runs Stanley live in your browser. The "weak k_gain" and "strong
+                    k_gain" presets both start the robot 1.5 m off the S-curve: with a weak gain it drifts
+                    back onto the path slowly, while a strong gain snaps it back within the first metre —
+                    the faster monotone return the derivation above predicts. The sharp-corner preset then
+                    shows both error terms steering together through a string of right angles.
                 </p>}
                 ko={<p>
-                    아래 sandbox는 브라우저에서 Stanley를 라이브로 실행한다. 기본 프리셋은 로봇을
-                    S-곡선에서 1.5 m 벗어난 위치에서 시작시켜 crosstrack 오차가 다시 경로로 끌어당기는
-                    모습을 보여준다. 급코너 프리셋은 두 오차 항이 연속된 직각 코너를 함께 통과하는
-                    모습을 보여준다. gain 슬라이더를 올리거나("과대 gain" 프리셋으로 바꿔) 위 유도가
-                    예측한 과보정을 직접 확인해 보라.
+                    아래 sandbox는 브라우저에서 Stanley를 라이브로 실행한다. "약한 k_gain"과 "강한 k_gain"
+                    프리셋은 모두 로봇을 S-곡선에서 1.5 m 벗어난 위치에서 시작한다. gain이 약하면 긴 거리에
+                    걸쳐 천천히 경로로 붙고, 강하면 첫 1 m 안에 곧바로 되돌아온다. 위 유도가 예측한 더 빠른
+                    단조 복귀다. 급코너 프리셋은 두 오차 항이 연속된 직각 코너를 함께 조향하는 모습을
+                    보여준다.
                 </p>}
             />
             <StanleySandbox/>

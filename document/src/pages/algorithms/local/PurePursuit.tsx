@@ -348,16 +348,22 @@ return (v, omega)                                               # 8`}/>
             <h2>Demo</h2>
             <T
                 en={<p>
-                    The sandbox below runs Pure Pursuit live in your browser along two fixed reference
-                    paths. Drag the robot off the path and watch the lookahead circle pull it back onto
-                    the S-curve; switch to the sharp-turn preset and raise <InlineMath math="L_d"/> to
-                    watch the arc cut each corner progressively wider.
+                    The sandbox below runs Pure Pursuit live in your browser along a single zigzag path.
+                    The two presets share that path and change only <InlineMath math="L_d"/>: a short{" "}
+                    <InlineMath math="L_d"/> hugs the reference and traces every corner closely, but has to
+                    slow sharply into each one; a long <InlineMath math="L_d"/> keeps its speed and stays
+                    smooth, yet swings wide and cuts each corner by roughly a metre. Drag the robot off the
+                    path to watch the lookahead circle pull it back, or move <InlineMath math="L_d"/>{" "}
+                    between the two presets to sweep the whole tradeoff.
                 </p>}
                 ko={<p>
-                    아래 sandbox는 두 고정 참조 경로를 따라 브라우저에서 Pure Pursuit을 라이브로
-                    실행한다. 로봇을 경로 밖으로 끌어 lookahead 원이 S-곡선 위로 다시 끌어당기는
-                    모습을 보고, 급커브 프리셋으로 바꿔 <InlineMath math="L_d"/>를 올리며 원호가 각
-                    코너를 점점 더 크게 잘라가는 모습을 보라.
+                    아래 sandbox는 하나의 지그재그 경로를 따라 브라우저에서 Pure Pursuit을 라이브로
+                    실행한다. 두 프리셋은 이 경로를 공유하고 <InlineMath math="L_d"/>만 바꾼다. 짧은{" "}
+                    <InlineMath math="L_d"/>는 참조 경로에 바짝 붙어 모든 코너를 정확히 따라가지만 코너마다
+                    크게 감속해야 한다. 긴 <InlineMath math="L_d"/>는 속도를 유지하며 부드럽게 가지만
+                    코너마다 크게 벌어져 약 1 m씩 잘라낸다. 로봇을 경로 밖으로 끌면 lookahead 원이 다시
+                    끌어당기고, <InlineMath math="L_d"/>를 두 프리셋 사이에서 움직이면 트레이드오프 전체를
+                    훑어볼 수 있다.
                 </p>}
             />
             <PurePursuitSandbox/>

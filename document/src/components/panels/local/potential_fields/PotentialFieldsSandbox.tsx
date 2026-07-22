@@ -40,37 +40,32 @@ const PF_TRAP_ROWS: Rows = [
 const PF_TRAP_START: Pose = [1.25, 4.75, 0]
 const PF_TRAP_GOAL: [number, number] = [8.75, 4.75]
 
-// 산개 블록 지형: 벽을 완전히 두르지 않아, 같은 파라미터로도 회피해 목표에 닿는다.
-const CLUTTER_ROWS: Rows = [
-    "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0",
-    "0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 0",
-    "0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 0",
-    "0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 0 0 255 255 0",
-    "0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 0 0 255 255 0",
-    "0 255 255 255 255 0 0 255 255 255 255 255 255 255 255 255 255 255 255 0",
-    "0 255 255 255 255 0 0 255 255 255 255 255 255 0 0 255 255 255 255 0",
-    "0 255 255 255 255 255 255 255 255 255 255 255 255 0 0 255 255 255 255 0",
-    "0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 0",
-    "0 255 255 255 255 255 255 255 255 255 0 0 255 255 255 255 255 255 255 0",
-    "0 255 255 255 255 255 255 255 255 255 0 0 255 255 255 255 255 255 255 0",
-    "0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 0",
-    "0 255 255 255 255 255 255 0 0 255 255 255 255 255 255 255 255 255 255 0",
-    "0 255 255 255 255 255 255 0 0 255 255 255 255 255 255 255 255 255 255 0",
-    "0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 0",
-    "0 255 255 255 0 0 255 255 255 255 0 0 255 255 255 255 255 255 255 0",
-    "0 255 255 255 0 0 255 255 255 255 0 0 255 255 255 255 255 255 255 0",
-    "0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 0",
-    "0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 0",
-    "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0",
+// 산개 블록 지형: 벽을 완전히 두르지 않아, 벽이 미는 힘으로 회피해 목표에 닿는다. footprint
+// 0.35에 통로 폭이 넉넉하도록 6개 블록(페이지 산문의 "six scattered blocks"와 일치)을
+// 2x2(1m)로 성기게 흩는다. 저장소 clutter01.pgm은 yaml 기본 footprint 0.2용이라 0.35에서는
+// 통로가 좁아 벽에 스치므로, 0.3+ 규칙에 맞춰 새로 구성했다. 인력이 goal로 곧장 당기는
+// 사이 벽 반발이 로봇을 블록마다 우회시키는 모습을 보여준다.
+const CLUTTER_BLOCKS: [number, number][] = [
+    [6, 4], [4, 9], [11, 8], [14, 12], [8, 13], [15, 7],
 ]
-const CLUTTER_START: Pose = [0.75, 0.75, 0]
-const CLUTTER_GOAL: [number, number] = [9.25, 9.25]
+const clutterMap = (): GridMap => {
+    const width = 20, height = 20
+    const occupied = new Array(width * height).fill(false)
+    for (let r = 0; r < height; r++)
+        for (let c = 0; c < width; c++)
+            if (r === 0 || r === height - 1 || c === 0 || c === width - 1) occupied[r * width + c] = true
+    for (const [c0, r0] of CLUTTER_BLOCKS)
+        for (let r = r0; r < r0 + 2; r++) for (let c = c0; c < c0 + 2; c++) occupied[r * width + c] = true
+    return {name: "clutter", width, height, occupied, resolution: 0.5, originX: 0, originY: 0}
+}
+const CLUTTER_START: Pose = [1.25, 1.25, 0]
+const CLUTTER_GOAL: [number, number] = [8.75, 8.75]
 
 type Preset = "trap" | "bypass";
 
 const presetMap = (preset: Preset): GridMap => preset === "trap"
     ? gridFromPgmRows("pf_trap01", PF_TRAP_ROWS, 0.5)
-    : gridFromPgmRows("clutter01", CLUTTER_ROWS, 0.5)
+    : clutterMap()
 const presetStart = (preset: Preset): Pose => preset === "trap" ? PF_TRAP_START : CLUTTER_START
 const presetGoal = (preset: Preset): [number, number] => preset === "trap" ? PF_TRAP_GOAL : CLUTTER_GOAL
 
@@ -95,7 +90,9 @@ const PotentialFieldsScene = ({panel = 340}: {panel?: number}) => {
     const [goal, setGoal] = useState<[number, number]>(PF_TRAP_GOAL)
     const [kAtt, setKAtt] = useState(0.5)
     const [kRep, setKRep] = useState(3.0)
-    const [influenceRadius, setInfluenceRadius] = useState(0.7)
+    // 영향 반경 밖 장애물은 반발력에 잡히지 않는다. 기본값을 키워 벽을 그렸을 때 힘이
+    // 곧바로 반응하는 것이 보이게 하고, bypass 프리셋이 산개 블록을 스치지 않고 돌게 한다.
+    const [influenceRadius, setInfluenceRadius] = useState(1.0)
 
     const events = useMemo(() => runPotentialFields({
         map, start, goal,
@@ -124,6 +121,7 @@ const PotentialFieldsScene = ({panel = 340}: {panel?: number}) => {
         <LocalTracePlayer footprintRadius={FOOTPRINT_RADIUS}
             map={map} events={events} panel={panel}
             startPose={start} goal={goal}
+            auxCircleRadius={influenceRadius}
             onPaintCell={paintCell}
             onMoveStart={(xy) => setStart([xy[0], xy[1], 0])}
             onMoveGoal={setGoal}
@@ -150,6 +148,20 @@ const PotentialFieldsScene = ({panel = 340}: {panel?: number}) => {
                         <ParamSlider label="k_rep" value={kRep} min={0} max={10} step={0.1} onCommit={setKRep}/>
                         <ParamSlider label={t("ρ₀", "ρ₀")} value={influenceRadius} min={0.1} max={2}
                                      step={0.05} onCommit={setInfluenceRadius}/>
+                    </div>
+                    <div className="flex flex-col gap-0.5 text-[11px] text-muted text-left max-w-[20rem]">
+                        <span>{t(
+                            "k_att — pull toward the goal; raise it to head straight for the goal and detour less",
+                            "k_att: goal로 당기는 인력. 올리면 goal로 곧장 향하고 덜 우회한다",
+                        )}</span>
+                        <span>{t(
+                            "k_rep — push from walls; raise it to swing wider, too high and a narrow gap traps it as both sides cancel",
+                            "k_rep: 벽이 미는 반발력. 올리면 더 크게 돌고, 과하면 좁은 틈에서 양쪽 반발이 상쇄돼 갇힌다",
+                        )}</span>
+                        <span>{t(
+                            "ρ₀ — the dashed circle where repulsion acts; walls outside it exert no force, so raise it to react sooner",
+                            "ρ₀: 반발이 작동하는 점선 원. 이 원 밖 장애물은 힘에 안 잡히므로, 올리면 더 일찍 반응한다",
+                        )}</span>
                     </div>
                     <div className="text-xs text-muted text-center tabular-nums">
                         {t(
