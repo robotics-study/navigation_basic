@@ -6,16 +6,12 @@ import {runSST} from "../../../../libs/algorithms/sst";
 import {runRRTStar} from "../../../../libs/algorithms/rrt_star";
 import {Point} from "../../../../libs/algorithms/sampling_space";
 import {buildGridTimeline, Cell} from "../../../../libs/trace/timeline";
-import {GridMap} from "../../../../libs/grid";
+import {cellCenterWorld, GridMap} from "../../../../libs/grid";
 import {useTr} from "../../../../libs/i18n";
 import {PATH_COLOR} from "../../../2d/GridCanvas";
 import {SST_GOAL, SST_START, islandMap} from "./presets";
 
 const BUDGET = 4000
-
-const cellToWorld = (map: GridMap, c: Cell): Point =>
-    [map.originX + (c[1] + 0.5) * map.resolution,
-     map.originY + (map.height - 1 - c[0] + 0.5) * map.resolution]
 
 const SstScene = ({panel = 340}: {panel?: number}) => {
     const t = useTr()
@@ -57,7 +53,7 @@ const SstScene = ({panel = 340}: {panel?: number}) => {
     }
     const moveEndpoint = (setter: (p: Point) => void) => (c: Cell) => {
         if (map.occupied[c[0] * map.width + c[1]]) return
-        setter(cellToWorld(map, c))
+        setter(cellCenterWorld(map, c))
     }
 
     return (

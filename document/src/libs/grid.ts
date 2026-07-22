@@ -57,3 +57,10 @@ export const worldToCellUnits = (map: GridMap, x: number, y: number): [number, n
     (x - map.originX) / map.resolution,
     map.height - (y - map.originY) / map.resolution,
 ]
+
+// grid cell (row, col) → 그 셀 중심의 world (x, y). 위 worldToCellUnits의 역방향
+// (연속 상태 planner의 endpoint 드래그용) — world y는 위로 증가라 row를 뒤집는다.
+export const cellCenterWorld = (map: GridMap, c: [number, number]): [number, number] => [
+    map.originX + (c[1] + 0.5) * map.resolution,
+    map.originY + (map.height - 1 - c[0] + 0.5) * map.resolution,
+]

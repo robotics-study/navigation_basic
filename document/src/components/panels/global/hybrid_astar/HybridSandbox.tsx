@@ -4,7 +4,7 @@ import TracePlayer from "../../../player/TracePlayer";
 import ParamSlider from "../../../player/ParamSlider";
 import {runHybridAStar, Pose} from "../../../../libs/algorithms/hybrid_astar";
 import {buildGridTimeline} from "../../../../libs/trace/timeline";
-import {emptyGrid, GridMap} from "../../../../libs/grid";
+import {cellCenterWorld, emptyGrid, GridMap} from "../../../../libs/grid";
 import {useTr} from "../../../../libs/i18n";
 import {PATH_COLOR} from "../../../2d/GridCanvas";
 import cn from "../../../../libs/cn";
@@ -30,16 +30,18 @@ export function parkingLotMap(): GridMap {
 const HybridScene = ({panel = 340}: {panel?: number}) => {
     const t = useTr()
     const [map, setMap] = useState<GridMap>(parkingLotMap)
+    const [start, setStart] = useState<Pose>(LOT_START)
+    const [goal, setGoal] = useState<Pose>(LOT_GOAL)
     const [radius, setRadius] = useState(1.6)
     const [allowReverse, setAllowReverse] = useState(true)
 
     const timeline = useMemo(() => buildGridTimeline(runHybridAStar({
-        map, start: LOT_START, goal: LOT_GOAL,
+        map, start, goal,
         minTurnRadius: radius, arcStep: 1.2, numSteering: 5, thetaBins: 72,
         xyResolution: 1.0, footprintRadius: 0.45,
         allowReverse, reversePenalty: 2, steerPenalty: 0.1,
         goalPosTolerance: 0.8, goalHeadingTolerance: 0.35,
-    })), [map, radius, allowReverse])
+    })), [map, start, goal, radius, allowReverse])
 
     const cost = timeline.metrics?.path_cost
     const success = timeline.success !== false && timeline.paths.length > 0
@@ -51,16 +53,28 @@ const HybridScene = ({panel = 340}: {panel?: number}) => {
             return next
         })
     }
+    // 위치만 옮기고 heading은 유지한다 — goal heading이 베이 진입 방향이라는 문제 설정을 지키기 위해.
+    const moveEndpoint = (pose: Pose, setter: (p: Pose) => void) => (c: [number, number]) => {
+        if (map.occupied[c[0] * map.width + c[1]]) return
+        const [x, y] = cellCenterWorld(map, c)
+        setter([x, y, pose[2]])
+    }
 
     return (
         <TracePlayer
             map={map} timeline={timeline} panel={panel}
-            start={[LOT_START[0], LOT_START[1]]}
-            goal={[LOT_GOAL[0], LOT_GOAL[1]]}
-            startPose={LOT_START} goalPose={LOT_GOAL} vehicle
+            start={[start[0], start[1]]}
+            goal={[goal[0], goal[1]]}
+            startPose={start} goalPose={goal} vehicle
             showTree
             onPaintCell={paintCell}
-            onReset={() => setMap(parkingLotMap())}
+            onMoveStart={moveEndpoint(start, setStart)}
+            onMoveGoal={moveEndpoint(goal, setGoal)}
+            onReset={() => {
+                setMap(parkingLotMap())
+                setStart(LOT_START)
+                setGoal(LOT_GOAL)
+            }}
             footer={
                 <div className="flex flex-col items-center gap-1.5">
                     <div className="flex items-center justify-center gap-1.5 text-xs text-muted flex-wrap tabular-nums">
@@ -84,7 +98,8 @@ const HybridScene = ({panel = 340}: {panel?: number}) => {
                                 </span>
                             </>
                             : <span className="font-semibold">{t("no path", "경로 없음")}</span>}
-                        {" · "}{t("goal heading points into the bay", "goal heading은 베이 안쪽을 향한다")}
+                        {" · "}{t("drag the endpoints — headings stay fixed, the goal keeps pointing into the bay",
+                            "원을 끌면 시작·목표가 움직인다. heading은 고정이라 goal은 계속 베이 방향을 향한다")}
                         {" · "}{t("draw walls to reshape the lot", "벽을 그려 주차장을 바꿔 보라")}
                     </div>
                 </div>
