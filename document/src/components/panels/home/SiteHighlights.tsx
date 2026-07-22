@@ -13,42 +13,40 @@ const SiteHighlights = () => {
     const cards: Array<{kicker: string; title: string; desc: string}> = [
         {
             kicker: t(`${total} algorithms`, `${total}개 알고리즘`),
-            title: t("One base class", "하나의 베이스 클래스"),
+            title: t("BFS to LQR-RRT*, in lineage order", "BFS에서 LQR-RRT*까지, 계보순"),
             desc: t(
-                `${search} graph-search and ${sampling} sampling planners share a single GlobalPlanner ` +
-                "abstraction. Local planning and multi-agent are next.",
-                `${search}개의 graph-search와 ${sampling}개의 sampling planner가 GlobalPlanner 추상화 ` +
-                "하나를 공유한다. Local planning과 multi-agent가 다음 차례다.",
+                `${search} graph-search and ${sampling} sampling planners, each page building on ` +
+                "the one before it. Local planning and multi-agent are next.",
+                `${search}개의 graph-search와 ${sampling}개의 sampling planner를 앞 페이지 위에 ` +
+                "다음 페이지가 쌓이는 순서로 읽는다. Local planning과 multi-agent가 다음 차례다.",
             ),
         },
         {
-            kicker: t("2 languages", "2개 언어"),
-            title: t("C++ and Python, mirrored", "C++과 Python, 미러링"),
+            kicker: t("proofs", "증명"),
+            title: t("Every property, proven", "모든 성질에 증명"),
             desc: t(
-                "Every planner is implemented twice — the same design, parameter names, " +
-                "and trace events in both languages.",
-                "모든 planner를 두 번 구현한다. 같은 설계, 같은 파라미터 이름, 같은 trace 이벤트를 " +
-                "두 언어에서.",
+                "Optimality, completeness, and complexity claims come with step-by-step " +
+                "proofs, not hand-waving.",
+                "최적성·완전성·복잡도 주장은 말로 얼버무리지 않고 단계별 증명으로 뒷받침한다.",
             ),
         },
         {
-            kicker: t("1:1 parity", "1:1 parity"),
-            title: t("The demo runs the algorithm", "데모가 알고리즘을 돌린다"),
+            kicker: t("live demos", "라이브 데모"),
+            title: t("Experiment on every page", "모든 페이지에서 직접 실험"),
             desc: t(
-                "The browser demos emit the same trace events as the repo demos. " +
-                "The same seed reproduces the same samples and tree.",
-                "브라우저 데모는 저장소 데모와 같은 trace 이벤트를 방출한다. 같은 seed면 표본과 " +
-                "트리까지 똑같이 재현된다.",
+                "Draw walls, drag start and goal, and move the parameter sliders — " +
+                "the planner re-solves in front of you.",
+                "벽을 그리고, 시작·목표를 끌고, 파라미터 슬라이더를 움직이면 planner가 눈앞에서 " +
+                "다시 푼다.",
             ),
         },
         {
-            kicker: t("theory → source", "이론 → 소스"),
-            title: t("Every page, end to end", "모든 페이지, 처음부터 끝까지"),
+            kicker: t("full source", "전체 소스"),
+            title: t("Read the real implementation", "실제 구현을 그대로 읽기"),
             desc: t(
-                "Each page runs idea → properties → proof → a live demo → the actual " +
-                "repository source, embedded.",
-                "각 페이지는 아이디어 → 성질 → 증명 → 라이브 데모 → 실제 저장소 소스 순으로 " +
-                "이어지고, 소스는 그대로 embed된다.",
+                "Each page ends with the complete C++ and Python source that the " +
+                "explanations describe.",
+                "각 페이지 끝에는 설명이 가리키는 C++·Python 구현 전체가 그대로 붙어 있다.",
             ),
         },
     ]

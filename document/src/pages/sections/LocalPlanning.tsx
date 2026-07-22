@@ -204,16 +204,13 @@ const LocalPlanning = () => {
                 en={<p>
                     Planned for this section: <strong>DWA</strong>, <strong>Pure Pursuit</strong>,{" "}
                     <strong>VFH</strong>, and <strong>MPC</strong> — one representative per family —
-                    implemented in C++ and Python against the{" "}
-                    <code>ObstacleQuery</code> capability, with the same live demos and recorded
-                    traces as the global planners. Trajectory-optimization variants such as TEB are
-                    natural follow-ups.
+                    with the same derivations, proofs, and live demos as the global planners.
+                    Trajectory-optimization variants such as TEB are natural follow-ups.
                 </p>}
                 ko={<p>
-                    이 섹션의 구현 예정: <strong>DWA</strong>, <strong>Pure Pursuit</strong>,{" "}
-                    <strong>VFH</strong>, <strong>MPC</strong>, 이렇게 계열별 대표 하나씩을{" "}
-                    <code>ObstacleQuery</code> capability 위에서 C++/Python으로 구현하고, global
-                    planner와 같은 라이브 demo·기록 trace를 제공한다. TEB 같은 궤적 최적화
+                    이 섹션의 예정 페이지: <strong>DWA</strong>, <strong>Pure Pursuit</strong>,{" "}
+                    <strong>VFH</strong>, <strong>MPC</strong>, 이렇게 계열별 대표 하나씩을 global
+                    planner 페이지와 같은 유도·증명·라이브 데모로 다룬다. TEB 같은 궤적 최적화
                     변형이 자연스러운 후속이다.
                 </p>}
             />

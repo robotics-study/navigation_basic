@@ -28,11 +28,6 @@ const HeroSearch = () => {
                     <TwinDemo panel={panel}/>
                 </Suspense>
             </div>
-            <div className="hero-cap">
-                <span className="dot" aria-hidden="true"/>
-                {t("live · A* and RRT* running in your browser",
-                    "live · 브라우저에서 실행 중인 A*와 RRT*")}
-            </div>
         </div>
     )
 }

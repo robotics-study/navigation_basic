@@ -97,8 +97,8 @@ const TwinDemo = ({panel = 280}: {panel?: number}) => {
             </div>
             <div className="text-xs text-muted text-center max-w-md">
                 {t(
-                    "Both run the real algorithm in your browser. Draw walls on the left grid or drag the endpoints — both planners re-solve the same problem.",
-                    "둘 다 브라우저에서 실제 알고리즘을 돌린다. 왼쪽 격자에 벽을 그리거나 원을 끌면 두 planner가 같은 문제를 다시 푼다.",
+                    "Draw walls on the left grid or drag the endpoints — both planners re-solve the same problem.",
+                    "왼쪽 격자에 벽을 그리거나 원을 끌면 두 planner가 같은 문제를 다시 푼다.",
                 )}
                 <span className="ml-1" style={{color: PATH_COLOR}}>●</span>
                 {" "}{t("red is the found path", "빨간 선이 찾은 경로")}

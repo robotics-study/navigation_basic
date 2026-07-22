@@ -46,8 +46,7 @@ const Sampling = () => {
             <T
                 en={<>
                     <p>
-                        Every planner in this category is assembled from five primitives (the
-                        repository's <code>SamplingSpace</code> capability):
+                        Every planner in this category is assembled from five primitives:
                     </p>
                     <ul>
                         <li><code>sample()</code> — draw a random state.</li>
@@ -65,8 +64,7 @@ const Sampling = () => {
                 </>}
                 ko={<>
                     <p>
-                        이 카테고리의 모든 planner는 다섯 개의 primitive(저장소의{" "}
-                        <code>SamplingSpace</code> capability)로 조립된다:
+                        이 카테고리의 모든 planner는 다섯 개의 primitive로 조립된다:
                     </p>
                     <ul>
                         <li><code>sample()</code>: 무작위 상태를 뽑는다.</li>
