@@ -25,5 +25,8 @@ export {runLQRRRTStar} from "../src/libs/algorithms/lqr_rrt_star";
 export {runHybridAStar} from "../src/libs/algorithms/hybrid_astar";
 export {runPotentialFields} from "../src/libs/algorithms/potential_fields";
 export {runVfh} from "../src/libs/algorithms/vfh";
+export {runDwa} from "../src/libs/algorithms/dwa";
 export {runPurePursuit} from "../src/libs/algorithms/pure_pursuit";
+export {runStanley} from "../src/libs/algorithms/stanley";
+export {runRegulatedPurePursuit} from "../src/libs/algorithms/regulated_pure_pursuit";
 export {parseGridMap} from "../src/libs/grid";

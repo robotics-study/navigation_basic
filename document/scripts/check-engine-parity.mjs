@@ -173,6 +173,19 @@ const RUNNERS = {
         controlDt: p.control_dt, maxSteps: p.max_steps, goalTolerance: p.goal_tolerance,
         footprintRadius: p.footprint_radius, stallWindow: p.stall_window, stallDistance: p.stall_distance,
     }),
+    // 시나리오: maps/scenarios/clutter01_s1.yaml (DWA 는 참조 경로 불요 — goal 만).
+    dwa: (m, s, g, p) => engines.runDwa({
+        map: m, startPose: s, goal: [9.25, 9.25],
+        maxSpeed: p.max_speed, minSpeed: p.min_speed, maxOmega: p.max_omega,
+        accel: p.accel, accelOmega: p.accel_omega,
+        vSamples: p.v_samples, omegaSamples: p.omega_samples,
+        simTime: p.sim_time, simSteps: p.sim_steps,
+        headingWeight: p.heading_weight, clearanceWeight: p.clearance_weight,
+        velocityWeight: p.velocity_weight, clearanceLimit: p.clearance_limit,
+        slowRadius: p.slow_radius, controlDt: p.control_dt, maxSteps: p.max_steps,
+        goalTolerance: p.goal_tolerance, footprintRadius: p.footprint_radius,
+        stallWindow: p.stall_window, stallDistance: p.stall_distance,
+    }),
     // 시나리오: maps/scenarios/open01_s2.yaml (goal + reference_path 전부 이 파일 값).
     pure_pursuit: (m, s, g, p) => engines.runPurePursuit({
         map: m, startPose: s, goal: [9.0, 9.0],
@@ -184,6 +197,35 @@ const RUNNERS = {
         slowRadius: p.slow_radius, controlDt: p.control_dt, maxSteps: p.max_steps,
         goalTolerance: p.goal_tolerance, footprintRadius: p.footprint_radius,
         stallWindow: p.stall_window, stallDistance: p.stall_distance,
+    }),
+    // 시나리오: maps/scenarios/open01_s3.yaml (오프셋 시작 — goal + reference_path 이 파일 값).
+    stanley: (m, s, g, p) => engines.runStanley({
+        map: m, startPose: s, goal: [9.0, 9.0],
+        referencePath: [
+            [1.0, 1.0], [2.0, 1.0], [3.5, 1.2], [5.0, 1.5], [5.0, 3.5],
+            [5.0, 6.0], [5.0, 8.5], [7.0, 8.8], [8.7, 9.0], [9.0, 9.0],
+        ],
+        kGain: p.k_gain, kSoft: p.k_soft, wheelbase: p.wheelbase, maxSteer: p.max_steer,
+        maxSpeed: p.max_speed, maxOmega: p.max_omega, slowRadius: p.slow_radius,
+        controlDt: p.control_dt, maxSteps: p.max_steps, goalTolerance: p.goal_tolerance,
+        footprintRadius: p.footprint_radius, stallWindow: p.stall_window,
+        stallDistance: p.stall_distance,
+    }),
+    // 시나리오: maps/scenarios/clutter01_s2.yaml (goal + reference_path 이 파일 값).
+    regulated_pure_pursuit: (m, s, g, p) => engines.runRegulatedPurePursuit({
+        map: m, startPose: s, goal: [9.25, 9.25],
+        referencePath: [
+            [0.75, 0.75], [1.0, 4.0], [1.0, 7.5], [1.6, 8.6],
+            [4.0, 8.75], [7.3, 8.75], [9.25, 9.25],
+        ],
+        lookaheadTime: p.lookahead_time, minLookahead: p.min_lookahead,
+        maxLookahead: p.max_lookahead, regulatedMinRadius: p.regulated_min_radius,
+        proximityDistance: p.proximity_distance, minRegulatedSpeed: p.min_regulated_speed,
+        collisionCheckStep: p.collision_check_step, maxSpeed: p.max_speed,
+        maxOmega: p.max_omega, slowRadius: p.slow_radius,
+        controlDt: p.control_dt, maxSteps: p.max_steps, goalTolerance: p.goal_tolerance,
+        footprintRadius: p.footprint_radius, stallWindow: p.stall_window,
+        stallDistance: p.stall_distance,
     }),
 };
 
@@ -229,7 +271,13 @@ const CHECKS = [
      metricKeys: [{key: "steps", tol: 0}, {key: "distance_traveled", tol: 1e-3}]},
     {algo: "vfh", maps: ["clutter01"],
      metricKeys: [{key: "steps", tol: 0}, {key: "distance_traveled", tol: 1e-3}]},
+    {algo: "dwa", maps: ["clutter01"],
+     metricKeys: [{key: "steps", tol: 0}, {key: "distance_traveled", tol: 1e-3}]},
     {algo: "pure_pursuit", maps: ["open01"],
+     metricKeys: [{key: "steps", tol: 0}, {key: "distance_traveled", tol: 1e-3}]},
+    {algo: "stanley", maps: ["open01"],
+     metricKeys: [{key: "steps", tol: 0}, {key: "distance_traveled", tol: 1e-3}]},
+    {algo: "regulated_pure_pursuit", maps: ["clutter01"],
      metricKeys: [{key: "steps", tol: 0}, {key: "distance_traveled", tol: 1e-3}]},
 ];
 
