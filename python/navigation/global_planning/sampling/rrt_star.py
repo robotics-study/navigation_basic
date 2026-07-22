@@ -25,7 +25,7 @@ from ._sampling import (
 )
 
 
-class RRTStar(_SamplingPlanner):
+class RRTStar(_SamplingPlanner["SamplingSpace[Point]"]):
     @property
     def name(self) -> str:
         return "rrt_star"

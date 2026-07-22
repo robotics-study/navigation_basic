@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import math
 from collections.abc import Iterable
+from typing import TypeVar
 
 import numpy as np
 
@@ -15,6 +16,11 @@ from navigation.core.capabilities import Capability, SamplingSpace
 from navigation.core.planner import GlobalPlanner
 from navigation.core.trace import TraceRecorder
 from navigation.core.types import Point
+
+# 파생 planner 가 요구하는 공간 능력을 부모 계약으로 노출한다. 점 로봇 RRT 계열은
+# SamplingSpace 로, SE(2) footprint 를 쓰는 kinodynamic 계열(SST)은 SamplingSE2Space 로
+# 각자 바인딩해 plan 오버라이드가 부모 시그니처를 좁히지 않게 한다 (LSP).
+_SpaceT = TypeVar("_SpaceT", bound="SamplingSpace[Point]")
 
 
 class Tree:
@@ -229,7 +235,7 @@ def rewire(
                 recorder.rewire(tree.points[j], q_new)
 
 
-class _SamplingPlanner(GlobalPlanner[Point, "SamplingSpace[Point]"]):
+class _SamplingPlanner(GlobalPlanner[Point, _SpaceT]):
     """Base holding common params, RNG, and biased sampling."""
 
     def required_capabilities(self) -> set[Capability]:
