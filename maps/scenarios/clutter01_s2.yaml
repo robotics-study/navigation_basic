@@ -1,0 +1,19 @@
+map: ../grid/clutter01.yaml   # scenario file 기준 상대 경로
+start: [0.75, 0.75]           # world 좌표, reference_path 첫 점과 동일 (bottom-left 근처, free)
+goal: [9.25, 9.25]            # world 좌표, reference_path 끝 점과 동일 (top-right 근처, free)
+# --- reference path (Regulated Pure Pursuit 추종용) ---
+# 좌측 벽을 따라 북상한 뒤 상단을 가로질러 목표에 도달한다. 상단 가로 구간(4번째~6번째
+# 점)이 우상단 장애물(world x[7.5,8.5] y[7.5,8.5])의 위쪽 가장자리를 스치며 지나가도록
+# 설계해, 근접 규제(중심점 기준 최근접 장애물까지의 거리가 footprint 를 빼도
+# proximity_distance 0.6 m 미만)를 발동시킨다. 좌측→상단 전환 코너(3번째 점)는 곡률
+# 규제(회전 반경이 regulated_min_radius 0.9 m 미만)를 발동시키되, 장애물에서 충분히
+# 떨어진 빈 공간에 두어 lookahead 충돌 검사의 명령 원호가 우연히 다른 장애물을 스치는
+# 일이 없도록 했다.
+reference_path:
+  - [0.75, 0.75]
+  - [1.0, 4.0]
+  - [1.0, 7.5]
+  - [1.6, 8.6]
+  - [4.0, 8.75]
+  - [7.3, 8.75]
+  - [9.25, 9.25]
