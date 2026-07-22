@@ -65,17 +65,20 @@ _REQUIRED: dict[str, Capability] = {
     "pure_pursuit": Capability.OBSTACLE_QUERY,
     "stanley": Capability.OBSTACLE_QUERY,
     "regulated_pure_pursuit": Capability.OBSTACLE_QUERY,
+    "elastic_bands": Capability.OBSTACLE_QUERY,
+    "teb": Capability.OBSTACLE_QUERY,
 }
 _ORDER = ["bfs", "dijkstra", "astar", "ara_star", "jps", "ad_star", "dstar_lite", "theta_star",
           "lazy_theta_star", "visibility_astar", "anya", "hybrid_astar",
           "rrt", "rrt_connect", "rrt_star", "prm_star", "lqr_rrt_star", "kinodynamic_rrt_star",
           "informed_rrt_star", "prm", "fmt_star", "bit_star", "abit_star", "sst",
           "ait_star", "fast_rrt", "eit_star", "fcit_star",
-          "potential_fields", "vfh", "dwa", "pure_pursuit", "stanley", "regulated_pure_pursuit"]
+          "potential_fields", "vfh", "dwa", "pure_pursuit", "stanley", "regulated_pure_pursuit",
+          "elastic_bands", "teb"]
 # Path trackers follow a given reference path rather than seeking a bare goal, so a
 # scenario without one is a shape mismatch (not a capability mismatch) — reported the
 # same "incompatible" way, from a static table so bench still never imports algorithms.
-_NEEDS_PATH = {"pure_pursuit", "stanley", "regulated_pure_pursuit"}
+_NEEDS_PATH = {"pure_pursuit", "stanley", "regulated_pure_pursuit", "elastic_bands", "teb"}
 
 
 @dataclass
