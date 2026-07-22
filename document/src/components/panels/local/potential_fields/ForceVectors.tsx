@@ -21,23 +21,33 @@ const D_MIN = 22;      // px, 접촉 클램프
 const ForceVectors = () => {
     const t = useTr()
     const colors = useCanvasColors()
-    const [d, setD] = useState(70)   // 로봇-장애물 거리 (px)
+    const [d, setD] = useState(70)   // 로봇-장애물 거리 (px, 목표 방향 직선을 따라)
 
-    // 장애물은 로봇 아래쪽(-y, 화면 기준 +y)에 둔다 — 반발이 인력과 부분적으로 반대 방향.
-    const obstacle: [number, number] = [ROBOT[0], ROBOT[1] + d]
+    // 장애물은 로봇→목표 직선 위에서 옆으로 살짝 비껴 있다 — 가까워질수록 반발이
+    // 인력과 맞서며 합력을 직선 밖으로 꺾는다 (정면 배치면 합력이 0이 되는 특이 배치라
+    // 회피 방향이 드러나지 않는다).
+    const gx0 = GOAL[0] - ROBOT[0]
+    const gy0 = GOAL[1] - ROBOT[1]
+    const gLen = Math.hypot(gx0, gy0)
+    const ux = gx0 / gLen
+    const uy = gy0 / gLen
+    const obstacle: [number, number] = [
+        ROBOT[0] + ux * d - uy * 20,
+        ROBOT[1] + uy * d + ux * 20,
+    ]
 
-    const gx = GOAL[0] - ROBOT[0]
-    const gy = GOAL[1] - ROBOT[1]
-    const fAttX = K_ATT * gx
-    const fAttY = K_ATT * gy
+    const fAttX = K_ATT * gx0
+    const fAttY = K_ATT * gy0
 
-    const dClamped = Math.max(d, D_MIN)
     const ox = ROBOT[0] - obstacle[0]
     const oy = ROBOT[1] - obstacle[1]
-    const inRange = dClamped < RHO0
-    const mag = inRange ? K_REP * (1 / dClamped - 1 / RHO0) * (1 / (dClamped * dClamped)) : 0
-    const fRepX = inRange ? (mag * ox) / dClamped * 4000 : 0
-    const fRepY = inRange ? (mag * oy) / dClamped * 4000 : 0
+    const dist = Math.max(Math.hypot(ox, oy), D_MIN)
+    const inRange = dist < RHO0
+    // FIRAS 크기는 px 단위 거리에서 ~1e-4 수준이라, 화살표가 인력과 같은 자릿수로
+    // 보이도록 1.2e6 을 곱한다 (클램프가 발산을 막는다).
+    const mag = inRange ? K_REP * (1 / dist - 1 / RHO0) * (1 / (dist * dist)) : 0
+    const fRepX = inRange ? (mag * ox) / dist * 1.2e6 : 0
+    const fRepY = inRange ? (mag * oy) / dist * 1.2e6 : 0
 
     // 표시 스케일: 인력은 길이 고정 비례, 반발은 위 식의 크기를 그대로 쓰되 화면 밖으로
     // 나가지 않도록 클램프한다.
@@ -87,15 +97,15 @@ const ForceVectors = () => {
             </Stage>
             <div className="flex items-center gap-2 text-xs text-muted w-full" style={{maxWidth: W}}>
                 <span className="w-28 shrink-0">{t("obstacle distance", "장애물 거리")} d</span>
-                <input type="range" min={D_MIN} max={RHO0 + 20} step={1} value={d}
+                <input type="range" min={D_MIN + 10} max={RHO0 + 20} step={1} value={d}
                        onChange={(e) => setD(parseInt(e.target.value))}
                        className="flex-1 accent-[var(--accent)]"
                        aria-label={t("obstacle distance", "장애물 거리")}/>
             </div>
             <div className="text-xs text-muted text-center">
                 {t(
-                    "shrink d and the repulsive arrow grows without bound as it nears the contact clamp, bending the resultant away from the goal",
-                    "d를 줄이면 반발 화살표가 접촉 클램프에 가까워질수록 한없이 자라, 합력이 목표 방향에서 꺾여 나간다",
+                    "the obstacle sits on the way to the goal — shrink d and the repulsive arrow grows steeply, bending the resultant (black) off the straight line so the robot swerves around",
+                    "장애물이 목표로 가는 길목에 있다. d를 줄이면 반발 화살표가 가파르게 자라 합력(검정)이 직선에서 꺾이고, 로봇은 그쪽으로 비껴 돈다",
                 )}
             </div>
         </div>

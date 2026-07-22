@@ -1,5 +1,5 @@
 import {ReactNode, useEffect, useMemo, useRef, useState} from "react";
-import {Arrow, Circle, Layer, Line, Rect, Shape, Stage} from "react-konva";
+import {Arrow, Circle, Group, Layer, Line, Rect, Shape, Stage} from "react-konva";
 import Konva from "konva";
 import {GridMap, worldToCellUnits} from "../../../libs/grid";
 import {TraceEvent} from "../../../libs/trace/types";
@@ -19,10 +19,18 @@ const TICK_MS = 30;
 
 type Pose = [number, number, number];
 
-interface RobotTick { step: number; pose: Pose }
+interface RobotTick { step: number; pose: Pose; v?: number }
 interface ForceTick { step: number; pos: [number, number]; att: [number, number]; rep: [number, number] }
 interface HistogramTick { step: number; pos: [number, number]; bins: number[]; threshold?: number }
-interface CandidateTick { step: number; pos: [number, number]; selected: boolean }
+interface CandidateTick {
+    step: number;
+    pos: [number, number];
+    selected: boolean;
+    // 롤아웃 채점 계열(DWA)의 예측 궤적 폴리라인·admissible 플래그. 방출하지 않는
+    // 엔진(PF/VFH/추종 계열)에서는 rollout이 없어 기존 렌더가 그대로 유지된다.
+    admissible: boolean;
+    rollout?: [number, number][];
+}
 
 interface LocalTimeline {
     steps: number;
@@ -51,7 +59,13 @@ function buildLocalTimeline(events: TraceEvent[]): LocalTimeline {
         switch (ev.event) {
             case "robot_moved": {
                 const s = ev.state
-                if (s && s.length >= 3) timeline.robot.push({step, pose: [s[0], s[1], s[2]]})
+                if (s && s.length >= 3) {
+                    const v = ev.data?.v
+                    timeline.robot.push({
+                        step, pose: [s[0], s[1], s[2]],
+                        v: typeof v === "number" ? Math.abs(v) : undefined,
+                    })
+                }
                 break
             }
             case "force_computed": {
@@ -79,7 +93,16 @@ function buildLocalTimeline(events: TraceEvent[]): LocalTimeline {
             case "candidate_evaluated": {
                 const s = ev.state
                 if (s && s.length >= 2) {
-                    timeline.candidates.push({step, pos: [s[0], s[1]], selected: ev.data?.selected === 1})
+                    timeline.candidates.push({
+                        step, pos: [s[0], s[1]],
+                        selected: ev.data?.selected === 1,
+                        // 플래그가 없는 엔진(PP의 단일 lookahead 점 등)은 admissible로
+                        // 간주해 마커가 기존 불투명도를 유지한다.
+                        admissible: ev.data?.admissible !== 0,
+                        rollout: ev.rollout
+                            ?.filter((p) => p.length >= 2)
+                            .map((p): [number, number] => [p[0], p[1]]),
+                    })
                 }
                 break
             }
@@ -124,6 +147,13 @@ export interface LocalTracePlayerProps {
     goal: [number, number];
     // Pure Pursuit 등 추종 계열의 참조 경로(회색 파선 underlay). 없으면 그리지 않는다.
     referencePath?: [number, number][];
+    // 로봇 충돌 원 반경(world 단위) — 차량 몸체 + footprint 원을 이 크기로 그린다.
+    // local planner 는 모두 모바일 로봇용이므로 sandbox 는 항상 넘겨야 한다.
+    footprintRadius?: number;
+    // 추종 계열: 로봇 중심 lookahead 원(반경 = 로봇→이번 tick 후보점 거리)을 그린다.
+    showLookahead?: boolean;
+    // Stanley: 로봇→참조 경로 최근접점 crosstrack 선분을 그린다.
+    showCrosstrack?: boolean;
     panel?: number;
     autoPlay?: boolean;
     onPaintCell?: (row: number, col: number, occupied: boolean) => void;
@@ -134,7 +164,8 @@ export interface LocalTracePlayerProps {
 }
 
 const LocalTracePlayer = ({
-                              map, events, startPose, goal, referencePath, panel = 340,
+                              map, events, startPose, goal, referencePath, footprintRadius,
+                              showLookahead, showCrosstrack, panel = 340,
                               autoPlay = true, onPaintCell, onMoveStart, onMoveGoal, onReset, footer,
                           }: LocalTracePlayerProps) => {
     const t = useTr()
@@ -210,10 +241,10 @@ const LocalTracePlayer = ({
 
     // --- 재생 시점(step) 이하의 최신/누적 이벤트 -----------------------------------
     const robotTrail = useMemo(
-        () => timeline.robot.filter((r) => r.step <= step).map((r) => r.pose),
+        () => timeline.robot.filter((r) => r.step <= step),
         [timeline, step],
     )
-    const currentPose: Pose = robotTrail.length > 0 ? robotTrail[robotTrail.length - 1] : startPose
+    const currentPose: Pose = robotTrail.length > 0 ? robotTrail[robotTrail.length - 1].pose : startPose
     const latestForce = useMemo(() => {
         let latest: ForceTick | undefined
         for (const f of timeline.forces) { if (f.step <= step) latest = f; else break }
@@ -238,6 +269,12 @@ const LocalTracePlayer = ({
     const visiblePath = finished && timeline.path ? timeline.path : null
 
     // --- 렌더 헬퍼 ------------------------------------------------------------------
+    const pxPerWorld = cellPx / map.resolution
+    const vmax = useMemo(
+        () => timeline.robot.reduce((m, r) => Math.max(m, r.v ?? 0), 0),
+        [timeline],
+    )
+
     const headingArrow = (pose: Pose) => {
         const [px, py] = toPixel(pose[0], pose[1])
         const len = cellPx * 0.9
@@ -248,6 +285,72 @@ const LocalTracePlayer = ({
                       pointerLength={cellPx * 0.32} pointerWidth={cellPx * 0.28}
                       stroke={colors.accent2} fill={colors.accent2}
                       strokeWidth={Math.max(1.5, cellPx * 0.12)}/>
+    }
+
+    // 모바일 로봇: footprint 원(충돌 모델 그대로) + 그 안에 내접하는 차체. GridCanvas의
+    // car()와 같은 시각 어휘 — 대각선이 원 안에 들어오도록 몸체 길이를 지름의 0.86으로 잡는다.
+    const vehicle = (pose: Pose, fr: number) => {
+        const [px, py] = toPixel(pose[0], pose[1])
+        const rPx = fr * pxPerWorld
+        const len = rPx * 2 * 0.86
+        const wid = len * 0.58
+        const sw = Math.max(1.2, rPx * 0.14)
+        return <Group key="vehicle" x={px} y={py} rotation={-pose[2] * 180 / Math.PI} listening={false}>
+            <Circle radius={rPx} stroke={colors.accent2} strokeWidth={Math.max(1, rPx * 0.09)}
+                    dash={[rPx * 0.35, rPx * 0.3]} opacity={0.7}/>
+            <Rect x={-len / 2} y={-wid / 2} width={len} height={wid}
+                  cornerRadius={wid * 0.28} fill={colors.surface}
+                  stroke={colors.accent2} strokeWidth={sw}/>
+            <Line points={[len * 0.14, -wid * 0.3, len * 0.14, wid * 0.3]}
+                  stroke={colors.accent2} strokeWidth={sw} lineCap="round"/>
+        </Group>
+    }
+
+    // 속도 비례 굵기 trail — RPP의 규제 감속, DWA의 급정지가 선 굵기로 보인다.
+    // 속도 데이터가 없으면(구 trace) 일정 굵기로 그린다.
+    const speedTrail = (trail: RobotTick[], color: string) => {
+        const wBase = Math.max(2, cellPx * 0.2)
+        return <Shape key="trail" listening={false} sceneFunc={(ctx, shape) => {
+            for (let i = 1; i < trail.length; i++) {
+                const [x0, y0] = toPixel(trail[i - 1].pose[0], trail[i - 1].pose[1])
+                const [x1, y1] = toPixel(trail[i].pose[0], trail[i].pose[1])
+                const v = trail[i].v
+                const f = vmax > 0 && v !== undefined ? 0.25 + 0.75 * (v / vmax) : 1
+                ctx.beginPath()
+                ctx.moveTo(x0, y0)
+                ctx.lineTo(x1, y1)
+                ctx.setAttr("lineWidth", wBase * f)
+                ctx.setAttr("lineCap", "round")
+                ctx.setAttr("strokeStyle", color)
+                ctx.setAttr("globalAlpha", 0.9)
+                ctx.stroke()
+            }
+            ctx.setAttr("globalAlpha", 1)
+            ctx.fillStrokeShape(shape)
+        }}/>
+    }
+
+    // 로봇→참조 경로 최근접점 (Stanley crosstrack 표시용) — 각 선분에 사영해 최소 거리 점.
+    const nearestOnPath = (pose: Pose): [number, number] | null => {
+        if (!referencePath || referencePath.length < 2) return null
+        let best: [number, number] | null = null
+        let bestD = Infinity
+        for (let i = 1; i < referencePath.length; i++) {
+            const [ax, ay] = referencePath[i - 1]
+            const [bx, by] = referencePath[i]
+            const dx = bx - ax
+            const dy = by - ay
+            const L2 = dx * dx + dy * dy
+            const s = L2 > 0 ? Math.max(0, Math.min(1, ((pose[0] - ax) * dx + (pose[1] - ay) * dy) / L2)) : 0
+            const qx = ax + s * dx
+            const qy = ay + s * dy
+            const d = Math.hypot(pose[0] - qx, pose[1] - qy)
+            if (d < bestD) {
+                bestD = d
+                best = [qx, qy]
+            }
+        }
+        return best
     }
 
     const forceArrows = (f: ForceTick) => {
@@ -271,6 +374,8 @@ const LocalTracePlayer = ({
         </>
     }
 
+    // threshold 이상(막힘)은 경고색, 미만(열린 valley 후보)은 accent — 로즈에서 valley가
+    // "색이 끊긴 틈"으로 바로 읽히게 한다.
     const histogramRose = (h: HistogramTick) => {
         const [cx, cy] = toPixel(h.pos[0], h.pos[1])
         const n = h.bins.length
@@ -278,30 +383,57 @@ const LocalTracePlayer = ({
         const maxBin = Math.max(...h.bins, 1e-9)
         const baseR = cellPx * 2.4
         const sector = (2 * Math.PI) / n
-        return <Shape key="hist" listening={false} sceneFunc={(ctx, shape) => {
+        const wedges = (blocked: boolean) => (ctx: Konva.Context, shape: Konva.Shape) => {
             ctx.beginPath()
             for (let k = 0; k < n; k++) {
+                const isBlocked = h.threshold !== undefined && h.bins[k] >= h.threshold
+                if (isBlocked !== blocked) continue
                 const r = baseR * Math.min(1, h.bins[k] / maxBin)
                 if (r <= 0) continue
                 const a0 = k * sector
                 const a1 = (k + 1) * sector
                 // world CCW 각 → canvas 각(-각, y-flip) — 구간이 뒤집혀 start/end를 교환한다.
-                const ca0 = -a1
-                const ca1 = -a0
                 ctx.moveTo(cx, cy)
-                ctx.arc(cx, cy, r, ca0, ca1, false)
+                ctx.arc(cx, cy, r, -a1, -a0, false)
                 ctx.closePath()
             }
             ctx.fillStrokeShape(shape)
-        }} fill={colors.accent} opacity={0.28} stroke={colors.accent} strokeWidth={1}/>
+        }
+        return <Group key="hist" listening={false}>
+            <Shape sceneFunc={wedges(false)} fill={colors.accent} opacity={0.3}
+                   stroke={colors.accent} strokeWidth={1}/>
+            <Shape sceneFunc={wedges(true)} fill={PATH_COLOR} opacity={0.35}
+                   stroke={PATH_COLOR} strokeWidth={1}/>
+        </Group>
     }
 
     const candidateMarkers = currentCandidates.map((c, i) => {
         const [px, py] = toPixel(c.pos[0], c.pos[1])
         return <Circle key={`cand${i}`} x={px} y={py} radius={Math.max(1.5, cellPx * 0.12)}
                        fill={c.selected ? colors.accent2 : colors.muted}
-                       opacity={c.selected ? 0.95 : 0.55}/>
+                       opacity={c.selected ? 0.95 : c.admissible ? 0.55 : 0.25}/>
     })
+
+    // 롤아웃 폴리라인(직전 tick): 비선택은 muted 얇게(기각 후보는 더 옅게), 선택 후보는
+    // accent2 굵게 — 선택 arc가 항상 위에 오도록 나중에 그린다.
+    const rolloutLines = currentCandidates
+        .flatMap((c) => {
+            // flatMap 으로 rollout 이 실재하는 후보만 남긴다 — filter 는 optional 필드를
+            // 타입으로 좁혀 주지 못해 뒤에서 non-null 단언이 필요해진다.
+            const rollout = c.rollout
+            return rollout && rollout.length > 1 ? [{candidate: c, rollout}] : []
+        })
+        .sort((a, b) => Number(a.candidate.selected) - Number(b.candidate.selected))
+        .map(({candidate, rollout}, i) => (
+            <Line key={`roll${i}`}
+                  points={rollout.flatMap(([x, y]) => toPixel(x, y))}
+                  stroke={candidate.selected ? colors.accent2 : colors.muted}
+                  strokeWidth={candidate.selected
+                      ? Math.max(2, cellPx * 0.18)
+                      : Math.max(1, cellPx * 0.07)}
+                  opacity={candidate.selected ? 0.95 : candidate.admissible ? 0.4 : 0.15}
+                  lineCap="round" lineJoin="round" listening={false}/>
+        ))
 
     const statusLabel = (s: SimStatus): string => ({
         reached: t("reached", "도달"),
@@ -347,31 +479,59 @@ const LocalTracePlayer = ({
                               dash={[cellPx * 0.5, cellPx * 0.4]} lineCap="round" lineJoin="round"
                               opacity={0.85}/>
                     )}
-                    {/* 실행 궤적(성공 시 최종 경로 강조) */}
-                    {robotTrail.length > 1 && (
-                        <Line points={robotTrail.flatMap((p) => toPixel(p[0], p[1]))}
-                              stroke={visiblePath ? PATH_COLOR : colors.accent2}
-                              strokeWidth={Math.max(2, cellPx * (visiblePath ? 0.24 : 0.18))}
-                              lineCap="round" lineJoin="round" opacity={0.9}/>
-                    )}
-                    {/* histogram rose (VFH, 최신 tick) */}
-                    {latestHistogram && histogramRose(latestHistogram)}
-                    {/* candidate 마커(직전 tick) */}
-                    {candidateMarkers}
-                    {/* force 화살표(PF, 최신 tick 1건만) */}
-                    {latestForce && forceArrows(latestForce)}
-                    {/* 로봇 heading */}
-                    {headingArrow(currentPose)}
+                    {/* 실행 궤적 — 속도 비례 굵기 */}
+                    {robotTrail.length > 1 && speedTrail(robotTrail, visiblePath ? PATH_COLOR : colors.accent2)}
+                    {/* tick 오버레이는 재생/스크럽 중에만 — 종료 화면은 궤적 + 차량만 남겨
+                        마지막 tick의 히스토그램/후보가 goal 위에 박제되는 것을 막는다 */}
+                    {!finished && <>
+                        {/* histogram rose (VFH, 최신 tick) */}
+                        {latestHistogram && histogramRose(latestHistogram)}
+                        {/* 롤아웃 폴리라인(DWA, 직전 tick) — candidate 마커 아래 */}
+                        {rolloutLines}
+                        {/* candidate 마커(직전 tick) */}
+                        {candidateMarkers}
+                        {/* force 화살표(PF, 최신 tick 1건만) */}
+                        {latestForce && forceArrows(latestForce)}
+                        {/* lookahead 원 (추종 계열): 로봇 중심, 이번 tick 후보점을 지나는 원 */}
+                        {showLookahead && currentCandidates.length > 0 && (() => {
+                            const cand = currentCandidates[currentCandidates.length - 1]
+                            const [rx, ry] = toPixel(currentPose[0], currentPose[1])
+                            const [lx, ly] = toPixel(cand.pos[0], cand.pos[1])
+                            const r = Math.hypot(lx - rx, ly - ry)
+                            return <Group listening={false}>
+                                <Circle x={rx} y={ry} radius={r} stroke={colors.accent}
+                                        strokeWidth={1.2} dash={[5, 4]} opacity={0.55}/>
+                                <Line points={[rx, ry, lx, ly]} stroke={colors.accent}
+                                      strokeWidth={1.2} dash={[3, 3]} opacity={0.55}/>
+                                <Circle x={lx} y={ly} radius={Math.max(2.5, cellPx * 0.18)}
+                                        fill={colors.accent}/>
+                            </Group>
+                        })()}
+                        {/* crosstrack 선분 (Stanley): 로봇→참조 경로 최근접점 */}
+                        {showCrosstrack && (() => {
+                            const q = nearestOnPath(currentPose)
+                            if (!q) return null
+                            const [rx, ry] = toPixel(currentPose[0], currentPose[1])
+                            const [qx, qy] = toPixel(q[0], q[1])
+                            return <Group listening={false}>
+                                <Line points={[rx, ry, qx, qy]} stroke={PATH_COLOR}
+                                      strokeWidth={Math.max(1.5, cellPx * 0.1)} dash={[4, 3]}/>
+                                <Circle x={qx} y={qy} radius={Math.max(2, cellPx * 0.14)} fill={PATH_COLOR}/>
+                            </Group>
+                        })()}
+                    </>}
+                    {/* 로봇: footprint + 차량 (없으면 heading 화살표만) */}
+                    {footprintRadius ? vehicle(currentPose, footprintRadius) : headingArrow(currentPose)}
                     {/* 시작/목표 마커 */}
-                    <Circle x={startPx[0]} y={startPx[1]} radius={cellPx * 0.34} fill={colors.accent}
-                            stroke={colors.bg} strokeWidth={Math.max(1, cellPx * 0.06)}
+                    <Circle x={startPx[0]} y={startPx[1]} radius={cellPx * 0.2} fill={colors.accent}
+                            stroke={colors.bg} strokeWidth={Math.max(1, cellPx * 0.05)}
                             hitStrokeWidth={cellPx * 0.9} draggable={!!onMoveStart}
                             onDragEnd={(e) => {
                                 e.target.position({x: startPx[0], y: startPx[1]})
                                 onMoveStart?.(pixelToWorld(e.target.x(), e.target.y()))
                             }}/>
-                    <Circle x={goalPx[0]} y={goalPx[1]} radius={cellPx * 0.34} fill={PATH_COLOR}
-                            stroke={colors.bg} strokeWidth={Math.max(1, cellPx * 0.06)}
+                    <Circle x={goalPx[0]} y={goalPx[1]} radius={cellPx * 0.2} fill={PATH_COLOR}
+                            stroke={colors.bg} strokeWidth={Math.max(1, cellPx * 0.05)}
                             hitStrokeWidth={cellPx * 0.9} draggable={!!onMoveGoal}
                             onDragEnd={(e) => {
                                 e.target.position({x: goalPx[0], y: goalPx[1]})
@@ -415,7 +575,7 @@ const LocalTracePlayer = ({
                 finished && status ? "font-semibold" : "text-muted")}
                  style={finished && status ? {color: statusColor(status)} : undefined}>
                 {finished && status
-                    ? statusLabel(status)
+                    ? `${statusLabel(status)} · ${timeline.robot.length} ticks`
                     : `${t("step", "step")} ${step}/${timeline.steps}`}
             </div>
 

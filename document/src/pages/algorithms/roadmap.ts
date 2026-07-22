@@ -296,6 +296,17 @@ export const ALGO_BLURBS: AlgoBlurb[] = [
         },
     },
     {
+        slug: "dwa",
+        blurb: {
+            en: "Sample the (v, ω) commands one accel-limited tick can reach, roll each " +
+                "forward as an arc, and keep only those that can still stop in time — " +
+                "honest enough to brake to a STALL in a dead end.",
+            ko: "한 tick의 가감속으로 닿는 (v, ω) 명령들을 격자로 샘플링하고 각각을 " +
+                "원호로 굴려 채점한다. 제때 멈출 수 있는 후보만 남기므로, 막다른 길에서는 " +
+                "감속 정지라는 한계까지 정직하게 드러난다.",
+        },
+    },
+    {
         slug: "pure_pursuit",
         blurb: {
             en: "Anchor a lookahead circle on the robot and chase the point where it meets " +
@@ -303,6 +314,28 @@ export const ALGO_BLURBS: AlgoBlurb[] = [
                 "curvature, blind to obstacles by design.",
             ko: "로봇에 lookahead 원을 걸고 그 원이 참조 경로와 만나는 점을 원호 하나로 " +
                 "쫓는다. 제어기 전체가 곡률 하나이고, 설계상 장애물은 보지 않는다.",
+        },
+    },
+    {
+        slug: "stanley",
+        blurb: {
+            en: "Steer on two errors at once — heading misalignment plus front-axle " +
+                "crosstrack offset — the law that won the DARPA Grand Challenge, and one " +
+                "that oscillates honestly when the gain is pushed too far.",
+            ko: "경로 접선과의 각도 오차, 전륜축의 횡방향 오차라는 두 오차를 한 조향식으로 " +
+                "묶는다. DARPA Grand Challenge를 이긴 법칙이지만, gain을 키우면 진동하는 " +
+                "모습도 demo로 정직하게 보여준다.",
+        },
+    },
+    {
+        slug: "regulated_pure_pursuit",
+        blurb: {
+            en: "Pure Pursuit fitted for the real world: a speed-scaled lookahead, slow-downs " +
+                "for tight corners and nearby obstacles, and a stop before a predicted " +
+                "collision — the recipe Nav2 ships as its default controller.",
+            ko: "Pure Pursuit에 실전 장비를 채운 확장판. lookahead는 속도에 비례해 늘고, " +
+                "급코너와 장애물 근처에서는 감속하며, 예측 원호가 벽에 닿으면 멈춘다. " +
+                "Nav2가 기본 controller로 채택한 조합이다.",
         },
     },
 ];

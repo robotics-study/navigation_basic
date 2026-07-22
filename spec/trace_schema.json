@@ -48,7 +48,7 @@
     },
     "cost": {
       "type": "number",
-      "description": "이벤트 시점의 관련 비용 (g-value, edge cost, candidate score 등; local candidate_evaluated 에서는 Pure Pursuit 곡률 κ 또는 VFH 후보의 목표각 편차)."
+      "description": "이벤트 시점의 관련 비용 (g-value, edge cost, candidate score 등; local candidate_evaluated 에서는 Pure Pursuit/Regulated Pure Pursuit 곡률 κ, VFH 후보의 목표각 편차, DWA 목적함수 G, Stanley 조향각 δ)."
     },
     "path": {
       "type": "array",
@@ -82,12 +82,17 @@
     },
     "data": {
       "type": "object",
-      "description": "알고리즘 고유 부가 정보 (viz 는 알아도 되고 몰라도 되는 값만). 공통 필드로 표현 가능한 정보를 여기에 넣지 않는다. 예: robot_moved 의 {v, omega}, force_computed 의 {fx_att, fy_att, fx_rep, fy_rep, fx, fy}, histogram_updated 의 {threshold, target_direction, selected_direction}."
+      "description": "알고리즘 고유 부가 정보 (viz 는 알아도 되고 몰라도 되는 값만). 공통 필드로 표현 가능한 정보를 여기에 넣지 않는다. 예: robot_moved 의 {v, omega}, force_computed 의 {fx_att, fy_att, fx_rep, fy_rep, fx, fy}, histogram_updated 의 {threshold, target_direction, selected_direction}, DWA candidate_evaluated 의 {v, omega, heading, clearance, velocity, admissible, selected}, Stanley candidate_evaluated 의 {e, psi, v}, Regulated Pure Pursuit candidate_evaluated 의 {alpha, lookahead, curvature_scale, proximity_scale, blocked}."
     },
     "bins": {
       "type": "array",
       "items": { "type": "number" },
       "description": "histogram_updated 전용: 폴라 히스토그램 sector 값 (index 0 = world +x, 반시계)."
+    },
+    "rollout": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/state" },
+      "description": "candidate_evaluated 선택 필드: 후보 명령을 짧은 horizon 동안 적분한 예측 궤적 폴리라인 (DWA 등 롤아웃 채점 계열). data 는 스칼라 맵이라 배열을 담을 수 없으므로 bins 와 같은 top-level 배열로 둔다."
     }
   },
   "$defs": {

@@ -70,6 +70,12 @@ _HIST_MAX_RADIUS_CELLS = 6.0
 # Candidate markers (Pure Pursuit lookahead point / VFH valley probes): amber, clear
 # of every other mark color in this file.
 _CANDIDATE_COLOR = "#f59e0b"
+# DWA candidate rollouts: unselected arcs in slate (same hue family as the reference
+# path, which never co-occurs — DWA takes no reference path), rejected ones fainter,
+# and the selected arc in the candidate amber so it reads as "this tick's choice".
+_ROLLOUT_COLOR = "#94a3b8"
+_ROLLOUT_ALPHA_ADMISSIBLE = 0.35
+_ROLLOUT_ALPHA_REJECTED = 0.12
 # Kinodynamic (Hybrid A*) path headings + local planning current-pose heading: a dark
 # slate distinct from the path gradient + every ramp.
 _HEADING_COLOR = "#1e293b"
@@ -147,6 +153,13 @@ class Scene:
     # so this stays empty for every non-local trace.
     candidates: list[Point] = field(default_factory=list)
     candidate_orders: list[int] = field(default_factory=list)
+    # Rollout-scoring planners (DWA): per-candidate predicted polyline (trace
+    # `rollout`) plus the admissible/selected flags from `data`. Parallel to
+    # candidates/candidate_orders; None/default entries for planners that emit no
+    # rollout (Pure Pursuit, VFH, ...) keep their render unchanged.
+    candidate_rollouts: list[list[Point] | None] = field(default_factory=list)
+    candidate_selected: list[bool] = field(default_factory=list)
+    candidate_admissible: list[bool] = field(default_factory=list)
     # Local planning problem definition, loaded from planning_started.scenario (not a
     # search/execution event) so tracking planners' reference path and the goal render
     # even on a failed run (no path_found).
@@ -290,6 +303,15 @@ def build_scene(
         elif name == "candidate_evaluated" and is_local_trace and "state" in ev:
             scene.candidates.append(to_world(ev["state"]))
             scene.candidate_orders.append(order)
+            data = ev.get("data") or {}
+            rollout = ev.get("rollout")
+            scene.candidate_rollouts.append(
+                [to_world(p) for p in rollout] if rollout else None
+            )
+            scene.candidate_selected.append(float(data.get("selected", 0.0)) >= 1.0)
+            # Planners without the flag (Pure Pursuit's single lookahead point etc.)
+            # default to admissible so their marker keeps full opacity.
+            scene.candidate_admissible.append(float(data.get("admissible", 1.0)) >= 1.0)
             order += 1
         elif name in ("path_found", "planning_finished") and ev.get("path"):
             scene.path = [to_world(s) for s in ev["path"]]
@@ -457,11 +479,47 @@ def _draw(
     # Current-tick candidates only (those emitted since the previous robot move), so a
     # long PP/VFH run doesn't smear every historical probe on top of each other.
     tick_candidates: list[Point] = []
+    rollouts_shown = False
     if scene.candidates:
         tick_start = scene.robot_orders[n_robot - 2] if n_robot >= 2 else -1
         lo = bisect_right(scene.candidate_orders, tick_start)
         hi = bisect_right(scene.candidate_orders, cutoff)
         tick_candidates = scene.candidates[lo:hi]
+        # Rollout arcs first (below the endpoint markers): unselected admissible
+        # arcs thin slate, rejected/inadmissible ones fainter, the selected arc
+        # in accent amber on top. Latest tick only, same rationale as candidates.
+        from matplotlib.colors import to_rgba
+
+        rollout_segments: list[list[Point]] = []
+        rollout_colors: list[tuple[float, float, float, float]] = []
+        selected_rollout: list[Point] | None = None
+        for i in range(lo, hi):
+            rollout = scene.candidate_rollouts[i]
+            if rollout is None or len(rollout) < 2:
+                continue
+            if scene.candidate_selected[i]:
+                selected_rollout = rollout
+                continue
+            alpha = (
+                _ROLLOUT_ALPHA_ADMISSIBLE
+                if scene.candidate_admissible[i]
+                else _ROLLOUT_ALPHA_REJECTED
+            )
+            rollout_segments.append(rollout)
+            rollout_colors.append(to_rgba(_ROLLOUT_COLOR, alpha))
+        if rollout_segments:
+            ax.add_collection(
+                LineCollection(
+                    rollout_segments, colors=rollout_colors, linewidths=0.8, zorder=5.5,
+                    antialiaseds=False,
+                )
+            )
+        if selected_rollout is not None:
+            ax.plot(
+                [p[0] for p in selected_rollout], [p[1] for p in selected_rollout],
+                color=_CANDIDATE_COLOR, linewidth=2.0, zorder=5.8, alpha=0.95,
+            )
+        rollouts_shown = bool(rollout_segments) or selected_rollout is not None
         if tick_candidates:
             ax.scatter(
                 [p[0] for p in tick_candidates], [p[1] for p in tick_candidates],
@@ -486,6 +544,7 @@ def _draw(
         robot_shown=n_robot > 0, revealed_shown=n_revealed > 0, headings_shown=drew_headings,
         reference_path_shown=reference_path_shown, force_shown=n_force > 0,
         histogram_shown=n_hist > 0, candidate_shown=bool(tick_candidates),
+        rollout_shown=rollouts_shown,
     )
 
 
@@ -570,6 +629,7 @@ def _draw_legend(
     robot_shown: bool = False, revealed_shown: bool = False, headings_shown: bool = False,
     reference_path_shown: bool = False, force_shown: bool = False,
     histogram_shown: bool = False, candidate_shown: bool = False,
+    rollout_shown: bool = False,
 ) -> None:
     from matplotlib.lines import Line2D
 
@@ -599,6 +659,9 @@ def _draw_legend(
     if histogram_shown:
         handles.append(Line2D([0], [0], color=_HIST_COLOR_BLOCKED, linewidth=1.8))
         labels.append("histogram (bin ∝ density)")
+    if rollout_shown:
+        handles.append(Line2D([0], [0], color=_ROLLOUT_COLOR, linewidth=1.2))
+        labels.append("rollout (selected = amber)")
     if candidate_shown:
         handles.append(_mark_proxy(_CANDIDATE_COLOR))
         labels.append("candidate")

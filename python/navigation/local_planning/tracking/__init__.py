@@ -3,5 +3,7 @@
 from __future__ import annotations
 
 from .pure_pursuit import PurePursuit
+from .regulated_pure_pursuit import RegulatedPurePursuit
+from .stanley import Stanley
 
-__all__ = ["PurePursuit"]
+__all__ = ["PurePursuit", "RegulatedPurePursuit", "Stanley"]

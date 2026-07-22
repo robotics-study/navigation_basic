@@ -1,0 +1,126 @@
+algorithm: dwa
+category: local_planning
+params:
+  - name: max_speed
+    type: float
+    default: 0.77
+    min: 0.01
+    max: 10.0
+    description: 최대 전진 속도 (m/s).
+  - name: min_speed
+    type: float
+    default: 0.0
+    min: 0.0
+    max: 10.0
+    description: 최소 전진 속도 (m/s). 전진 전용, 후진 미지원.
+  - name: max_omega
+    type: float
+    default: 1.35
+    min: 0.01
+    max: 20.0
+    description: 최대 각속도 (rad/s).
+  - name: accel
+    type: float
+    default: 1.92
+    min: 0.01
+    max: 50.0
+    description: 선가속 한계 (m/s^2). dynamic window 폭과 admissible 정지거리를 결정한다.
+  - name: accel_omega
+    type: float
+    default: 6.98
+    min: 0.01
+    max: 100.0
+    description: 각가속 한계 (rad/s^2).
+  - name: v_samples
+    type: int
+    default: 5
+    min: 2
+    max: 50
+    description: dynamic window 내 v 격자 샘플 수 (결정적 균등 샘플링).
+  - name: omega_samples
+    type: int
+    default: 9
+    min: 3
+    max: 101
+    description: dynamic window 내 omega 격자 샘플 수 (결정적 균등 샘플링).
+  - name: sim_time
+    type: float
+    default: 1.66
+    min: 0.1
+    max: 10.0
+    description: 후보 (v, omega) 를 상수로 유지하며 롤아웃하는 예측 horizon (seconds). (Fox, Burgard & Thrun 1997)
+  - name: sim_steps
+    type: int
+    default: 12
+    min: 2
+    max: 100
+    description: 롤아웃 평가점 수 (sim_time 을 등분).
+  - name: heading_weight
+    type: float
+    default: 0.15
+    min: 0.0
+    max: 100.0
+    description: 목적함수 heading 항 가중치 alpha. (Fox 1997 eq. 15)
+  - name: clearance_weight
+    type: float
+    default: 0.14
+    min: 0.0
+    max: 100.0
+    description: 목적함수 clearance 항 가중치 beta.
+  - name: velocity_weight
+    type: float
+    default: 0.23
+    min: 0.0
+    max: 100.0
+    description: 목적함수 velocity 항 가중치 gamma.
+  - name: clearance_limit
+    type: float
+    default: 0.68
+    min: 0.01
+    max: 100.0
+    description: clearance 정규화 상한 (meters). 이 이상은 동일하게 만점 처리.
+  - name: slow_radius
+    type: float
+    default: 0.5
+    min: 0.001
+    max: 100.0
+    description: goal 로부터 이 반경 이내에서 속도 상한을 선형 감속 (meters).
+  # --- shared closed-loop simulator block (identical defaults across every
+  # local_planning algo; param_schema.json has no separate "sim" section, so
+  # these live as ordinary params entries like the algorithm params above) ---
+  - name: control_dt
+    type: float
+    default: 0.1
+    min: 0.001
+    max: 1.0
+    description: 제어 주기 (seconds).
+  - name: max_steps
+    type: int
+    default: 1000
+    min: 1
+    max: 100000
+    description: 최대 tick 수 (소진 시 TIMEOUT).
+  - name: goal_tolerance
+    type: float
+    default: 0.3
+    min: 0.01
+    max: 5.0
+    description: goal 도달 판정 반경 (meters).
+  - name: footprint_radius
+    type: float
+    default: 0.2
+    min: 0.01
+    max: 5.0
+    description: 로봇 충돌 footprint 반경 (meters).
+  - name: stall_window
+    type: int
+    default: 20
+    min: 1
+    max: 100000
+    description: 정체 판정 sliding window 길이 (ticks).
+  - name: stall_distance
+    type: float
+    default: 0.05
+    min: 0.0
+    max: 5.0
+    description: stall_window 구간 순변위가 이 이하이면 STALLED (meters).

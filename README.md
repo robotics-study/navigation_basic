@@ -104,8 +104,10 @@ visualization, interactive in-browser demos, and a benchmark matrix.*
 | global_planning | Fast-RRT | ✅ | ✅ | Wu et al. (2021) |
 | local_planning | Potential Fields | ✅ | ✅ | Khatib (1986) |
 | local_planning | VFH | ✅ | ✅ | Borenstein & Koren (1991) |
+| local_planning | DWA | ✅ | ✅ | Fox, Burgard & Thrun (1997) |
 | local_planning | Pure Pursuit | ✅ | ✅ | Coulter (1992) |
-| local_planning | DWA | ⬜ | ⬜ | Fox, Burgard & Thrun (1997) |
+| local_planning | Stanley | ✅ | ✅ | Thrun et al. (2006) |
+| local_planning | Regulated Pure Pursuit | ✅ | ✅ | Macenski, Singh, Martin & Gines (2023) |
 | local_planning | MPC | ⬜ | ⬜ | — |
 | multi_agent | Prioritized A* | ⬜ | ⬜ | Erdmann & Lozano-Pérez (1987) |
 | multi_agent | Joint-space A* | ⬜ | ⬜ | — |

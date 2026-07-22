@@ -11,40 +11,14 @@ import cn from "../../../../libs/cn";
 
 // S-curve 프리셋: maps/scenarios/open01_s2.yaml이 참조하는 grid(maps/grid/open01.yaml)와
 // reference_path를 그대로 미러한다 -- python demo와 같은 입력이라 결과를 나란히 비교할 수 있다.
-const S_CURVE_ROWS = [
-    "####################",
-    "#..................#",
-    "#..................#",
-    "#..................#",
-    "#....####..........#",
-    "#....####..........#",
-    "#....####....###...#",
-    "#....####....###...#",
-    "#....####....###...#",
-    "#............###...#",
-    "#..................#",
-    "#..........#####...#",
-    "#..........#####...#",
-    "#..........#####...#",
-    "#..........#####...#",
-    "#..........#####...#",
-    "#..................#",
-    "#..................#",
-    "#..................#",
-    "####################",
-]
-const sCurveMap = (): GridMap => {
-    const width = 20, height = 20
-    const occupied = new Array(width * height).fill(false)
-    S_CURVE_ROWS.forEach((row, r) => {
-        for (let c = 0; c < width; c++) occupied[r * width + c] = row[c] === "#"
-    })
-    return {name: "open01", width, height, occupied, resolution: 0.5, originX: 0, originY: 0}
-}
 const S_CURVE_PATH: Point[] = [
     [1.0, 1.0], [2.0, 1.0], [3.5, 1.2], [5.0, 1.5], [5.0, 3.5],
     [5.0, 6.0], [5.0, 8.5], [7.0, 8.8], [8.7, 9.0], [9.0, 9.0],
 ]
+// 추종 데모는 장애물 없는 빈 맵(0.5 m/셀)에서 경로 기하만 보여준다 — pure pursuit 은
+// 회피 능력이 없는 추종기라 장애물을 두면 오해를 부른다.
+const openHalfGrid = (name: string): GridMap => ({...emptyGrid(name, 20, 20), resolution: 0.5})
+
 const S_CURVE_START: Pose = [1.0, 1.0, 0]
 const S_CURVE_GOAL: [number, number] = [9.0, 9.0]
 
@@ -59,15 +33,15 @@ type PresetId = "s_curve" | "sharp";
 interface Preset { map: () => GridMap; path: Point[]; start: Pose; goal: [number, number] }
 
 const PRESETS: Record<PresetId, Preset> = {
-    s_curve: {map: sCurveMap, path: S_CURVE_PATH, start: S_CURVE_START, goal: S_CURVE_GOAL},
-    sharp: {map: () => emptyGrid("sharp_turn", 20, 20), path: SHARP_PATH, start: SHARP_START, goal: SHARP_GOAL},
+    s_curve: {map: () => openHalfGrid("s_curve"), path: S_CURVE_PATH, start: S_CURVE_START, goal: S_CURVE_GOAL},
+    sharp: {map: () => openHalfGrid("sharp_turn"), path: SHARP_PATH, start: SHARP_START, goal: SHARP_GOAL},
 }
 
 // configs/local_planning/pure_pursuit.yaml의 공유 폐루프 시뮬레이터 블록 기본값
 // (lookahead_distance만 sandbox에서 조절한다).
 const SIM_DEFAULTS = {
     maxSpeed: 0.8, maxOmega: 1.5, slowRadius: 0.5, controlDt: 0.1, maxSteps: 1000,
-    goalTolerance: 0.3, footprintRadius: 0.2, stallWindow: 20, stallDistance: 0.05,
+    goalTolerance: 0.3, footprintRadius: 0.35, stallWindow: 20, stallDistance: 0.05,
 }
 
 const PurePursuitScene = ({panel = 340}: {panel?: number}) => {
@@ -76,7 +50,7 @@ const PurePursuitScene = ({panel = 340}: {panel?: number}) => {
     const preset = PRESETS[presetId]
     const [map, setMap] = useState<GridMap>(preset.map)
     const [start, setStart] = useState<Pose>(preset.start)
-    const [lookahead, setLookahead] = useState(0.3)
+    const [lookahead, setLookahead] = useState(0.6)
 
     const events = useMemo(() => runPurePursuit({
         map, startPose: start, goal: preset.goal, referencePath: preset.path,
@@ -97,7 +71,7 @@ const PurePursuitScene = ({panel = 340}: {panel?: number}) => {
     }
 
     return (
-        <LocalTracePlayer
+        <LocalTracePlayer footprintRadius={SIM_DEFAULTS.footprintRadius} showLookahead
             map={map} events={events} startPose={start} goal={preset.goal}
             referencePath={preset.path} panel={panel}
             onPaintCell={paintCell}

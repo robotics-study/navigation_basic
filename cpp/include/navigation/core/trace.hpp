@@ -51,6 +51,15 @@ class TraceRecorder {
   void candidate_evaluated(const State& s, double cost, const EventData& data = {}) {
     ev_state("candidate_evaluated", to_trace(s), &cost, ptr(data));
   }
+  // Rollout-carrying variant (spec `rollout`): predicted trajectory polyline
+  // for rollout-scoring planners (DWA). A top-level array like `bins` because
+  // the numeric-only `data` map cannot carry arrays; a separate overload so
+  // pre-existing call sites (no rollout) stay byte-identical.
+  template <class State>
+  void candidate_evaluated(const State& s, double cost, const EventData& data,
+                           const std::vector<std::vector<double>>& rollout) {
+    ev_rollout(to_trace(s), cost, ptr(data), rollout);
+  }
   // Dynamic replanning (D* Lite): the robot's new executed cell, and a cell newly
   // sensed as blocked (revealed obstacle). No cost field. Reused by the local-
   // planning closed-loop simulator for each control tick's executed pose — same
@@ -103,6 +112,8 @@ class TraceRecorder {
   static const EventData* ptr(const EventData& d) { return d.empty() ? nullptr : &d; }
   void ev_state(const char* event, const std::vector<double>& s, const double* cost,
                 const EventData* data);
+  void ev_rollout(const std::vector<double>& s, double cost, const EventData* data,
+                  const std::vector<std::vector<double>>& rollout);
   void ev_edge(const char* event, const std::vector<double>& s, const std::vector<double>& parent,
                const double* cost, const EventData* data);
   void ev_bins(const char* event, const std::vector<double>& s, const std::vector<double>& bins,

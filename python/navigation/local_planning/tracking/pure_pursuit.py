@@ -17,54 +17,13 @@ from navigation.core.trace import TraceRecorder
 from navigation.core.types import LocalTask, Point, RobotState, VelocityCommand
 
 from .._geometry import wrap_to_pi
+from ._path import advance_progress_index, lookahead_point
 
 # Below this curvature the clamp-recompute step (v = omega / kappa) would divide
 # by a near-zero denominator. At |kappa| this small, kappa*v is already far under
 # any reasonable max_omega so the clamp branch never actually fires in practice --
 # this guards the division defensively rather than tuning any real behavior.
 _KAPPA_EPS = 1e-9
-
-
-def _closest_point_on_segment(p: Point, a: Point, b: Point) -> Point:
-    ax, ay = a
-    bx, by = b
-    dx, dy = bx - ax, by - ay
-    seg_len_sq = dx * dx + dy * dy
-    if seg_len_sq < 1e-12:
-        return a
-    t = max(0.0, min(1.0, ((p[0] - ax) * dx + (p[1] - ay) * dy) / seg_len_sq))
-    return (ax + t * dx, ay + t * dy)
-
-
-def _sq_dist(a: Point, b: Point) -> float:
-    return (a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2
-
-
-def _segment_circle_forward_t(p: Point, a: Point, b: Point, radius: float) -> float | None:
-    """Forward-most intersection of the robot-centered lookahead circle with
-    segment a->b, as a parameter t in [0, 1], or None if the segment stays
-    entirely inside/outside the circle.
-
-    Solves |a + t*(b-a) - p|^2 = radius^2 (Coulter 1992 sec. 3: circle-line
-    intersection) and keeps the larger root in range -- the exit point, i.e.
-    further along the path -- so the chosen point always leads the robot
-    forward rather than back toward where it entered the circle.
-    """
-    dx, dy = b[0] - a[0], b[1] - a[1]
-    fx, fy = a[0] - p[0], a[1] - p[1]
-    aa = dx * dx + dy * dy
-    if aa < 1e-12:
-        return None
-    bb = 2.0 * (fx * dx + fy * dy)
-    cc = fx * fx + fy * fy - radius * radius
-    disc = bb * bb - 4.0 * aa * cc
-    if disc < 0.0:
-        return None
-    sq = math.sqrt(disc)
-    for t in ((-bb + sq) / (2.0 * aa), (-bb - sq) / (2.0 * aa)):
-        if 0.0 <= t <= 1.0:
-            return t
-    return None
 
 
 class PurePursuit(ObstacleLocalPlanner):
@@ -106,9 +65,9 @@ class PurePursuit(ObstacleLocalPlanner):
         x, y, theta = state.pose
         robot_xy: Point = (x, y)
 
-        self._progress_index = self._advance_progress_index(path, robot_xy)
+        self._progress_index = advance_progress_index(path, robot_xy, self._progress_index)
         lookahead_distance = self.params.get_float("lookahead_distance")
-        target = self._lookahead_point(path, self._progress_index, robot_xy, lookahead_distance)
+        target = lookahead_point(path, self._progress_index, robot_xy, lookahead_distance)
 
         alpha = wrap_to_pi(math.atan2(target[1] - y, target[0] - x) - theta)
         kappa = 2.0 * math.sin(alpha) / lookahead_distance
@@ -130,37 +89,3 @@ class PurePursuit(ObstacleLocalPlanner):
         if recorder is not None:
             recorder.candidate_evaluated([target[0], target[1]], kappa, data={"alpha": alpha})
         return VelocityCommand(v, omega)
-
-    def _advance_progress_index(self, path: tuple[Point, ...], robot_xy: Point) -> int:
-        if len(path) < 2:
-            return self._progress_index
-        best_index = self._progress_index
-        best_sq_dist = float("inf")
-        for i in range(self._progress_index, len(path) - 1):
-            closest = _closest_point_on_segment(robot_xy, path[i], path[i + 1])
-            sq_dist = _sq_dist(robot_xy, closest)
-            # <=, not <: consecutive segments share their joint endpoint, so a
-            # robot sitting exactly at a corner ties every segment ending/starting
-            # there. Preferring the later (more forward) segment on a tie keeps
-            # progress advancing through the corner instead of latching onto the
-            # segment just traveled.
-            if sq_dist <= best_sq_dist:
-                best_sq_dist = sq_dist
-                best_index = i
-        return best_index
-
-    def _lookahead_point(
-        self,
-        path: tuple[Point, ...],
-        start_index: int,
-        robot_xy: Point,
-        lookahead_distance: float,
-    ) -> Point:
-        for i in range(start_index, len(path) - 1):
-            t = _segment_circle_forward_t(robot_xy, path[i], path[i + 1], lookahead_distance)
-            if t is not None:
-                a, b = path[i], path[i + 1]
-                return (a[0] + t * (b[0] - a[0]), a[1] + t * (b[1] - a[1]))
-        # No segment crosses the lookahead circle -- the remaining path is
-        # shorter than L_d, so aim at the path's end (the goal).
-        return path[-1]

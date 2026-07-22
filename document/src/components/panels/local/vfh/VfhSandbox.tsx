@@ -49,9 +49,9 @@ const NARROW_GOAL: [number, number] = [8.75, 5.0]
 const CLUTTER_ROWS: Rows = [
     "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0",
     "0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 0",
+    "0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 0 0 255 255 0",
+    "0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 0 0 255 255 0",
     "0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 0",
-    "0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 0 0 255 255 0",
-    "0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 0 0 255 255 0",
     "0 255 255 255 255 0 0 255 255 255 255 255 255 255 255 255 255 255 255 0",
     "0 255 255 255 255 0 0 255 255 255 255 255 255 0 0 255 255 255 255 0",
     "0 255 255 255 255 255 255 255 255 255 255 255 255 0 0 255 255 255 255 0",
@@ -68,8 +68,8 @@ const CLUTTER_ROWS: Rows = [
     "0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 0",
     "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0",
 ]
-const CLUTTER_START: Pose = [0.75, 0.75, 0]
-const CLUTTER_GOAL: [number, number] = [9.25, 9.25]
+const CLUTTER_START: Pose = [1.25, 1.25, 0]
+const CLUTTER_GOAL: [number, number] = [9.0, 7.75]
 
 type Preset = "narrow" | "clutter";
 
@@ -88,7 +88,7 @@ const H_M = 0.0905
 const K_OMEGA = 1.54
 const MAX_SPEED = 0.44
 const MAX_OMEGA = 2.86
-const FOOTPRINT_RADIUS = 0.2
+const FOOTPRINT_RADIUS = 0.3
 const CONTROL_DT = 0.1
 const MAX_STEPS = 1000
 const GOAL_TOLERANCE = 0.3
@@ -101,8 +101,8 @@ const VfhScene = ({panel = 340}: {panel?: number}) => {
     const [map, setMap] = useState<GridMap>(() => presetMap("clutter"))
     const [start, setStart] = useState<Pose>(CLUTTER_START)
     const [goal, setGoal] = useState<[number, number]>(CLUTTER_GOAL)
-    const [threshold, setThreshold] = useState(0.041)
-    const [windowRadius, setWindowRadius] = useState(1.32)
+    const [threshold, setThreshold] = useState(0.02)
+    const [windowRadius, setWindowRadius] = useState(1.8)
     const [numSectors, setNumSectors] = useState(60)
 
     const events = useMemo(() => runVfh({
@@ -130,7 +130,7 @@ const VfhScene = ({panel = 340}: {panel?: number}) => {
     }
 
     return (
-        <LocalTracePlayer
+        <LocalTracePlayer footprintRadius={FOOTPRINT_RADIUS}
             map={map} events={events} startPose={start} goal={goal} panel={panel}
             onPaintCell={paintCell}
             onMoveStart={(xy) => setStart([xy[0], xy[1], start[2]])}

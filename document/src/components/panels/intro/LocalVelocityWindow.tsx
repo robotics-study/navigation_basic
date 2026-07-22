@@ -1,109 +1,246 @@
-import {useState} from "react";
-import {Layer, Line, Rect, Stage, Text, Circle} from "react-konva";
+import {useMemo, useState} from "react";
+import {Circle, Group, Layer, Line, Rect, Shape, Stage, Text} from "react-konva";
+import Konva from "konva";
 import CanvasFigure from "../../CanvasFigure";
 import {useCanvasColors} from "../../../libs/useTheme";
 import {PATH_COLOR} from "../../2d/GridCanvas";
 import {useTr} from "../../../libs/i18n";
 
-// DWA의 핵심 그림: 로봇이 고를 수 있는 명령은 (v, ω) 평면 전체가 아니라
-// 현재 속도에서 한 제어 주기의 가감속으로 도달 가능한 작은 사각형(dynamic window)뿐이다.
-// 그 창을 장애물이 허용하는 영역과 교차한 부분에서 최선을 고른다 (Fox et al., 1997).
-const PAD_L = 44;
-const PAD_B = 34;
-const PAD_T = 14;
-const PAD_R = 14;
-const PLOT = 240;
-const W = PAD_L + PLOT + PAD_R;
-const H = PAD_T + PLOT + PAD_B;
-
+// DWA의 핵심 그림 (Fox, Burgard & Thrun 1997). 왼쪽은 실제 장면(로봇·장애물·goal·
+// 명령이 그리는 원호), 오른쪽은 같은 장면의 (v, ω) 속도 공간이다. 오른쪽의 충돌 위험
+// 영역은 지어낸 모양이 아니라 논문의 admissible velocity 조건
+//   v ≤ sqrt(2 · dist(v, ω) · v̇_b)
+// 을 원호를 따라가는 충돌 거리 dist로 그대로 계산해 칠한다. 선택 명령도 논문의
+// 목적함수(heading + clearance + velocity 가중합)를 window ∩ admissible 위에서 최대화한다.
 const V_MAX = 1.0;                 // m/s
 const OM_MAX = 1.4;                // rad/s
 const A_V = 0.35;                  // 가속 한계 × dt (창 반높이, m/s)
 const A_OM = 0.6;                  // 각가속 한계 × dt (창 반너비, rad/s)
+const A_BRAKE = 0.22;              // 제동 감속 v̇_b (m/s²) — 경계가 v 축 범위 안에 들어오는 값
+const ROBOT_R = 0.12;              // m
+const OBST: [number, number] = [0.22, 1.0];   // 로봇 기준 (x: 좌+, y: 전방) — 전방 약간 오른쪽
+const OBST_R = 0.28;
+const GOAL: [number, number] = [-0.35, 2.3];   // 장애물 왼쪽 뒤편
+const S_MAX = 4;                   // 충돌 거리 탐색 상한 (m)
 
-// 값 → 픽셀. v는 아래가 0, 위가 V_MAX. ω는 가운데가 0.
+// 곡률 κ 원호를 따라 장애물(로봇 반경으로 팽창)까지의 거리. 로봇은 원점, 전방 +y.
+function arcDistToObstacle(kappa: number): number {
+    const rHit = OBST_R + ROBOT_R
+    let x = 0
+    let y = 0
+    let th = 0                     // 전방(+y) 기준 편각. 왼쪽 회전이 +.
+    const ds = 0.02
+    for (let s = 0; s < S_MAX; s += ds) {
+        x += -Math.sin(th) * ds
+        y += Math.cos(th) * ds
+        th += kappa * ds
+        if (Math.hypot(x - OBST[0], y - OBST[1]) <= rHit) return s
+    }
+    return Infinity
+}
+
+const admissibleV = (v: number, om: number): boolean => {
+    if (v <= 0) return true
+    const dist = arcDistToObstacle(om / v)
+    return v <= Math.sqrt(2 * A_BRAKE * dist)
+}
+
+// 원호 폴리라인 (좌표는 로봇 기준 m). length만큼 전진했을 때의 자취.
+function arcPoints(kappa: number, length: number): [number, number][] {
+    const pts: [number, number][] = [[0, 0]]
+    let x = 0
+    let y = 0
+    let th = 0
+    const ds = 0.05
+    for (let s = 0; s < length; s += ds) {
+        x += -Math.sin(th) * ds
+        y += Math.cos(th) * ds
+        th += kappa * ds
+        pts.push([x, y])
+    }
+    return pts
+}
+
+// --- 오른쪽 (v, ω) 평면 레이아웃 -----------------------------------------------
+const PAD_L = 40;
+const PAD_B = 30;
+const PAD_T = 12;
+const PLOT = 220;
+const VW = PAD_L + PLOT + 12;
+const VH = PAD_T + PLOT + PAD_B;
 const vx = (om: number) => PAD_L + ((om + OM_MAX) / (2 * OM_MAX)) * PLOT;
 const vy = (v: number) => PAD_T + (1 - v / V_MAX) * PLOT;
 const clamp = (x: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, x));
 
+// --- 왼쪽 장면 레이아웃 (m → px) ------------------------------------------------
+const SW = 210;
+const SH = VH;
+const SCALE = 78;                  // px per m
+const RX = SW / 2 - 12;            // 로봇 화면 x (약간 왼쪽)
+const RY = SH - 46;                // 로봇 화면 y (아래쪽)
+const sx = (mx: number) => RX + mx * SCALE;
+const sy = (my: number) => RY - my * SCALE;
+
 const Scene = () => {
     const colors = useCanvasColors()
     const t = useTr()
-    const [vc, setVc] = useState(0.55)      // 현재 병진 속도
-    const [oc, setOc] = useState(-0.2)      // 현재 각속도
+    const [vc, setVc] = useState(0.55)
+    const [oc, setOc] = useState(0.0)
 
-    // dynamic window: 현재 속도를 중심으로 한 주기의 가감속 사각형, 허용 공간으로 clip.
-    const wLo = clamp(vc - A_V, 0, V_MAX)
-    const wHi = clamp(vc + A_V, 0, V_MAX)
+    const wLo = clamp(vc - A_V, 0.02, V_MAX)
+    const wHi = clamp(vc + A_V, 0.02, V_MAX)
     const wLeft = clamp(oc - A_OM, -OM_MAX, OM_MAX)
     const wRight = clamp(oc + A_OM, -OM_MAX, OM_MAX)
 
-    // 정면 장애물이 만드는 금지 영역: 빠른 v + 작은 |ω|는 제때 못 멈춰 충돌한다.
-    // v ≤ V_MAX·(|ω|/OM_MAX)^0.5 위쪽이 금지 (직진일수록 낮은 속도만 안전).
-    const safeV = (om: number) => V_MAX * Math.sqrt(Math.abs(om) / OM_MAX)
-    const forbidPts: number[] = []
-    const stepsF = 40
-    for (let i = 0; i <= stepsF; i++) {
-        const om = -OM_MAX + (i / stepsF) * 2 * OM_MAX
-        forbidPts.push(vx(om), vy(Math.min(V_MAX, safeV(om))))
-    }
-    // 위 경계 두 꼭짓점으로 닫아 상단 금지 폴리곤을 만든다.
-    forbidPts.push(vx(OM_MAX), vy(V_MAX), vx(-OM_MAX), vy(V_MAX))
-
-    // 창 안에서 안전하고 병진 속도가 가장 큰 명령을 최선으로 고른다 (진행 선호).
-    let best: {v: number, om: number} | null = null
-    const stepsW = 12
-    for (let iv = 0; iv <= stepsW; iv++) {
-        const v = wLo + (iv / stepsW) * (wHi - wLo)
-        for (let io = 0; io <= stepsW; io++) {
-            const om = wLeft + (io / stepsW) * (wRight - wLeft)
-            if (v > safeV(om)) continue
-            if (!best || v - Math.abs(om) * 0.15 > best.v - Math.abs(best.om) * 0.15) best = {v, om}
+    // admissible 격자 (오른쪽 평면 채색용) — 60×40 셀.
+    const NC = 60
+    const NR = 40
+    const grid = useMemo(() => {
+        const g: boolean[][] = []
+        for (let ir = 0; ir < NR; ir++) {
+            const row: boolean[] = []
+            const v = V_MAX * (1 - (ir + 0.5) / NR)
+            for (let ic = 0; ic < NC; ic++) {
+                const om = -OM_MAX + ((ic + 0.5) / NC) * 2 * OM_MAX
+                row.push(admissibleV(v, om))
+            }
+            g.push(row)
         }
-    }
+        return g
+    }, [])
+
+    // 논문 목적함수: heading(예측 pose에서 goal을 향한 정렬) + clearance + velocity.
+    const best = useMemo(() => {
+        let bestCmd: {v: number, om: number, J: number} | null = null
+        const T = 1.4
+        const steps = 16
+        for (let iv = 0; iv <= steps; iv++) {
+            const v = wLo + (iv / steps) * (wHi - wLo)
+            for (let io = 0; io <= steps; io++) {
+                const om = wLeft + (io / steps) * (wRight - wLeft)
+                if (!admissibleV(v, om)) continue
+                const kappa = v > 0 ? om / v : 0
+                const s = v * T
+                const thEnd = kappa * s
+                // 원호 끝점 (근사 적분과 동일한 기하)
+                const pts = arcPoints(kappa, Math.max(s, 0.01))
+                const [ex, ey] = pts[pts.length - 1]
+                const angToGoal = Math.atan2(-(GOAL[0] - ex), GOAL[1] - ey)
+                const heading = 1 - Math.abs(angToGoal - thEnd) / Math.PI
+                const dist = arcDistToObstacle(kappa)
+                const clear = Math.min(dist, 2) / 2
+                const J = 2.0 * heading + 0.3 * clear + 0.6 * (v / V_MAX)
+                if (!bestCmd || J > bestCmd.J) bestCmd = {v, om, J}
+            }
+        }
+        return bestCmd
+    }, [wLo, wHi, wLeft, wRight])
+
+    // 왼쪽 장면에 그릴 후보 원호들 (window 모서리 + 중앙 열) — admissible 여부로 색 구분.
+    const sampleArcs = useMemo(() => {
+        const arcs: {pts: [number, number][], ok: boolean}[] = []
+        const T = 1.4
+        for (let io = 0; io <= 6; io++) {
+            const om = wLeft + (io / 6) * (wRight - wLeft)
+            const v = wHi
+            const ok = admissibleV(v, om)
+            const kappa = v > 0 ? om / v : 0
+            const dist = arcDistToObstacle(kappa)
+            const len = ok ? v * T : Math.min(dist, v * T)
+            arcs.push({pts: arcPoints(kappa, Math.max(len, 0.05)), ok})
+        }
+        return arcs
+    }, [wLeft, wRight, wHi])
 
     return (
         <div className="flex flex-col items-center gap-2">
-            <Stage width={W} height={H}
-                   className="bg-surface border border-border rounded-lg overflow-hidden">
-                <Layer>
-                    {/* 허용 속도 공간 (전체 사각형) */}
-                    <Rect x={PAD_L} y={PAD_T} width={PLOT} height={PLOT}
-                          stroke={colors.border} strokeWidth={1}/>
-                    {/* 장애물 금지 영역 (제때 못 멈추는 고속) */}
-                    <Line points={forbidPts} closed fill={PATH_COLOR} opacity={0.16}/>
-                    <Line points={forbidPts.slice(0, (stepsF + 1) * 2)}
-                          stroke={PATH_COLOR} strokeWidth={1.5} opacity={0.6}/>
-                    {/* dynamic window */}
-                    <Rect x={vx(wLeft)} y={vy(wHi)}
-                          width={vx(wRight) - vx(wLeft)} height={vy(wLo) - vy(wHi)}
-                          fill={colors.accent} opacity={0.16}
-                          stroke={colors.accent} strokeWidth={2}/>
-                    {/* 현재 속도 */}
-                    <Circle x={vx(oc)} y={vy(vc)} radius={4} fill={colors.text}/>
-                    {/* 선택된 명령 */}
-                    {best && (
-                        <Circle x={vx(best.om)} y={vy(best.v)} radius={6}
-                                fill={colors.accent2} stroke={colors.bg} strokeWidth={1.5}/>
-                    )}
-                    {/* 축 */}
-                    <Line points={[PAD_L, PAD_T, PAD_L, PAD_T + PLOT]}
-                          stroke={colors.muted} strokeWidth={1}/>
-                    <Line points={[PAD_L, PAD_T + PLOT, PAD_L + PLOT, PAD_T + PLOT]}
-                          stroke={colors.muted} strokeWidth={1}/>
-                    <Line points={[vx(0), PAD_T, vx(0), PAD_T + PLOT]}
-                          stroke={colors.border} strokeWidth={0.5} dash={[4, 4]}/>
-                    <Text x={0} y={PAD_T - 2} width={PAD_L - 6} align="right"
-                          text="v" fontSize={13} fill={colors.muted} fontStyle="italic"/>
-                    <Text x={PAD_L + PLOT - 14} y={PAD_T + PLOT + 8}
-                          text="ω" fontSize={13} fill={colors.muted} fontStyle="italic"/>
-                    <Text x={PAD_L} y={PAD_T + PLOT + 8} text="−" fontSize={12} fill={colors.muted}/>
-                </Layer>
-            </Stage>
-            <div className="flex flex-col gap-1 text-xs text-muted w-full" style={{maxWidth: W}}>
+            <div className="flex gap-2 flex-wrap justify-center">
+                {/* 왼쪽: 실제 장면 */}
+                <Stage width={SW} height={SH}
+                       className="bg-surface border border-border rounded-lg overflow-hidden">
+                    <Layer>
+                        {/* goal */}
+                        <Circle x={sx(GOAL[0])} y={sy(GOAL[1])} radius={6} fill={PATH_COLOR}
+                                stroke={colors.bg} strokeWidth={1.5}/>
+                        <Text x={sx(GOAL[0]) + 8} y={sy(GOAL[1]) - 6} text={t("goal", "목표")}
+                              fontSize={11} fill={PATH_COLOR} fontStyle="bold"/>
+                        {/* 장애물 */}
+                        <Circle x={sx(OBST[0])} y={sy(OBST[1])} radius={OBST_R * SCALE}
+                                fill={colors.text} opacity={0.75}/>
+                        {/* 후보 원호: admissible = 회색, 위험(제때 못 멈춤) = 경고색 */}
+                        {sampleArcs.map((a, i) => (
+                            <Line key={`arc${i}`}
+                                  points={a.pts.flatMap(([mx, my]) => [sx(mx), sy(my)])}
+                                  stroke={a.ok ? colors.muted : PATH_COLOR}
+                                  strokeWidth={1.3} opacity={a.ok ? 0.5 : 0.55}
+                                  dash={a.ok ? undefined : [4, 3]}/>
+                        ))}
+                        {/* 선택 명령의 원호 */}
+                        {best && (
+                            <Line points={arcPoints(best.v > 0 ? best.om / best.v : 0, best.v * 1.4)
+                                .flatMap(([mx, my]) => [sx(mx), sy(my)])}
+                                  stroke={colors.accent2} strokeWidth={3} lineCap="round"/>
+                        )}
+                        {/* 로봇 (전방 = 위) */}
+                        <Group x={RX} y={RY}>
+                            <Circle radius={ROBOT_R * SCALE} stroke={colors.accent2}
+                                    strokeWidth={1.2} dash={[3, 3]} opacity={0.7}/>
+                            <Rect x={-7} y={-10} width={14} height={20} cornerRadius={4}
+                                  fill={colors.surface} stroke={colors.accent2} strokeWidth={2}/>
+                            <Line points={[-4, -4, 4, -4]} stroke={colors.accent2} strokeWidth={2}
+                                  lineCap="round"/>
+                        </Group>
+                    </Layer>
+                </Stage>
+                {/* 오른쪽: (v, ω) 평면 */}
+                <Stage width={VW} height={VH}
+                       className="bg-surface border border-border rounded-lg overflow-hidden">
+                    <Layer>
+                        {/* admissible 격자: 위험 셀만 칠한다 */}
+                        <Shape listening={false} sceneFunc={(ctx: Konva.Context, shape: Konva.Shape) => {
+                            const cw = PLOT / NC
+                            const ch = PLOT / NR
+                            ctx.beginPath()
+                            for (let ir = 0; ir < NR; ir++) {
+                                for (let ic = 0; ic < NC; ic++) {
+                                    if (grid[ir][ic]) continue
+                                    ctx.rect(PAD_L + ic * cw, PAD_T + ir * ch, cw + 0.5, ch + 0.5)
+                                }
+                            }
+                            ctx.fillStrokeShape(shape)
+                        }} fill={PATH_COLOR} opacity={0.18}/>
+                        <Rect x={PAD_L} y={PAD_T} width={PLOT} height={PLOT}
+                              stroke={colors.border} strokeWidth={1}/>
+                        {/* dynamic window */}
+                        <Rect x={vx(wLeft)} y={vy(wHi)}
+                              width={vx(wRight) - vx(wLeft)} height={vy(wLo) - vy(wHi)}
+                              fill={colors.accent} opacity={0.14}
+                              stroke={colors.accent} strokeWidth={2}/>
+                        {/* 현재 속도 */}
+                        <Circle x={vx(oc)} y={vy(vc)} radius={4} fill={colors.text}/>
+                        {/* 선택된 명령 */}
+                        {best && (
+                            <Circle x={vx(best.om)} y={vy(best.v)} radius={6}
+                                    fill={colors.accent2} stroke={colors.bg} strokeWidth={1.5}/>
+                        )}
+                        {/* 축 */}
+                        <Line points={[PAD_L, PAD_T, PAD_L, PAD_T + PLOT]}
+                              stroke={colors.muted} strokeWidth={1}/>
+                        <Line points={[PAD_L, PAD_T + PLOT, PAD_L + PLOT, PAD_T + PLOT]}
+                              stroke={colors.muted} strokeWidth={1}/>
+                        <Line points={[vx(0), PAD_T, vx(0), PAD_T + PLOT]}
+                              stroke={colors.border} strokeWidth={0.5} dash={[4, 4]}/>
+                        <Text x={0} y={PAD_T - 2} width={PAD_L - 6} align="right"
+                              text="v" fontSize={13} fill={colors.muted} fontStyle="italic"/>
+                        <Text x={PAD_L + PLOT - 14} y={PAD_T + PLOT + 8}
+                              text="ω" fontSize={13} fill={colors.muted} fontStyle="italic"/>
+                    </Layer>
+                </Stage>
+            </div>
+            <div className="flex flex-col gap-1 text-xs text-muted w-full" style={{maxWidth: SW + VW + 8}}>
                 <label className="flex items-center gap-2">
                     <span className="w-14 shrink-0">v = {vc.toFixed(2)}</span>
-                    <input type="range" min={0} max={V_MAX} step={0.01} value={vc}
+                    <input type="range" min={0.02} max={V_MAX} step={0.01} value={vc}
                            onChange={(e) => setVc(parseFloat(e.target.value))}
                            className="flex-1 accent-[var(--accent)]"
                            aria-label={t("current translational velocity", "현재 병진 속도")}/>
@@ -120,11 +257,11 @@ const Scene = () => {
                 <span style={{color: "var(--accent)"}} className="font-semibold">dynamic window</span>
                 {" · "}
                 <span style={{color: "var(--accent-2)"}} className="font-semibold">
-                    {t("chosen command", "선택된 명령")}
+                    {t("chosen command and its arc", "선택된 명령과 그 원호")}
                 </span>
                 {" · "}
                 <span style={{color: PATH_COLOR}} className="font-semibold">
-                    {t("unsafe", "충돌 위험")}
+                    {t("cannot stop before the obstacle", "장애물 앞에서 못 멈추는 명령")}
                 </span>
             </div>
         </div>
@@ -135,8 +272,8 @@ const LocalVelocityWindow = () => {
     const t = useTr()
     return <CanvasFigure
         label={t(
-            "DWA searches only the dynamic window — the (v, ω) box reachable within one cycle's acceleration limits — intersected with velocities that can still stop before an obstacle. Drag the sliders to move the current velocity and watch the window follow.",
-            "DWA는 (v, ω) 평면 전체가 아니라 dynamic window, 곧 한 주기의 가감속으로 도달 가능한 상자만, 그것도 장애물 앞에서 멈출 수 있는 속도와 교차한 부분만 탐색한다. 슬라이더로 현재 속도를 옮기면 창이 따라 움직인다.",
+            "Left: the robot, an obstacle on the way, and the circular arcs its commands trace. Right: the same scene in velocity space — a command (v, ω) is inadmissible (red) when v exceeds √(2·dist·brake), the speed that can still stop along its arc before the obstacle. DWA scores only the dynamic window (the box of velocities reachable within one cycle's acceleration limits) intersected with the admissible region, and picks the command that best balances heading to the goal, clearance, and speed.",
+            "왼쪽은 로봇과 길목의 장애물, 그리고 각 명령이 그리는 원호다. 오른쪽은 같은 장면의 속도 공간이다. 명령 (v, ω)는 자신의 원호를 따라 장애물 앞에서 멈출 수 있는 한계 √(2·dist·brake)를 넘으면 위험(빨강)으로 배제된다. DWA는 한 주기의 가감속으로 도달 가능한 상자(dynamic window)와 이 admissible 영역의 교집합만 채점해, goal 방향·여유 거리·속도를 저울질한 최선의 명령을 고른다.",
         )}
         tight bodyClassName="w-fit" className="w-full"
         modal={<Scene/>}

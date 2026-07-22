@@ -289,3 +289,76 @@ def test_local_trace_gif_and_snapshots_render(tmp_path: Path) -> None:
     paths = replay.save_snapshots(scene, snaps_dir, count=2)
     assert len(paths) == 3
     assert all(Path(p).stat().st_size > 0 for p in paths)
+
+
+def _rollout_events() -> list[dict[str, object]]:
+    """DWA-shaped local trace: per tick, candidate_evaluated events that carry a
+    rollout polyline plus admissible/selected flags, then the executed robot_moved."""
+    events: list[dict[str, object]] = [{
+        "seq": 0, "event": "planning_started", "algorithm": "dwa",
+        "map": "maps/grid/open01.yaml", "params": {},
+    }]
+    seq = 1
+    x = 0.75
+    for _ in range(2):
+        for j, (admissible, selected) in enumerate([(1.0, 0.0), (0.0, 0.0), (1.0, 1.0)]):
+            events.append({
+                "seq": seq, "event": "candidate_evaluated",
+                "state": [x + 0.4, 0.75 + 0.1 * j], "cost": 0.5,
+                "data": {"v": 0.5, "omega": 0.1 * j,
+                         "admissible": admissible, "selected": selected},
+                "rollout": [[x + 0.1, 0.75], [x + 0.25, 0.75 + 0.05 * j],
+                            [x + 0.4, 0.75 + 0.1 * j]],
+            })
+            seq += 1
+        x += 0.2
+        events.append({"seq": seq, "event": "robot_moved", "state": [x, 0.75, 0.0],
+                       "data": {"v": 0.5, "omega": 0.0}})
+        seq += 1
+    events.append({"seq": seq, "event": "planning_finished", "success": False,
+                   "metrics": {"steps": 2.0, "collided": 0.0, "stalled": 1.0}})
+    return events
+
+
+def test_build_scene_parses_rollouts_and_flags() -> None:
+    grid = load_map(REPO_ROOT / "maps" / "grid" / "open01.yaml")
+    scene = replay.build_scene(_rollout_events(), grid)
+    assert len(scene.candidates) == 6
+    assert scene.candidate_selected == [False, False, True] * 2
+    assert scene.candidate_admissible == [True, False, True] * 2
+    assert all(r is not None and len(r) == 3 for r in scene.candidate_rollouts)
+    assert scene.candidate_rollouts[0][0] == pytest.approx((0.85, 0.75))
+    # Traces without rollouts (Pure Pursuit / VFH) must keep rendering untouched:
+    # rollout stays None and the marker keeps full (admissible) opacity.
+    legacy = replay.build_scene(_local_events(), grid)
+    assert legacy.candidate_rollouts == [None] * 4
+    assert legacy.candidate_admissible == [True] * 4
+
+
+def test_rollout_arcs_drawn_by_flag() -> None:
+    # Last tick has three rollout candidates: one unselected admissible and one
+    # rejected (same slate collection, rejected fainter) plus the selected arc
+    # drawn as its own accent line.
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    from matplotlib.collections import LineCollection
+
+    grid = load_map(REPO_ROOT / "maps" / "grid" / "open01.yaml")
+    scene = replay.build_scene(_rollout_events(), grid)
+    fig, ax = plt.subplots()
+    replay._draw(ax, scene, scene.total_ops, show_path=False)
+    rollout_cols = [
+        c for c in ax.collections
+        if isinstance(c, LineCollection) and len(c.get_segments()) == 2
+    ]
+    assert len(rollout_cols) == 1  # both unselected arcs share one collection
+    alphas = sorted(rgba[3] for rgba in rollout_cols[0].get_colors())
+    assert alphas == pytest.approx(
+        [replay._ROLLOUT_ALPHA_REJECTED, replay._ROLLOUT_ALPHA_ADMISSIBLE]
+    )
+    selected_lines = [ln for ln in ax.lines if ln.get_color() == replay._CANDIDATE_COLOR]
+    assert len(selected_lines) == 1
+    assert len(selected_lines[0].get_xdata()) == 3  # full rollout polyline
+    plt.close(fig)

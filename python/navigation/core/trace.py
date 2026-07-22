@@ -104,10 +104,20 @@ class TraceRecorder:
         self._emit("rewire", fields)
 
     def candidate_evaluated(
-        self, state: State, cost: float, data: EventData | None = None
+        self,
+        state: State,
+        cost: float,
+        data: EventData | None = None,
+        rollout: Sequence[State] | None = None,
     ) -> None:
+        # rollout (spec/trace_schema.json): predicted trajectory polyline for
+        # rollout-scoring planners (DWA). A top-level array like `bins` because
+        # the numeric-only `data` map cannot carry arrays; omitted when absent
+        # so existing traces stay byte-identical.
         fields: dict[str, object] = {"state": list(state), "cost": cost}
         _add_data(fields, data)
+        if rollout is not None:
+            fields["rollout"] = [list(p) for p in rollout]
         self._emit("candidate_evaluated", fields)
 
     def robot_moved(self, state: State, data: EventData | None = None) -> None:
