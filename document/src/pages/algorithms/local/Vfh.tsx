@@ -363,21 +363,26 @@ return heading_command(θ_sel − θ, v)`}/>
             <h2>Demo</h2>
             <T
                 en={<p>
-                    Both presets use the repository's tuned defaults unchanged. In the narrow
-                    passage, only one valley is ever open, so the narrow-valley rule fires on
-                    every tick — the robot heads for the gap's center the moment it comes into
-                    the window. In dense clutter, several valleys open and close as the robot
-                    moves, and the rose visibly reshapes each tick as the selected direction
-                    hops between them. Raise the threshold slider high enough and watch valleys
-                    disappear one at a time until none are left.
+                    Both presets run VFH with the repository's tuned gains; only the maps are
+                    shaped for the demo. In the narrow corridor the walls flank the robot the
+                    whole way, so the forward valley stays pinned and it tracks straight down the
+                    middle, slowing where the central pinch crowds the histogram. In dense
+                    clutter, several valleys open and close as the robot moves, and the rose
+                    visibly reshapes each tick as the selected direction hops between them. Raise
+                    the threshold slider high enough and watch valleys disappear one at a time
+                    until none are left. Open the space up and the heading wobbles as near-tied
+                    valleys flip — a known VFH limitation that VFH+ damps with hysteresis.
                 </p>}
                 ko={<p>
-                    두 프리셋 모두 저장소의 튜닝된 기본값을 그대로 쓴다. 좁은 통로에서는
-                    항상 valley가 하나만 열려 있어 narrow 규칙이 매 tick 발동한다. gap이
-                    window 안에 들어오는 순간 로봇이 그 중심을 향한다. 밀집 프리셋에서는
-                    로봇이 움직이는 동안 valley 여럿이 열리고 닫히고, 선택된 방향이 그
-                    사이를 오가며 매 tick 장미 모양이 눈에 띄게 바뀐다. threshold 슬라이더를
-                    충분히 올리면 valley가 하나씩 사라지는 것도 볼 수 있다.
+                    두 프리셋 모두 저장소의 튜닝된 VFH 게인을 그대로 쓰고, 맵만 데모에 맞게
+                    구성했다. 좁은 통로에서는 양쪽 벽이 로봇을 처음부터 끝까지 감싸 전방
+                    valley가 고정되므로, 로봇이 통로 한가운데를 곧게 따라가다가 중앙 pinch에서
+                    히스토그램이 몰리는 지점에서 느려진다. 밀집 프리셋에서는 로봇이 움직이는
+                    동안 valley 여럿이 열리고 닫히고, 선택된 방향이 그 사이를 오가며 매 tick
+                    장미 모양이 눈에 띄게 바뀐다. threshold 슬라이더를 충분히 올리면 valley가
+                    하나씩 사라지는 것도 볼 수 있다. 공간을 열어 두면 거의 동률인 valley들이
+                    뒤집히며 조향이 흔들리는데, VFH의 알려진 한계이고 VFH+가 hysteresis로
+                    억제한다.
                 </p>}
             />
             <VfhSandbox/>

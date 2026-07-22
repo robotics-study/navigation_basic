@@ -1,5 +1,5 @@
 import {Arrow, Circle, Layer, Line, Shape, Stage, Text} from "react-konva";
-import CanvasFigure from "../../../CanvasFigure";
+import CanvasFigure, {modalScale} from "../../../CanvasFigure";
 import {useCanvasColors} from "../../../../libs/useTheme";
 import {useTr} from "../../../../libs/i18n";
 
@@ -28,7 +28,7 @@ const drawMinorArc = (
 
 const deg = (d: number) => (d * Math.PI) / 180
 
-const Scene = () => {
+const Scene = ({scale = 1}: {scale?: number}) => {
     const colors = useCanvasColors()
 
     const heading = deg(HEADING_DEG)
@@ -66,9 +66,9 @@ const Scene = () => {
     ]
 
     return (
-        <Stage width={PANEL} height={PANEL}
+        <Stage width={PANEL * scale} height={PANEL * scale}
                className="bg-surface border border-border rounded-lg overflow-hidden">
-            <Layer>
+            <Layer scaleX={scale} scaleY={scale}>
                 {/* 참조 경로 (파선) */}
                 <Line points={[...pathBack2, ...pathBack, ...foot, ...pathFwd, ...pathFwd2]}
                       stroke={colors.muted} strokeWidth={2} dash={[7, 5]}
@@ -127,7 +127,7 @@ const StanleyGeometryFigure = () => {
             "두 오차 모두 전륜축에서 잰다. 경로 접선 대비 heading 오차 ψ, foot point로부터의 측방 오프셋 crosstrack 오차 e. 조향각 δ가 둘을 함께 보정하고, ω = v·tanδ/L로 unicycle 명령으로 바뀐다",
         )}
         tight bodyClassName="w-fit" className="w-full"
-        modal={<Scene/>}
+        modal={<Scene scale={modalScale(PANEL, PANEL)}/>}
     >
         <Scene/>
     </CanvasFigure>

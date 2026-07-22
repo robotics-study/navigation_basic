@@ -164,6 +164,8 @@ export interface LocalTracePlayerProps {
     showLookahead?: boolean;
     // Stanley: 로봇→참조 경로 최근접점 crosstrack 선분을 그린다.
     showCrosstrack?: boolean;
+    // 로봇 중심에 항상 그리는 보조 반경(world 단위, 예: RPP 의 근접 감속 반경 d_prox).
+    auxCircleRadius?: number;
     // Elastic Bands/TEB: 최신 tick의 band_updated(bubble/pose 열)를 그린다. band_updated를
     // 방출하지 않는 엔진에서는 latestBand가 없어 자연히 미표시되므로, 페이지가 명시적으로
     // 끌 때만 false로 둔다.
@@ -179,7 +181,7 @@ export interface LocalTracePlayerProps {
 
 const LocalTracePlayer = ({
                               map, events, startPose, goal, referencePath, footprintRadius,
-                              showLookahead, showCrosstrack, showBand = true, panel = 340,
+                              showLookahead, showCrosstrack, showBand = true, auxCircleRadius, panel = 340,
                               autoPlay = true, onPaintCell, onMoveStart, onMoveGoal, onReset, footer,
                           }: LocalTracePlayerProps) => {
     const t = useTr()
@@ -243,6 +245,30 @@ const LocalTracePlayer = ({
     }
     const startPx = toPixel(startPose[0], startPose[1])
     const goalPx = toPixel(goal[0], goal[1])
+    // 드롭 지점이 맵 안이고 footprint 원이 벽과 겹치지 않아야 이동을 허용한다 —
+    // 충돌 지점에 놓으면 시뮬레이션이 0 tick 충돌로 끝나 조작이 고장 나 보인다.
+    const droppedFree = (p: [number, number]): boolean => {
+        const fr = footprintRadius ?? 0
+        if (p[0] < map.originX + fr || p[1] < map.originY + fr
+            || p[0] > map.originX + map.width * map.resolution - fr
+            || p[1] > map.originY + map.height * map.resolution - fr) return false
+        const r0 = Math.max(0, Math.floor((map.height - (p[1] - map.originY + fr) / map.resolution)))
+        const r1 = Math.min(map.height - 1, Math.floor((map.height - (p[1] - map.originY - fr) / map.resolution)))
+        const c0 = Math.max(0, Math.floor((p[0] - map.originX - fr) / map.resolution))
+        const c1 = Math.min(map.width - 1, Math.floor((p[0] - map.originX + fr) / map.resolution))
+        for (let r = r0; r <= r1; r++) {
+            for (let c = c0; c <= c1; c++) {
+                if (!map.occupied[r * map.width + c]) continue
+                // 셀 사각형과 원의 최소 거리 검사
+                const cx0 = map.originX + c * map.resolution
+                const cy0 = map.originY + (map.height - 1 - r) * map.resolution
+                const dx = Math.max(cx0 - p[0], 0, p[0] - (cx0 + map.resolution))
+                const dy = Math.max(cy0 - p[1], 0, p[1] - (cy0 + map.resolution))
+                if (Math.hypot(dx, dy) < fr) return false
+            }
+        }
+        return true
+    }
     const nearPoint = (ax: number, ay: number, px: number, py: number): boolean =>
         Math.hypot(px - ax, py - ay) <= cellPx * 0.75
     const paint = (c: [number, number]) => {
@@ -589,6 +615,13 @@ const LocalTracePlayer = ({
                             </Group>
                         })()}
                     </>}
+                    {/* 보조 반경 (예: RPP d_prox) — 재생 중에만 */}
+                    {!finished && auxCircleRadius !== undefined && (() => {
+                        const [rx, ry] = toPixel(currentPose[0], currentPose[1])
+                        return <Circle x={rx} y={ry} radius={auxCircleRadius * pxPerWorld}
+                                       stroke={colors.muted} strokeWidth={1} dash={[3, 4]}
+                                       opacity={0.5} listening={false}/>
+                    })()}
                     {/* 로봇: footprint + 차량 (없으면 heading 화살표만) */}
                     {footprintRadius ? vehicle(currentPose, footprintRadius) : headingArrow(currentPose)}
                     {/* 시작/목표 마커 */}
@@ -596,15 +629,18 @@ const LocalTracePlayer = ({
                             stroke={colors.bg} strokeWidth={Math.max(1, cellPx * 0.05)}
                             hitStrokeWidth={cellPx * 0.9} draggable={!!onMoveStart}
                             onDragEnd={(e) => {
+                                // 드롭 좌표를 먼저 읽는다 — position() 리셋 후에 읽으면 원위치가 읽힌다.
+                                const dropped = pixelToWorld(e.target.x(), e.target.y())
                                 e.target.position({x: startPx[0], y: startPx[1]})
-                                onMoveStart?.(pixelToWorld(e.target.x(), e.target.y()))
+                                if (droppedFree(dropped)) onMoveStart?.(dropped)
                             }}/>
                     <Circle x={goalPx[0]} y={goalPx[1]} radius={cellPx * 0.2} fill={PATH_COLOR}
                             stroke={colors.bg} strokeWidth={Math.max(1, cellPx * 0.05)}
                             hitStrokeWidth={cellPx * 0.9} draggable={!!onMoveGoal}
                             onDragEnd={(e) => {
+                                const dropped = pixelToWorld(e.target.x(), e.target.y())
                                 e.target.position({x: goalPx[0], y: goalPx[1]})
-                                onMoveGoal?.(pixelToWorld(e.target.x(), e.target.y()))
+                                if (droppedFree(dropped)) onMoveGoal?.(dropped)
                             }}/>
                 </Layer>
             </Stage>

@@ -1,5 +1,5 @@
 import {Layer, Line, Stage, Text} from "react-konva";
-import CanvasFigure from "../../../CanvasFigure";
+import CanvasFigure, {modalScale} from "../../../CanvasFigure";
 import {useCanvasColors} from "../../../../libs/useTheme";
 import {useTr} from "../../../../libs/i18n";
 
@@ -30,16 +30,16 @@ const rampPoints = (threshold: number): number[] => [
     mapX(X_MAX), mapY(MAX_SPEED),
 ];
 
-const Scene = () => {
+const Scene = ({scale = 1}: {scale?: number}) => {
     const t = useTr()
     const colors = useCanvasColors()
     const axisY0 = mapY(0)
     const axisX0 = mapX(0)
 
     return (
-        <Stage width={PANEL_W} height={PANEL_H}
+        <Stage width={PANEL_W * scale} height={PANEL_H * scale}
                className="bg-surface border border-border rounded-lg overflow-hidden">
-            <Layer>
+            <Layer scaleX={scale} scaleY={scale}>
                 {/* 축 */}
                 <Line points={[axisX0, MARGIN.top, axisX0, MARGIN.top + PLOT_H]}
                       stroke={colors.muted} strokeWidth={1.3}/>
@@ -92,7 +92,7 @@ const RegulationCurveFigure = () => {
             "두 규제 모두 같은 선형 램프 모양이다. 회전 반경이나 장애물 거리가 0에 가까워질수록 속도도 0에 가까워지고, 반경이 r_min(곡률)을 넘거나 거리가 d_prox(근접)를 넘으면 v_max에 도달한다",
         )}
         tight bodyClassName="w-fit" className="w-full"
-        modal={<Scene/>}
+        modal={<Scene scale={modalScale(PANEL_W, PANEL_H)}/>}
     >
         <Scene/>
     </CanvasFigure>

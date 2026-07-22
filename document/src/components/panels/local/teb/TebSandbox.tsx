@@ -168,6 +168,16 @@ const TebScene = ({panel = 340}: {panel?: number}) => {
                         <ParamSlider label="v_max" value={vMax}
                                      min={0.3} max={1.3} step={0.05} onCommit={setVMax}/>
                     </div>
+                    <div className="flex flex-col gap-0.5 text-[11px] text-muted text-left max-w-[20rem]">
+                        <span>{t(
+                            "w_time — weight on finishing fast; raise it and the pose chain pulls tighter, cutting corners closer",
+                            "w_time: 빨리 끝내려는 가중치. 올리면 pose 열이 더 바짝 당겨져 코너를 가깝게 자른다",
+                        )}</span>
+                        <span>{t(
+                            "v_max — top speed; raise it to move faster, but the turn-rate and accel limits bind more often",
+                            "v_max: 상한 속도. 올리면 빨라지되 회전율·가속 한계에 더 자주 걸린다",
+                        )}</span>
+                    </div>
                     <div className="text-xs text-muted text-center tabular-nums">
                         {t(
                             "raise w_time to see the pose chain pull tighter into each corner, or watch the sharp corner preset slow down honestly where the turn rate limit binds",

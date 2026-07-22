@@ -1,5 +1,5 @@
 import {Arrow, Circle, Layer, Line, Rect, Stage, Text} from "react-konva";
-import CanvasFigure from "../../../CanvasFigure";
+import CanvasFigure, {modalScale} from "../../../CanvasFigure";
 import {useCanvasColors} from "../../../../libs/useTheme";
 import {useTr} from "../../../../libs/i18n";
 import {PATH_COLOR} from "../../../2d/GridCanvas";
@@ -17,15 +17,15 @@ const WALL_Y = 110;
 const SIDE_Y0 = 118;
 const SIDE_Y1 = 220;
 
-const UTrapFigure = () => {
+const UTrapFigure = ({scale = 1}: {scale?: number}) => {
     const t = useTr()
     const colors = useCanvasColors()
 
     return (
         <div className="flex flex-col items-center gap-2">
-            <Stage width={W} height={H}
+            <Stage width={W * scale} height={H * scale}
                    className="bg-surface border border-border rounded-lg overflow-hidden">
-                <Layer>
+                <Layer scaleX={scale} scaleY={scale}>
                     {/* 대칭축 */}
                     <Line points={[AXIS_X, 20, AXIS_X, H - 20]} stroke={colors.muted}
                           strokeWidth={1} dash={[3, 4]} opacity={0.5}/>
@@ -67,7 +67,7 @@ const UTrapFigure = () => {
                           fontSize={13} fill={colors.text} fontStyle="italic bold"/>
                 </Layer>
             </Stage>
-            <div className="text-xs text-muted text-center" style={{maxWidth: W}}>
+            <div className="text-xs text-muted text-center" style={{maxWidth: W * scale}}>
                 {t(
                     "front wall repulsion cancels the goal's pull while the side walls' lateral push cancels itself by symmetry — the robot stops on the axis, short of the goal",
                     "정면 벽의 반발이 목표로의 인력과 상쇄되고, 좌우 벽의 옆 성분은 대칭이라 스스로 상쇄된다. 로봇은 축 위, 목표에 못 미친 지점에서 멈춘다",
@@ -85,7 +85,7 @@ const UTrapEquilibrium = () => {
             "알고리즘 자신의 대칭축 위 U-trap. 좌우 반발은 거울 대칭으로 상쇄되고, 남은 정면 벽 반발이 목표 인력과 정확히 맞서는 지점에서 합력이 0이 된다",
         )}
         tight bodyClassName="w-fit" className="w-full"
-        modal={<UTrapFigure/>}
+        modal={<UTrapFigure scale={modalScale(W, H)}/>}
     >
         <UTrapFigure/>
     </CanvasFigure>

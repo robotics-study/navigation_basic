@@ -202,23 +202,22 @@ const LocalPlanning = () => {
             <h2>{t("What Is Coming", "구현 예정")}</h2>
             <T
                 en={<p>
-                    <strong>Potential Fields</strong>, <strong>VFH</strong>, <strong>DWA</strong>,{" "}
-                    <strong>Pure Pursuit</strong>, <strong>Stanley</strong>,
-                    and <strong>Regulated Pure Pursuit</strong> are now written — reactive force
-                    fields, histogram steering, command-space sampling, and the full geometric
-                    tracking branch from the plain lookahead arc to its regulated, obstacle-aware
-                    descendant. What remains is the optimization lineage: EB and TEB deform an
-                    elastic band in time, and MPC and MPPI close the section with full trajectory
-                    optimization.
+                    The reactive branch (<strong>Potential Fields</strong>, <strong>VFH</strong>,{" "}
+                    <strong>DWA</strong>), the geometric tracking branch (<strong>Pure
+                    Pursuit</strong>, <strong>Stanley</strong>, <strong>Regulated Pure
+                    Pursuit</strong>), and the band-deformation pair (<strong>Elastic
+                    Bands</strong>, <strong>Timed Elastic Band</strong>) are all written. What
+                    remains closes the optimization lineage: <strong>MPC</strong> and{" "}
+                    <strong>MPPI</strong> with full receding-horizon trajectory optimization.
                 </p>}
                 ko={<p>
-                    이제 <strong>Potential Fields</strong>, <strong>VFH</strong>,{" "}
-                    <strong>DWA</strong>, <strong>Pure Pursuit</strong>, <strong>Stanley</strong>,{" "}
-                    <strong>Regulated Pure Pursuit</strong> 여섯 페이지가 채워졌다. 반발력,
-                    히스토그램 조향, 명령 공간 sampling, 그리고 lookahead 원호에서 규제형
-                    확장까지 이어지는 기하학적 추종 가지가 모두 갖춰진 셈이다. 남은 계보는
-                    최적화 계열이다. 시간 축 위 elastic band 변형은 EB와 TEB가 맡고, 궤적
-                    최적화는 MPC와 MPPI로 완성된다.
+                    반응형 가지(<strong>Potential Fields</strong>, <strong>VFH</strong>,{" "}
+                    <strong>DWA</strong>), 기하학적 추종 가지(<strong>Pure Pursuit</strong>,{" "}
+                    <strong>Stanley</strong>, <strong>Regulated Pure Pursuit</strong>), 그리고
+                    밴드 변형 짝(<strong>Elastic Bands</strong>, <strong>Timed Elastic
+                    Band</strong>)까지 모두 채워졌다. 남은 것은 최적화 계보의 마무리다.{" "}
+                    <strong>MPC</strong>와 <strong>MPPI</strong>가 receding-horizon 궤적
+                    최적화로 이 섹션을 완성한다.
                 </p>}
             />
         </>

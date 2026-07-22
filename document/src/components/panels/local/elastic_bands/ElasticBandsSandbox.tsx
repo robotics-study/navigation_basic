@@ -157,6 +157,16 @@ const ElasticBandsScene = ({panel = 340}: {panel?: number}) => {
                         <ParamSlider label="rho_influence" value={rhoInfluence}
                                      min={0.3} max={2.0} step={0.05} onCommit={setRhoInfluence}/>
                     </div>
+                    <div className="flex flex-col gap-0.5 text-[11px] text-muted text-left max-w-[20rem]">
+                        <span>{t(
+                            "k_repulsion — how hard bubbles are shoved off obstacles; raise it and the band bows farther from walls",
+                            "k_repulsion: bubble를 장애물에서 밀어내는 힘. 올리면 밴드가 벽에서 더 멀리 부푼다",
+                        )}</span>
+                        <span>{t(
+                            "rho_influence — reach of that push; widen it and farther walls already bend the band",
+                            "rho_influence: 반발이 미치는 거리. 넓히면 더 먼 벽에도 밴드가 미리 휜다",
+                        )}</span>
+                    </div>
                     <div className="text-xs text-muted text-center tabular-nums">
                         {t(
                             "draw a wall across the band mid-flight and watch it deform live, or erase it to see the band recover",

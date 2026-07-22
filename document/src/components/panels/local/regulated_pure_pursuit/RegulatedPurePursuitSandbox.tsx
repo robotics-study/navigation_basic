@@ -12,11 +12,8 @@ import cn from "../../../../libs/cn";
 // "hairpin" 프리셋: 벽 없는 빈 맵 위에 90도 급코너 3개를 긴 직선 구간(4~6m)으로
 // 띄엄띄엄 배치한 경로 -- 장애물의 간섭 없이 곡률 규제(regulated_min_radius)만
 // 순수하게 보여주기 위한 기하 데모다. 직선 구간이 넉넉해 로봇이 코너 사이마다
-// 최고 속도로 회복했다가 다음 코너에서 다시 감속하는 모습이 뚜렷이 보인다(코너를
-// 촘촘히 붙이면 규제가 거의 끊임없이 걸려 "코너에서만 느려진다"는 대비가 흐려진다
-// -- 실측: max_steps=400 예산 안에서 완주하는지도 이 간격으로 확인했다). 경로가
-// 경계에서 항상 1m 이상 떨어져 있어(footprint를 빼도 proximity_distance 기본값
-// 0.6m보다 크다) 근접 규제는 우연히도 발동하지 않는다.
+// 최고 속도로 회복했다가 다음 코너에서 다시 감속하는 모습이 뚜렷이 보인다. 벽이 없어
+// 근접 규제는 발동하지 않는다.
 const HAIRPIN_PATH: Point[] = [
     [1.2, 1.2], [1.2, 7.2], [5.2, 7.2], [5.2, 1.2], [7.8, 1.2],
 ]
@@ -24,40 +21,40 @@ const HAIRPIN_START: Pose = [1.2, 1.2, 0]
 const HAIRPIN_GOAL: [number, number] = [7.8, 1.2]
 const hairpinMap = (): GridMap => emptyGrid("hairpin", 9, 9)
 
-// "narrow gap" 프리셋: maps/grid/clutter01.pgm과 maps/scenarios/clutter01_s2.yaml의
-// reference_path를 그대로 재현한다(VFH/Potential Fields sandbox와 같은 관례 --
-// 실제 저장소 시나리오라 근접 규제가 실제로 발동하는 구간임이 보장된다). 상단
-// 가로 구간이 우상단 장애물(world x[7.5,8.5] y[7.5,8.5])의 위쪽 가장자리를
-// 스치며 지나가 근접 규제를, 좌측->상단 코너가 곡률 규제를 함께 발동시킨다.
+// "narrow gap" 프리셋: 열린 맵 한가운데에 위/아래 장애물 블록으로 좁은 통로(폭 1.6m)를
+// 만든 gate 맵. 직선 경로가 그 틈을 그대로 통과한다 -- 곡률이 거의 0이라 곡률 규제는
+// 걸리지 않고 근접 규제(proximity_distance)만 순수하게 발동한다. footprint 0.3 기준
+// 통로 중앙에서 clearance가 약 0.2m라 근접 규제가 확실히 발동하며, 통로 밖에서는
+// 최고 속도로 회복한다. 저장소 clutter01 맵은 시작점이 벽에서 0.25m뿐이라 footprint
+// 0.3에서 첫 tick부터 충돌하므로, footprint 0.3을 지키면서 근접 규제만 깔끔히 보이도록
+// 이 gate 맵을 쓴다.
 type Rows = string[];
-const CLUTTER_ROWS: Rows = [
+const GATE_ROWS: Rows = [
     "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0",
     "0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 0",
+    "0 255 255 255 255 255 255 255 0 0 0 0 255 255 255 255 255 255 255 0",
+    "0 255 255 255 255 255 255 255 0 0 0 0 255 255 255 255 255 255 255 0",
+    "0 255 255 255 255 255 255 255 0 0 0 0 255 255 255 255 255 255 255 0",
+    "0 255 255 255 255 255 255 255 0 0 0 0 255 255 255 255 255 255 255 0",
+    "0 255 255 255 255 255 255 255 0 0 0 0 255 255 255 255 255 255 255 0",
+    "0 255 255 255 255 255 255 255 0 0 0 0 255 255 255 255 255 255 255 0",
+    "0 255 255 255 255 255 255 255 0 0 0 0 255 255 255 255 255 255 255 0",
     "0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 0",
-    "0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 0 0 255 255 0",
-    "0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 0 0 255 255 0",
-    "0 255 255 255 255 0 0 255 255 255 255 255 255 255 255 255 255 255 255 0",
-    "0 255 255 255 255 0 0 255 255 255 255 255 255 0 0 255 255 255 255 0",
-    "0 255 255 255 255 255 255 255 255 255 255 255 255 0 0 255 255 255 255 0",
     "0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 0",
-    "0 255 255 255 255 255 255 255 255 255 0 0 255 255 255 255 255 255 255 0",
-    "0 255 255 255 255 255 255 255 255 255 0 0 255 255 255 255 255 255 255 0",
-    "0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 0",
-    "0 255 255 255 255 255 255 0 0 255 255 255 255 255 255 255 255 255 255 0",
-    "0 255 255 255 255 255 255 0 0 255 255 255 255 255 255 255 255 255 255 0",
-    "0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 0",
-    "0 255 255 255 0 0 255 255 255 255 0 0 255 255 255 255 255 255 255 0",
-    "0 255 255 255 0 0 255 255 255 255 0 0 255 255 255 255 255 255 255 0",
-    "0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 0",
+    "0 255 255 255 255 255 255 255 0 0 0 0 255 255 255 255 255 255 255 0",
+    "0 255 255 255 255 255 255 255 0 0 0 0 255 255 255 255 255 255 255 0",
+    "0 255 255 255 255 255 255 255 0 0 0 0 255 255 255 255 255 255 255 0",
+    "0 255 255 255 255 255 255 255 0 0 0 0 255 255 255 255 255 255 255 0",
+    "0 255 255 255 255 255 255 255 0 0 0 0 255 255 255 255 255 255 255 0",
+    "0 255 255 255 255 255 255 255 0 0 0 0 255 255 255 255 255 255 255 0",
+    "0 255 255 255 255 255 255 255 0 0 0 0 255 255 255 255 255 255 255 0",
     "0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 0",
     "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0",
 ]
-const NARROW_GAP_PATH: Point[] = [
-    [0.75, 0.75], [1.0, 4.0], [1.0, 7.5], [1.6, 8.6], [4.0, 8.75], [7.3, 8.75], [9.25, 9.25],
-]
-const NARROW_GAP_START: Pose = [0.75, 0.75, 0]
-const NARROW_GAP_GOAL: [number, number] = [9.25, 9.25]
-const narrowGapMap = (): GridMap => gridFromPgmRows("clutter01", CLUTTER_ROWS, 0.5)
+const NARROW_GAP_PATH: Point[] = [[1.0, 5.0], [9.0, 5.0]]
+const NARROW_GAP_START: Pose = [1.0, 5.0, 0]
+const NARROW_GAP_GOAL: [number, number] = [9.0, 5.0]
+const narrowGapMap = (): GridMap => gridFromPgmRows("gate", GATE_ROWS, 0.5)
 
 type PresetId = "hairpin" | "narrow_gap" | "plain_pursuit";
 
@@ -92,14 +89,12 @@ const PRESETS: Record<PresetId, Preset> = {
 // configs/local_planning/regulated_pure_pursuit.yaml의 공유 폐루프 시뮬레이터 블록 +
 // 슬라이더로 노출하지 않는 알고리즘 파라미터는 이 값으로 고정한다. max_steps는 yaml
 // 기본(1000)보다 낮춰 sandbox 재생 이벤트 수를 억제한다(다른 local sandbox와 같은 관례).
-// footprintRadius는 yaml 기본값(0.2)을 그대로 쓴다 -- 0.35로 키우면 narrow_gap 프리셋의
-// 시작점(0.75, 0.75)이 경계 벽면(x=0.5)까지 0.25m 여유뿐이라 discCollides가 첫 tick부터
-// 즉시 충돌로 판정한다(hairpin/plain_pursuit는 벽 없는 맵이라 이 값 변경의 영향이 없음을
-// 실행 검증으로 확인했다).
+// footprintRadius는 0.3으로 둔다 -- narrow_gap의 gate 통로(폭 1.6m)와 시작점(벽에서 0.5m)이
+// 이 반경을 안전하게 수용하고, hairpin/plain_pursuit는 벽 없는 맵이라 영향이 없다.
 const FIXED = {
     minLookahead: 0.25, maxLookahead: 1.0, minRegulatedSpeed: 0.1, collisionCheckStep: 0.05,
     maxSpeed: 0.8, maxOmega: 1.5, slowRadius: 0.5,
-    controlDt: 0.1, maxSteps: 400, goalTolerance: 0.3, footprintRadius: 0.2,
+    controlDt: 0.1, maxSteps: 400, goalTolerance: 0.3, footprintRadius: 0.3,
     stallWindow: 20, stallDistance: 0.05,
 }
 
@@ -142,6 +137,7 @@ const RegulatedPurePursuitScene = ({panel = 340}: {panel?: number}) => {
 
     return (
         <LocalTracePlayer footprintRadius={FIXED.footprintRadius} showLookahead
+            auxCircleRadius={proximityDistance}
             map={map} events={events} startPose={start} goal={preset.goal}
             referencePath={preset.path} panel={panel}
             onPaintCell={paintCell}
@@ -157,6 +153,14 @@ const RegulatedPurePursuitScene = ({panel = 340}: {panel?: number}) => {
                         <ParamSlider label="d_prox" value={proximityDistance} min={0.05} max={1.2} step={0.05}
                                      onCommit={setProximityDistance}/>
                     </div>
+                    <ul className="text-xs text-muted text-left max-w-[28rem] list-none space-y-0.5">
+                        <li>{t("t_l — lookahead time: the aim point sits t_l seconds of travel ahead, so higher t_l looks farther when moving fast.",
+                            "t_l은 lookahead 시간이다. 겨냥점을 t_l초 앞에 두어, t_l이 클수록 빠를 때 더 멀리 본다.")}</li>
+                        <li>{t("r_min — the turn radius below which the robot brakes for curvature: raise it to slow into gentler corners too (the dashed lookahead circle marks the aim point).",
+                            "r_min은 이 회전 반경보다 급하면 곡률 때문에 감속하는 문턱이다. 올리면 더 완만한 코너에서도 감속한다(파선 lookahead 원이 겨냥점을 표시한다).")}</li>
+                        <li>{t("d_prox — obstacle clearance below which the robot brakes for proximity: raise it to start braking farther from walls (the dotted circle around the robot marks this radius).",
+                            "d_prox는 이 장애물 clearance보다 가까우면 근접 감속하는 문턱이다. 올리면 벽에서 더 멀리서부터 감속한다(로봇 둘레의 점선 원이 이 반경이다).")}</li>
+                    </ul>
                     <div className="flex items-center justify-center gap-1.5 text-xs text-muted flex-wrap tabular-nums">
                         {(["hairpin", "narrow_gap", "plain_pursuit"] as const).map((id) => (
                             <button key={id} type="button" onClick={() => switchPreset(id)}
@@ -171,10 +175,8 @@ const RegulatedPurePursuitScene = ({panel = 340}: {panel?: number}) => {
                         ))}
                     </div>
                     <div className="text-xs text-muted text-center tabular-nums">
-                        {t("watch the robot slow into sharp turns and near obstacles, then speed back up",
-                            "급코너와 장애물 근처에서 느려졌다가 다시 속도를 회복하는 모습을 보라")}
-                        {" · "}{t("plain pursuit turns the regulations off for comparison",
-                            "plain pursuit는 비교를 위해 규제를 껐다")}
+                        {t("the trail thins where the robot slows: hairpin brakes into corners, narrow gap brakes at the gap, plain pursuit turns both off for comparison",
+                            "속도가 줄면 궤적이 얇아진다. hairpin은 코너에서, narrow gap은 통로에서 감속하고, plain pursuit는 비교를 위해 두 규제를 껐다")}
                     </div>
                 </div>
             }
@@ -186,8 +188,8 @@ const RegulatedPurePursuitSandbox = () => {
     const t = useTr()
     return <CanvasFigure
         label={t(
-            "Live Regulated Pure Pursuit: raise r_min or d_prox to see the robot brake earlier into corners and near obstacles — the plain pursuit preset turns both regulations off for comparison",
-            "라이브 Regulated Pure Pursuit. r_min이나 d_prox를 올리면 코너와 장애물 근처에서 더 일찍 감속하는 것을 볼 수 있다. plain pursuit 프리셋은 비교를 위해 두 규제를 모두 껐다",
+            "Live Regulated Pure Pursuit: raise r_min or d_prox to see the robot brake earlier into corners and near obstacles — the speed-proportional trail thins where it slows, and the plain pursuit preset turns both regulations off for comparison",
+            "라이브 Regulated Pure Pursuit. r_min이나 d_prox를 올리면 코너와 장애물 근처에서 더 일찍 감속하는 것을 볼 수 있다. 속도 비례 궤적은 감속 구간에서 얇아지고, plain pursuit 프리셋은 비교를 위해 두 규제를 모두 껐다",
         )}
         tight bodyClassName="w-fit" className="w-full"
         modal={<RegulatedPurePursuitScene panel={Math.min(modalCanvasSize(1).width, 640)}/>}

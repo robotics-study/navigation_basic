@@ -1,7 +1,7 @@
 import {useMemo, useState} from "react";
 import {Circle, Group, Layer, Line, Rect, Shape, Stage, Text} from "react-konva";
 import Konva from "konva";
-import CanvasFigure from "../../CanvasFigure";
+import CanvasFigure, {modalScale} from "../../CanvasFigure";
 import {useCanvasColors} from "../../../libs/useTheme";
 import {PATH_COLOR} from "../../2d/GridCanvas";
 import {useTr} from "../../../libs/i18n";
@@ -81,7 +81,7 @@ const RY = SH - 46;                // 로봇 화면 y (아래쪽)
 const sx = (mx: number) => RX + mx * SCALE;
 const sy = (my: number) => RY - my * SCALE;
 
-const Scene = () => {
+const Scene = ({scale = 1}: {scale?: number}) => {
     const colors = useCanvasColors()
     const t = useTr()
     const [vc, setVc] = useState(0.55)
@@ -156,9 +156,9 @@ const Scene = () => {
         <div className="flex flex-col items-center gap-2">
             <div className="flex gap-2 flex-wrap justify-center">
                 {/* 왼쪽: 실제 장면 */}
-                <Stage width={SW} height={SH}
+                <Stage width={SW * scale} height={SH * scale}
                        className="bg-surface border border-border rounded-lg overflow-hidden">
-                    <Layer>
+                    <Layer scaleX={scale} scaleY={scale}>
                         {/* goal */}
                         <Circle x={sx(GOAL[0])} y={sy(GOAL[1])} radius={6} fill={PATH_COLOR}
                                 stroke={colors.bg} strokeWidth={1.5}/>
@@ -172,9 +172,15 @@ const Scene = () => {
                             <Line key={`arc${i}`}
                                   points={a.pts.flatMap(([mx, my]) => [sx(mx), sy(my)])}
                                   stroke={a.ok ? colors.muted : PATH_COLOR}
-                                  strokeWidth={1.3} opacity={a.ok ? 0.5 : 0.55}
+                                  strokeWidth={a.ok ? 1.3 : 1.6} opacity={a.ok ? 0.5 : 0.7}
                                   dash={a.ok ? undefined : [4, 3]}/>
                         ))}
+                        {/* 위험 원호가 장애물에 닿는 지점 — "제때 못 멈춰 들이받는" 명령임을 명시 */}
+                        {sampleArcs.filter((a) => !a.ok).map((a, i) => {
+                            const [mx, my] = a.pts[a.pts.length - 1]
+                            return <Circle key={`hit${i}`} x={sx(mx)} y={sy(my)} radius={3}
+                                           fill={PATH_COLOR} stroke={colors.bg} strokeWidth={1}/>
+                        })}
                         {/* 선택 명령의 원호 */}
                         {best && (
                             <Line points={arcPoints(best.v > 0 ? best.om / best.v : 0, best.v * 1.4)
@@ -193,9 +199,9 @@ const Scene = () => {
                     </Layer>
                 </Stage>
                 {/* 오른쪽: (v, ω) 평면 */}
-                <Stage width={VW} height={VH}
+                <Stage width={VW * scale} height={VH * scale}
                        className="bg-surface border border-border rounded-lg overflow-hidden">
-                    <Layer>
+                    <Layer scaleX={scale} scaleY={scale}>
                         {/* admissible 격자: 위험 셀만 칠한다 */}
                         <Shape listening={false} sceneFunc={(ctx: Konva.Context, shape: Konva.Shape) => {
                             const cw = PLOT / NC
@@ -237,7 +243,7 @@ const Scene = () => {
                     </Layer>
                 </Stage>
             </div>
-            <div className="flex flex-col gap-1 text-xs text-muted w-full" style={{maxWidth: SW + VW + 8}}>
+            <div className="flex flex-col gap-1 text-xs text-muted w-full" style={{maxWidth: (SW + VW + 8) * scale}}>
                 <label className="flex items-center gap-2">
                     <span className="w-14 shrink-0">v = {vc.toFixed(2)}</span>
                     <input type="range" min={0.02} max={V_MAX} step={0.01} value={vc}
@@ -276,7 +282,7 @@ const LocalVelocityWindow = () => {
             "왼쪽은 로봇과 길목의 장애물, 그리고 각 명령이 그리는 원호다. 오른쪽은 같은 장면의 속도 공간이다. 명령 (v, ω)는 자신의 원호를 따라 장애물 앞에서 멈출 수 있는 한계 √(2·dist·brake)를 넘으면 위험(빨강)으로 배제된다. DWA는 한 주기의 가감속으로 도달 가능한 상자(dynamic window)와 이 admissible 영역의 교집합만 채점해, goal 방향·여유 거리·속도를 저울질한 최선의 명령을 고른다.",
         )}
         tight bodyClassName="w-fit" className="w-full"
-        modal={<Scene/>}
+        modal={<Scene scale={modalScale(SW + VW + 8, VH)}/>}
     >
         <Scene/>
     </CanvasFigure>

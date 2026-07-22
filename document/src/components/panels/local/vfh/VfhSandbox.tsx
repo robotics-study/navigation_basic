@@ -4,78 +4,64 @@ import LocalTracePlayer from "../LocalTracePlayer";
 import ParamSlider from "../../../player/ParamSlider";
 import {runVfh} from "../../../../libs/algorithms/vfh";
 import {Pose} from "../../../../libs/algorithms/local_sim";
-import {GridMap, gridFromPgmRows} from "../../../../libs/grid";
+import {GridMap} from "../../../../libs/grid";
 import {useTr} from "../../../../libs/i18n";
 import cn from "../../../../libs/cn";
 
-// 산개 블록 프리셋은 저장소 실제 demo 맵(maps/grid/clutter01.pgm)을 그대로 재사용한다 —
-// configs/local_planning/vfh.yaml 기본값이 정확히 이 스케일로 튜닝되어 있어(clutter01_s1,
-// steps=315), 손으로 새 지형을 지어 균형을 잘못 잡을 위험이 없다(Potential Fields
-// sandbox와 같은 관례). 좁은 통로 프리셋은 대응하는 저장소 맵이 없어(VFH 전용
-// 시나리오) 같은 20x20/0.5m 스케일로 새로 구성했다 — valley가 하나만 열려
-// narrow-valley 조향 규칙이 항상 발동하는 것을 보여준다.
-type Rows = string[];   // 각 행: 공백 구분 pixel 값(0=occupied, 255=free), pgm 그대로.
+// 두 프리셋 모두 20x20 @ 0.5m 해상도(10m x 10m 방). footprint 0.3(지름 0.6) 규칙에
+// 맞춰 통로 폭을 1.0m 이상으로 잡는다.
+const RES = 0.5
+const buildGrid = (name: string, isWall: (x: number, y: number) => boolean): GridMap => {
+    const width = 20, height = 20
+    const occupied = new Array(width * height).fill(false)
+    for (let row = 0; row < height; row++) {
+        for (let col = 0; col < width; col++) {
+            if (row === 0 || row === height - 1 || col === 0 || col === width - 1) {
+                occupied[row * width + col] = true
+                continue
+            }
+            const x = (col + 0.5) * RES
+            const y = (height - 1 - row + 0.5) * RES
+            occupied[row * width + col] = isWall(x, y)
+        }
+    }
+    return {name, width, height, occupied, resolution: RES, originX: 0, originY: 0}
+}
 
-
-// 전체 높이를 가로지르는 벽 하나에 gap 두 칸(로봇 지름 대비 넉넉한 폭)뿐이라, 매 tick
-// valley가 하나만 열린다.
-const NARROW_ROWS: Rows = [
-    "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0",
-    "0 255 255 255 255 255 255 255 255 255 0 255 255 255 255 255 255 255 255 0",
-    "0 255 255 255 255 255 255 255 255 255 0 255 255 255 255 255 255 255 255 0",
-    "0 255 255 255 255 255 255 255 255 255 0 255 255 255 255 255 255 255 255 0",
-    "0 255 255 255 255 255 255 255 255 255 0 255 255 255 255 255 255 255 255 0",
-    "0 255 255 255 255 255 255 255 255 255 0 255 255 255 255 255 255 255 255 0",
-    "0 255 255 255 255 255 255 255 255 255 0 255 255 255 255 255 255 255 255 0",
-    "0 255 255 255 255 255 255 255 255 255 0 255 255 255 255 255 255 255 255 0",
-    "0 255 255 255 255 255 255 255 255 255 0 255 255 255 255 255 255 255 255 0",
-    "0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 0",
-    "0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 0",
-    "0 255 255 255 255 255 255 255 255 255 0 255 255 255 255 255 255 255 255 0",
-    "0 255 255 255 255 255 255 255 255 255 0 255 255 255 255 255 255 255 255 0",
-    "0 255 255 255 255 255 255 255 255 255 0 255 255 255 255 255 255 255 255 0",
-    "0 255 255 255 255 255 255 255 255 255 0 255 255 255 255 255 255 255 255 0",
-    "0 255 255 255 255 255 255 255 255 255 0 255 255 255 255 255 255 255 255 0",
-    "0 255 255 255 255 255 255 255 255 255 0 255 255 255 255 255 255 255 255 0",
-    "0 255 255 255 255 255 255 255 255 255 0 255 255 255 255 255 255 255 255 0",
-    "0 255 255 255 255 255 255 255 255 255 0 255 255 255 255 255 255 255 255 0",
-    "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0",
-]
+// "좁은 통로": 폭 2.0m 통로에 중앙 1.0m pinch. 양쪽 벽이 항상 window 안에 있어
+// 히스토그램이 양쪽으로 채워지므로, 열린 방에서 나타나던 조향 진동이 없다. 그 진동은
+// 장애물이 window 밖으로 사라진 near-open 구간에서 전방 valley가 goal 방향을 인접 sector
+// 사이에서 뒤집으며 생기는 VFH의 sector 이산화 한계이고(VFH+가 hysteresis로 억제), 벽이
+// 방향을 가둔 통로에서는 나타나지 않는다. pinch에서 valley 밀도가 올라 감속을 보여준다.
+const narrowMap = (): GridMap => buildGrid("vfh_narrow", (x, y) => {
+    if (!(y >= 4.0 && y < 6.0)) return true
+    return Math.abs(x - 5.0) < 0.25 && !(y >= 4.5 && y < 5.5)
+})
 const NARROW_START: Pose = [1.25, 5.0, 0]
 const NARROW_GOAL: [number, number] = [8.75, 5.0]
 
-// maps/grid/clutter01.pgm 그대로(2x2 블록 산개, 사방 border) — clutter01_s1과 동일한
-// 대각선 start/goal.
-const CLUTTER_ROWS: Rows = [
-    "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0",
-    "0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 0",
-    "0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 0 0 255 255 0",
-    "0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 0 0 255 255 0",
-    "0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 0",
-    "0 255 255 255 255 0 0 255 255 255 255 255 255 255 255 255 255 255 255 0",
-    "0 255 255 255 255 0 0 255 255 255 255 255 255 0 0 255 255 255 255 0",
-    "0 255 255 255 255 255 255 255 255 255 255 255 255 0 0 255 255 255 255 0",
-    "0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 0",
-    "0 255 255 255 255 255 255 255 255 255 0 0 255 255 255 255 255 255 255 0",
-    "0 255 255 255 255 255 255 255 255 255 0 0 255 255 255 255 255 255 255 0",
-    "0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 0",
-    "0 255 255 255 255 255 255 0 0 255 255 255 255 255 255 255 255 255 255 0",
-    "0 255 255 255 255 255 255 0 0 255 255 255 255 255 255 255 255 255 255 0",
-    "0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 0",
-    "0 255 255 255 0 0 255 255 255 255 0 0 255 255 255 255 255 255 255 0",
-    "0 255 255 255 0 0 255 255 255 255 0 0 255 255 255 255 255 255 255 0",
-    "0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 0",
-    "0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 0",
-    "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0",
+// "밀집": 균일 간격 2x2 블록(1m) 밭. footprint 0.3에 통로 폭 1.0m를 보장하도록 3행
+// 엇갈림 배치. 저장소 clutter01.pgm은 yaml 기본 footprint 0.2용이라 0.3에서 통로가 좁아
+// 첫 tick 충돌이 나므로, 0.3 규칙에 맞춰 새로 구성했다.
+const CLUTTER_BLOCKS: [number, number][] = [
+    [3, 3], [9, 3], [15, 3], [6, 8], [12, 8], [3, 13], [9, 13], [15, 13],
 ]
+const clutterMap = (): GridMap => {
+    const width = 20, height = 20
+    const occupied = new Array(width * height).fill(false)
+    for (let r = 0; r < height; r++)
+        for (let c = 0; c < width; c++)
+            if (r === 0 || r === height - 1 || c === 0 || c === width - 1) occupied[r * width + c] = true
+    for (const [c0, r0] of CLUTTER_BLOCKS)
+        for (let r = r0; r < r0 + 2; r++) for (let c = c0; c < c0 + 2; c++) occupied[r * width + c] = true
+    return {name: "clutter", width, height, occupied, resolution: 0.5, originX: 0, originY: 0}
+}
 const CLUTTER_START: Pose = [1.25, 1.25, 0]
-const CLUTTER_GOAL: [number, number] = [9.0, 7.75]
+const CLUTTER_GOAL: [number, number] = [8.75, 8.75]
 
 type Preset = "narrow" | "clutter";
 
-const presetMap = (preset: Preset): GridMap => preset === "narrow"
-    ? gridFromPgmRows("vfh_narrow", NARROW_ROWS, 0.5)
-    : gridFromPgmRows("clutter01", CLUTTER_ROWS, 0.5)
+const presetMap = (preset: Preset): GridMap => preset === "narrow" ? narrowMap() : clutterMap()
 const presetStart = (preset: Preset): Pose => preset === "narrow" ? NARROW_START : CLUTTER_START
 const presetGoal = (preset: Preset): [number, number] => preset === "narrow" ? NARROW_GOAL : CLUTTER_GOAL
 
@@ -160,6 +146,20 @@ const VfhScene = ({panel = 340}: {panel?: number}) => {
                                      min={20} max={100} step={4} onCommit={setNumSectors}
                                      format={(v) => String(Math.round(v))}/>
                     </div>
+                    <div className="flex flex-col gap-0.5 text-[11px] text-muted text-left max-w-[20rem]">
+                        <span>{t(
+                            "threshold — density that counts a direction as blocked; raise it and valleys close one by one",
+                            "threshold: 한 방향을 막힘으로 보는 밀도 기준. 올리면 valley가 하나씩 닫힌다",
+                        )}</span>
+                        <span>{t(
+                            "window — obstacle radius folded into the histogram; wider looks further ahead but can read a real gap as blocked",
+                            "window: 히스토그램에 담는 장애물 반경. 넓히면 더 멀리 보지만 실제 틈을 막힘으로 볼 수 있다",
+                        )}</span>
+                        <span>{t(
+                            "sectors — how finely direction is discretized; more is smoother, fewer coarsens steering and worsens the wobble",
+                            "sector 수: 방향 이산화 해상도. 많을수록 조향이 매끄럽고, 적으면 거칠어져 흔들림이 커진다",
+                        )}</span>
+                    </div>
                     <div className="text-xs text-muted text-center">
                         {t("draw walls, drag the endpoints, or raise threshold until a valley closes",
                             "벽을 그리거나 시작/목표를 끌어 보라. threshold를 올리면 valley가 하나씩 닫힌다")}
@@ -174,8 +174,8 @@ const VfhSandbox = () => {
     const t = useTr()
     return <CanvasFigure
         label={t(
-            "Live VFH: the rose around the robot is the smoothed polar histogram, thickest where obstacles crowd a direction — the robot steers for the nearest open valley toward the goal and slows as that valley's density rises",
-            "라이브 VFH. 로봇 주변의 장미 모양이 스무딩된 폴라 히스토그램이고, 장애물이 몰린 방향일수록 두껍다. goal에 가장 가까운 열린 valley로 조향하고, 그 valley의 밀도가 오를수록 느려진다",
+            "Live VFH: the rose around the robot is the smoothed polar histogram, thickest where obstacles crowd a direction — the robot steers for the nearest open valley toward the goal and slows as that valley's density rises. In the narrow corridor the walls pin the valley so it tracks straight",
+            "라이브 VFH. 로봇 주변의 장미 모양이 스무딩된 폴라 히스토그램이고, 장애물이 몰린 방향일수록 두껍다. goal에 가장 가까운 열린 valley로 조향하고, 그 valley의 밀도가 오를수록 느려진다. 좁은 통로에서는 양쪽 벽이 valley를 가둬 곧게 따라간다",
         )}
         tight bodyClassName="w-fit" className="w-full"
         modal={<VfhScene panel={Math.min(modalCanvasSize(1).width, 640)}/>}
