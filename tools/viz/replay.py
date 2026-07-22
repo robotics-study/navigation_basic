@@ -49,6 +49,40 @@ _EDGE_RAMP = ("#7dd3fc", "#075985")  # sky
 # Dynamic replanning (D* Lite): robot trail teal (clear of every ramp + the path
 # gradient), sensed obstacles fog in as dark squares over the all-free belief. CVD-safe.
 _ROBOT_COLOR = "#0d9488"
+# Local planning problem definition (Pure Pursuit reference path / every algorithm's
+# goal): slate gray + the path ramp's own goal red, so a failed run (no path_found)
+# still shows what the robot was chasing.
+_REFERENCE_PATH_COLOR = "#94a3b8"
+_GOAL_COLOR = _PATH_RAMP[-1]
+# Potential Fields (Khatib 1986) force quiver: blue pull toward the goal, red push
+# away from obstacles — matches the attractive/repulsive convention used on the docs
+# site. Vector length is clamped (see _clamped_vec) so a large gain never draws an
+# arrow off the map.
+_FORCE_COLOR_ATT = "#2563eb"
+_FORCE_COLOR_REP = "#dc2626"
+_FORCE_MAX_RADIUS_CELLS = 3.0
+# VFH (Borenstein & Koren 1991) polar histogram wedges: open sectors light, sectors
+# over threshold (blocked) dark. Bin magnitude has no fixed physical unit, so the
+# radius is normalized to the tick's own max bin rather than an absolute scale.
+_HIST_COLOR_OPEN = "#94a3b8"
+_HIST_COLOR_BLOCKED = "#334155"
+_HIST_MAX_RADIUS_CELLS = 6.0
+# Candidate markers (Pure Pursuit lookahead point / VFH valley probes): amber, clear
+# of every other mark color in this file.
+_CANDIDATE_COLOR = "#f59e0b"
+# Kinodynamic (Hybrid A*) path headings + local planning current-pose heading: a dark
+# slate distinct from the path gradient + every ramp.
+_HEADING_COLOR = "#1e293b"
+
+
+def _clamped_vec(v: Point, max_len: float) -> Point:
+    mag = math.hypot(v[0], v[1])
+    if mag <= 1e-9 or mag <= max_len:
+        return v
+    scale = max_len / mag
+    return (v[0] * scale, v[1] * scale)
+
+
 # Snap normalized time to 16 shades per ramp: the gradient still reads smooth, but
 # the total distinct mark colors stay well under Pillow's 256-color GIF palette, so
 # the GIF re-compresses instead of ballooning. Applied in every mode for color
@@ -94,8 +128,30 @@ class Scene:
     # senses. Empty for every static planner, which keeps their frames unchanged.
     robot: list[Point] = field(default_factory=list)
     robot_orders: list[int] = field(default_factory=list)
+    # Per-robot-move heading (radians), parallel to robot/robot_orders. D* Lite's
+    # 2-element cell state carries no heading, so those ticks store nan (skip-drawn).
+    robot_headings: list[float] = field(default_factory=list)
     revealed: list[Point] = field(default_factory=list)
     revealed_orders: list[int] = field(default_factory=list)
+    # Local planning (Potential Fields): attractive/repulsive force vectors at the
+    # pose in force order, one force_computed event per control tick.
+    forces: list[tuple[Point, Point, Point]] = field(default_factory=list)  # (pos, F_att, F_rep)
+    force_orders: list[int] = field(default_factory=list)
+    # Local planning (VFH): polar obstacle-density histogram at the pose in force
+    # order, one histogram_updated event per control tick.
+    # each entry: (pos, bins, threshold)
+    histograms: list[tuple[Point, list[float], float]] = field(default_factory=list)
+    histogram_orders: list[int] = field(default_factory=list)
+    # Local planning (Pure Pursuit lookahead point / VFH valley candidates). Global
+    # search's own candidate_evaluated flood is excluded in build_scene (see there),
+    # so this stays empty for every non-local trace.
+    candidates: list[Point] = field(default_factory=list)
+    candidate_orders: list[int] = field(default_factory=list)
+    # Local planning problem definition, loaded from planning_started.scenario (not a
+    # search/execution event) so tracking planners' reference path and the goal render
+    # even on a failed run (no path_found).
+    reference_path: list[Point] = field(default_factory=list)
+    goal: Point | None = None
     path: list[Point] = field(default_factory=list)
     # Kinodynamic (Hybrid A*): per-path-pose heading (radians). Empty for every 2-element
     # (Cell/Point) planner, so their render is untouched; populated only by SE(2) traces.
@@ -158,14 +214,43 @@ def _world_extent(grid: OccupancyGrid2D) -> tuple[float, float, float, float]:
     return (x0 - res / 2, x1 + res / 2, y0 - res / 2, y1 + res / 2)
 
 
-def build_scene(events: list[dict[str, Any]], grid: OccupancyGrid2D) -> Scene:
+def _resolve_scenario_path(scenario_field: str, trace_path: str | None) -> Path | None:
+    # Mirrors _resolve_map's two candidates: repo-root-relative (matches how demos
+    # write the field, cwd == repo root) or relative to the trace file's directory.
+    candidate = Path(scenario_field)
+    if candidate.exists():
+        return candidate
+    if trace_path is not None:
+        near = Path(trace_path).parent / scenario_field
+        if near.exists():
+            return near
+    return None
+
+
+def build_scene(
+    events: list[dict[str, Any]], grid: OccupancyGrid2D, trace_path: str | None = None
+) -> Scene:
     to_world = _to_world_fn(grid)
     scene = Scene(grid=grid, extent=_world_extent(grid))
+    # Global search planners also emit candidate_evaluated (e.g. A*'s per-neighbor
+    # scoring) in bulk; that flood must stay ignored as before. Only local planning's
+    # closed-loop tick (Pure Pursuit lookahead / VFH valleys) also emits robot_moved,
+    # so gating candidate collection on robot_moved's presence tells the two apart.
+    is_local_trace = any(ev.get("event") == "robot_moved" for ev in events)
     order = 0
     for ev in events:
         name = ev.get("event")
         if name == "planning_started":
             scene.algorithm = str(ev.get("algorithm", ""))
+            scenario_field = ev.get("scenario")
+            if scenario_field:
+                path = _resolve_scenario_path(str(scenario_field), trace_path)
+                if path is not None:
+                    from navigation.maps.loader import load_scenario
+
+                    sc = load_scenario(path)
+                    scene.reference_path = list(sc.reference_path)
+                    scene.goal = sc.goal
         elif name == "node_expanded" and "state" in ev:
             scene.expanded.append(to_world(ev["state"]))
             scene.expanded_orders.append(order)
@@ -179,12 +264,32 @@ def build_scene(events: list[dict[str, Any]], grid: OccupancyGrid2D) -> Scene:
             scene.edge_orders.append(order)
             order += 1
         elif name == "robot_moved" and "state" in ev:
-            scene.robot.append(to_world(ev["state"]))
+            state = ev["state"]
+            scene.robot.append(to_world(state))
             scene.robot_orders.append(order)
+            scene.robot_headings.append(float(state[2]) if len(state) >= 3 else math.nan)
             order += 1
         elif name == "obstacle_revealed" and "state" in ev:
             scene.revealed.append(to_world(ev["state"]))
             scene.revealed_orders.append(order)
+            order += 1
+        elif name == "force_computed" and "state" in ev:
+            data = ev.get("data") or {}
+            f_att = (float(data.get("fx_att", 0.0)), float(data.get("fy_att", 0.0)))
+            f_rep = (float(data.get("fx_rep", 0.0)), float(data.get("fy_rep", 0.0)))
+            scene.forces.append((to_world(ev["state"]), f_att, f_rep))
+            scene.force_orders.append(order)
+            order += 1
+        elif name == "histogram_updated" and "state" in ev:
+            data = ev.get("data") or {}
+            bins = [float(b) for b in ev.get("bins", [])]
+            threshold = float(data.get("threshold", 0.0))
+            scene.histograms.append((to_world(ev["state"]), bins, threshold))
+            scene.histogram_orders.append(order)
+            order += 1
+        elif name == "candidate_evaluated" and is_local_trace and "state" in ev:
+            scene.candidates.append(to_world(ev["state"]))
+            scene.candidate_orders.append(order)
             order += 1
         elif name in ("path_found", "planning_finished") and ev.get("path"):
             scene.path = [to_world(s) for s in ev["path"]]
@@ -209,9 +314,11 @@ def _draw(
 
     ax.clear()
     # D* Lite starts blind (freespace belief) and reveals obstacles as it senses them,
-    # so its background is all-free and the true walls fog in cell by cell; every static
-    # planner (no robot events) keeps the ground-truth free_mask background.
-    dynamic = bool(scene.robot) or bool(scene.revealed)
+    # so its background is all-free and the true walls fog in cell by cell. Local
+    # planners execute on a KNOWN map, so robot_moved alone (no reveals) must NOT flip
+    # the background — only a planner that actually senses obstacles (obstacle_revealed,
+    # D* Lite family) has belief != ground truth.
+    dynamic = bool(scene.revealed)
     if dynamic:
         ax.imshow(
             np.ones(scene.grid.free_mask().shape, dtype=float),
@@ -225,6 +332,22 @@ def _draw(
             origin="upper",
             extent=scene.extent,
             interpolation="nearest",
+        )
+    # Local planning problem definition: drawn right after the background so every
+    # search/execution mark below stays on top of it. Present even on a failed run
+    # (STALLED/COLLISION/TIMEOUT never emits path_found) because it comes from the
+    # scenario, not the execution outcome.
+    reference_path_shown = len(scene.reference_path) >= 2
+    if reference_path_shown:
+        ref = scene.reference_path
+        ax.plot(
+            [p[0] for p in ref], [p[1] for p in ref], color=_REFERENCE_PATH_COLOR,
+            linewidth=1.4, linestyle=(0, (5, 3)), zorder=1.6, alpha=0.9,
+        )
+    if scene.goal is not None:
+        ax.scatter(
+            [scene.goal[0]], [scene.goal[1]], marker="*", s=150, color=_GOAL_COLOR,
+            edgecolors="white", linewidths=1.0, zorder=6.5,
         )
     n_edges = bisect_right(scene.edge_orders, cutoff)
     n_expanded = bisect_right(scene.expanded_orders, cutoff)
@@ -263,7 +386,6 @@ def _draw(
         )
         sc.set_antialiased(False)
     n_revealed = 0
-    n_robot = 0
     if dynamic:
         n_revealed = bisect_right(scene.revealed_orders, cutoff)
         if n_revealed:
@@ -276,16 +398,75 @@ def _draw(
                 np.ma.masked_invalid(overlay), cmap="gray", origin="upper",
                 extent=scene.extent, vmin=0.0, vmax=1.0, interpolation="nearest", zorder=1.5,
             )
-        n_robot = bisect_right(scene.robot_orders, cutoff)
-        if n_robot:
-            trail = scene.robot[:n_robot]
-            ax.plot(
-                [p[0] for p in trail], [p[1] for p in trail], color=_ROBOT_COLOR,
-                linewidth=1.6, alpha=0.85, zorder=5, solid_capstyle="round",
+    # Executed trail: D* Lite (dynamic background above) and every local planner (known,
+    # static background) both walk one cell/pose per robot_moved, so this no longer
+    # nests under `dynamic` — only the fog overlay above is background-mode-specific.
+    n_robot = bisect_right(scene.robot_orders, cutoff)
+    if n_robot:
+        trail = scene.robot[:n_robot]
+        ax.plot(
+            [p[0] for p in trail], [p[1] for p in trail], color=_ROBOT_COLOR,
+            linewidth=1.6, alpha=0.85, zorder=5, solid_capstyle="round",
+        )
+        ax.scatter(
+            [trail[-1][0]], [trail[-1][1]], marker="D", s=55, color=_ROBOT_COLOR,
+            edgecolors="white", linewidths=1.1, zorder=8,
+        )
+        # Local planning (SE(2) pose): heading arrow at the current pose. D* Lite's
+        # 2-element cell state stored nan for this tick, so it draws nothing.
+        current_heading = scene.robot_headings[n_robot - 1]
+        if not math.isnan(current_heading):
+            ax.quiver(
+                [trail[-1][0]], [trail[-1][1]],
+                [math.cos(current_heading)], [math.sin(current_heading)],
+                color=_HEADING_COLOR, angles="xy", scale_units="xy", scale=2.2,
+                width=0.008, headwidth=4, headlength=5, zorder=9, alpha=0.9,
             )
+    n_force = bisect_right(scene.force_orders, cutoff)
+    if n_force:
+        # Latest tick only: force is an instantaneous quantity, so accumulating every
+        # past tick's arrows would just clutter the frame (and bloat the GIF palette).
+        pos, f_att, f_rep = scene.forces[n_force - 1]
+        max_len = _FORCE_MAX_RADIUS_CELLS * scene.grid.resolution
+        f_att = _clamped_vec(f_att, max_len)
+        f_rep = _clamped_vec(f_rep, max_len)
+        ax.quiver(
+            [pos[0], pos[0]], [pos[1], pos[1]], [f_att[0], f_rep[0]], [f_att[1], f_rep[1]],
+            color=[_FORCE_COLOR_ATT, _FORCE_COLOR_REP], angles="xy", scale_units="xy",
+            scale=1.0, width=0.01, zorder=6, alpha=0.9,
+        )
+    n_hist = bisect_right(scene.histogram_orders, cutoff)
+    if n_hist and scene.histograms[n_hist - 1][1]:
+        # Latest tick only, same rationale as the force quiver above.
+        pos, bins, threshold = scene.histograms[n_hist - 1]
+        max_bin = max(bins) or 1.0
+        r_max = _HIST_MAX_RADIUS_CELLS * scene.grid.resolution
+        n_bins = len(bins)
+        hist_segments: list[tuple[Point, Point]] = []
+        hist_colors: list[str] = []
+        for k, value in enumerate(bins):
+            angle = 2.0 * math.pi * k / n_bins  # sector 0 = world +x, ccw (schema)
+            radius = (value / max_bin) * r_max
+            hist_segments.append(
+                (pos, (pos[0] + radius * math.cos(angle), pos[1] + radius * math.sin(angle)))
+            )
+            hist_colors.append(_HIST_COLOR_BLOCKED if value > threshold else _HIST_COLOR_OPEN)
+        ax.add_collection(
+            LineCollection(hist_segments, colors=hist_colors, linewidths=1.6, zorder=6, alpha=0.85)
+        )
+    # Current-tick candidates only (those emitted since the previous robot move), so a
+    # long PP/VFH run doesn't smear every historical probe on top of each other.
+    tick_candidates: list[Point] = []
+    if scene.candidates:
+        tick_start = scene.robot_orders[n_robot - 2] if n_robot >= 2 else -1
+        lo = bisect_right(scene.candidate_orders, tick_start)
+        hi = bisect_right(scene.candidate_orders, cutoff)
+        tick_candidates = scene.candidates[lo:hi]
+        if tick_candidates:
             ax.scatter(
-                [trail[-1][0]], [trail[-1][1]], marker="D", s=55, color=_ROBOT_COLOR,
-                edgecolors="white", linewidths=1.1, zorder=8,
+                [p[0] for p in tick_candidates], [p[1] for p in tick_candidates],
+                marker="^", s=40, color=_CANDIDATE_COLOR, edgecolors="white",
+                linewidths=0.6, zorder=6, alpha=0.9,
             )
     drew_path = show_path and len(scene.path) >= 2
     if drew_path:
@@ -303,6 +484,8 @@ def _draw(
     _draw_legend(
         ax, expanded_shown=n_expanded > 0, samples_shown=n_samples > 0, path_shown=drew_path,
         robot_shown=n_robot > 0, revealed_shown=n_revealed > 0, headings_shown=drew_headings,
+        reference_path_shown=reference_path_shown, force_shown=n_force > 0,
+        histogram_shown=n_hist > 0, candidate_shown=bool(tick_candidates),
     )
 
 
@@ -344,10 +527,6 @@ def _draw_path_gradient(ax: Any, path: list[Point], path_segments: int | None = 
         )
 
 
-# Kinodynamic heading arrows: a dark slate distinct from the path gradient + every ramp.
-_HEADING_COLOR = "#1e293b"
-
-
 def _draw_headings(
     ax: Any, path: list[Point], headings: list[float], path_segments: int | None = None
 ) -> None:
@@ -377,7 +556,7 @@ def _draw_headings(
     )
 
 
-def _mark_proxy(color: tuple[float, float, float, float]) -> Line2D:
+def _mark_proxy(color: str | tuple[float, float, float, float]) -> Line2D:
     from matplotlib.lines import Line2D
 
     return Line2D(
@@ -389,6 +568,8 @@ def _mark_proxy(color: tuple[float, float, float, float]) -> Line2D:
 def _draw_legend(
     ax: Any, *, expanded_shown: bool, samples_shown: bool, path_shown: bool,
     robot_shown: bool = False, revealed_shown: bool = False, headings_shown: bool = False,
+    reference_path_shown: bool = False, force_shown: bool = False,
+    histogram_shown: bool = False, candidate_shown: bool = False,
 ) -> None:
     from matplotlib.lines import Line2D
 
@@ -404,9 +585,23 @@ def _draw_legend(
     if revealed_shown:
         handles.append(_mark_proxy((0.1, 0.1, 0.1, 1.0)))
         labels.append("sensed obstacle")
+    if reference_path_shown:
+        handles.append(Line2D([0], [0], color=_REFERENCE_PATH_COLOR, linewidth=1.4, linestyle="--"))
+        labels.append("reference path")
     if robot_shown:
         handles.append(Line2D([0], [0], color=_ROBOT_COLOR, linewidth=1.8))
         labels.append("robot trail")
+    if force_shown:
+        handles.append(Line2D([0], [0], color=_FORCE_COLOR_ATT, linewidth=1.8))
+        labels.append("attractive force")
+        handles.append(Line2D([0], [0], color=_FORCE_COLOR_REP, linewidth=1.8))
+        labels.append("repulsive force")
+    if histogram_shown:
+        handles.append(Line2D([0], [0], color=_HIST_COLOR_BLOCKED, linewidth=1.8))
+        labels.append("histogram (bin ∝ density)")
+    if candidate_shown:
+        handles.append(_mark_proxy(_CANDIDATE_COLOR))
+        labels.append("candidate")
     if path_shown:
         handles.append(Line2D([0], [0], color=_PATH_RAMP[1], linewidth=2.5))
         labels.append("path (start→goal)")
@@ -566,7 +761,7 @@ def main() -> None:
     events = _read_events(args.trace)
     grid = load_map(_resolve_map(args.trace, events, args.map))
     assert isinstance(grid, OccupancyGrid2D)
-    scene = build_scene(events, grid)
+    scene = build_scene(events, grid, trace_path=args.trace)
 
     if args.gif:
         n_frames = save_gif(scene, args.gif, fps=args.fps, events_per_frame=args.events_per_frame)
