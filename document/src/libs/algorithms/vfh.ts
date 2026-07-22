@@ -1,7 +1,7 @@
 import {GridMap} from "../grid";
 import {TraceEvent} from "../trace/types";
 import {occupiedWithin} from "./obstacle_grid";
-import {EmitFn, Pose, RobotState3, VelocityCommand, runClosedLoop, wrapToPi} from "./local_sim";
+import {EmitFn, Pose, RobotState3, VelocityCommand, headingCommand, runClosedLoop, wrapToPi} from "./local_sim";
 
 // Vector Field Histogram (Borenstein & Koren 1991) 브라우저 라이브 엔진. 저장소
 // reactive/vfh.py를 그대로 미러한다 — valley 선택의 폭 tie-break, target-inside-valley
@@ -47,15 +47,6 @@ function wrap2pi(angle: number): number {
 // python `%`(항상 [0,n) 반환)과 일치시키는 정수 모듈러 — JS `%`는 음수 피연산자에서
 // 음수를 낼 수 있어 valley 폭·circular distance 계산에 그대로 쓰면 어긋난다.
 const mod = (a: number, n: number): number => ((a % n) + n) % n
-
-// heading-command 법칙(저장소 reactive/_steering.py 미러 — PF와 공유하는 3줄짜리
-// 순수 함수라 별도 공용 모듈 없이 여기 인라인한다). omega는 게인 클램프, v는
-// cos(theta_err) 게이트로 목표가 뒤에 있으면 제자리 회전한다.
-function headingCommand(thetaErr: number, gain: number, maxSpeed: number, maxOmega: number): VelocityCommand {
-    const omega = Math.max(-maxOmega, Math.min(maxOmega, gain * thetaErr))
-    const v = maxSpeed * Math.max(0, Math.cos(thetaErr))
-    return {v, omega}
-}
 
 export function runVfh(opts: VfhOptions): TraceEvent[] {
     const events: TraceEvent[] = []

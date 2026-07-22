@@ -4,7 +4,7 @@ import LocalTracePlayer from "../LocalTracePlayer";
 import ParamSlider from "../../../player/ParamSlider";
 import {runPotentialFields} from "../../../../libs/algorithms/potential_fields";
 import {Pose} from "../../../../libs/algorithms/local_sim";
-import {GridMap} from "../../../../libs/grid";
+import {GridMap, gridFromPgmRows} from "../../../../libs/grid";
 import {useTr} from "../../../../libs/i18n";
 import cn from "../../../../libs/cn";
 
@@ -13,15 +13,6 @@ import cn from "../../../../libs/cn";
 // 잘못 잡을 위험 없이, 알고리즘의 알려진 함정과 성공 사례를 검증된 형태로 보여준다.
 type Rows = string[];   // 각 행: 공백 구분 pixel 값(0=occupied, 255=free), pgm 그대로.
 
-const gridFromPgmRows = (name: string, rows: Rows, resolution: number): GridMap => {
-    const width = rows[0].trim().split(/\s+/).length
-    const height = rows.length
-    const occupied: boolean[] = []
-    for (const row of rows) {
-        for (const tok of row.trim().split(/\s+/)) occupied.push(tok !== "255")
-    }
-    return {name, width, height, occupied, resolution, originX: 0, originY: 0}
-}
 
 // ㄷ자 함정: 입구가 서쪽(start), 동쪽이 막힌 back wall — 직선 인력이 벽에서 stall된다.
 const PF_TRAP_ROWS: Rows = [

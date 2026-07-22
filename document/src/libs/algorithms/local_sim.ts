@@ -63,6 +63,18 @@ export function wrapToPi(angle: number): number {
     return wrapped - Math.PI
 }
 
+// 조향 법칙(heading error -> 속도 명령), reactive/_steering.py의 heading_command 미러.
+// PF와 VFH가 공유한다. omega는 게인 클램프, v는 cos(theta_err) 게이트로 목표가 뒤에
+// 있으면 제자리 회전한다. 호출자가 자기 유효 속도를 maxSpeed로 넘기므로 이 함수는
+// 조향 법칙만 담당한다.
+export function headingCommand(
+    thetaErr: number, gain: number, maxSpeed: number, maxOmega: number,
+): VelocityCommand {
+    const omega = Math.max(-maxOmega, Math.min(maxOmega, gain * thetaErr))
+    const v = maxSpeed * Math.max(0, Math.cos(thetaErr))
+    return {v, omega}
+}
+
 // 상수 (v, omega) 구간의 정확한 원호 적분(closed form) — dt 크기와 무관하게 정확해
 // Euler 이산화 오차가 알고리즘 특성(PF 진동, PP 추종오차)과 섞이지 않는다.
 export function integrateUnicycle(pose: Pose, cmd: VelocityCommand, dt: number): Pose {

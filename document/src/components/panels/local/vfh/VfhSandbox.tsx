@@ -4,7 +4,7 @@ import LocalTracePlayer from "../LocalTracePlayer";
 import ParamSlider from "../../../player/ParamSlider";
 import {runVfh} from "../../../../libs/algorithms/vfh";
 import {Pose} from "../../../../libs/algorithms/local_sim";
-import {GridMap} from "../../../../libs/grid";
+import {GridMap, gridFromPgmRows} from "../../../../libs/grid";
 import {useTr} from "../../../../libs/i18n";
 import cn from "../../../../libs/cn";
 
@@ -16,15 +16,6 @@ import cn from "../../../../libs/cn";
 // narrow-valley 조향 규칙이 항상 발동하는 것을 보여준다.
 type Rows = string[];   // 각 행: 공백 구분 pixel 값(0=occupied, 255=free), pgm 그대로.
 
-const gridFromPgmRows = (name: string, rows: Rows, resolution: number): GridMap => {
-    const width = rows[0].trim().split(/\s+/).length
-    const height = rows.length
-    const occupied: boolean[] = []
-    for (const row of rows) {
-        for (const tok of row.trim().split(/\s+/)) occupied.push(tok !== "255")
-    }
-    return {name, width, height, occupied, resolution, originX: 0, originY: 0}
-}
 
 // 전체 높이를 가로지르는 벽 하나에 gap 두 칸(로봇 지름 대비 넉넉한 폭)뿐이라, 매 tick
 // valley가 하나만 열린다.

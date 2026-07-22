@@ -1,7 +1,7 @@
 import {GridMap} from "../grid";
 import {TraceEvent} from "../trace/types";
 import {occupiedWithin} from "./obstacle_grid";
-import {ClosedLoopTick, Pose, RobotState3, VelocityCommand, runClosedLoop, wrapToPi} from "./local_sim";
+import {ClosedLoopTick, Pose, RobotState3, headingCommand, runClosedLoop, wrapToPi} from "./local_sim";
 
 // 브라우저 라이브 Potential Fields (Khatib 1986): 매 tick 목표 인력 + FIRAS 반발력을
 // 합산해 그 방향으로 조향한다. 저장소 python/navigation/local_planning/reactive/
@@ -26,17 +26,6 @@ export interface PotentialFieldsOptions {
     goalTolerance: number;
     stallWindow: number;
     stallDistance: number;
-}
-
-// 조향 법칙(heading error -> 속도 명령). 저장소 reactive/_steering.py가 PF·VFH
-// 두 family에 공유하는 heading_command와 동일 — VFH 엔진이 추가될 때 이 함수를
-// 재사용하거나 공용 모듈로 승격한다(지금은 소비자가 하나뿐이라 조기 추출하지 않는다).
-export function headingCommand(
-    thetaErr: number, gain: number, maxSpeed: number, maxOmega: number,
-): VelocityCommand {
-    const omega = Math.max(-maxOmega, Math.min(maxOmega, gain * thetaErr))
-    const v = maxSpeed * Math.max(0, Math.cos(thetaErr))
-    return {v, omega}
 }
 
 export function runPotentialFields(opts: PotentialFieldsOptions): TraceEvent[] {
