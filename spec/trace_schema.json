@@ -82,7 +82,7 @@
     },
     "data": {
       "type": "object",
-      "description": "알고리즘 고유 부가 정보 (viz 는 알아도 되고 몰라도 되는 값만). 공통 필드로 표현 가능한 정보를 여기에 넣지 않는다. 예: robot_moved 의 {v, omega}, force_computed 의 {fx_att, fy_att, fx_rep, fy_rep, fx, fy}, histogram_updated 의 {threshold, target_direction, selected_direction}, DWA candidate_evaluated 의 {v, omega, heading, clearance, velocity, admissible, selected}, Regulated Pure Pursuit candidate_evaluated 의 {alpha, lookahead, curvature_scale, proximity_scale, blocked}."
+      "description": "알고리즘 고유 부가 정보 (viz 는 알아도 되고 몰라도 되는 값만). 공통 필드로 표현 가능한 정보를 여기에 넣지 않는다. 예: robot_moved 의 {v, omega}, force_computed 의 {fx_att, fy_att, fx_rep, fy_rep, fx, fy}, histogram_updated 의 {threshold, target_direction, selected_direction}, DWA candidate_evaluated 의 {v, omega, heading, clearance, velocity, admissible, selected}, Stanley candidate_evaluated 의 {e, psi, v}, Regulated Pure Pursuit candidate_evaluated 의 {alpha, lookahead, curvature_scale, proximity_scale, blocked}."
     },
     "bins": {
       "type": "array",
