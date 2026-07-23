@@ -30,6 +30,7 @@
         "force_computed",
         "histogram_updated",
         "band_updated",
+        "velocity_obstacle",
         "path_found",
         "planning_finished"
       ]
@@ -83,7 +84,7 @@
     },
     "data": {
       "type": "object",
-      "description": "알고리즘 고유 부가 정보 (viz 는 알아도 되고 몰라도 되는 값만). 공통 필드로 표현 가능한 정보를 여기에 넣지 않는다. 예: robot_moved 의 {v, omega}, force_computed 의 {fx_att, fy_att, fx_rep, fy_rep, fx, fy}, histogram_updated 의 {threshold, target_direction, selected_direction}, DWA candidate_evaluated 의 {v, omega, heading, clearance, velocity, admissible, selected}, Stanley candidate_evaluated 의 {e, psi, v}, Regulated Pure Pursuit candidate_evaluated 의 {alpha, lookahead, curvature_scale, proximity_scale, blocked}, Elastic Bands band_updated 의 {iterations, bubbles, broken}, TEB band_updated 의 {iterations, poses, total_cost, horizon_time}, MPC band_updated 의 {iterations, horizon, total_cost}, MPPI candidate_evaluated 의 {weight, selected}, MPPI 공칭 band_updated 의 {min_cost, num_samples, temperature}."
+      "description": "알고리즘 고유 부가 정보 (viz 는 알아도 되고 몰라도 되는 값만). 공통 필드로 표현 가능한 정보를 여기에 넣지 않는다. 예: robot_moved 의 {v, omega}, force_computed 의 {fx_att, fy_att, fx_rep, fy_rep, fx, fy}, histogram_updated 의 {threshold, target_direction, selected_direction}, DWA candidate_evaluated 의 {v, omega, heading, clearance, velocity, admissible, selected}, Stanley candidate_evaluated 의 {e, psi, v}, Regulated Pure Pursuit candidate_evaluated 의 {alpha, lookahead, curvature_scale, proximity_scale, blocked}, Elastic Bands band_updated 의 {iterations, bubbles, broken}, TEB band_updated 의 {iterations, poses, total_cost, horizon_time}, MPC band_updated 의 {iterations, horizon, total_cost}, MPPI candidate_evaluated 의 {weight, selected}, MPPI 공칭 band_updated 의 {min_cost, num_samples, temperature}, velocity_obstacle 의 {pref_vx, pref_vy, new_vx, new_vy} (선호속도/선택속도, VO/RVO/ORCA 공통)."
     },
     "bins": {
       "type": "array",
@@ -99,6 +100,11 @@
       "type": "array",
       "items": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 4 },
       "description": "band_updated 전용: 탄성 밴드 상태 열. 항목 길이 3 = [x, y, radius] (Elastic Bands bubble: world 중심 + clearance 반경), 길이 4 = [x, y, theta, dt] (TEB/MPC/MPPI pose + 직전 구간 ΔT초; 첫 항목의 dt = 0. MPC/MPPI 는 예측 스텝이 control_dt 로 균일해 dt 가 상수, 길이 = horizon+1). data 는 스칼라 맵이라 배열을 담을 수 없으므로 bins/rollout 과 같은 top-level 배열로 둔다."
+    },
+    "constraints": {
+      "type": "array",
+      "items": { "type": "array", "items": { "type": "number" }, "minItems": 4, "maxItems": 6 },
+      "description": "velocity_obstacle 전용: 속도공간 금지영역. 길이 6 = [apex_x,apex_y,left_x,left_y,right_x,right_y] (VO/RVO 절단 원뿔: apex=속도공간 꼭짓점, left/right=경계 단위벡터). 길이 4 = [point_x,point_y,normal_x,normal_y] (ORCA half-plane: feasible 는 dot(v-point,normal)>=0). data 는 스칼라 맵이라 배열을 담을 수 없으므로 bins/rollout/band 와 같은 top-level 배열로 둔다."
     }
   },
   "$defs": {

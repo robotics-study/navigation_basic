@@ -161,6 +161,34 @@ void TraceRecorder::ev_rollout(const std::vector<double>& s, double cost, const 
   end_event();
 }
 
+void TraceRecorder::ev_robot_moved(const std::vector<double>& s, int agent,
+                                   const EventData* data) {
+  begin_event("robot_moved");
+  os_ << ",\"state\":";
+  write_array(os_, s);
+  os_ << ",\"agent\":" << agent;
+  write_data(os_, data);
+  end_event();
+}
+
+void TraceRecorder::ev_velocity_obstacle(const std::vector<double>& s,
+                                         const std::vector<std::vector<double>>& constraints,
+                                         const EventData* data) {
+  begin_event("velocity_obstacle");
+  os_ << ",\"state\":";
+  write_array(os_, s);
+  if (!constraints.empty()) {
+    os_ << ",\"constraints\":[";
+    for (size_t i = 0; i < constraints.size(); ++i) {
+      if (i) os_ << ',';
+      write_array(os_, constraints[i]);
+    }
+    os_ << ']';
+  }
+  write_data(os_, data);
+  end_event();
+}
+
 void TraceRecorder::ev_edge(const char* event, const std::vector<double>& s,
                             const std::vector<double>& parent, const double* cost,
                             const EventData* data) {
