@@ -1,0 +1,124 @@
+algorithm: mppi
+category: local_planning
+params:
+  - name: horizon
+    type: int
+    default: 20
+    min: 3
+    max: 60
+    description: 예측 스텝 수 H (MPC와 동일 receding horizon 길이). (Williams et al. 2016/2018)
+  - name: num_samples
+    type: int
+    default: 200
+    min: 8
+    max: 2000
+    description: 표본 rollout 수 K.
+  - name: temperature
+    type: float
+    default: 1.0
+    min: 0.001
+    max: 100.0
+    description: >-
+      softmax 온도 lambda. 작을수록 최소비용 표본에 가중치가 집중되고, 클수록 가중치가
+      균일해진다.
+  - name: sigma_v
+    type: float
+    default: 0.3
+    min: 0.001
+    max: 5.0
+    description: v 노이즈 표준편차 (m/s).
+  - name: sigma_omega
+    type: float
+    default: 0.5
+    min: 0.001
+    max: 10.0
+    description: omega 노이즈 표준편차 (rad/s).
+  - name: w_goal
+    type: float
+    default: 2.0
+    min: 0.0
+    max: 100.0
+    description: goal 거리 2차 비용 가중치. (mpc.yaml과 동일 기본값 — 같은 비용판 비교)
+  - name: w_obstacle
+    type: float
+    default: 25.0
+    min: 0.0
+    max: 1000.0
+    description: 장애물 hinge^2 페널티 가중치. (mpc.yaml과 동일)
+  - name: w_control
+    type: float
+    default: 0.05
+    min: 0.0
+    max: 100.0
+    description: 제어 노력 정규화 가중치. (mpc.yaml과 동일)
+  - name: min_obstacle_dist
+    type: float
+    default: 0.8
+    min: 0.1
+    max: 3.0
+    description: >-
+      장애물 페널티가 활성화되는 거리 d_min (meters). 최근접 occupied cell까지의 연속
+      거리로 clearance를 계산한다. (mpc.yaml과 동일)
+  - name: v_max
+    type: float
+    default: 0.8
+    min: 0.1
+    max: 2.0
+    description: 최대 전진 속도 (m/s, 전진 전용). (mpc.yaml과 동일)
+  - name: omega_max
+    type: float
+    default: 1.5
+    min: 0.1
+    max: 5.0
+    description: 최대 각속도 (rad/s). (mpc.yaml과 동일)
+  - name: a_max
+    type: float
+    default: 1.5
+    min: 0.1
+    max: 10.0
+    description: 병진 가속 한계 (m/s^2, 실행 명령에만 clamp). (mpc.yaml과 동일)
+  - name: seed
+    type: int
+    default: 1
+    min: 0
+    max: 2147483647
+    description: RNG seed (에피소드 재현성).
+  # --- shared closed-loop simulator block (identical defaults across every
+  # local_planning algo; param_schema.json has no separate "sim" section, so
+  # these live as ordinary params entries like the algorithm params above) ---
+  - name: control_dt
+    type: float
+    default: 0.1
+    min: 0.001
+    max: 1.0
+    description: 제어 주기 (seconds).
+  - name: max_steps
+    type: int
+    default: 1000
+    min: 1
+    max: 100000
+    description: 최대 tick 수 (소진 시 TIMEOUT).
+  - name: goal_tolerance
+    type: float
+    default: 0.3
+    min: 0.01
+    max: 5.0
+    description: goal 도달 판정 반경 (meters).
+  - name: footprint_radius
+    type: float
+    default: 0.2
+    min: 0.01
+    max: 5.0
+    description: 로봇 충돌 footprint 반경 (meters).
+  - name: stall_window
+    type: int
+    default: 20
+    min: 1
+    max: 100000
+    description: 정체 판정 sliding window 길이 (ticks).
+  - name: stall_distance
+    type: float
+    default: 0.05
+    min: 0.0
+    max: 5.0
+    description: stall_window 구간 순변위가 이 이하이면 STALLED (meters).

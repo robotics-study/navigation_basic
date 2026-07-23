@@ -1,0 +1,8 @@
+map: ../grid/open01.yaml   # scenario 파일 기준 상대 경로
+start: [1.5, 1.5]          # world 좌표, 내부 자유공간 (벽에서 충분히 이격)
+goal: [8.0, 8.0]           # world 좌표, 벽 penalty zone 밖(clearance > min_obstacle_dist)
+# goal-seeking 예측 planner(MPC/MPPI)용 reach 시나리오. MPC/MPPI는 min_obstacle_dist 안쪽
+# clearance를 페널티로 밀어내므로, 벽 코너에 붙은 goal(예: clutter01_s1의 (9.25,9.25),
+# clearance ~0.55 < 0.8)은 페널티 등고선에서 얼어붙어 물리적으로 도달 불가다. reach 검증은
+# 페널티 zone 밖 내부 goal로 하고, 코너 goal 정체는 문서화된 약점(MPC 비볼록 함정 / MPPI
+# 퇴화)으로 남긴다. reference_path 없음(goal-seeking).

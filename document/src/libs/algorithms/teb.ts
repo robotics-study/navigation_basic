@@ -1,7 +1,7 @@
 import {GridMap} from "../grid";
 import {TraceEvent} from "../trace/types";
 import {Point} from "./sampling_space";
-import {occupiedWithin} from "./obstacle_grid";
+import {nearestOccupied} from "./obstacle_grid";
 import {EmitFn, Pose, RobotState3, VelocityCommand, runClosedLoop, wrapToPi} from "./local_sim";
 
 // Timed Elastic Band (Rösmann, Feiten, Wösch, Hoffmann & Bertram, ROBOTIK 2012;
@@ -147,22 +147,6 @@ function resamplePolyline(points: Point[], spacing: number): Point[] {
     for (let k = 1; k < nSegments; k++) out.push(pointAtArcLength(points, k * step))
     out.push(points[points.length - 1])
     return out
-}
-
-// radius 내 최근접 occupied cell 중심과 그 연속 거리 -- occupied_within의 row/col
-// 오름차순 리스트에서 strict '<'로 첫 동률을 유지한다 (py _band.nearest_occupied 미러).
-function nearestOccupied(map: GridMap, p: Point, radius: number): [Point | null, number] {
-    let best: Point | null = null
-    let bestSq = Infinity
-    for (const o of occupiedWithin(map, p, radius)) {
-        const d = sqDist(p, o)
-        if (d < bestSq) {
-            bestSq = d
-            best = o
-        }
-    }
-    if (best === null) return [null, Infinity]
-    return [best, Math.sqrt(bestSq)]
 }
 
 export function runTeb(opts: TebOptions): TraceEvent[] {
