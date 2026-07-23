@@ -58,7 +58,7 @@ def _closest_point_on_polyline(points: list[Point], p: Point) -> Point:
     """Nearest point to ``p`` over every segment of ``points`` (no monotonic
     constraint, unlike ``advance_progress_index`` -- this is a per-tick anchor
     lookup, not a forward-only progress cursor). Strict ``<`` keeps the first
-    tie, mirroring ``_band.nearest_occupied``'s determinism convention."""
+    tie, mirroring ``_geometry.nearest_occupied``'s determinism convention."""
     best = points[0]
     best_sq = float("inf")
     for i in range(len(points) - 1):
