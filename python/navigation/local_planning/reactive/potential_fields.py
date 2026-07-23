@@ -14,8 +14,7 @@ from navigation.core.planner import ObstacleLocalPlanner
 from navigation.core.trace import TraceRecorder
 from navigation.core.types import LocalTask, RobotState, VelocityCommand
 
-from .._geometry import wrap_to_pi
-from ._steering import heading_command
+from .._geometry import heading_command, wrap_to_pi
 
 
 class PotentialFields(ObstacleLocalPlanner):

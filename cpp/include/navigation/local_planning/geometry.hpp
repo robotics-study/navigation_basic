@@ -28,6 +28,22 @@ inline double wrap_to_pi(double angle) {
   return wrapped - M_PI;
 }
 
+// Turn-in-place-then-drive command toward a heading error `theta_err` (rad).
+//
+// omega = clamp(gain * theta_err, +/- max_omega). v is gated by cos(theta_err)
+// so a target behind the robot (|theta_err| > pi/2) produces v <= 0 clamped to
+// 0 -- the robot rotates in place instead of driving backward or arcing wide.
+//
+// Promoted here (was reactive/steering.hpp) once the velocity-obstacle family
+// (VO/RVO/ORCA) needed the same turn-rate law for its velocity-vector-to-command
+// projection, becoming the category's second consumer alongside PF/VFH.
+inline core::VelocityCommand heading_command(double theta_err, double gain, double max_speed,
+                                             double max_omega) {
+  double omega = std::max(-max_omega, std::min(max_omega, gain * theta_err));
+  double v = max_speed * std::max(0.0, std::cos(theta_err));
+  return core::VelocityCommand{v, omega};
+}
+
 inline core::Point closest_point_on_segment(const core::Point& p, const core::Point& a,
                                             const core::Point& b) {
   double dx = b.x - a.x, dy = b.y - a.y;

@@ -17,7 +17,7 @@ from __future__ import annotations
 import math
 
 from navigation.core.capabilities import ObstacleQuery
-from navigation.core.types import Point
+from navigation.core.types import Point, VelocityCommand
 
 
 def wrap_to_pi(angle: float) -> float:
@@ -26,6 +26,24 @@ def wrap_to_pi(angle: float) -> float:
     if wrapped <= 0.0:
         wrapped += 2.0 * math.pi
     return wrapped - math.pi
+
+
+def heading_command(
+    theta_err: float, gain: float, max_speed: float, max_omega: float
+) -> VelocityCommand:
+    """Turn-in-place-then-drive command toward a heading error `theta_err` (rad).
+
+    omega = clamp(gain * theta_err, +/- max_omega). v is gated by cos(theta_err)
+    so a target behind the robot (|theta_err| > pi/2) produces v <= 0 clamped to
+    0 -- the robot rotates in place instead of driving backward or arcing wide.
+
+    Promoted here (was reactive/_steering.py) once the velocity-obstacle family
+    (VO/RVO/ORCA) needed the same turn-rate law for its velocity-vector-to-command
+    projection, becoming the category's second consumer alongside PF/VFH.
+    """
+    omega = max(-max_omega, min(max_omega, gain * theta_err))
+    v = max_speed * max(0.0, math.cos(theta_err))
+    return VelocityCommand(v=v, omega=omega)
 
 
 def closest_point_on_segment(p: Point, a: Point, b: Point) -> Point:
