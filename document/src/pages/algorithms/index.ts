@@ -446,7 +446,7 @@ const data: IAlgoData[] = [
     // 계보순: 반응형 힘장(potential_fields) → 히스토그램 조향(vfh) → 명령 공간 sampling
     // (dwa) → 기하학적 경로 추종(pure_pursuit) → 오차 기반 조향(stanley) → 실무형 규제
     // 추종(regulated_pure_pursuit) → 탄성 밴드(elastic_bands) → 시간 밴드(teb) → 모델 예측
-    // 제어(mpc).
+    // 제어(mpc) → 경로적분 sampling(mppi).
     {
         slug: "potential_fields",
         title: {en: "Potential Fields", ko: "Potential Fields"},
@@ -592,6 +592,23 @@ const data: IAlgoData[] = [
             {en: "Properties and Complexity", ko: "성질과 복잡도"},
             {en: "The Algorithm", ko: "알고리즘"},
             {en: "The Nonconvex Trap", ko: "비볼록 함정"},
+            {en: "Demo", ko: "Demo"},
+            {en: "Implementation", ko: "Implementation"},
+            {en: "References", ko: "References"},
+        ],
+    },
+    {
+        slug: "mppi",
+        title: {en: "MPPI", ko: "MPPI"},
+        category: "local",
+        supportedExample: {python: true, "c++": true},
+        contents: lazy(() => import("./local/Mppi")),
+        sections: [
+            {en: "From Gradients to Samples", ko: "gradient에서 표본으로"},
+            {en: "The Path-Integral Weights", ko: "경로적분 가중치"},
+            {en: "Properties and Complexity", ko: "성질과 복잡도"},
+            {en: "The Algorithm", ko: "알고리즘"},
+            {en: "The Temperature Knife-Edge", ko: "온도의 외줄타기"},
             {en: "Demo", ko: "Demo"},
             {en: "Implementation", ko: "Implementation"},
             {en: "References", ko: "References"},

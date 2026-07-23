@@ -111,6 +111,7 @@ visualization, interactive in-browser demos, and a benchmark matrix.*
 | local_planning | Elastic Bands | ✅ | ✅ | Quinlan & Khatib (1993) |
 | local_planning | TEB | ✅ | ✅ | Rösmann et al. (2012/2017) |
 | local_planning | MPC | ✅ | ✅ | Klančar & Škrjanc (2007) |
+| local_planning | MPPI | ✅ | ✅ | Williams et al. (2016/2018) |
 | multi_agent | Prioritized A* | ⬜ | ⬜ | Erdmann & Lozano-Pérez (1987) |
 | multi_agent | Joint-space A* | ⬜ | ⬜ | — |
 | multi_agent | CBS | ⬜ | ⬜ | Sharon et al. (2015) |

@@ -271,6 +271,17 @@ const RUNNERS = {
         aMax: p.a_max, controlDt: p.control_dt, maxSteps: p.max_steps, goalTolerance: p.goal_tolerance,
         footprintRadius: p.footprint_radius, stallWindow: p.stall_window, stallDistance: p.stall_distance,
     }),
+    // 시나리오: maps/scenarios/open01_s4.yaml (goal-seeking reach). MPPI는 py↔TS가
+    // NumpyRandom(PCG64) + Box-Muller로 bit-identical 균등 스트림을 공유해 노이즈열까지 같다.
+    mppi: (m, s, g, p) => engines.runMppi({
+        map: m, startPose: s, goal: [8.0, 8.0],
+        horizon: p.horizon, numSamples: p.num_samples, temperature: p.temperature,
+        sigmaV: p.sigma_v, sigmaOmega: p.sigma_omega, wGoal: p.w_goal, wObstacle: p.w_obstacle,
+        wControl: p.w_control, minObstacleDist: p.min_obstacle_dist, vMax: p.v_max, omegaMax: p.omega_max,
+        aMax: p.a_max, seed: p.seed, controlDt: p.control_dt, maxSteps: p.max_steps,
+        goalTolerance: p.goal_tolerance, footprintRadius: p.footprint_radius,
+        stallWindow: p.stall_window, stallDistance: p.stall_distance,
+    }),
 };
 
 // exact: 연산 순서·tie-break 까지 py 를 미러 → expanded_nodes 도 일치해야 한다.
@@ -348,6 +359,16 @@ const CHECKS = [
     // 1e-3을 그대로 유지한다(1e-3은 tick마다의 fdlibm sin/cos 1ULP 누적을 흡수).
     {algo: "mpc", maps: ["open01"],
      metricKeys: [{key: "steps", tol: 0}, {key: "distance_traveled", tol: 1e-3}]},
+    // MPPI는 py↔TS가 NumpyRandom(PCG64) + Box-Muller로 bit-identical 균등 스트림을 공유해
+    // 노이즈열이 일치한다. 실행 궤적은 argmin 선택이 아니라 K=200 표본의 softmax 가중 평균이라
+    // 경로 자체엔 ULP를 증폭하는 이산 분기가 없고(selected 플래그만 argmin에 의존하며 trace용),
+    // 실측 py↔TS 차이는 steps 0(정수 exact), distance_traveled 5.2e-7로 매우 작다. 다만 이
+    // fixture는 이 머신의 Python libm으로 뽑았고 TS는 V8에서 도는 데다, 매 tick exp/log을 K회
+    // 호출하고 폐루프 goal/stall 경계 판정이 tick 수를 ±1 흔들 수 있어, 다른 CI 머신의 libm에서
+    // 궤적이 몇 tick 어긋날 여지가 있다. TEB와 같은 tol(steps 8, distance 0.2)로 그 여지를 덮되
+    // 무관한 회귀(미도달·스텝 급변·NaN)는 잡는다.
+    {algo: "mppi", maps: ["open01"],
+     metricKeys: [{key: "steps", tol: 8}, {key: "distance_traveled", tol: 0.2}]},
 ];
 
 let failures = 0;
