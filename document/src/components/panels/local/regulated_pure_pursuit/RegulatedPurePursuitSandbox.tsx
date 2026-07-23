@@ -175,8 +175,8 @@ const RegulatedPurePursuitScene = ({panel = 340}: {panel?: number}) => {
                         ))}
                     </div>
                     <div className="text-xs text-muted text-center tabular-nums">
-                        {t("the trail thins where the robot slows: hairpin brakes into corners, narrow gap brakes at the gap, plain pursuit turns both off for comparison",
-                            "속도가 줄면 궤적이 얇아진다. hairpin은 코너에서, narrow gap은 통로에서 감속하고, plain pursuit는 비교를 위해 두 규제를 껐다")}
+                        {t("the trail fades where the robot slows: hairpin brakes into corners, narrow gap brakes at the gap, plain pursuit turns both off for comparison",
+                            "속도가 줄면 궤적 색이 옅어진다. hairpin은 코너에서, narrow gap은 통로에서 감속하고, plain pursuit는 비교를 위해 두 규제를 껐다")}
                     </div>
                 </div>
             }
@@ -188,8 +188,8 @@ const RegulatedPurePursuitSandbox = () => {
     const t = useTr()
     return <CanvasFigure
         label={t(
-            "Live Regulated Pure Pursuit: raise r_min or d_prox to see the robot brake earlier into corners and near obstacles — the speed-proportional trail thins where it slows, and the plain pursuit preset turns both regulations off for comparison",
-            "라이브 Regulated Pure Pursuit. r_min이나 d_prox를 올리면 코너와 장애물 근처에서 더 일찍 감속하는 것을 볼 수 있다. 속도 비례 궤적은 감속 구간에서 얇아지고, plain pursuit 프리셋은 비교를 위해 두 규제를 모두 껐다",
+            "Live Regulated Pure Pursuit: raise r_min or d_prox to see the robot brake earlier into corners and near obstacles — the trail fades where it slows, and the plain pursuit preset turns both regulations off for comparison",
+            "라이브 Regulated Pure Pursuit. r_min이나 d_prox를 올리면 코너와 장애물 근처에서 더 일찍 감속하는 것을 볼 수 있다. 궤적은 감속 구간에서 색이 옅어지고, plain pursuit 프리셋은 비교를 위해 두 규제를 모두 껐다",
         )}
         tight bodyClassName="w-fit" className="w-full"
         modal={<RegulatedPurePursuitScene panel={Math.min(modalCanvasSize(1).width, 640)}/>}
