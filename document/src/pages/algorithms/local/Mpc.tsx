@@ -309,9 +309,17 @@ return (v0, w0)                       # 7  execute only u_0`}/>
                         ]}/>
                         <p>Substitute <InlineMath math="U' - U = -\alpha\,\nabla J(U)"/>:</p>
                         <BlockMath math="J(U') \le J(U) - \alpha \lVert \nabla J(U) \rVert^2 + \tfrac{L\alpha^2}{2}\lVert \nabla J(U) \rVert^2 = J(U) - \alpha\Big(1 - \tfrac{L\alpha}{2}\Big)\lVert \nabla J(U) \rVert^2"/>
+                        <Terms items={[
+                            ["\\alpha", "the gradient-descent step size (step_alpha), with 0 < α ≤ 1/L"],
+                            ["\\nabla J(U)", "the gradient of the cost at U"],
+                        ]}/>
                         <p>With <InlineMath math="\alpha \le 1/L"/> we have{" "}
                             <InlineMath math="1 - \tfrac{L\alpha}{2} \ge \tfrac{1}{2}"/>, hence:</p>
                         <BlockMath math="J(U') \le J(U) - \tfrac{\alpha}{2}\lVert \nabla J(U) \rVert^2"/>
+                        <Terms items={[
+                            ["J(U')", "the cost after one gradient step"],
+                            ["J(U)", "the cost before the step"],
+                        ]}/>
                         <p>The right side is <InlineMath math="\le J(U)"/>, with equality only when{" "}
                             <InlineMath math="\nabla J(U) = 0"/>. Each unconstrained step strictly lowers{" "}
                             <InlineMath math="J"/> until a stationary point, which is the local optimum the
@@ -334,9 +342,17 @@ return (v0, w0)                       # 7  execute only u_0`}/>
                         ]}/>
                         <p><InlineMath math="U' - U = -\alpha\,\nabla J(U)"/>를 대입하면:</p>
                         <BlockMath math="J(U') \le J(U) - \alpha \lVert \nabla J(U) \rVert^2 + \tfrac{L\alpha^2}{2}\lVert \nabla J(U) \rVert^2 = J(U) - \alpha\Big(1 - \tfrac{L\alpha}{2}\Big)\lVert \nabla J(U) \rVert^2"/>
+                        <Terms items={[
+                            ["\\alpha", "gradient descent step 크기(step_alpha), 0 < α ≤ 1/L"],
+                            ["\\nabla J(U)", "U에서의 비용 gradient"],
+                        ]}/>
                         <p><InlineMath math="\alpha \le 1/L"/>이면 <InlineMath math="1 - \tfrac{L\alpha}{2}
                             \ge \tfrac{1}{2}"/>이므로:</p>
                         <BlockMath math="J(U') \le J(U) - \tfrac{\alpha}{2}\lVert \nabla J(U) \rVert^2"/>
+                        <Terms items={[
+                            ["J(U')", "step 한 번 뒤의 비용"],
+                            ["J(U)", "step 전의 비용"],
+                        ]}/>
                         <p>우변은 <InlineMath math="\le J(U)"/>이고, 등호는 <InlineMath math="\nabla J(U) =
                             0"/>일 때만 성립한다. 제약이 걸리지 않은 각 step은 정류점에 이를 때까지{" "}
                             <InlineMath math="J"/>를 엄격히 낮춘다. 그 정류점이 비볼록{" "}
