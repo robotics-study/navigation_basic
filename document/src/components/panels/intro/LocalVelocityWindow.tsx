@@ -149,7 +149,9 @@ const Scene = ({scale = 1}: {scale?: number}) => {
             const ok = admissibleV(v, om, obstY)
             const kappa = v > 0 ? om / v : 0
             const dist = arcDistToObstacle(kappa, obstY)
-            const len = ok ? v * T : Math.min(dist, v * T)
+            // admissible 이라도 v·T 롤아웃이 충돌 거리보다 길 수 있다(제동으로 그 전에
+            // 멈춘다는 뜻일 뿐) — 그림은 장애물 앞에서 끊어야 관통해 보이지 않는다.
+            const len = Math.min(dist, v * T)
             arcs.push({pts: arcPoints(kappa, Math.max(len, 0.05)), ok})
         }
         return arcs
@@ -184,12 +186,14 @@ const Scene = ({scale = 1}: {scale?: number}) => {
                             return <Circle key={`hit${i}`} x={sx(mx)} y={sy(my)} radius={3}
                                            fill={PATH_COLOR} stroke={colors.bg} strokeWidth={1}/>
                         })}
-                        {/* 선택 명령의 원호 */}
-                        {best && (
-                            <Line points={arcPoints(best.v > 0 ? best.om / best.v : 0, best.v * 1.4)
+                        {/* 선택 명령의 원호 — 충돌 거리 앞에서 끊는다 (관통해 보이지 않게) */}
+                        {best && (() => {
+                            const kappa = best.v > 0 ? best.om / best.v : 0
+                            const len = Math.min(arcDistToObstacle(kappa, obstY), best.v * 1.4)
+                            return <Line points={arcPoints(kappa, Math.max(len, 0.05))
                                 .flatMap(([mx, my]) => [sx(mx), sy(my)])}
-                                  stroke={colors.accent2} strokeWidth={3} lineCap="round"/>
-                        )}
+                                         stroke={colors.accent2} strokeWidth={3} lineCap="round"/>
+                        })()}
                         {/* 로봇 (전방 = 위) */}
                         <Group x={RX} y={RY}>
                             <Circle radius={ROBOT_R * SCALE} stroke={colors.accent2}
@@ -225,8 +229,9 @@ const Scene = ({scale = 1}: {scale?: number}) => {
                               width={vx(wRight) - vx(wLeft)} height={vy(wLo) - vy(wHi)}
                               fill={colors.accent} opacity={0.14}
                               stroke={colors.accent} strokeWidth={2}/>
-                        {/* 현재 속도 */}
-                        <Circle x={vx(oc)} y={vy(vc)} radius={4} fill={colors.text}/>
+                        {/* 현재 속도 — 판정 색 (안전=텍스트색, 위험=경고색) */}
+                        <Circle x={vx(oc)} y={vy(vc)} radius={4}
+                                fill={admissibleV(vc, oc, obstY) ? colors.text : PATH_COLOR}/>
                         {/* 선택된 명령 */}
                         {best && (
                             <Circle x={vx(best.om)} y={vy(best.v)} radius={6}
@@ -273,6 +278,18 @@ const Scene = ({scale = 1}: {scale?: number}) => {
                 {t("v, ω move the window over the map; d moves the obstacle and reshapes the red region",
                     "v, ω는 창을 옮기고, d는 장애물을 옮겨 빨간 영역 자체를 바꾼다")}
             </div>
+            {/* 현재 명령의 실제 판정 — 슬라이더에 실시간 반응하는 유일한 상태줄 */}
+            {(() => {
+                const okNow = admissibleV(vc, oc, obstY)
+                return <div className="text-xs text-center font-semibold tabular-nums"
+                            style={{color: okNow ? "var(--accent-2)" : PATH_COLOR}}>
+                    {okNow
+                        ? t(`current (v, ω) = (${vc.toFixed(2)}, ${oc.toFixed(2)}): can stop before the obstacle`,
+                            `현재 (v, ω) = (${vc.toFixed(2)}, ${oc.toFixed(2)}): 장애물 앞에서 멈출 수 있다`)
+                        : t(`current (v, ω) = (${vc.toFixed(2)}, ${oc.toFixed(2)}): cannot stop in time — collision`,
+                            `현재 (v, ω) = (${vc.toFixed(2)}, ${oc.toFixed(2)}): 제때 못 멈춘다 (충돌)`)}
+                </div>
+            })()}
             {/* 색 범례 — 상태 표시가 아니라 색의 의미 설명. "X 영역 = ..." 형식으로 적어
                 현재 상태에 대한 경고문으로 오독되지 않게 한다 */}
             <div className="text-xs text-muted text-center flex items-center justify-center gap-3 flex-wrap">
