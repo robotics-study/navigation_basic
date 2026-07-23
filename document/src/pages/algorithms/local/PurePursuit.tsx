@@ -115,10 +115,15 @@ const PurePursuit = () => {
                             (Coulter, 1992, §4–5), not a theorem — which is exactly why the derivation
                             below only claims to construct <em>an</em> arc through the lookahead point,
                             not to prove anything about long-run tracking error.</li>
-                        <li><strong>Cost: effectively <InlineMath math="O(1)"/> per tick.</strong> The
-                            search for the lookahead point resumes from wherever the previous tick left
-                            off and only ever moves forward along the path, so across an entire run the
-                            path is scanned once, not once per tick.</li>
+                        <li><strong>Cost: <InlineMath math="O(\text{remaining path})"/> per tick, not{" "}
+                            <InlineMath math="O(1)"/>.</strong> Because the progress index only moves
+                            forward, the controller never re-examines the prefix the robot has already
+                            passed. But within a single tick it still scans the entire path <em>ahead</em>{" "}
+                            of that index for the nearest segment, with no early stop, so the per-tick cost
+                            is linear in the path still to come. What the monotone index buys is not a
+                            cheaper tick but better behavior: it keeps tracking robust on self-crossing
+                            paths and stops the robot from ever being dragged backward to an earlier part
+                            of the route, which a plain global nearest-point search would do.</li>
                     </ul>
                 </>}
                 ko={<>
@@ -138,10 +143,14 @@ const PurePursuit = () => {
                             1992, §4–5). 그래서 아래 유도도 lookahead 점을 지나는 원호 <em>하나</em>를
                             구성한다는 것만 보이지, 장기 추종 오차에 대해서는 아무것도 증명하지
                             않는다.</li>
-                        <li><strong>비용: tick당 사실상 <InlineMath math="O(1)"/>.</strong> lookahead
-                            점 탐색은 직전 tick이 멈춘 지점에서 재개해 경로를 따라 앞으로만
-                            움직이므로, 전체 실행을 통틀어 경로를 한 번만 훑는다. tick마다 한 번씩이
-                            아니다.</li>
+                        <li><strong>비용: tick당 <InlineMath math="O(1)"/>이 아니라{" "}
+                            <InlineMath math="O(\text{남은 경로})"/>.</strong> progress index가 앞으로만
+                            움직이므로 로봇이 이미 지나온 앞쪽 구간을 다시 들여다보지는 않는다. 하지만
+                            한 tick 안에서는 그 인덱스 <em>이후</em>의 남은 경로 전체를 훑어 가장 가까운
+                            구간을 찾고, 중간에 멈추지 않는다. 그래서 tick당 비용은 남은 경로 길이에
+                            비례한다. 단조 진행이 주는 것은 더 싼 tick이 아니라 더 나은 동작이다. 자기
+                            자신과 교차하는 경로에서도 추종이 흔들리지 않게 하고, 전역 최근접점 탐색이라면
+                            일어날 법한, 경로의 앞부분으로 되돌아가 끌려가는 일을 막는다.</li>
                     </ul>
                 </>}
             />
@@ -177,7 +186,11 @@ return (v, omega)                                               # 8`}/>
                     <li>Find the lookahead point as in the previous section: the forward-most crossing
                         of the <InlineMath math="L_d"/>-circle with the path from the progress index
                         onward. If the remaining path is shorter than <InlineMath math="L_d"/>, no
-                        crossing exists — aim at the path's last point (the goal) instead.</li>
+                        crossing exists — aim at the path's last point (the goal) instead. In that
+                        end-game the curvature still divides by the fixed <InlineMath math="L_d"/> even
+                        though the goal now sits nearer than <InlineMath math="L_d"/>, so{" "}
+                        <InlineMath math="\kappa = 2\sin\alpha / L_d"/> slightly understates the turn —
+                        a benign, deliberate understeer that fades as the robot settles onto the goal.</li>
                     <li>Measure the bearing of the lookahead point relative to the current heading,
                         wrapped to <InlineMath math="(-\pi, \pi]"/>. Positive <InlineMath math="\alpha"/>{" "}
                         means the point sits to the left.</li>
@@ -200,15 +213,19 @@ return (v, omega)                                               # 8`}/>
                     <li>progress index를 마지막 값에서부터 앞으로만 훑어, 로봇에 가장 가까운 경로
                         구간으로 갱신한다. 절대 뒤로 가지 않는다. 자기 자신과 교차하는 경로에서
                         lookahead 점이 기하적으로 더 가까운 뒤쪽 교점으로 되돌아가지 않게 하는 것이
-                        바로 이 규칙이다 — 로봇은 이미 지나온 경로를 따라 항상 앞으로만 쫓는다.</li>
+                        바로 이 규칙이다. 로봇은 이미 지나온 경로를 따라 항상 앞으로만 쫓는다.</li>
                     <li>앞 절과 같은 방식으로 lookahead 점을 찾는다. progress index 이후 구간에서{" "}
                         <InlineMath math="L_d"/>원과의 교점 중 가장 앞선 것. 남은 경로가{" "}
-                        <InlineMath math="L_d"/>보다 짧으면 교점이 없다 — 대신 경로의 마지막
-                        점(goal)을 겨눈다.</li>
+                        <InlineMath math="L_d"/>보다 짧으면 교점이 없다. 대신 경로의 마지막
+                        점(goal)을 겨눈다. 이때도 곡률은 고정된 <InlineMath math="L_d"/>로 나누므로,
+                        goal이 <InlineMath math="L_d"/>보다 가까이 있어도{" "}
+                        <InlineMath math="\kappa = 2\sin\alpha / L_d"/>는 회전을 약간 과소평가한다.
+                        끝에서 살짝 덜 도는(understeer) 셈인데, 로봇이 goal에 안착하며 사라지는
+                        의도된 단순화다.</li>
                     <li>현재 heading 대비 lookahead 점의 방위를 <InlineMath math="(-\pi, \pi]"/>로
                         wrap해 측정한다. <InlineMath math="\alpha"/>가 양수면 점이 왼쪽에 있다는
                         뜻이다.</li>
-                    <li>그 방위를 곡률로 바꾼다 — 유도는 아래에.</li>
+                    <li>그 방위를 곡률로 바꾼다. 유도는 아래에 있다.</li>
                     <li>goal 반경 안에서는 전진 속도를 선형으로 줄여, 로봇이 전속력으로 지나쳐
                         되돌아오는 일이 없게 한다.</li>
                     <li>회전율은 속도 곱하기 곡률이고, 로봇이 물리적으로 낼 수 있는 값으로
@@ -218,7 +235,7 @@ return (v, omega)                                               # 8`}/>
                         <InlineMath math="v"/>를 다시 계산한다. 흔히 놓치는 지점이다.{" "}
                         <InlineMath math="\omega"/>만 클램프하고 <InlineMath math="v"/>를 옛 값 그대로
                         두면, 실행되는 <InlineMath math="(v, \omega)"/>가 방금 유도한{" "}
-                        <InlineMath math="\kappa"/>보다 더 완만한 원호를 그린다 — 기하가 요구한
+                        <InlineMath math="\kappa"/>보다 더 완만한 원호를 그린다. 기하가 요구한
                         것보다 덜 도는(understeer) 결과가 된다.</li>
                     <li>명령을 반환한다. 폐루프 시뮬레이터가 이를 적분하고 다음 tick에 다시
                         불러온다.</li>
@@ -254,12 +271,15 @@ return (v, omega)                                               # 8`}/>
                         </p>
                         <p>
                             The <strong>tangent–chord angle theorem</strong> says the angle between a
-                            tangent and a chord drawn from the point of tangency equals half the central
-                            angle the chord subtends — the same relationship the inscribed angle theorem
-                            gives from any point on the far arc. Applying it to the right triangle formed
-                            by the chord, the tangent, and the diameter through the robot gives the chord
-                            length directly in terms of <InlineMath math="R"/> and the tangent–chord
-                            angle:
+                            tangent and a chord drawn from the point of tangency equals the inscribed
+                            angle that same chord subtends from the far arc. So the tangent–chord angle{" "}
+                            <InlineMath math="\alpha"/> at the robot equals the inscribed angle the chord{" "}
+                            <InlineMath math="L_d"/> subtends elsewhere on the circle. Now take the
+                            diameter that starts at the robot as the hypotenuse of an inscribed triangle:
+                            by Thales' theorem its third vertex, placed at the lookahead point, carries a
+                            right angle. In that right triangle the hypotenuse is <InlineMath math="2R"/>{" "}
+                            and the chord <InlineMath math="L_d"/> lies opposite the inscribed angle{" "}
+                            <InlineMath math="\alpha"/>, so:
                         </p>
                         <BlockMath math="L_d = 2R \sin\alpha"/>
                         <Terms items={[
@@ -304,10 +324,14 @@ return (v, omega)                                               # 8`}/>
                         </p>
                         <p>
                             <strong>접선-현 각 정리(tangent–chord angle theorem)</strong>에 따르면
-                            접점에서 그은 접선과 현 사이의 각은 그 현이 만드는 중심각의 절반과
-                            같다 — 먼 쪽 호 위 어느 점에서 보든 원주각 정리가 주는 값과 동일하다.
-                            이를 현·접선·로봇을 지나는 지름이 만드는 직각삼각형에 적용하면 현의
-                            길이가 <InlineMath math="R"/>과 접선-현 각으로 바로 나온다:
+                            접점에서 그은 접선과 현 사이의 각은 그 현이 먼 쪽 호에서 만드는 원주각과
+                            같다. 그래서 로봇에서의 접선-현 각 <InlineMath math="\alpha"/>는 현{" "}
+                            <InlineMath math="L_d"/>가 원의 다른 점에서 만드는 원주각과 같다. 이제
+                            로봇에서 시작하는 지름을 빗변으로 하는 삼각형을 원에 내접시키면, 탈레스
+                            정리에 의해 나머지 꼭짓점을 lookahead 점에 두었을 때 그 점에서 직각이 된다.
+                            이 직각삼각형에서 빗변은 <InlineMath math="2R"/>이고 현{" "}
+                            <InlineMath math="L_d"/>는 원주각 <InlineMath math="\alpha"/>의 맞은편에
+                            놓이므로:
                         </p>
                         <BlockMath math="L_d = 2R \sin\alpha"/>
                         <Terms items={[
@@ -332,7 +356,7 @@ return (v, omega)                                               # 8`}/>
                         </p>
                         <BlockMath math="\kappa = \frac{1}{R} = \frac{2\sin\alpha}{L_d}"/>
                         <Terms items={[
-                            ["\\kappa", "추종 원호의 부호 있는 곡률. 양수면 왼쪽으로 돈다 — \\alpha의 부호와 일치"],
+                            ["\\kappa", "추종 원호의 부호 있는 곡률. 양수면 왼쪽으로 돈다(\\alpha의 부호와 일치)"],
                             ["R", "위 현 관계식에서 나온 반지름"],
                             ["\\alpha,\\ L_d", "위와 동일: 접선-현 각과 lookahead 거리"],
                         ]}/>
