@@ -273,12 +273,14 @@ const Scene = ({scale = 1}: {scale?: number}) => {
                 {t("v, ω move the window over the map; d moves the obstacle and reshapes the red region",
                     "v, ω는 창을 옮기고, d는 장애물을 옮겨 빨간 영역 자체를 바꾼다")}
             </div>
-            {/* 색 범례 — 상태 표시가 아니라 세 색의 의미 설명이다 (견본으로 명시) */}
+            {/* 색 범례 — 상태 표시가 아니라 색의 의미 설명. "X 영역 = ..." 형식으로 적어
+                현재 상태에 대한 경고문으로 오독되지 않게 한다 */}
             <div className="text-xs text-muted text-center flex items-center justify-center gap-3 flex-wrap">
                 {([
-                    ["var(--accent)", t("dynamic window", "dynamic window")],
-                    ["var(--accent-2)", t("chosen command and its arc", "선택된 명령과 그 원호")],
-                    [PATH_COLOR, t("cannot stop before the obstacle", "장애물 앞에서 못 멈추는 명령")],
+                    ["var(--accent)", t("purple box = dynamic window", "보라 상자 = dynamic window")],
+                    ["var(--accent-2)", t("teal = chosen command and its arc", "청록 = 선택된 명령과 그 원호")],
+                    [PATH_COLOR, t("red region = commands that cannot stop before the obstacle",
+                        "빨간 영역 = 장애물 앞에서 못 멈추는 명령들")],
                 ] as const).map(([c, label]) => (
                     <span key={label} className="inline-flex items-center gap-1.5">
                         <span aria-hidden="true" className="inline-block w-2.5 h-2.5 rounded-sm"
