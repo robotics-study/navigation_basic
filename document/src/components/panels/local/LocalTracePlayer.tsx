@@ -162,8 +162,12 @@ export interface LocalTracePlayerProps {
     footprintRadius?: number;
     // 추종 계열: 로봇 중심 lookahead 원(반경 = 로봇→이번 tick 후보점 거리)을 그린다.
     showLookahead?: boolean;
-    // Stanley: 로봇→참조 경로 최근접점 crosstrack 선분을 그린다.
+    // Stanley: crosstrack 선분(측정점→참조 경로 최근접점)을 그린다. Stanley는 오차를
+    // 로봇 중심이 아니라 전륜축에서 재므로, crosstrackWheelbase가 주어지면 측정점을
+    // pose에서 heading 방향으로 그만큼 앞선 전륜축으로 옮긴다.
     showCrosstrack?: boolean;
+    // Stanley 전륜축 오프셋(가상 축간거리 L). 주면 crosstrack 측정점이 전륜축이 된다.
+    crosstrackWheelbase?: number;
     // 로봇 중심에 항상 그리는 보조 반경(world 단위, 예: RPP 의 근접 감속 반경 d_prox).
     auxCircleRadius?: number;
     // Elastic Bands/TEB: 최신 tick의 band_updated(bubble/pose 열)를 그린다. band_updated를
@@ -181,7 +185,8 @@ export interface LocalTracePlayerProps {
 
 const LocalTracePlayer = ({
                               map, events, startPose, goal, referencePath, footprintRadius,
-                              showLookahead, showCrosstrack, showBand = true, auxCircleRadius, panel = 340,
+                              showLookahead, showCrosstrack, crosstrackWheelbase, showBand = true,
+                              auxCircleRadius, panel = 340,
                               autoPlay = true, onPaintCell, onMoveStart, onMoveGoal, onReset, footer,
                           }: LocalTracePlayerProps) => {
     const t = useTr()
@@ -609,11 +614,19 @@ const LocalTracePlayer = ({
                                         fill={colors.accent}/>
                             </Group>
                         })()}
-                        {/* crosstrack 선분 (Stanley): 로봇→참조 경로 최근접점 */}
+                        {/* crosstrack 선분 (Stanley): 전륜축→참조 경로 최근접점. Stanley는
+                            오차를 로봇 중심이 아니라 전륜축(pose에서 heading 방향으로 L 앞선
+                            점)에서 재므로, 측정 시작점을 전륜축으로 옮긴다. */}
                         {showCrosstrack && (() => {
-                            const q = nearestOnPath(currentPose)
+                            const wb = crosstrackWheelbase ?? 0
+                            const front: Pose = [
+                                currentPose[0] + wb * Math.cos(currentPose[2]),
+                                currentPose[1] + wb * Math.sin(currentPose[2]),
+                                currentPose[2],
+                            ]
+                            const q = nearestOnPath(front)
                             if (!q) return null
-                            const [rx, ry] = toPixel(currentPose[0], currentPose[1])
+                            const [rx, ry] = toPixel(front[0], front[1])
                             const [qx, qy] = toPixel(q[0], q[1])
                             return <Group listening={false}>
                                 <Line points={[rx, ry, qx, qy]} stroke={PATH_COLOR}

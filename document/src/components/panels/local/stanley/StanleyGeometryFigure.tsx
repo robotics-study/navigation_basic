@@ -30,6 +30,7 @@ const deg = (d: number) => (d * Math.PI) / 180
 
 const Scene = ({scale = 1}: {scale?: number}) => {
     const colors = useCanvasColors()
+    const t = useTr()
 
     const heading = deg(HEADING_DEG)
     const thetaPath = heading + deg(PSI_DEG)
@@ -66,6 +67,7 @@ const Scene = ({scale = 1}: {scale?: number}) => {
     ]
 
     return (
+        <div className="flex flex-col items-center gap-2">
         <Stage width={PANEL * scale} height={PANEL * scale}
                className="bg-surface border border-border rounded-lg overflow-hidden">
             <Layer scaleX={scale} scaleY={scale}>
@@ -78,12 +80,13 @@ const Scene = ({scale = 1}: {scale?: number}) => {
                        stroke={colors.accent} fill={colors.accent} strokeWidth={1.6} opacity={0.85}/>
                 {/* 축간거리 L (후륜축 → 전륜축) */}
                 <Line points={[...rear, ...front]} stroke={colors.text} strokeWidth={1.6} opacity={0.85}/>
-                {/* heading 방향(전륜축 너머로 살짝 연장) */}
+                {/* heading 방향(전륜축 너머로 살짝 연장). heading·경로 접선·psi를 accent로
+                    묶고, 조향각 delta는 accent2로 대비시켜 둘을 눈으로 구분하게 한다. */}
                 <Arrow points={[...front, ...headTip]} pointerLength={8} pointerWidth={7}
-                       stroke={colors.accent2} fill={colors.accent2} strokeWidth={2.2} opacity={0.9}/>
+                       stroke={colors.accent} fill={colors.accent} strokeWidth={2.2} opacity={0.9}/>
                 {/* delta: 조향된 전륜 방향 */}
                 <Arrow points={[...front, ...deltaTip]} pointerLength={8} pointerWidth={7}
-                       stroke={colors.accent} fill={colors.accent} strokeWidth={2.2}/>
+                       stroke={colors.accent2} fill={colors.accent2} strokeWidth={2.2}/>
                 {/* e: 전륜축 -> foot point (crosstrack error) */}
                 <Line points={[...front, ...foot]} stroke={colors.text} strokeWidth={1.4}
                       dash={[3, 3]} opacity={0.75}/>
@@ -116,6 +119,22 @@ const Scene = ({scale = 1}: {scale?: number}) => {
                       fontStyle="bold" fill={colors.accent2}/>
             </Layer>
         </Stage>
+        {/* 색 범례 ("색 = 의미" 형식) — heading·경로 접선·psi(accent) vs 조향각 delta(accent2). */}
+        <div className="text-xs text-muted text-center flex items-center justify-center gap-3 flex-wrap"
+             style={{maxWidth: PANEL * scale}}>
+            {([
+                ["var(--accent)", t("blue = heading and path tangent, with the heading error ψ between them",
+                    "파란색 = heading과 경로 접선, 그 사이 각이 heading 오차 ψ")],
+                ["var(--accent-2)", t("teal = steering angle δ", "청록색 = 조향각 δ")],
+            ] as const).map(([c, label]) => (
+                <span key={label} className="inline-flex items-center gap-1.5">
+                    <span aria-hidden="true" className="inline-block w-2.5 h-2.5 rounded-sm"
+                          style={{background: c}}/>
+                    <span className="font-semibold" style={{color: c}}>{label}</span>
+                </span>
+            ))}
+        </div>
+        </div>
     )
 }
 
