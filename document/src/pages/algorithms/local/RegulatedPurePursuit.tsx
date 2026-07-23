@@ -31,16 +31,18 @@ const RegulatedPurePursuit = () => {
                     moving, caps its speed the tighter a corner gets, caps it again the closer an obstacle
                     gets, and checks the arc it is about to drive before committing to it. Macenski, Singh,
                     Martin and Gines described the method in a 2023 <em>Autonomous Robots</em> paper, and it
-                    now ships as Nav2's default local controller — the thing that actually drives the robot
-                    once a global planner has handed it a path.
+                    now ships as one of Nav2's built-in path-tracking controllers, among the most widely
+                    used — the thing that actually drives the robot once a global planner has handed it a
+                    path.
                 </p>}
                 ko={<p>
                     Regulated Pure Pursuit는 Pure Pursuit의 "점 하나를 지나는 원호 하나"라는 기하는 그대로
                     두되, 세상이 텅 비어 있는 척은 그만둔다. 속도가 빠를수록 더 멀리 내다보고, 코너가
                     조여질수록 속도를 낮추고, 장애물이 가까워질수록 다시 낮추며, 명령할 원호를 실행하기
                     전에 미리 걸어보고 검사한다. Macenski, Singh, Martin, Gines가 2023년 <em>Autonomous
-                    Robots</em> 논문에서 이 방법을 정리했고, 지금은 Nav2의 기본 local controller로
-                    쓰인다. global planner가 경로를 건네준 뒤 실제로 로봇을 움직이는 바로 그 부분이다.
+                    Robots</em> 논문에서 이 방법을 정리했고, 지금은 Nav2에 내장된 경로 추종 controller 중
+                    가장 널리 쓰이는 것들 중 하나다. global planner가 경로를 건네준 뒤 실제로 로봇을
+                    움직이는 바로 그 부분이다.
                 </p>}
             />
 
@@ -65,8 +67,9 @@ const RegulatedPurePursuit = () => {
                         curvature, and a speed cap that tightens with obstacle proximity, plus a short
                         lookahead collision check before the command ever reaches the motors. The result is
                         Regulated Pure Pursuit — still geometric, still cheap, but no longer indifferent to
-                        speed, curvature, or the map. It is why Nav2 ships it as the default controller
-                        instead of plain Pure Pursuit.
+                        speed, curvature, or the map. It is why Nav2 ships it as one of its built-in
+                        controllers in place of plain Pure Pursuit, and why it is one of the most widely
+                        used path-tracking plugins in practice.
                     </p>
                 </>}
                 ko={<>
@@ -80,14 +83,14 @@ const RegulatedPurePursuit = () => {
                     </p>
                     <p>
                         첫 번째 사각지대의 해법은 Regulated Pure Pursuit보다 먼저 나왔다. Campbell(2007)이
-                        DARPA Urban Challenge를 위해 lookahead 거리를 차량 자신의 속도에 비례시켰다 — 빠르게
-                        달릴수록 더 멀리 본다는 것으로, 보통 Adaptive Pure Pursuit라 부른다. Macenski,
+                        DARPA Urban Challenge를 위해 lookahead 거리를 차량 자신의 속도에 비례시켰다. 빠르게
+                        달릴수록 더 멀리 본다는 뜻으로, 보통 Adaptive Pure Pursuit라 부른다. Macenski,
                         Singh, Martin, Gines(2023)는 이를 받아들이고 자기 나름의 규제 두 가지를 더
                         얹었다. 명령 곡률이 커질수록 조여지는 속도 상한과, 장애물이 가까워질수록 조여지는
                         속도 상한, 그리고 명령이 모터에 닿기 전 짧은 lookahead 충돌 검사까지. 그 결과가
                         Regulated Pure Pursuit다. 여전히 기하적이고 여전히 값싸지만, 더는 속도나 곡률이나
-                        지도에 무심하지 않다. Nav2가 이걸 plain Pure Pursuit 대신 기본 controller로 채택한
-                        이유이기도 하다.
+                        지도에 무심하지 않다. Nav2가 이걸 plain Pure Pursuit 대신 내장 controller로 채택해
+                        가장 널리 쓰는 이유이기도 하다.
                     </p>
                 </>}
             />
@@ -119,10 +122,12 @@ const RegulatedPurePursuit = () => {
                     ]}/>
                     <p>
                         Third, distance to the nearest obstacle caps the speed the same way — closer
-                        obstacle, lower ceiling. The original paper scales this by a costmap cost value; this
-                        implementation has no costmap layer, so it substitutes the plain Euclidean distance
-                        to the nearest occupied cell — a simplification of the proximity heuristic, not the
-                        heuristic itself:
+                        obstacle, lower ceiling. The paper's own proximity heuristic (Eq. 6) is already
+                        distance-based: it scales the ceiling by the ratio of obstacle distance to a
+                        proximity threshold, and costmap cost is only how the Nav2 plugin happens to read
+                        that distance off its map. This implementation applies the same ratio directly to a
+                        Euclidean clearance — distance to the nearest occupied cell, minus the footprint
+                        radius — and omits only the paper's extra tunable gain constant:
                     </p>
                     <BlockMath math="v_{\text{prox}} = \begin{cases} v_{\max} \cdot \dfrac{\max(d,\, 0)}{d_{\text{prox}}} & d < d_{\text{prox}} \\[4pt] v_{\max} & d \ge d_{\text{prox}} \end{cases}"/>
                     <Terms items={[
@@ -134,9 +139,14 @@ const RegulatedPurePursuit = () => {
                     <p>
                         The three ceilings — this one, the curvature one, and the ordinary goal-approach
                         slowdown pure pursuit already had — are combined by taking whichever is lowest, so
-                        the tightest constraint always wins. Below, both regulation ramps are drawn on the
-                        same speed axis: same shape, different thresholds, each independently reaching{" "}
-                        <InlineMath math="v_{\max}"/> once its own hazard clears.
+                        the tightest constraint always wins. The paper instead applies the curvature and
+                        proximity regulations sequentially, each one scaling the speed the previous one
+                        already reduced, so its combination compounds multiplicatively rather than taking a
+                        minimum; this implementation's minimum-of-ceilings approach is therefore slightly
+                        less conservative when both regulations bind at the same time. Below, both
+                        regulation ramps are drawn on the same speed axis: same shape, different thresholds,
+                        each independently reaching <InlineMath math="v_{\max}"/> once its own hazard
+                        clears.
                     </p>
                     <RegulationCurveFigure/>
                 </>}
@@ -164,9 +174,11 @@ const RegulatedPurePursuit = () => {
                     ]}/>
                     <p>
                         세 번째로, 가장 가까운 장애물까지의 거리도 같은 방식으로 속도 상한을 정한다.
-                        장애물이 가까울수록 상한이 낮아진다. 원 논문은 이를 costmap 비용값에 비례시키지만,
-                        이 구현에는 costmap 계층이 없어 가장 가까운 점유 셀까지의 단순 유클리드 거리로
-                        대신한다 — 근접 휴리스틱 자체가 아니라 그것의 단순화다:
+                        장애물이 가까울수록 상한이 낮아진다. 논문 자체의 근접 휴리스틱(Eq. 6)도 이미
+                        거리 기반이다. 장애물까지의 거리와 근접 문턱의 비율로 상한을 조절하며, costmap
+                        비용은 Nav2 플러그인이 그 거리를 지도에서 읽어내는 방법일 뿐이다. 이 구현은 같은
+                        비율을 유클리드 여유 거리(가장 가까운 점유 셀까지의 거리에서 footprint 반경을
+                        뺀 값)에 직접 적용하고, 논문의 추가 튜닝 상수만 생략한다:
                     </p>
                     <BlockMath math="v_{\text{prox}} = \begin{cases} v_{\max} \cdot \dfrac{\max(d,\, 0)}{d_{\text{prox}}} & d < d_{\text{prox}} \\[4pt] v_{\max} & d \ge d_{\text{prox}} \end{cases}"/>
                     <Terms items={[
@@ -177,9 +189,12 @@ const RegulatedPurePursuit = () => {
                     ]}/>
                     <p>
                         이 규제와 곡률 규제, 그리고 pure pursuit이 원래 갖고 있던 goal 근접 감속까지 세
-                        상한은 그중 가장 낮은 값을 취하는 방식으로 결합된다 — 가장 빡빡한 제약이 항상
-                        이긴다. 아래는 두 규제 램프를 같은 속도 축 위에 겹쳐 그린 것이다. 모양은 같고
-                        문턱만 다르며, 각자 자신의 위험 요인이 해소되면 독립적으로{" "}
+                        상한은 그중 가장 낮은 값을 취하는 방식으로 결합된다(가장 빡빡한 제약이 항상
+                        이긴다). 논문은 곡률 규제와 근접 규제를 순차적으로 적용해서, 앞 규제가 이미
+                        줄여놓은 속도에 다음 규제를 다시 곱하는 방식으로 결합한다. 즉 최솟값이 아니라
+                        곱셈으로 누적되는 셈이다. 이 구현의 최솟값 방식은 두 규제가 동시에 걸릴 때
+                        논문보다 약간 덜 보수적이다. 아래는 두 규제 램프를 같은 속도 축 위에 겹쳐 그린
+                        것이다. 모양은 같고 문턱만 다르며, 각자 자신의 위험 요인이 해소되면 독립적으로{" "}
                         <InlineMath math="v_{\max}"/>에 도달한다.
                     </p>
                     <RegulationCurveFigure/>
@@ -253,7 +268,7 @@ kappa ← 2 sin(alpha) / L_d
 v_goal ← v_max * min(1, remaining_to_goal / slow_radius)        # 4
 v_curv ← v_max * min(1, (1/|kappa|) / r_min)  if kappa != 0 else v_max
 v_prox ← v_max * clamp(clearance / d_prox, 0, 1)
-v ← max(min(v_goal, v_curv, v_prox), v_regulated_min)
+v ← max(min(v_goal, v_curv, v_prox), v_regulated_min)           # min of ceilings; paper compounds curv & prox multiplicatively instead
 arc_len ← L_d              if alpha near 0 or near +-pi         # 5
        ← L_d * alpha / sin(alpha)   otherwise
 for s in step, 2*step, ... up to arc_len:
@@ -290,20 +305,20 @@ return (v, omega)`}/>
                         clamp한다.</li>
                     <li>plain Pure Pursuit과 같은 전진 전용 progress 탐색과 원-경로 교차로 lookahead
                         점을 찾는다.</li>
-                    <li>그 점까지의 방위로부터 명령 곡률을 유도한다 — 기하는 동일하고, 고정 <InlineMath math="L_d"/>{" "}
+                    <li>그 점까지의 방위로부터 명령 곡률을 유도한다. 기하는 동일하고, 고정 <InlineMath math="L_d"/>{" "}
                         대신 adaptive <InlineMath math="L_d"/>를 쓸 뿐이다.</li>
                     <li>속도는 세 상한(goal 접근·곡률·근접) 중 최솟값을 취하고, 작은 규제 최소값으로
-                        바닥을 둬 셋 중 어느 것도 혼자서 속도를 0까지 끌어내리지 못하게 한다 — 이 바닥은
-                        다음 단계의 충돌 정지에는 적용하지 않는다. 그 정지는 정확히 0까지 내려갈 수
-                        있어야 하기 때문이다.</li>
+                        바닥을 둬 셋 중 어느 것도 혼자서 속도를 0까지 끌어내리지 못하게 한다. 다만 이
+                        바닥은 다음 단계의 충돌 정지에는 적용하지 않는다. 그 정지는 정확히 0까지 내려갈
+                        수 있어야 하기 때문이다.</li>
                     <li>명령된 원호를 고정 간격으로 앞서 걸으며 각 지점의 충돌 여부를 검사한다. 가장
-                        틀리기 쉬운 단계다 — 이 단계를 건너뛰거나 여기에 규제 최소값 바닥을 적용하면,
+                        틀리기 쉬운 단계다. 이 단계를 건너뛰거나 여기에 규제 최소값 바닥을 적용하면,
                         로봇이 충분히 볼 수 있었던 장애물로 그대로 명령될 수 있다. 한 지점이라도
-                        충돌하면 즉시 정지 명령을 반환하고 tick의 나머지를 건너뛴다 — 대부분 안전한
+                        충돌하면 즉시 정지 명령을 반환하고 tick의 나머지를 건너뛴다. 대부분 안전한
                         원호라고 봐주지 않는다.</li>
                     <li>원호가 막히지 않았다면 회전율을 로봇이 물리적으로 낼 수 있는 값으로 클램프하고,
                         클램프가 값을 바꿨다면 클램프된 <InlineMath math="\omega"/>와 원래의{" "}
-                        <InlineMath math="\kappa"/>로 <InlineMath math="v"/>를 다시 계산한다 — plain
+                        <InlineMath math="\kappa"/>로 <InlineMath math="v"/>를 다시 계산한다. plain
                         Pure Pursuit이 같은 이유로 쓰는 것과 같은 곡률-보존 재계산이다.</li>
                 </ol>}
             />
@@ -411,16 +426,18 @@ return (v, omega)`}/>
                 en={<p>
                     The sandbox below runs Regulated Pure Pursuit live in your browser. Raise{" "}
                     <InlineMath math="r_{\min}"/> or <InlineMath math="d_{\text{prox}}"/> and watch the
-                    robot brake earlier into the hairpin turns or the obstacle-hugging path; the plain
-                    pursuit preset drops both thresholds to where they never bind, so the same paths are
-                    driven the way plain Pure Pursuit would drive them — for direct comparison.
+                    robot brake earlier into the hairpin turns or the obstacle-hugging path. The plain
+                    pursuit preset drops both thresholds to where they never bind, running the same paths
+                    with the two speed regulations disabled for comparison — it still keeps the adaptive
+                    lookahead and the lookahead collision check, both of which plain Pure Pursuit lacks.
                 </p>}
                 ko={<p>
                     아래 sandbox는 브라우저에서 Regulated Pure Pursuit을 라이브로 실행한다.{" "}
                     <InlineMath math="r_{\min}"/>이나 <InlineMath math="d_{\text{prox}}"/>를 올리며 급코너나
                     장애물을 스치는 경로에서 더 일찍 감속하는 모습을 보라. plain pursuit 프리셋은 두 문턱을
-                    결코 걸리지 않을 정도로 낮춰, 같은 경로를 plain Pure Pursuit이 몰았을 법한 방식으로
-                    운전한다 — 직접 비교용이다.
+                    결코 걸리지 않을 정도로 낮춰, 비교를 위해 두 속도 규제만 끈 채로 같은 경로를 몬다.
+                    adaptive lookahead과 lookahead 충돌 검사는 그대로 켜져 있는데, 이는 plain Pure
+                    Pursuit에는 없는 기능이다.
                 </p>}
             />
             <RegulatedPurePursuitSandbox/>
