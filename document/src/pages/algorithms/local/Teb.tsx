@@ -3,6 +3,7 @@ import {T, useTr} from "../../../libs/i18n";
 import Terms from "../../../components/math/Terms";
 import {BlockMath, InlineMath} from "../../../components/math/Tex";
 import TebSandbox from "../../../components/panels/local/teb/TebSandbox";
+import TebHomotopyDemo from "../../../components/panels/local/teb/TebHomotopyDemo";
 import TebOptimizationFigure from "../../../components/panels/local/teb/TebOptimizationFigure";
 import CodeTabs from "../../../components/CodeTabs";
 import Pseudocode from "../../../components/Pseudocode";
@@ -565,6 +566,32 @@ return (v, omega)`}/>
                 />
             </Proof>
 
+            <h2>{t("The Homotopy Trap", "Homotopy 함정")}</h2>
+            <T
+                en={<p>
+                    Every deformation step moves each pose a small, continuous distance, so the band can
+                    slide along an obstacle but can never jump <em>across</em> one: whichever side of an
+                    obstacle the reference path chose, the optimizer is confined to that homotopy class and
+                    only polishes the detour within it. The demo below makes the cost visible — a straight,
+                    2 m-wide corridor is open under the block, yet because the reference path rounds the
+                    block from above, the band dutifully optimizes the long way and the robot travels
+                    roughly 19 m where 7.5 m would do. Later work fixes exactly this by keeping several TEBs
+                    alive in parallel, one per distinct homotopy class, and switching to the cheapest
+                    (Rösmann et al. 2017, in the references).
+                </p>}
+                ko={<p>
+                    변형 한 스텝은 각 pose를 짧고 연속적인 거리만큼만 옮긴다. 그래서 밴드는 장애물을
+                    따라 미끄러질 수는 있어도 장애물을 <em>건너뛰지는</em> 못한다. reference path가
+                    장애물의 어느 쪽을 골랐든 최적화는 그 homotopy 부류 안에 갇혀, 그 안의 우회로를
+                    다듬을 뿐이다. 아래 데모가 그 대가를 눈으로 보여준다. 블록 아래로 폭 2m 직선 통로가
+                    열려 있는데도 reference path가 블록을 위로 돌기 때문에, 밴드는 충실하게 먼 길을
+                    최적화하고 로봇은 7.5m면 될 길을 약 19m 돌아간다. 후속 연구는 정확히 이 문제를,
+                    서로 다른 homotopy 부류마다 TEB를 하나씩 병렬로 살려 두고 가장 싼 것으로 갈아타는
+                    방식으로 고친다(참고문헌의 Rösmann 2017).
+                </p>}
+            />
+            <TebHomotopyDemo/>
+
             <h2>Demo</h2>
             <T
                 en={<p>
@@ -572,24 +599,14 @@ return (v, omega)`}/>
                     thickness proportional to its own <InlineMath math="\Delta T"/> — thin segments are fast,
                     thick ones are slow. Raise <InlineMath math="w_{\text{time}}"/> and watch the chain pull
                     tighter through each corner; switch to the sharp-corner preset to see the turn-rate limit
-                    force a real, visible slowdown rather than an invisible one. The homotopy-trap preset
-                    shows the method's honest weakness: the band deforms continuously, so it can never jump
-                    across an obstacle into a different homotopy class — it polishes the detour the reference
-                    path chose even when a far shorter corridor is open on the other side. Later work fixes
-                    this by optimizing several TEBs in distinct homotopy classes in parallel (Rösmann et al.
-                    2017, in the references).
+                    force a real, visible slowdown rather than an invisible one.
                 </p>}
                 ko={<p>
                     아래 sandbox는 브라우저에서 TEB를 라이브로 실행한다. pose 사슬은 자신의{" "}
                     <InlineMath math="\Delta T"/>에 비례한 굵기로 그려진다. 가는 구간은 빠르고, 굵은
                     구간은 느리다. <InlineMath math="w_{\text{time}}"/>을 올리며 사슬이 각 코너를 더
                     바짝 당겨 지나가는 모습을 보거나, sharp corner 프리셋으로 바꿔 회전율 한계가 눈에
-                    보이지 않는 감속이 아니라 실제로 뚜렷한 감속을 강제하는 모습을 보라. homotopy 함정
-                    프리셋은 이 방법의 정직한 약점을 보여준다. 밴드는 연속으로만 변형되므로 장애물을
-                    건너뛰어 다른 homotopy 부류로 넘어가지 못하고, 반대편에 훨씬 짧은 통로가 열려
-                    있어도 reference path가 고른 우회로를 다듬을 뿐이다. 후속 연구는 서로 다른
-                    homotopy 부류의 TEB 여러 개를 병렬로 최적화해 이를 고친다(참고문헌의 Rösmann
-                    2017).
+                    보이지 않는 감속이 아니라 실제로 뚜렷한 감속을 강제하는 모습을 보라.
                 </p>}
             />
             <TebSandbox/>
