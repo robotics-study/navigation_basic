@@ -150,18 +150,26 @@ const Scene = ({scale = 1}: {scale?: number}) => {
                        className="flex-1 accent-[var(--accent)]"
                        aria-label={t("valley threshold", "valley threshold")}/>
             </label>
+            {/* 색 범례 ("X = ..." 형식, 상태 문구와 분리해 오독 방지) + 상태 한 줄 */}
+            <div className="text-xs text-muted text-center flex items-center justify-center gap-3 flex-wrap"
+                 style={{maxWidth: SIZE * scale}}>
+                {([
+                    ["var(--accent)", t("blue arrow = goal bearing", "파란 화살표 = goal 방향")],
+                    ["var(--accent-2)", t("teal = selected valley and steering", "청록 = 선택된 valley와 조향")],
+                ] as const).map(([c, label]) => (
+                    <span key={label} className="inline-flex items-center gap-1.5">
+                        <span aria-hidden="true" className="inline-block w-2.5 h-2.5 rounded-sm"
+                              style={{background: c}}/>
+                        <span className="font-semibold" style={{color: c}}>{label}</span>
+                    </span>
+                ))}
+            </div>
             <div className="text-xs text-muted text-center" style={{maxWidth: SIZE * scale}}>
-                <span style={{color: "var(--accent)"}} className="font-semibold">{t("goal", "goal")}</span>
-                {" · "}
-                <span style={{color: "var(--accent-2)"}} className="font-semibold">
-                    {t("selected valley", "선택된 valley")}
-                </span>
-                {" · "}
                 {selected
                     ? t("lower the threshold and the open valleys narrow, split, then close",
                         "threshold를 내리면 열린 valley가 좁아지고 갈라지다 결국 닫힌다")
-                    : t("no valley is open — every sector's density is at or above the threshold",
-                        "열린 valley가 없다 — 모든 sector의 밀도가 threshold 이상이다")}
+                    : t("no valley is open: every sector's density is at or above the threshold",
+                        "지금은 열린 valley가 없다. 모든 sector의 밀도가 threshold 이상이다")}
             </div>
         </div>
     )
