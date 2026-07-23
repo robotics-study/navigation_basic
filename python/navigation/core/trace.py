@@ -120,11 +120,18 @@ class TraceRecorder:
             fields["rollout"] = [list(p) for p in rollout]
         self._emit("candidate_evaluated", fields)
 
-    def robot_moved(self, state: State, data: EventData | None = None) -> None:
+    def robot_moved(
+        self, state: State, data: EventData | None = None, agent: int | None = None
+    ) -> None:
         # Dynamic replanning (D* Lite): the robot's new executed cell. Also reused by
         # the local-planning simulator for every closed-loop tick's executed pose,
         # where `data` optionally carries the (v, omega) command that produced it.
+        # `agent` (multi-agent velocity-obstacle harness only): which body this tick's
+        # pose belongs to. Omitted when None so every pre-existing single-robot trace
+        # (global replanning, local_planning.simulate) stays byte-identical.
         fields: dict[str, object] = {"state": list(state)}
+        if agent is not None:
+            fields["agent"] = agent
         _add_data(fields, data)
         self._emit("robot_moved", fields)
 
@@ -153,6 +160,24 @@ class TraceRecorder:
         fields: dict[str, object] = {"band": [list(b) for b in band]}
         _add_data(fields, data)
         self._emit("band_updated", fields)
+
+    def velocity_obstacle(
+        self,
+        state: State,
+        constraints: Sequence[Sequence[float]],
+        data: EventData | None = None,
+    ) -> None:
+        # VO/RVO/ORCA (Fiorini & Shiller 1998; van den Berg et al. 2008, 2011): this
+        # tick's ego forbidden region(s) in velocity space -- truncated cones (VO/RVO)
+        # or half-planes (ORCA), one entry per nearby obstacle. A top-level array like
+        # `band`/`bins`/`rollout` because the numeric-only `data` map cannot carry
+        # nested arrays; omitted when empty (no obstacle nearby) so the event still
+        # carries the pref/new velocity in `data` without an empty array on the wire.
+        fields: dict[str, object] = {"state": list(state)}
+        if constraints:
+            fields["constraints"] = [list(c) for c in constraints]
+        _add_data(fields, data)
+        self._emit("velocity_obstacle", fields)
 
     def obstacle_revealed(self, state: State) -> None:
         # Dynamic replanning (D* Lite): a cell newly sensed as blocked.

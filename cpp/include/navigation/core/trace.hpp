@@ -70,6 +70,26 @@ class TraceRecorder {
   void robot_moved(const State& s, const EventData& data = {}) {
     ev_state("robot_moved", to_trace(s), nullptr, ptr(data));
   }
+  // Multi-agent velocity-obstacle harness only: which body this tick's pose
+  // belongs to. A distinct overload (not a defaulted parameter on the one above)
+  // so every pre-existing single-robot robot_moved call stays byte-identical --
+  // the `agent` field is emitted only when a caller passes an index here.
+  template <class State>
+  void robot_moved(const State& s, const EventData& data, int agent) {
+    ev_robot_moved(to_trace(s), agent, ptr(data));
+  }
+  // VO/RVO/ORCA (Fiorini & Shiller 1998; van den Berg et al. 2008, 2011): this
+  // tick's ego forbidden region(s) in velocity space -- truncated cones (VO/RVO,
+  // length-6 entries) or half-planes (ORCA, length-4), one per nearby obstacle.
+  // `constraints` is a top-level array like `bins`/`band` because the numeric-only
+  // `data` map cannot carry nested arrays; omitted when empty so the event still
+  // carries the pref/new velocity in `data`. `data` holds {pref_vx, pref_vy,
+  // new_vx, new_vy}.
+  template <class State>
+  void velocity_obstacle(const State& s, const std::vector<std::vector<double>>& constraints,
+                         const EventData& data = {}) {
+    ev_velocity_obstacle(to_trace(s), constraints, ptr(data));
+  }
   template <class State>
   void obstacle_revealed(const State& s) {
     ev_state("obstacle_revealed", to_trace(s), nullptr, nullptr);
@@ -125,6 +145,10 @@ class TraceRecorder {
                const double* cost, const EventData* data);
   void ev_bins(const char* event, const std::vector<double>& s, const std::vector<double>& bins,
                const EventData* data);
+  void ev_robot_moved(const std::vector<double>& s, int agent, const EventData* data);
+  void ev_velocity_obstacle(const std::vector<double>& s,
+                            const std::vector<std::vector<double>>& constraints,
+                            const EventData* data);
   void ev_band(const std::vector<std::vector<double>>& band, const EventData* data);
   void ev_path(const std::vector<std::vector<double>>& path);
   // Shared prefix of both planning_started overloads (algorithm/map/params),

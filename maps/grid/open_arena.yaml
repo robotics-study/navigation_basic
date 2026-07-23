@@ -1,0 +1,6 @@
+type: occupancy_grid
+image: open_arena.pgm      # 0(black)=occupied border, 255(white)=free interior
+resolution: 0.5            # meters / pixel -> 30x30 grid = 15m x 15m world
+origin: [0.0, 0.0, 0.0]    # world pose of bottom-left pixel [x, y, theta]
+occupied_thresh: 0.65
+free_thresh: 0.196

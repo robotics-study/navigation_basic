@@ -444,9 +444,9 @@ const data: IAlgoData[] = [
     },
     // ---- Local planning ----
     // 계보순: 반응형 힘장(potential_fields) → 히스토그램 조향(vfh) → 명령 공간 sampling
-    // (dwa) → 기하학적 경로 추종(pure_pursuit) → 오차 기반 조향(stanley) → 실무형 규제
-    // 추종(regulated_pure_pursuit) → 탄성 밴드(elastic_bands) → 시간 밴드(teb) → 모델 예측
-    // 제어(mpc) → 경로적분 sampling(mppi).
+    // (dwa) → 속도 공간 회피(vo → rvo → orca) → 기하학적 경로 추종(pure_pursuit) → 오차
+    // 기반 조향(stanley) → 실무형 규제 추종(regulated_pure_pursuit) → 탄성 밴드
+    // (elastic_bands) → 시간 밴드(teb) → 모델 예측 제어(mpc) → 경로적분 sampling(mppi).
     {
         slug: "potential_fields",
         title: {en: "Potential Fields", ko: "Potential Fields"},
@@ -491,6 +491,54 @@ const data: IAlgoData[] = [
             {en: "Properties and Complexity", ko: "성질과 복잡도"},
             {en: "The Algorithm", ko: "알고리즘"},
             {en: "The Admissible Velocity Bound", ko: "Admissible 속도의 유도"},
+            {en: "Demo", ko: "Demo"},
+            {en: "Implementation", ko: "Implementation"},
+            {en: "References", ko: "References"},
+        ],
+    },
+    {
+        slug: "vo",
+        title: {en: "VO", ko: "VO"},
+        category: "local",
+        supportedExample: {python: true, "c++": true},
+        contents: lazy(() => import("./local/Vo")),
+        sections: [
+            {en: "A Forbidden Region in Velocity Space", ko: "속도 공간에 생기는 금지 영역"},
+            {en: "Properties and Complexity", ko: "성질과 복잡도"},
+            {en: "The Algorithm", ko: "알고리즘"},
+            {en: "The Reciprocal Dance", ko: "상호 회피의 진동"},
+            {en: "Demo", ko: "Demo"},
+            {en: "Implementation", ko: "Implementation"},
+            {en: "References", ko: "References"},
+        ],
+    },
+    {
+        slug: "rvo",
+        title: {en: "RVO", ko: "RVO"},
+        category: "local",
+        supportedExample: {python: true, "c++": true},
+        contents: lazy(() => import("./local/Rvo")),
+        sections: [
+            {en: "Splitting the Avoidance in Half", ko: "회피 책임을 절반씩 나눈다"},
+            {en: "Properties and Complexity", ko: "성질과 복잡도"},
+            {en: "The Algorithm", ko: "알고리즘"},
+            {en: "The Crowded Deadlock", ko: "밀집 환경의 교착"},
+            {en: "Demo", ko: "Demo"},
+            {en: "Implementation", ko: "Implementation"},
+            {en: "References", ko: "References"},
+        ],
+    },
+    {
+        slug: "orca",
+        title: {en: "ORCA", ko: "ORCA"},
+        category: "local",
+        supportedExample: {python: true, "c++": true},
+        contents: lazy(() => import("./local/Orca")),
+        sections: [
+            {en: "From Cones to Half-Planes", ko: "원뿔에서 half-plane으로"},
+            {en: "Properties and Complexity", ko: "성질과 복잡도"},
+            {en: "The Algorithm", ko: "알고리즘"},
+            {en: "The Holonomic Assumption", ko: "홀로노믹 가정의 한계"},
             {en: "Demo", ko: "Demo"},
             {en: "Implementation", ko: "Implementation"},
             {en: "References", ko: "References"},

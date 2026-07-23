@@ -5,7 +5,6 @@
 #include <utility>
 
 #include "navigation/local_planning/geometry.hpp"
-#include "navigation/local_planning/reactive/steering.hpp"
 
 namespace navigation::local_planning {
 

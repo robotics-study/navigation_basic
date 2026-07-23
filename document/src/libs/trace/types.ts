@@ -14,6 +14,7 @@ export type TraceEventType =
     | "force_computed"
     | "histogram_updated"
     | "band_updated"
+    | "velocity_obstacle"
     | "path_found"
     | "planning_finished";
 
@@ -45,4 +46,9 @@ export interface TraceEvent {
     // bubble), 길이 4 = [x, y, theta, dt] (TEB pose + 직전 구간 dt). data는 스칼라 맵이라
     // 배열을 담지 못해 bins/rollout처럼 top-level.
     band?: number[][];
+    // velocity_obstacle 전용 (VO/RVO/ORCA): 이번 tick ego의 속도공간 금지영역. 항목 길이
+    // 6 = [apex_x, apex_y, left_x, left_y, right_x, right_y] (VO/RVO 절단 원뿔), 길이 4 =
+    // [point_x, point_y, normal_x, normal_y] (ORCA half-plane). data는 스칼라 맵이라 배열을
+    // 담지 못해 bins/rollout/band처럼 top-level. data에는 {pref_vx, pref_vy, new_vx, new_vy}.
+    constraints?: number[][];
 }
