@@ -16,6 +16,9 @@ import cn from "../../../libs/cn";
 // 한다는 저장소 계약).
 const BASE_DURATION_MS = 3000;
 const TICK_MS = 30;
+// heading ray 전용 색. 차체·lookahead가 쓰는 accent 계열과도, goal/충돌의 적색과도
+// 구분되어야 세 요소(현재 방향·겨냥점·목표)가 한눈에 분리된다. 양 테마에서 대비 확보.
+const HEADING_COLOR = "#f59e0b";
 
 type Pose = [number, number, number];
 
@@ -165,6 +168,13 @@ export interface LocalTracePlayerProps {
     // 추종 계열: 차량 위에 현재 heading ray를 덧그린다. 차체 회전만으로는 향한 방향이
     // 흐릿해서, lookahead 겨냥선과의 사이 각(α)을 눈으로 보이게 하는 용도다.
     showHeadingRay?: boolean;
+    // 전체 재생 시간(ms). 기하 관계(heading vs 겨냥선 등)를 눈으로 따라가야 하는 데모는
+    // 기본 3초 압축이 너무 빨라 길게 준다.
+    durationMs?: number;
+    // 셀 스칼라 장(row-major, 0..1, null = 미표시)을 RViz costmap풍 히트맵으로 벽 아래에
+    // 깐다. Potential Fields처럼 로봇이 "지형의 내리막"을 굴러가는 알고리즘에서, 그 지형
+    // 자체를 보여 주기 위한 것이다. 값의 의미는 넘겨주는 sandbox가 정한다.
+    cellHeat?: (number | null)[];
     // Stanley: crosstrack 선분(측정점→참조 경로 최근접점)을 그린다. Stanley는 오차를
     // 로봇 중심이 아니라 전륜축에서 재므로, crosstrackWheelbase가 주어지면 측정점을
     // pose에서 heading 방향으로 그만큼 앞선 전륜축으로 옮긴다.
@@ -189,7 +199,7 @@ export interface LocalTracePlayerProps {
 const LocalTracePlayer = ({
                               map, events, startPose, goal, referencePath, footprintRadius,
                               showLookahead, showHeadingRay, showCrosstrack, crosstrackWheelbase, showBand = true,
-                              auxCircleRadius, panel = 340,
+                              auxCircleRadius, panel = 340, durationMs, cellHeat,
                               autoPlay = true, onPaintCell, onMoveStart, onMoveGoal, onReset, footer,
                           }: LocalTracePlayerProps) => {
     const t = useTr()
@@ -208,7 +218,7 @@ const LocalTracePlayer = ({
 
     useEffect(() => {
         if (!playing) return
-        const perTick = Math.max(1, Math.round(timeline.steps / (BASE_DURATION_MS / TICK_MS)))
+        const perTick = Math.max(1, Math.round(timeline.steps / ((durationMs ?? BASE_DURATION_MS) / TICK_MS)))
         timer.current = window.setInterval(() => {
             setStep((s) => {
                 if (s >= timeline.steps) {
@@ -219,7 +229,7 @@ const LocalTracePlayer = ({
             })
         }, TICK_MS)
         return () => window.clearInterval(timer.current)
-    }, [playing, timeline])
+    }, [playing, timeline, durationMs])
 
     const finished = step >= timeline.steps
     const replay = () => {
@@ -328,15 +338,15 @@ const LocalTracePlayer = ({
         [timeline],
     )
 
-    const headingArrow = (pose: Pose, len = cellPx * 0.9) => {
+    const headingArrow = (pose: Pose, len = cellPx * 0.9, color = colors.accent2) => {
         const [px, py] = toPixel(pose[0], pose[1])
         // world θ(ccw, +x 기준) → canvas 회전은 y축 반전 때문에 부호가 반대다(GridCanvas와 동일 관례).
         const dx = Math.cos(-pose[2]) * len
         const dy = Math.sin(-pose[2]) * len
         return <Arrow key="heading" points={[px, py, px + dx, py + dy]}
                       pointerLength={cellPx * 0.32} pointerWidth={cellPx * 0.28}
-                      stroke={colors.accent2} fill={colors.accent2}
-                      strokeWidth={Math.max(1.5, cellPx * 0.12)}/>
+                      stroke={color} fill={color}
+                      strokeWidth={Math.max(1.5, cellPx * 0.14)}/>
     }
 
     // 모바일 로봇: footprint 원(충돌 모델 그대로) + 그 안에 내접하는 차체. GridCanvas의
@@ -574,6 +584,14 @@ const LocalTracePlayer = ({
                    onPointerUp={() => { paintValue.current = null }}
                    onPointerLeave={() => { paintValue.current = null }}>
                 <Layer>
+                    {/* 셀 히트맵 (costmap풍): 파랑(낮음) → 빨강(높음) hue 스윕. 벽보다 먼저
+                        그려 벽·궤적·오버레이가 항상 위에 오게 한다. */}
+                    {cellHeat && cellHeat.map((v, i) => (v === null || map.occupied[i]) ? null : (
+                        <Rect key={`h${i}`} x={(i % map.width) * cellPx} y={Math.floor(i / map.width) * cellPx}
+                              width={cellPx + 0.5} height={cellPx + 0.5}
+                              fill={`hsl(${Math.round(220 * (1 - Math.min(1, Math.max(0, v))))}, 85%, 55%)`}
+                              opacity={0.3} listening={false}/>
+                    ))}
                     {/* 벽 */}
                     {map.occupied.map((occ, i) => occ && (
                         <Rect key={`w${i}`} x={(i % map.width) * cellPx} y={Math.floor(i / map.width) * cellPx}
@@ -646,9 +664,10 @@ const LocalTracePlayer = ({
                     })()}
                     {/* 로봇: footprint + 차량 (없으면 heading 화살표만) */}
                     {footprintRadius ? vehicle(currentPose, footprintRadius) : headingArrow(currentPose)}
-                    {/* heading ray: 차체보다 길게 뽑아 lookahead 겨냥선과의 각(α)이 보이게 한다 */}
+                    {/* heading ray: 차체보다 길게 뽑아 lookahead 겨냥선과의 각(α)이 보이게 한다.
+                        차체(accent2)·겨냥선(accent)과 색이 겹치면 묻히므로 전용 색을 쓴다. */}
                     {showHeadingRay && footprintRadius !== undefined &&
-                        headingArrow(currentPose, Math.max(cellPx * 1.6, footprintRadius * pxPerWorld * 2.2))}
+                        headingArrow(currentPose, Math.max(cellPx * 2.2, footprintRadius * pxPerWorld * 3), HEADING_COLOR)}
                     {/* 시작/목표 마커 */}
                     <Circle x={startPx[0]} y={startPx[1]} radius={cellPx * 0.2} fill={colors.accent}
                             stroke={colors.bg} strokeWidth={Math.max(1, cellPx * 0.05)}
