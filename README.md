@@ -110,7 +110,7 @@ visualization, interactive in-browser demos, and a benchmark matrix.*
 | local_planning | Regulated Pure Pursuit | ✅ | ✅ | Macenski, Singh, Martin & Gines (2023) |
 | local_planning | Elastic Bands | ✅ | ✅ | Quinlan & Khatib (1993) |
 | local_planning | TEB | ✅ | ✅ | Rösmann et al. (2012/2017) |
-| local_planning | MPC | ⬜ | ⬜ | — |
+| local_planning | MPC | ✅ | ✅ | Klančar & Škrjanc (2007) |
 | multi_agent | Prioritized A* | ⬜ | ⬜ | Erdmann & Lozano-Pérez (1987) |
 | multi_agent | Joint-space A* | ⬜ | ⬜ | — |
 | multi_agent | CBS | ⬜ | ⬜ | Sharon et al. (2015) |

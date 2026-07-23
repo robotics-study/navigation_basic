@@ -261,6 +261,16 @@ const RUNNERS = {
         footprintRadius: p.footprint_radius, stallWindow: p.stall_window,
         stallDistance: p.stall_distance,
     }),
+    // 시나리오: maps/scenarios/open01_s4.yaml (goal-seeking reach -- goal만, reference_path
+    // 없음. 벽 penalty zone 밖 내부 goal이라 MPC가 폐루프로 안정 도달한다).
+    mpc: (m, s, g, p) => engines.runMpc({
+        map: m, startPose: s, goal: [8.0, 8.0],
+        horizon: p.horizon, iterations: p.iterations, stepAlpha: p.step_alpha, gradEps: p.grad_eps,
+        maxStepV: p.max_step_v, maxStepOmega: p.max_step_omega, wGoal: p.w_goal, wObstacle: p.w_obstacle,
+        wControl: p.w_control, minObstacleDist: p.min_obstacle_dist, vMax: p.v_max, omegaMax: p.omega_max,
+        aMax: p.a_max, controlDt: p.control_dt, maxSteps: p.max_steps, goalTolerance: p.goal_tolerance,
+        footprintRadius: p.footprint_radius, stallWindow: p.stall_window, stallDistance: p.stall_distance,
+    }),
 };
 
 // exact: 연산 순서·tie-break 까지 py 를 미러 → expanded_nodes 도 일치해야 한다.
@@ -329,6 +339,15 @@ const CHECKS = [
     // 미도달·스텝 수 급변·NaN)는 잡아내되 이 계층적 ULP 분기는 통과시킬 여유를 둔다.
     {algo: "teb", maps: ["clutter01"],
      metricKeys: [{key: "steps", tol: 8}, {key: "distance_traveled", tol: 0.2}]},
+    // MPC는 매 tick iterations회 투영 경사하강을 돌리고 그 안의 central finite-difference
+    // gradient가 반복마다 2H 성분 × ±grad_eps 섭동 rollout을 재계산해 tick당 수백 회의 sin/cos를
+    // 몰아 호출한다 -- 하지만 open01_s4는 벽 penalty zone 밖 내부 goal을 향한 깨끗한 reach라
+    // TEB의 clutter 미로 같은 이산 분기(resize 등)가 없어, 119 tick 내내 clamp 분기가 ULP
+    // 경계에서 뒤집히지 않는다. 실측 py↔TS 차이는 steps 0(정수 exact), distance_traveled 7.3e-11로,
+    // pf/vfh/dwa/pure_pursuit 등 다른 결정론 폐루프 local planner와 같은 steps tol 0 / distance
+    // 1e-3을 그대로 유지한다(1e-3은 tick마다의 fdlibm sin/cos 1ULP 누적을 흡수).
+    {algo: "mpc", maps: ["open01"],
+     metricKeys: [{key: "steps", tol: 0}, {key: "distance_traveled", tol: 1e-3}]},
 ];
 
 let failures = 0;
