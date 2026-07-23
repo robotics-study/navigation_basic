@@ -83,6 +83,20 @@ _HEADING_COLOR = "#1e293b"
 # tick only. Warm gold keeps it clear of the marks it always coexists with (robot
 # trail teal, path gradient purple/magenta/red, reference-path/heading slate).
 _BAND_COLOR = "#ca8a04"
+# Velocity-obstacle family (VO/RVO/ORCA) multi-agent replay: each body gets a
+# footprint disc + heading + trail in a distinct CVD-safe hue, cycled by agent
+# index (index 0 shares the single-robot trail teal). Ego (agent 0) additionally
+# shows its velocity-space decision as two world-space arrows: the preferred
+# velocity (blue) and the collision-free velocity actually chosen (amber). The
+# forbidden cones/half-planes live in velocity space, so the docs site's inset
+# draws those, not this world-space view.
+_AGENT_PALETTE = ("#0d9488", "#c2179b", "#2563eb", "#ca8a04", "#7c3aed", "#e5484d")
+_VPREF_COLOR = "#2563eb"
+_VNEW_COLOR = "#f59e0b"
+# Replay receives only pose + (v, omega) per body through the trace, never a
+# per-agent radius channel, so multi-agent footprints render at a nominal disc
+# radius (the velocity scenarios' shared agent radius) purely for visualization.
+_AGENT_FOOTPRINT_RADIUS = 0.3
 
 
 def _clamped_vec(v: Point, max_len: float) -> Point:
@@ -116,6 +130,16 @@ def _ramp_cmap(stops: tuple[str, ...]) -> LinearSegmentedColormap:
     from matplotlib.colors import LinearSegmentedColormap
 
     return LinearSegmentedColormap.from_list("nav_ramp", list(stops))
+
+
+@dataclass
+class AgentTrack:
+    """One body's executed poses in a multi-agent velocity-obstacle trace,
+    parallel to Scene.robot for the single-robot case but kept per agent index."""
+
+    positions: list[Point] = field(default_factory=list)
+    orders: list[int] = field(default_factory=list)
+    headings: list[float] = field(default_factory=list)
 
 
 @dataclass
@@ -179,6 +203,14 @@ class Scene:
     # Kinodynamic (Hybrid A*): per-path-pose heading (radians). Empty for every 2-element
     # (Cell/Point) planner, so their render is untouched; populated only by SE(2) traces.
     path_headings: list[float] = field(default_factory=list)
+    # Velocity-obstacle family (VO/RVO/ORCA): robot_moved carries an `agent` index, so
+    # poses bucket per body here instead of the single `robot` trail above (which stays
+    # the sole path for every single-robot trace). Empty for every pre-existing trace.
+    agent_tracks: dict[int, AgentTrack] = field(default_factory=dict)
+    # Ego (agent 0) velocity_obstacle decisions: (pose, v_pref, v_new) per tick, for the
+    # world-space preferred-vs-chosen velocity arrows.
+    vo_states: list[tuple[Point, Point, Point]] = field(default_factory=list)
+    vo_orders: list[int] = field(default_factory=list)
     total_ops: int = 0
     algorithm: str = ""
 
@@ -288,9 +320,26 @@ def build_scene(
             order += 1
         elif name == "robot_moved" and "state" in ev:
             state = ev["state"]
-            scene.robot.append(to_world(state))
-            scene.robot_orders.append(order)
-            scene.robot_headings.append(float(state[2]) if len(state) >= 3 else math.nan)
+            heading = float(state[2]) if len(state) >= 3 else math.nan
+            if "agent" in ev:
+                # Multi-agent (velocity-obstacle) trace: bucket per body so each
+                # gets its own trail/footprint/heading, keeping the single-robot
+                # `robot` list empty and its render path untouched.
+                track = scene.agent_tracks.setdefault(int(ev["agent"]), AgentTrack())
+                track.positions.append(to_world(state))
+                track.orders.append(order)
+                track.headings.append(heading)
+            else:
+                scene.robot.append(to_world(state))
+                scene.robot_orders.append(order)
+                scene.robot_headings.append(heading)
+            order += 1
+        elif name == "velocity_obstacle" and "state" in ev:
+            data = ev.get("data") or {}
+            v_pref = (float(data.get("pref_vx", 0.0)), float(data.get("pref_vy", 0.0)))
+            v_new = (float(data.get("new_vx", 0.0)), float(data.get("new_vy", 0.0)))
+            scene.vo_states.append((to_world(ev["state"]), v_pref, v_new))
+            scene.vo_orders.append(order)
             order += 1
         elif name == "obstacle_revealed" and "state" in ev:
             scene.revealed.append(to_world(ev["state"]))
@@ -458,6 +507,51 @@ def _draw(
                 color=_HEADING_COLOR, angles="xy", scale_units="xy", scale=2.2,
                 width=0.008, headwidth=4, headlength=5, zorder=9, alpha=0.9,
             )
+    # Velocity-obstacle family (VO/RVO/ORCA): one footprint vehicle + heading + trail
+    # per body, plus ego's velocity-space decision arrows. Empty agent_tracks (every
+    # single-robot trace) skips this entirely, leaving those renders unchanged.
+    agents_shown = False
+    if scene.agent_tracks:
+        from matplotlib.colors import to_rgba
+        from matplotlib.patches import Circle
+
+        for aid in sorted(scene.agent_tracks):
+            track = scene.agent_tracks[aid]
+            n = bisect_right(track.orders, cutoff)
+            if not n:
+                continue
+            agents_shown = True
+            color = _AGENT_PALETTE[aid % len(_AGENT_PALETTE)]
+            trail = track.positions[:n]
+            ax.plot(
+                [p[0] for p in trail], [p[1] for p in trail], color=color,
+                linewidth=1.6, alpha=0.85, zorder=5, solid_capstyle="round",
+            )
+            cx, cy = trail[-1]
+            ax.add_patch(
+                Circle((cx, cy), _AGENT_FOOTPRINT_RADIUS, facecolor=to_rgba(color, 0.25),
+                       edgecolor=color, linewidth=1.4, zorder=8)
+            )
+            heading = track.headings[n - 1]
+            if not math.isnan(heading):
+                ax.quiver(
+                    [cx], [cy], [math.cos(heading)], [math.sin(heading)], color=color,
+                    angles="xy", scale_units="xy", scale=2.2, width=0.008,
+                    headwidth=4, headlength=5, zorder=9, alpha=0.95,
+                )
+        n_vo = bisect_right(scene.vo_orders, cutoff)
+        if agents_shown and n_vo:
+            # Latest tick only (instantaneous decision), same rationale as the force
+            # quiver below: preferred velocity vs the collision-free chosen velocity.
+            pose, v_pref, v_new = scene.vo_states[n_vo - 1]
+            max_len = _FORCE_MAX_RADIUS_CELLS * scene.grid.resolution
+            v_pref = _clamped_vec(v_pref, max_len)
+            v_new = _clamped_vec(v_new, max_len)
+            ax.quiver(
+                [pose[0], pose[0]], [pose[1], pose[1]], [v_pref[0], v_new[0]],
+                [v_pref[1], v_new[1]], color=[_VPREF_COLOR, _VNEW_COLOR], angles="xy",
+                scale_units="xy", scale=1.0, width=0.01, zorder=9.5, alpha=0.9,
+            )
     n_force = bisect_right(scene.force_orders, cutoff)
     if n_force:
         # Latest tick only: force is an instantaneous quantity, so accumulating every
@@ -594,7 +688,7 @@ def _draw(
         robot_shown=n_robot > 0, revealed_shown=n_revealed > 0, headings_shown=drew_headings,
         reference_path_shown=reference_path_shown, force_shown=n_force > 0,
         histogram_shown=n_hist > 0, band_shown=n_band > 0, candidate_shown=bool(tick_candidates),
-        rollout_shown=rollouts_shown,
+        rollout_shown=rollouts_shown, agents_shown=agents_shown,
     )
 
 
@@ -679,7 +773,7 @@ def _draw_legend(
     robot_shown: bool = False, revealed_shown: bool = False, headings_shown: bool = False,
     reference_path_shown: bool = False, force_shown: bool = False,
     histogram_shown: bool = False, band_shown: bool = False, candidate_shown: bool = False,
-    rollout_shown: bool = False,
+    rollout_shown: bool = False, agents_shown: bool = False,
 ) -> None:
     from matplotlib.lines import Line2D
 
@@ -718,6 +812,13 @@ def _draw_legend(
     if candidate_shown:
         handles.append(_mark_proxy(_CANDIDATE_COLOR))
         labels.append("candidate")
+    if agents_shown:
+        handles.append(_mark_proxy(_AGENT_PALETTE[0]))
+        labels.append("agents")
+        handles.append(Line2D([0], [0], color=_VPREF_COLOR, linewidth=1.8))
+        labels.append("preferred velocity")
+        handles.append(Line2D([0], [0], color=_VNEW_COLOR, linewidth=1.8))
+        labels.append("chosen velocity")
     if path_shown:
         handles.append(Line2D([0], [0], color=_PATH_RAMP[1], linewidth=2.5))
         labels.append("path (start→goal)")
