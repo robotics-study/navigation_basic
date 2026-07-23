@@ -54,7 +54,19 @@ const SHARP_CORNER_PATH: Point[] = [[1.25, 5.0], [5.0, 5.0], [5.0, 8.75]]
 const SHARP_CORNER_START: Pose = [1.25, 5.0, 0]
 const SHARP_CORNER_GOAL: [number, number] = [5.0, 8.75]
 
-type PresetId = "corner_cutting" | "sharp_corner";
+// "Homotopy trap": 중앙 블록(x=[4,6), y=[2.5,6.5))의 아래로 폭 2m 통로가 곧게 열려
+// 있는데 reference path는 위로 크게 돈다. 밴드 변형은 연속이라 장애물을 "건너뛰어"
+// 반대편 homotopy로 넘어갈 수 없고, 최적화는 reference가 정한 위쪽 부류 안의 국소
+// 최적만 찾는다 — 실행 검증: 아래 직선 약 7.5m가 열려 있어도 위로 약 19m를 돌아
+// REACHED. 원 논문 계열의 알려진 한계로, 후속 연구가 서로 다른 homotopy의 TEB 여러
+// 개를 병렬 최적화해 고친다(Rösmann 2017).
+const homotopyMap = (): GridMap => buildGrid("teb_homotopy", 20, 20, (x, y) =>
+    x >= 4.0 && x < 6.0 && y >= 2.5 && y < 6.5)
+const HOMOTOPY_PATH: Point[] = [[1.25, 1.5], [1.25, 7.5], [8.75, 7.5], [8.75, 1.5]]
+const HOMOTOPY_START: Pose = [1.25, 1.5, Math.PI / 2]
+const HOMOTOPY_GOAL: [number, number] = [8.75, 1.5]
+
+type PresetId = "corner_cutting" | "sharp_corner" | "homotopy_trap";
 
 interface Preset { map: () => GridMap; path: Point[]; start: Pose; goal: [number, number] }
 
@@ -64,6 +76,9 @@ const PRESETS: Record<PresetId, Preset> = {
     },
     sharp_corner: {
         map: sharpCornerMap, path: SHARP_CORNER_PATH, start: SHARP_CORNER_START, goal: SHARP_CORNER_GOAL,
+    },
+    homotopy_trap: {
+        map: homotopyMap, path: HOMOTOPY_PATH, start: HOMOTOPY_START, goal: HOMOTOPY_GOAL,
     },
 }
 
@@ -138,6 +153,7 @@ const TebScene = ({panel = 340}: {panel?: number}) => {
     const presetLabel = (id: PresetId): string => ({
         corner_cutting: t("corner cutting", "corner cutting"),
         sharp_corner: t("sharp corner", "sharp corner"),
+        homotopy_trap: t("homotopy trap", "homotopy 함정"),
     })[id]
 
     return (
@@ -150,7 +166,7 @@ const TebScene = ({panel = 340}: {panel?: number}) => {
             footer={
                 <div className="flex flex-col items-center gap-1.5">
                     <div className="flex items-center justify-center gap-1.5 text-xs">
-                        {(["corner_cutting", "sharp_corner"] as const).map((id) => (
+                        {(["corner_cutting", "sharp_corner", "homotopy_trap"] as const).map((id) => (
                             <button key={id} type="button" onClick={() => switchPreset(id)}
                                     className={cn(
                                         "px-2 py-0.5 rounded border",
@@ -188,6 +204,12 @@ const TebScene = ({panel = 340}: {panel?: number}) => {
                         {t(
                             "raise w_time to see the pose chain pull tighter into each corner, or watch the sharp corner preset slow down honestly where the turn rate limit binds",
                             "w_time을 올리면 pose 열이 각 코너로 더 바짝 당겨지는 모습을, sharp corner 프리셋에서는 회전율 한계가 걸리는 지점에서 정직하게 느려지는 모습을 볼 수 있다",
+                        )}
+                    </div>
+                    <div className="text-xs text-muted text-center max-w-[24rem]">
+                        {t(
+                            "homotopy trap = the weakness preset: a straight 2 m-wide corridor is open below the block, but because the reference path rounds it above, the band can only deform continuously and never jumps to the other side — the robot detours roughly 19 m where 7.5 m would do",
+                            "homotopy 함정 = 약점 프리셋. 블록 아래로 폭 2m 직선 통로가 열려 있지만 reference path가 위로 돌기 때문에, 연속으로만 변형되는 밴드는 반대편으로 건너뛰지 못한다. 7.5m면 될 길을 로봇이 약 19m 돌아간다",
                         )}
                     </div>
                 </div>

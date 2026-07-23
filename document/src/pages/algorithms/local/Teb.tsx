@@ -572,14 +572,24 @@ return (v, omega)`}/>
                     thickness proportional to its own <InlineMath math="\Delta T"/> — thin segments are fast,
                     thick ones are slow. Raise <InlineMath math="w_{\text{time}}"/> and watch the chain pull
                     tighter through each corner; switch to the sharp-corner preset to see the turn-rate limit
-                    force a real, visible slowdown rather than an invisible one.
+                    force a real, visible slowdown rather than an invisible one. The homotopy-trap preset
+                    shows the method's honest weakness: the band deforms continuously, so it can never jump
+                    across an obstacle into a different homotopy class — it polishes the detour the reference
+                    path chose even when a far shorter corridor is open on the other side. Later work fixes
+                    this by optimizing several TEBs in distinct homotopy classes in parallel (Rösmann et al.
+                    2017, in the references).
                 </p>}
                 ko={<p>
                     아래 sandbox는 브라우저에서 TEB를 라이브로 실행한다. pose 사슬은 자신의{" "}
                     <InlineMath math="\Delta T"/>에 비례한 굵기로 그려진다. 가는 구간은 빠르고, 굵은
                     구간은 느리다. <InlineMath math="w_{\text{time}}"/>을 올리며 사슬이 각 코너를 더
                     바짝 당겨 지나가는 모습을 보거나, sharp corner 프리셋으로 바꿔 회전율 한계가 눈에
-                    보이지 않는 감속이 아니라 실제로 뚜렷한 감속을 강제하는 모습을 보라.
+                    보이지 않는 감속이 아니라 실제로 뚜렷한 감속을 강제하는 모습을 보라. homotopy 함정
+                    프리셋은 이 방법의 정직한 약점을 보여준다. 밴드는 연속으로만 변형되므로 장애물을
+                    건너뛰어 다른 homotopy 부류로 넘어가지 못하고, 반대편에 훨씬 짧은 통로가 열려
+                    있어도 reference path가 고른 우회로를 다듬을 뿐이다. 후속 연구는 서로 다른
+                    homotopy 부류의 TEB 여러 개를 병렬로 최적화해 이를 고친다(참고문헌의 Rösmann
+                    2017).
                 </p>}
             />
             <TebSandbox/>
