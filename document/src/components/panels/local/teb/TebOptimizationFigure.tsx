@@ -1,18 +1,19 @@
-import {useMemo} from "react";
+import {useMemo, useState} from "react";
 import {Circle, Layer, Line, Stage} from "react-konva";
 import CanvasFigure, {modalScale} from "../../../CanvasFigure";
+import ParamSlider from "../../../player/ParamSlider";
 import {runTeb} from "../../../../libs/algorithms/teb";
 import {GridMap} from "../../../../libs/grid";
 import {Point} from "../../../../libs/algorithms/sampling_space";
 import {Pose} from "../../../../libs/algorithms/local_sim";
 import {useCanvasColors} from "../../../../libs/useTheme";
-import {useTr} from "../../../../libs/i18n";
+import {T, useTr} from "../../../../libs/i18n";
 
 // 실제 teb.ts의 runTeb를 그대로 호출한다(내부 gradientStep을 따로 export하지 않으므로
-// 반복 횟수만 다르게 준 세 번의 온전한 실행에서 첫 tick의 band_updated를 뽑는다) --
+// 반복 횟수만 다르게 준 온전한 실행에서 첫 tick의 band_updated를 뽑는다) --
 // 지어낸 폴리라인이 아니라 진짜 최적화 결과다. 90도 코너를 도는 toy 참조 경로에
-// iterations=0(재초기화 직후, 미최적화)/10(부분 수렴)/40(기본값, 완전 수렴)을 주면
-// 코너가 안쪽으로 당겨지고 ΔT가 줄어드는 과정이 그대로 드러난다.
+// 반복 횟수를 슬라이더로 바꾸면, 코너가 안쪽으로 당겨지고 계획 시간 Σ ΔT가 줄어드는
+// 과정이 그대로 드러난다.
 const TOY_MAP: GridMap = {
     name: "teb_toy", width: 12, height: 12, resolution: 0.5, originX: 0, originY: 0,
     occupied: (() => {
@@ -56,42 +57,77 @@ const SCALE = (W - 2 * MARGIN) / (WORLD_MAX - WORLD_MIN)
 const toPx = (x: number, y: number): [number, number] =>
     [MARGIN + (x - WORLD_MIN) * SCALE, H - MARGIN - (y - WORLD_MIN) * SCALE]
 
-// 세 반복 횟수의 band는 테마와 무관한 순수 계산이므로, 컴포넌트 밖에서 한 번만 구한다
-// (테마 토글마다 runTeb를 다시 돌릴 이유가 없다).
-const BANDS_BY_ITERATIONS = [0, 10, 40].map((iterations) => ({iterations, band: firstBand(iterations)}))
+// 슬라이더가 밟는 반복 횟수들. 밴드는 테마와 무관한 순수 계산이므로 컴포넌트 밖에서
+// 한 번만 전부 구해 둔다(슬라이더 이동마다 runTeb를 다시 돌릴 이유가 없다).
+const ITER_STEP = 5
+const ITER_MAX = 40
+const BANDS_BY_ITERATIONS = new Map(
+    Array.from({length: ITER_MAX / ITER_STEP + 1}, (_, i) => i * ITER_STEP)
+        .map((iterations) => [iterations, firstBand(iterations)] as const),
+)
+// entry 0의 dt는 placeholder(이전 세그먼트 없음)라 0이고, 합에는 자연히 기여하지 않는다.
+const totalTime = (band: number[][]): number => band.reduce((s, p) => s + (p[3] ?? 0), 0)
+// 세그먼트 굵기는 모든 반복 횟수에 대해 같은 기준(전역 최대 ΔT)으로 정규화한다.
+// 밴드별 정규화는 ΔT가 전부 함께 줄어들 때 굵기 변화를 지워 버려, "수렴하며 얇아진다"가
+// 보이지 않게 된다.
+const DT_MAX_GLOBAL = Math.max(
+    ...[...BANDS_BY_ITERATIONS.values()].flatMap((band) => band.map((p) => p[3] ?? 0)), 1e-9,
+)
 
 const Scene = ({scale = 1}: {scale?: number}) => {
+    const t = useTr()
     const colors = useCanvasColors()
-    const bands = useMemo(() => ([
-        {...BANDS_BY_ITERATIONS[0], color: colors.muted},
-        {...BANDS_BY_ITERATIONS[1], color: colors.accent},
-        {...BANDS_BY_ITERATIONS[2], color: colors.accent2},
-    ]), [colors])
+    const [iterations, setIterations] = useState(ITER_MAX)
+    const band = BANDS_BY_ITERATIONS.get(iterations) ?? []
+    const band0 = BANDS_BY_ITERATIONS.get(0) ?? []
+    const time = useMemo(() => totalTime(band), [band])
+    const time0 = useMemo(() => totalTime(band0), [band0])
+
+    const bandSegments = (b: number[][], color: string, thick: boolean, opacity: number) =>
+        b.slice(0, -1).map((p, i) => {
+            const dt = b[i + 1][3] ?? 0
+            const sw = thick ? 1 + 3.2 * (dt / DT_MAX_GLOBAL) : 1.2
+            const [x0, y0] = toPx(p[0], p[1])
+            const [x1, y1] = toPx(b[i + 1][0], b[i + 1][1])
+            return <Line key={`s${i}`} points={[x0, y0, x1, y1]} stroke={color}
+                         strokeWidth={sw} opacity={opacity} lineCap="round"/>
+        })
 
     return (
-        <Stage width={W * scale} height={H * scale} className="bg-surface border border-border rounded-lg overflow-hidden">
-            <Layer scaleX={scale} scaleY={scale}>
-                <Line points={TOY_PATH.flatMap(([x, y]) => toPx(x, y))} stroke={colors.muted}
-                      strokeWidth={1.4} dash={[5, 4]} opacity={0.6}/>
-                {bands.map(({iterations, band, color}) => {
-                    if (band.length === 0) return null
-                    const dts = band.map((p) => p[3] ?? 0)
-                    const dtMax = Math.max(...dts, 1e-9)
-                    return band.slice(0, -1).map((p, i) => {
-                        const dt = dts[i + 1] ?? 0
-                        const sw = 1 + 3.2 * (dt / dtMax)
-                        const [x0, y0] = toPx(p[0], p[1])
-                        const [x1, y1] = toPx(band[i + 1][0], band[i + 1][1])
-                        return <Line key={`b${iterations}-${i}`} points={[x0, y0, x1, y1]}
-                                     stroke={color} strokeWidth={sw} opacity={0.85} lineCap="round"/>
-                    })
-                })}
-                {bands.map(({iterations, band, color}) => band.map((p, i) => {
-                    const [px, py] = toPx(p[0], p[1])
-                    return <Circle key={`p${iterations}-${i}`} x={px} y={py} radius={2.4} fill={color}/>
-                }))}
-            </Layer>
-        </Stage>
+        <div className="flex flex-col items-center gap-2">
+            <Stage width={W * scale} height={H * scale}
+                   className="bg-surface border border-border rounded-lg overflow-hidden">
+                <Layer scaleX={scale} scaleY={scale}>
+                    <Line points={TOY_PATH.flatMap(([x, y]) => toPx(x, y))} stroke={colors.muted}
+                          strokeWidth={1.4} dash={[5, 4]} opacity={0.6}/>
+                    {/* 반복 0회(재초기화 직후) 밴드: 항상 깔아 두는 비교 기준 */}
+                    {bandSegments(band0, colors.muted, false, 0.55)}
+                    {/* 현재 반복 횟수의 밴드 */}
+                    {bandSegments(band, colors.accent2, true, 0.9)}
+                    {band.map((p, i) => {
+                        const [px, py] = toPx(p[0], p[1])
+                        return <Circle key={`p${i}`} x={px} y={py} radius={2.4} fill={colors.accent2}/>
+                    })}
+                </Layer>
+            </Stage>
+            <ParamSlider label="iterations" value={iterations}
+                         min={0} max={ITER_MAX} step={ITER_STEP} onCommit={setIterations}
+                         format={(v) => String(Math.round(v))}/>
+            <div className="text-xs text-muted text-center tabular-nums">
+                <T
+                    en={<>plan time <span className="font-semibold">Σ ΔT = {time.toFixed(2)} s</span>
+                        {" "}(before optimization: {time0.toFixed(2)} s)</>}
+                    ko={<>계획 시간 <span className="font-semibold">Σ ΔT = {time.toFixed(2)} s</span>
+                        {" "}(최적화 전: {time0.toFixed(2)} s)</>}
+                />
+            </div>
+            <div className="text-xs text-muted text-center max-w-[21rem]">
+                {t(
+                    "gray thin chain = band before optimization · teal chain = band after the chosen iterations · segment thickness = its ΔT (thicker = that stretch is crossed more slowly)",
+                    "회색 가는 사슬 = 최적화 전 밴드 · 청록 사슬 = 선택한 반복 횟수만큼 최적화된 밴드 · 세그먼트 굵기 = 그 구간의 ΔT (굵을수록 느리게 지나간다)",
+                )}
+            </div>
+        </div>
     )
 }
 
@@ -99,8 +135,8 @@ const TebOptimizationFigure = () => {
     const t = useTr()
     return <CanvasFigure
         label={t(
-            "The same 90° toy corner optimized by the real teb.ts solver at 0 (gray), 10 (teal), and 40 (bright, default) gradient-descent iterations — the pose chain pulls tighter into the corner and segment thickness (∝ ΔT) shrinks as it converges",
-            "실제 teb.ts 솔버로 같은 90도 toy 코너를 gradient descent 0회(회색)/10회(청록)/40회(밝음, 기본값) 반복 최적화한 결과. 수렴할수록 pose 열이 코너 안쪽으로 당겨지고 세그먼트 굵기(∝ΔT)가 줄어든다",
+            "Drag the iteration slider and watch the real teb.ts solver optimize a 90° toy corner: the pose chain pulls into the corner and the plan time Σ ΔT drops",
+            "iteration 슬라이더를 끌면 실제 teb.ts 솔버가 90도 toy 코너를 최적화하는 과정이 보인다. pose 사슬이 코너 안쪽으로 당겨지고 계획 시간 Σ ΔT가 줄어든다",
         )}
         tight bodyClassName="w-fit" className="w-full"
         modal={<Scene scale={modalScale(W, H)}/>}

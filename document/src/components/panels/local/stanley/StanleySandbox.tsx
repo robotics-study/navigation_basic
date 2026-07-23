@@ -81,6 +81,7 @@ const StanleyScene = ({panel = 340}: {panel?: number}) => {
 
     return (
         <LocalTracePlayer footprintRadius={SIM_DEFAULTS.footprintRadius} showCrosstrack
+            crosstrackWheelbase={wheelbase}
             map={map} events={events} startPose={start} goal={preset.goal}
             referencePath={preset.path} panel={panel}
             onPaintCell={paintCell}

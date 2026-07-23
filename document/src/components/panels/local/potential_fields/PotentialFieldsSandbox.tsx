@@ -3,8 +3,9 @@ import CanvasFigure, {modalCanvasSize} from "../../../CanvasFigure";
 import LocalTracePlayer from "../LocalTracePlayer";
 import ParamSlider from "../../../player/ParamSlider";
 import {runPotentialFields} from "../../../../libs/algorithms/potential_fields";
+import {occupiedWithin} from "../../../../libs/algorithms/obstacle_grid";
 import {Pose} from "../../../../libs/algorithms/local_sim";
-import {GridMap, gridFromPgmRows} from "../../../../libs/grid";
+import {cellCenterWorld, GridMap, gridFromPgmRows} from "../../../../libs/grid";
 import {useTr} from "../../../../libs/i18n";
 import cn from "../../../../libs/cn";
 
@@ -82,6 +83,39 @@ const GOAL_TOLERANCE = 0.3
 const STALL_WINDOW = 20
 const STALL_DISTANCE = 0.05
 
+// costmap풍 배경: 각 자유 셀 중심에서 potential U = ½k_att·‖p−g‖² + Σ ½k_rep(1/d − 1/ρ₀)²
+// 를 표본화해 0..1로 정규화한다. 힘 벡터가 아니라 U 자체를 칠해, 로봇이 "파란 저지대
+// (goal)로 굴러 내려가고 빨간 벽 앞에서 밀리는" 지형이 그대로 보이게 한다. 반발항의
+// 거리·클램프는 엔진과 같은 규약(셀 중심 합산, d_min = footprint)을 쓴다. 벽 바로 옆은
+// U가 발산하므로 상위 5% 값에 클램프해 나머지 그라데이션이 뭉개지지 않게 한다.
+const potentialHeat = (
+    map: GridMap, goal: [number, number], kAtt: number, kRep: number, rho0: number,
+): (number | null)[] => {
+    const raw: (number | null)[] = new Array(map.width * map.height).fill(null)
+    const finite: number[] = []
+    for (let row = 0; row < map.height; row++) {
+        for (let col = 0; col < map.width; col++) {
+            const i = row * map.width + col
+            if (map.occupied[i]) continue
+            const [x, y] = cellCenterWorld(map, [row, col])
+            const dg = Math.hypot(goal[0] - x, goal[1] - y)
+            let u = 0.5 * kAtt * dg * dg
+            for (const [ox, oy] of occupiedWithin(map, [x, y], rho0)) {
+                const d = Math.max(Math.hypot(x - ox, y - oy), FOOTPRINT_RADIUS)
+                if (d >= rho0) continue
+                const inv = 1 / d - 1 / rho0
+                u += 0.5 * kRep * inv * inv
+            }
+            raw[i] = u
+            finite.push(u)
+        }
+    }
+    if (finite.length === 0) return raw
+    finite.sort((a, b) => a - b)
+    const hi = finite[Math.floor(0.95 * (finite.length - 1))] || 1
+    return raw.map((v) => v === null ? null : Math.min(1, v / hi))
+}
+
 const PotentialFieldsScene = ({panel = 340}: {panel?: number}) => {
     const t = useTr()
     const [preset, setPreset] = useState<Preset>("trap")
@@ -103,6 +137,11 @@ const PotentialFieldsScene = ({panel = 340}: {panel?: number}) => {
         stallWindow: STALL_WINDOW, stallDistance: STALL_DISTANCE,
     }), [map, start, goal, kAtt, kRep, influenceRadius])
 
+    const heat = useMemo(
+        () => potentialHeat(map, goal, kAtt, kRep, influenceRadius),
+        [map, goal, kAtt, kRep, influenceRadius],
+    )
+
     const applyPreset = (next: Preset) => {
         setPreset(next)
         setMap(presetMap(next))
@@ -121,7 +160,7 @@ const PotentialFieldsScene = ({panel = 340}: {panel?: number}) => {
         <LocalTracePlayer footprintRadius={FOOTPRINT_RADIUS}
             map={map} events={events} panel={panel}
             startPose={start} goal={goal}
-            auxCircleRadius={influenceRadius}
+            auxCircleRadius={influenceRadius} cellHeat={heat}
             onPaintCell={paintCell}
             onMoveStart={(xy) => setStart([xy[0], xy[1], 0])}
             onMoveGoal={setGoal}
@@ -163,10 +202,16 @@ const PotentialFieldsScene = ({panel = 340}: {panel?: number}) => {
                             "ρ₀: 반발이 작동하는 점선 원. 이 원 밖 장애물은 힘에 안 잡히므로, 올리면 더 일찍 반응한다",
                         )}</span>
                     </div>
+                    <div className="text-xs text-muted text-center max-w-[24rem]">
+                        {t(
+                            "background heatmap = the potential U itself: blue = low (the basin around the goal) → red = high (near walls); the robot rolls downhill on this terrain, and in the U-trap you can read why it stalls — a low pocket walled in red, whose floor is not the goal",
+                            "배경 히트맵 = potential U 그 자체. 파랑 = 낮음(goal 주변의 분지), 빨강 = 높음(벽 근처). 로봇은 이 지형의 내리막을 굴러 내려간다. U-trap에서 로봇이 멈추는 이유도 지형으로 읽힌다. 빨간 벽에 둘러싸인 저지대의 바닥이 goal이 아니기 때문이다",
+                        )}
+                    </div>
                     <div className="text-xs text-muted text-center tabular-nums">
                         {t(
-                            "drag start/goal or paint walls, then compare the U-trap against the clutter field",
-                            "start/goal를 끌거나 벽을 그려 보라. U-trap과 산개 지형을 비교해 보라",
+                            "drag start/goal or paint walls (the heatmap re-shapes live), then compare the U-trap against the clutter field",
+                            "start/goal를 끌거나 벽을 그려 보라(히트맵이 실시간으로 다시 그려진다). U-trap과 산개 지형을 비교해 보라",
                         )}
                     </div>
                 </div>

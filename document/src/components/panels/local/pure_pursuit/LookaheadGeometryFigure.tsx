@@ -104,7 +104,7 @@ const LookaheadGeometryFigure = () => {
     return <CanvasFigure
         label={t(
             "The tangent-chord construction: the single circle tangent to the robot's heading that also passes through the lookahead point — its radius is R = L_d / (2 sin α)",
-            "접선-현 구성. 로봇의 heading에 접하면서 lookahead 점도 지나는 유일한 원 -- 그 반지름이 R = L_d / (2 sin α)다",
+            "접선-현 구성. 로봇의 heading에 접하면서 lookahead 점도 지나는 유일한 원이고, 그 반지름이 R = L_d / (2 sin α)다",
         )}
         tight bodyClassName="w-fit" className="w-full"
         modal={<Scene scale={modalScale(PANEL, PANEL)}/>}

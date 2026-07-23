@@ -167,10 +167,14 @@ const Stanley = () => {
             <T
                 en={<>
                     <ul>
-                        <li><strong>Cost: <InlineMath math="O(1)"/> amortized per tick.</strong> Like
-                            Pure Pursuit, the front-axle progress index only ever scans forward, so a full
-                            run touches each path segment once rather than re-searching the whole path
-                            every tick.</li>
+                        <li><strong>Cost: <InlineMath math="O(\text{remaining path})"/> per tick, not{" "}
+                            <InlineMath math="O(1)"/>.</strong> Like Pure Pursuit, the front-axle progress
+                            index only moves forward, so tracking never re-visits the prefix it has already
+                            passed. But each tick still re-scans from that index to the end of the path for
+                            the segment nearest the front axle, with no early stop, so the per-tick cost is
+                            linear in the path still ahead. Forward-only progress buys robustness, not a
+                            cheaper tick: it keeps a self-crossing path from snapping tracking back to an
+                            earlier crossing.</li>
                         <li><strong>Obstacle-blind by design.</strong> Same limitation as Pure Pursuit:
                             Stanley tracks whatever path it is handed and never queries the map for
                             obstacles. A path through a wall gets driven into the wall exactly as
@@ -178,9 +182,12 @@ const Stanley = () => {
                         <li><strong>One gain sets the return speed.</strong> Too small a{" "}
                             <InlineMath math="k"/> and the crosstrack term barely pulls the robot back, so
                             it drifts onto the path over a long stretch; a larger <InlineMath math="k"/>{" "}
-                            returns it sooner. The derivation further down shows the crosstrack error
-                            decays monotonically in this kinematic model, with a rate that grows
-                            with <InlineMath math="k"/>, so there is no overshoot to trade against. On a
+                            returns it sooner. The derivation further down shows that <em>once the heading
+                            has aligned</em> (<InlineMath math="\psi"/> small), the crosstrack error decays
+                            monotonically in this kinematic model, with a rate that grows
+                            with <InlineMath math="k"/>. That guarantee is local to the aligned regime, not a
+                            global promise for the full two-term law, but in the demo the offset recovery
+                            stays well-behaved even through the large heading errors of the first metre. On a
                             real vehicle, steering lag and actuator dynamics do eventually turn too high a
                             gain into oscillation, but that lies outside the bicycle kinematics simulated
                             here.</li>
@@ -188,19 +195,26 @@ const Stanley = () => {
                 </>}
                 ko={<>
                     <ul>
-                        <li><strong>비용: tick당 상환 <InlineMath math="O(1)"/>.</strong> Pure Pursuit과
-                            마찬가지로 전륜축 progress index는 앞으로만 훑으므로, 전체 실행을 통틀어
-                            경로 구간마다 한 번씩만 닿는다. tick마다 경로 전체를 다시 훑지 않는다.</li>
+                        <li><strong>비용: tick당 <InlineMath math="O(1)"/>이 아니라{" "}
+                            <InlineMath math="O(\text{남은 경로})"/>.</strong> Pure Pursuit과 마찬가지로
+                            전륜축 progress index는 앞으로만 나아가므로 이미 지난 앞부분을 다시 보지
+                            않는다. 다만 매 tick 그 index부터 경로 끝까지는 전륜축에 가장 가까운 구간을
+                            찾아 다시 훑고, 중간에 멈추지 않는다. 그래서 tick당 비용은 남은 경로 길이에
+                            비례한다. 앞으로만 진행해서 얻는 것은 더 싼 tick이 아니라 견고함이다.
+                            자기 자신과 교차하는 경로에서 추종이 뒤쪽 교점으로 되돌아가지 않게 한다.</li>
                         <li><strong>설계상 장애물을 보지 못한다.</strong> Pure Pursuit과 같은 한계다.
                             Stanley는 주어진 경로를 추종할 뿐 맵에 장애물을 묻지 않는다. 벽을 관통하는
                             경로를 주면 다른 경로와 똑같이 충실하게 벽으로 걸어 들어간다.</li>
                         <li><strong>gain 하나가 복귀 속도를 정한다.</strong> <InlineMath math="k"/>가 너무
                             작으면 crosstrack 항이 로봇을 거의 끌어당기지 못해 긴 거리에 걸쳐 천천히
                             경로로 붙는다. <InlineMath math="k"/>가 클수록 더 빨리 되돌아온다. 아래 유도는
-                            이 기구학 모델에서 crosstrack 오차가 단조 감소하며 그 감소율이{" "}
-                            <InlineMath math="k"/>에 비례해 커짐을 보인다. 상충할 오버슈트 자체가 없다.
-                            실제 차량에서는 조향 지연과 액추에이터 동역학 때문에 과대 gain이 결국 진동을
-                            부르지만, 그 동역학은 여기서 시뮬레이션하는 bicycle 기구학 범위 밖이다.</li>
+                            <em>heading이 정렬된 뒤</em>(<InlineMath math="\psi"/>가 작을 때)에는 이 기구학
+                            모델에서 crosstrack 오차가 단조 감소하며 그 감소율이 <InlineMath math="k"/>에
+                            비례해 커짐을 보인다. 이 보장은 정렬된 영역에 국한되고 두 항을 합친 전체 법칙의
+                            전역 보장은 아니다. 다만 데모에서는 첫 1 m의 큰 heading 오차를 지나는 동안에도
+                            오프셋 복귀가 얌전하게 이뤄진다. 실제 차량에서는 조향 지연과 액추에이터 동역학
+                            때문에 과대 gain이 결국 진동을 부르지만, 그 동역학은 여기서 시뮬레이션하는
+                            bicycle 기구학 범위 밖이다.</li>
                     </ul>
                 </>}
             />
@@ -305,10 +319,12 @@ return (v, omega)                                                     # 12`}/>
                             ["k,\\ k_{soft},\\ v", "gain, softening constant, forward speed — as defined above"],
                         ]}/>
                         <p>
-                            Under the bicycle–unicycle equivalence, the front axle's velocity component
-                            perpendicular to the path — the rate of change of <InlineMath math="e"/> — is{" "}
-                            <InlineMath math="v"/> times the sine of the vehicle's heading relative to the
-                            path, which under the assumption above equals <InlineMath math="\delta"/>:
+                            Under the bicycle–unicycle equivalence, the front axle rolls in the direction
+                            its wheel points, so its velocity component perpendicular to the path — the rate
+                            of change of <InlineMath math="e"/> — is <InlineMath math="v"/> times the sine of
+                            the front wheel's direction relative to the path. With the heading already
+                            aligned (<InlineMath math="\psi \approx 0"/>), that direction is just the
+                            steering angle <InlineMath math="\delta"/>:
                         </p>
                         <BlockMath math="\dot e = v \sin\delta = -v \sin\!\left(\arctan\!\left(\frac{k e}{k_{soft} + v}\right)\right)"/>
                         <Terms items={[
@@ -334,7 +350,7 @@ return (v, omega)                                                     # 12`}/>
                         <BlockMath math="\dot e \approx -\frac{vk}{k_{soft}+v}\, e \quad\Longrightarrow\quad e(t) \approx e(0)\, \exp\!\left(-\frac{vk}{k_{soft}+v}\, t\right)"/>
                         <Terms items={[
                             ["e(t),\\ e(0)", "crosstrack error at time t and at the start of this local approximation"],
-                            ["\\frac{vk}{k_{soft}+v}", "the local convergence rate — larger gain k means faster convergence, but also a stronger overcorrection once e is no longer small (the high-gain oscillation in the demo below)"],
+                            ["\\frac{vk}{k_{soft}+v}", "the local convergence rate — larger gain k gives a sharper steering response and faster exponential decay, with the arctan and the max-steer clamp capping how hard the correction can pull"],
                         ]}/>
                         <p>
                             <strong>Conclusion.</strong> With the heading error already zeroed,{" "}
@@ -360,9 +376,10 @@ return (v, omega)                                                     # 12`}/>
                             ["k,\\ k_{soft},\\ v", "gain, softening 상수, 전진 속도. 위와 동일"],
                         ]}/>
                         <p>
-                            자전거-unicycle 등가 관계에서, 전륜축이 경로에 수직으로 움직이는
-                            속도 성분(<InlineMath math="e"/>의 변화율)은 <InlineMath math="v"/> 곱하기
-                            차량 heading과 경로 사이 각의 sine이고, 위 가정 아래에서 그 각은{" "}
+                            자전거-unicycle 등가 관계에서 전륜축은 바퀴가 가리키는 방향으로 굴러가므로,
+                            전륜축이 경로에 수직으로 움직이는 속도 성분(<InlineMath math="e"/>의 변화율)은{" "}
+                            <InlineMath math="v"/> 곱하기 전륜의 방향과 경로 사이 각의 sine이다. heading이
+                            이미 정렬된(<InlineMath math="\psi \approx 0"/>) 상태에서 그 각은 조향각{" "}
                             <InlineMath math="\delta"/>와 같다.
                         </p>
                         <BlockMath math="\dot e = v \sin\delta = -v \sin\!\left(\arctan\!\left(\frac{k e}{k_{soft} + v}\right)\right)"/>
@@ -389,7 +406,7 @@ return (v, omega)                                                     # 12`}/>
                         <BlockMath math="\dot e \approx -\frac{vk}{k_{soft}+v}\, e \quad\Longrightarrow\quad e(t) \approx e(0)\, \exp\!\left(-\frac{vk}{k_{soft}+v}\, t\right)"/>
                         <Terms items={[
                             ["e(t),\\ e(0)", "시각 t에서의 crosstrack 오차와, 이 국소 근사가 시작되는 시점의 값"],
-                            ["\\frac{vk}{k_{soft}+v}", "국소 수렴률. gain k가 클수록 더 빨리 수렴하지만, e가 더 이상 작지 않을 때는 그만큼 더 크게 과보정한다(아래 데모의 과대 gain 진동)"],
+                            ["\\frac{vk}{k_{soft}+v}", "국소 수렴률. gain k가 클수록 조향 반응이 날카로워지고 지수 감쇠가 빨라진다. arctan과 max-steer 클램프가 보정이 낼 수 있는 세기의 상한을 정한다"],
                         ]}/>
                         <p>
                             <strong>결론.</strong> heading 오차가 이미 0이 된 상태에서 <InlineMath math="|e|"/>는
@@ -407,16 +424,19 @@ return (v, omega)                                                     # 12`}/>
                 en={<p>
                     The sandbox below runs Stanley live in your browser. The "weak k_gain" and "strong
                     k_gain" presets both start the robot 1.5 m off the S-curve: with a weak gain it drifts
-                    back onto the path slowly, while a strong gain snaps it back within the first metre —
-                    the faster monotone return the derivation above predicts. The sharp-corner preset then
+                    back onto the path slowly, while a strong gain snaps it back within the first metre. Once
+                    the heading has aligned, that return is the faster monotone decay the derivation above
+                    predicts; the earlier, large-heading part of the recovery lies outside what the
+                    derivation covers, though it stays well-behaved here. The sharp-corner preset then
                     shows both error terms steering together through a string of right angles.
                 </p>}
                 ko={<p>
                     아래 sandbox는 브라우저에서 Stanley를 라이브로 실행한다. "약한 k_gain"과 "강한 k_gain"
                     프리셋은 모두 로봇을 S-곡선에서 1.5 m 벗어난 위치에서 시작한다. gain이 약하면 긴 거리에
-                    걸쳐 천천히 경로로 붙고, 강하면 첫 1 m 안에 곧바로 되돌아온다. 위 유도가 예측한 더 빠른
-                    단조 복귀다. 급코너 프리셋은 두 오차 항이 연속된 직각 코너를 함께 조향하는 모습을
-                    보여준다.
+                    걸쳐 천천히 경로로 붙고, 강하면 첫 1 m 안에 곧바로 되돌아온다. heading이 정렬된 뒤의
+                    이 복귀가 위 유도가 예측한 더 빠른 단조 감쇠다. 복귀 앞부분의 큰 heading 구간은 유도가
+                    다루는 범위 밖이지만 여기서는 얌전하게 이뤄진다. 급코너 프리셋은 두 오차 항이 연속된
+                    직각 코너를 함께 조향하는 모습을 보여준다.
                 </p>}
             />
             <StanleySandbox/>

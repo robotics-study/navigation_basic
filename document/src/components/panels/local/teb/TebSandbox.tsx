@@ -141,7 +141,7 @@ const TebScene = ({panel = 340}: {panel?: number}) => {
     })[id]
 
     return (
-        <LocalTracePlayer footprintRadius={FOOTPRINT_RADIUS}
+        <LocalTracePlayer footprintRadius={FOOTPRINT_RADIUS} durationMs={8000}
             map={map} events={events} startPose={start} goal={preset.goal}
             referencePath={preset.path} panel={panel}
             onPaintCell={paintCell}
@@ -177,6 +177,12 @@ const TebScene = ({panel = 340}: {panel?: number}) => {
                             "v_max — top speed; raise it to move faster, but the turn-rate and accel limits bind more often",
                             "v_max: 상한 속도. 올리면 빨라지되 회전율·가속 한계에 더 자주 걸린다",
                         )}</span>
+                    </div>
+                    <div className="text-xs text-muted text-center max-w-[24rem]">
+                        {t(
+                            "blue chain = the plan (band) re-optimized this tick, running ahead of the robot · segment thickness = its ΔT (thicker = slower stretch) · gray dashed = reference path · trail fading = the robot actually slowing down",
+                            "파란 사슬 = 이번 tick 다시 최적화된 계획(밴드)으로, 로봇보다 앞서 달린다 · 세그먼트 굵기 = 그 구간의 ΔT (굵을수록 느린 구간) · 회색 점선 = reference path · trail이 옅어지면 로봇이 실제로 감속 중",
+                        )}
                     </div>
                     <div className="text-xs text-muted text-center tabular-nums">
                         {t(

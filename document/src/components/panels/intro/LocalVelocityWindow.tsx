@@ -5,6 +5,7 @@ import CanvasFigure, {modalScale} from "../../CanvasFigure";
 import {useCanvasColors} from "../../../libs/useTheme";
 import {PATH_COLOR} from "../../2d/GridCanvas";
 import {useTr} from "../../../libs/i18n";
+import {wrapToPi} from "../../../libs/algorithms/local_sim";
 
 // DWA의 핵심 그림 (Fox, Burgard & Thrun 1997). 왼쪽은 실제 장면(로봇·장애물·goal·
 // 명령이 그리는 원호), 오른쪽은 같은 장면의 (v, ω) 속도 공간이다. 오른쪽의 충돌 위험
@@ -129,7 +130,7 @@ const Scene = ({scale = 1}: {scale?: number}) => {
                 const pts = arcPoints(kappa, Math.max(s, 0.01))
                 const [ex, ey] = pts[pts.length - 1]
                 const angToGoal = Math.atan2(-(GOAL[0] - ex), GOAL[1] - ey)
-                const heading = 1 - Math.abs(angToGoal - thEnd) / Math.PI
+                const heading = 1 - Math.abs(wrapToPi(angToGoal - thEnd)) / Math.PI
                 const dist = arcDistToObstacle(kappa, obstY)
                 const clear = Math.min(dist, 2) / 2
                 const J = 2.0 * heading + 0.3 * clear + 0.6 * (v / V_MAX)
@@ -305,6 +306,11 @@ const Scene = ({scale = 1}: {scale?: number}) => {
                         <span className="font-semibold" style={{color: c}}>{label}</span>
                     </span>
                 ))}
+            </div>
+            {/* 그림용 상수 caveat: 제동 감속을 window 가속과 별개로 낮게 잡은 이유를 밝힌다 */}
+            <div className="text-xs text-muted text-center max-w-prose">
+                {t("The braking deceleration behind the red bound is a figure constant chosen for legibility, kept below the window's per-tick acceleration so the boundary stays inside the plotted speed range across the whole obstacle-distance slider.",
+                    "빨간 경계를 만드는 제동 감속은 가독성을 위해 고른 그림용 상수다. window의 tick당 가속보다 낮게 잡아, 장애물 거리 슬라이더 전 구간에서 경계가 그려진 속도 범위 안에 들어오게 했다.")}
             </div>
         </div>
     )

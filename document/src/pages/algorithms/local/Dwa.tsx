@@ -69,7 +69,11 @@ const Dwa = () => {
                         \Delta t"/> of where the robot already is. That reachable rectangle is the{" "}
                         <strong>dynamic window</strong> — small, centered on the current velocity, and
                         moving with it tick by tick. DWA only ever samples inside the intersection of the
-                        two: the dynamic window clipped to the admissible space.
+                        two: the dynamic window clipped to the admissible space. One narrowing here is
+                        specific to this implementation: the window's lower speed bound is pinned at zero,
+                        so it samples forward motion only and never reverses — a deliberate restriction of
+                        the paper's full velocity space <InlineMath math="V_s"/>, which also admits backward
+                        velocities.
                     </p>
                 </>}
                 ko={<>
@@ -92,7 +96,10 @@ const Dwa = () => {
                         이내의 속도까지만 도달할 수 있다. 그 도달 가능한 사각형이{" "}
                         <strong>dynamic window</strong>다. 작고, 현재 속도를 중심으로 하고, tick마다 함께
                         움직인다. DWA는 이 두 영역의 교집합, 곧 dynamic window를 admissible 공간으로
-                        잘라낸 부분 안에서만 표본을 뽑는다.
+                        잘라낸 부분 안에서만 표본을 뽑는다. 이 구현에는 한 가지 제약이 더 있다. window의
+                        아래쪽 속도 한계를 0으로 고정해 전진만 표본으로 뽑고 후진은 하지 않는다. 후진
+                        속도까지 포함하는 원 논문의 전체 속도 공간 <InlineMath math="V_s"/>를 의도적으로
+                        좁힌 것이다.
                     </p>
                 </>}
             />
@@ -288,6 +295,178 @@ return (best.v, best.omega)                                          # 15`}/>
                         된다.</li>
                 </ol>}
             />
+            <T
+                en={<p>
+                    Step 5 leans on a closed form for that arc. Holding a single{" "}
+                    <InlineMath math="(v, \omega)"/> fixed for the whole rollout makes the path a circular
+                    arc whose points have an exact expression, so the rollout evaluates that expression at a
+                    handful of sample times instead of integrating the motion one small step at a time.
+                </p>}
+                ko={<p>
+                    5단계는 그 원호의 closed-form에 기댄다. 하나의 <InlineMath math="(v, \omega)"/>를 롤아웃
+                    내내 고정하면 경로가 원호가 되고, 그 위 점들이 정확한 식으로 주어진다. 그래서 롤아웃은
+                    운동을 잘게 한 스텝씩 적분하는 대신 이 식을 몇 개의 표본 시각에서 바로 계산한다.
+                </p>}
+            />
+            <Proof title={t("Derivation (constant-curvature arc rollout)", "유도 (일정 곡률 원호 롤아웃)")}>
+                <T
+                    en={<>
+                        <p>
+                            <strong>Setup.</strong> A differential-drive robot at pose
+                            <InlineMath math="(x, y, \theta)"/>, driven at a constant forward speed{" "}
+                            <InlineMath math="v"/> and turn rate <InlineMath math="\omega"/>, follows the
+                            unicycle kinematics:
+                        </p>
+                        <BlockMath math="\dot x = v\cos\theta, \qquad \dot y = v\sin\theta, \qquad \dot\theta = \omega"/>
+                        <Terms items={[
+                            ["\\dot x,\\ \\dot y", "time derivatives of the robot's world position"],
+                            ["\\dot\\theta", "time derivative of heading — the turn rate itself"],
+                            ["v", "commanded forward speed, held constant over the rollout"],
+                            ["\\omega", "commanded turn rate, held constant over the rollout"],
+                            ["\\theta", "robot heading, measured from the world x-axis"],
+                        ]}/>
+                        <p>
+                            <strong>Heading.</strong> With <InlineMath math="\omega"/> constant the third
+                            equation integrates on its own: heading advances linearly from its start value{" "}
+                            <InlineMath math="\theta_0"/>.
+                        </p>
+                        <BlockMath math="\theta(t) = \theta_0 + \omega t"/>
+                        <Terms items={[
+                            ["\\theta(t)", "heading at time t into the rollout"],
+                            ["\\theta_0", "heading at the start of the rollout"],
+                            ["\\omega", "constant turn rate, as above"],
+                            ["t", "elapsed time since the rollout began"],
+                        ]}/>
+                        <p>
+                            <strong>Position (<InlineMath math="\omega \ne 0"/>).</strong> Substituting{" "}
+                            <InlineMath math="\theta(t)"/> into <InlineMath math="\dot x"/> and{" "}
+                            <InlineMath math="\dot y"/> and integrating from <InlineMath math="0"/> to{" "}
+                            <InlineMath math="t"/> gives both coordinates in closed form:
+                        </p>
+                        <BlockMath math="x(t) = x_0 + \frac{v}{\omega}\big(\sin(\theta_0 + \omega t) - \sin\theta_0\big)"/>
+                        <Terms items={[
+                            ["x(t)", "world x-coordinate at time t"],
+                            ["x_0", "world x-coordinate at the start of the rollout"],
+                            ["v,\\ \\omega", "constant forward speed and turn rate, as above"],
+                            ["\\theta_0", "starting heading, as above"],
+                            ["t", "elapsed rollout time, as above"],
+                        ]}/>
+                        <BlockMath math="y(t) = y_0 - \frac{v}{\omega}\big(\cos(\theta_0 + \omega t) - \cos\theta_0\big)"/>
+                        <Terms items={[
+                            ["y(t)", "world y-coordinate at time t"],
+                            ["y_0", "world y-coordinate at the start of the rollout"],
+                            ["v,\\ \\omega,\\ \\theta_0,\\ t", "as above"],
+                        ]}/>
+                        <p>
+                            These are the parametric equations of a circle: the robot rides an arc of fixed
+                            radius, with the curvature set entirely by the ratio of the two commands.
+                        </p>
+                        <BlockMath math="R = \frac{v}{\omega}"/>
+                        <Terms items={[
+                            ["R", "signed radius of the circular arc the command traces"],
+                            ["v", "constant forward speed, as above"],
+                            ["\\omega", "constant turn rate — its sign fixes the turn direction, as above"],
+                        ]}/>
+                        <p>
+                            <strong>Straight-line limit (<InlineMath math="\omega \to 0"/>).</strong> As the
+                            turn rate vanishes the radius blows up and the arc flattens. Taking{" "}
+                            <InlineMath math="\omega \to 0"/> in the position equations (the sine and cosine
+                            differences linearize) leaves straight-line motion along the starting heading:
+                        </p>
+                        <BlockMath math="\lim_{\omega \to 0} x(t) = x_0 + v t\cos\theta_0, \qquad \lim_{\omega \to 0} y(t) = y_0 + v t\sin\theta_0"/>
+                        <Terms items={[
+                            ["x(t),\\ y(t)", "world coordinates at time t in the zero-turn-rate limit"],
+                            ["x_0,\\ y_0", "starting world position, as above"],
+                            ["v", "constant forward speed, as above"],
+                            ["\\theta_0", "starting heading, now the fixed direction of travel"],
+                            ["t", "elapsed rollout time, as above"],
+                        ]}/>
+                        <p>
+                            So a constant command is either a circular arc (<InlineMath math="\omega \ne 0"/>)
+                            or a straight line (<InlineMath math="\omega = 0"/>), and step 5 samples these same
+                            closed-form expressions at a few values of <InlineMath math="t"/> rather than
+                            stepping a numerical integrator — cheaper, and exact for a held command.
+                        </p>
+                    </>}
+                    ko={<>
+                        <p>
+                            <strong>가정.</strong> pose <InlineMath math="(x, y, \theta)"/>에서 일정한 전진
+                            속도 <InlineMath math="v"/>와 회전율 <InlineMath math="\omega"/>로 구동되는 차동
+                            구동 로봇은 unicycle 운동학을 따른다:
+                        </p>
+                        <BlockMath math="\dot x = v\cos\theta, \qquad \dot y = v\sin\theta, \qquad \dot\theta = \omega"/>
+                        <Terms items={[
+                            ["\\dot x,\\ \\dot y", "로봇 world 위치의 시간 미분"],
+                            ["\\dot\\theta", "heading의 시간 미분. 곧 회전율 그 자체"],
+                            ["v", "롤아웃 내내 고정된 명령 전진 속도"],
+                            ["\\omega", "롤아웃 내내 고정된 명령 회전율"],
+                            ["\\theta", "world x축에서 잰 로봇 heading"],
+                        ]}/>
+                        <p>
+                            <strong>Heading.</strong> <InlineMath math="\omega"/>가 일정하면 세 번째 식은
+                            홀로 적분된다. heading은 시작값 <InlineMath math="\theta_0"/>에서 선형으로
+                            증가한다.
+                        </p>
+                        <BlockMath math="\theta(t) = \theta_0 + \omega t"/>
+                        <Terms items={[
+                            ["\\theta(t)", "롤아웃 시작 후 시간 t에서의 heading"],
+                            ["\\theta_0", "롤아웃 시작 시점의 heading"],
+                            ["\\omega", "일정한 회전율, 위와 동일"],
+                            ["t", "롤아웃 시작 이후 경과 시간"],
+                        ]}/>
+                        <p>
+                            <strong>위치 (<InlineMath math="\omega \ne 0"/>).</strong>{" "}
+                            <InlineMath math="\theta(t)"/>를 <InlineMath math="\dot x"/>,{" "}
+                            <InlineMath math="\dot y"/>에 대입하고 <InlineMath math="0"/>부터{" "}
+                            <InlineMath math="t"/>까지 적분하면 두 좌표가 closed-form으로 나온다:
+                        </p>
+                        <BlockMath math="x(t) = x_0 + \frac{v}{\omega}\big(\sin(\theta_0 + \omega t) - \sin\theta_0\big)"/>
+                        <Terms items={[
+                            ["x(t)", "시간 t에서의 world x좌표"],
+                            ["x_0", "롤아웃 시작 시점의 world x좌표"],
+                            ["v,\\ \\omega", "일정한 전진 속도와 회전율, 위와 동일"],
+                            ["\\theta_0", "시작 heading, 위와 동일"],
+                            ["t", "경과 롤아웃 시간, 위와 동일"],
+                        ]}/>
+                        <BlockMath math="y(t) = y_0 - \frac{v}{\omega}\big(\cos(\theta_0 + \omega t) - \cos\theta_0\big)"/>
+                        <Terms items={[
+                            ["y(t)", "시간 t에서의 world y좌표"],
+                            ["y_0", "롤아웃 시작 시점의 world y좌표"],
+                            ["v,\\ \\omega,\\ \\theta_0,\\ t", "위와 동일"],
+                        ]}/>
+                        <p>
+                            이 두 식은 원의 매개변수 방정식이다. 로봇은 반지름이 일정한 원호를 타고, 곡률은
+                            오로지 두 명령의 비로 정해진다.
+                        </p>
+                        <BlockMath math="R = \frac{v}{\omega}"/>
+                        <Terms items={[
+                            ["R", "명령이 그리는 원호의 부호 있는 반지름"],
+                            ["v", "일정한 전진 속도, 위와 동일"],
+                            ["\\omega", "일정한 회전율. 그 부호가 회전 방향을 정한다, 위와 동일"],
+                        ]}/>
+                        <p>
+                            <strong>직선 극한 (<InlineMath math="\omega \to 0"/>).</strong> 회전율이 0으로
+                            가면 반지름이 무한히 커지고 원호가 펴진다. 위치 식에서{" "}
+                            <InlineMath math="\omega \to 0"/>을 취하면 (사인과 코사인 차가 선형화된다) 시작
+                            heading을 따라가는 직선 운동이 남는다:
+                        </p>
+                        <BlockMath math="\lim_{\omega \to 0} x(t) = x_0 + v t\cos\theta_0, \qquad \lim_{\omega \to 0} y(t) = y_0 + v t\sin\theta_0"/>
+                        <Terms items={[
+                            ["x(t),\\ y(t)", "회전율이 0인 극한에서 시간 t의 world 좌표"],
+                            ["x_0,\\ y_0", "시작 world 위치, 위와 동일"],
+                            ["v", "일정한 전진 속도, 위와 동일"],
+                            ["\\theta_0", "시작 heading. 이제 고정된 진행 방향이다"],
+                            ["t", "경과 롤아웃 시간, 위와 동일"],
+                        ]}/>
+                        <p>
+                            따라서 일정한 명령은 원호(<InlineMath math="\omega \ne 0"/>)이거나 직선
+                            (<InlineMath math="\omega = 0"/>)이고, 5단계는 수치 적분기를 돌리는 대신 같은
+                            closed-form 식을 몇 개의 <InlineMath math="t"/> 값에서 표본화한다. 붙잡아 둔
+                            명령에 대해서는 이쪽이 더 싸고 정확하다.
+                        </p>
+                    </>}
+                />
+            </Proof>
 
             <h2>{t("The Admissible Velocity Bound", "Admissible 속도의 유도")}</h2>
             <T

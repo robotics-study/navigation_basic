@@ -3,6 +3,7 @@ import {T, useTr} from "../../../libs/i18n";
 import Terms from "../../../components/math/Terms";
 import {BlockMath, InlineMath} from "../../../components/math/Tex";
 import TebSandbox from "../../../components/panels/local/teb/TebSandbox";
+import TebHomotopyDemo from "../../../components/panels/local/teb/TebHomotopyDemo";
 import TebOptimizationFigure from "../../../components/panels/local/teb/TebOptimizationFigure";
 import CodeTabs from "../../../components/CodeTabs";
 import Pseudocode from "../../../components/Pseudocode";
@@ -59,11 +60,13 @@ const Teb = () => {
             <BlockMath math="\text{poses} = [s_0, \ldots, s_{n-1}],\quad s_i = (x_i, y_i, \theta_i); \qquad \text{dts} = [\Delta T_0, \ldots, \Delta T_{n-2}]"/>
             <T
                 en={<Terms items={[
+                    ["n", "number of poses currently in the chain"],
                     ["s_i", "pose i in the chain: 2D position plus heading"],
                     ["\\Delta T_i", "time budgeted for the robot to travel from s_i to s_{i+1}, always \\ge \\Delta T_{\\min}"],
                     ["s_0,\\ s_{n-1}", "the two fixed endpoints — s_0 is the robot's executed pose, s_{n-1} is the local goal"],
                 ]}/>}
                 ko={<Terms items={[
+                    ["n", "사슬 안 pose의 현재 개수"],
                     ["s_i", "사슬 안의 pose i. 2D 위치와 heading의 쌍"],
                     ["\\Delta T_i", "s_i에서 s_{i+1}로 이동하는 데 배정된 시간. 항상 \\Delta T_{\\min} 이상"],
                     ["s_0,\\ s_{n-1}", "고정된 양 끝점. s_0는 로봇이 실제로 도달한 pose, s_{n-1}은 local goal"],
@@ -101,6 +104,24 @@ const Teb = () => {
                     비용이 되고, 각 항은 독립된 가중치를 갖는다. 첫 항은 사슬을 참조 경로 쪽으로
                     당긴다. 각 pose가 이번 tick 시작한 위치에 고정된 anchor를 기준으로 한다(움직이는
                     목표라면 이 항은 결코 안정되지 못한다):
+                </p>}
+            />
+            <T
+                en={<p>
+                    <strong>On the solver:</strong> the original TEB formulates this same objective as a sparse
+                    factor graph — a hyper-graph in g2o's terms, since terms like the kinematics residual below
+                    couple more than two poses — and solves it with the Levenberg-Marquardt algorithm. This
+                    page's engine is a from-scratch gradient-descent reimplementation of the same six terms,
+                    chosen for cross-language determinism and easy step-by-step visualization, not for solver
+                    fidelity to the paper.
+                </p>}
+                ko={<p>
+                    <strong>솔버에 대해:</strong> 원래 TEB는 이와 같은 목적함수를 sparse factor graph로
+                    구성한다. g2o 식으로는 hyper-graph인데, 아래 kinematics 잔차처럼 pose 두 개보다 많이
+                    엮이는 항이 있기 때문이다. 그리고 이를 Levenberg-Marquardt 알고리즘으로 푼다. 이
+                    페이지의 엔진은 같은 여섯 항을 대상으로 처음부터 새로 짠 gradient descent다. 논문
+                    솔버에 대한 충실도가 아니라 언어 간 결정론과 단계별 시각화 편의성을 위해 고른
+                    선택이다.
                 </p>}
             />
             <BlockMath math="f_{\text{path}} = w_{\text{path}} \sum_{i=1}^{n-2} \lVert p_i - v_i \rVert^2"/>
@@ -153,12 +174,16 @@ const Teb = () => {
                 en={<p>
                     The third and fourth are soft physical limits on every segment's realized velocity and
                     acceleration — realized, because nothing in the state directly stores speed; it falls out
-                    of geometry divided by time:
+                    of geometry divided by time. The paper's penalty functions activate gradually, inside the
+                    bound by a margin <InlineMath math="\epsilon"/>; this implementation activates exactly at
+                    the bound with a plain <InlineMath math="\max(0, \cdot)^2"/>:
                 </p>}
                 ko={<p>
                     세 번째와 네 번째는 매 구간에서 실현되는 속도와 가속도에 대한 soft 물리 한계다.
                     "실현되는"이라 부르는 이유는, 상태 어디에도 속도가 직접 저장돼 있지 않고 기하를
-                    시간으로 나눈 값으로 매번 계산되기 때문이다:
+                    시간으로 나눈 값으로 매번 계산되기 때문이다. 논문의 페널티 함수는 한계보다 여유{" "}
+                    <InlineMath math="\epsilon"/>만큼 안쪽에서부터 서서히 활성화되지만, 이 구현은 한계
+                    지점에서 곧바로 <InlineMath math="\max(0, \cdot)^2"/>로 활성화된다:
                 </p>}
             />
             <BlockMath math="v_i = \frac{\ell_i}{\Delta T_i},\quad \omega_i = \frac{\operatorname{wrap}(\theta_{i+1} - \theta_i)}{\Delta T_i}, \qquad f_{\text{vel}} = w_{\text{velocity}} \sum_{i=0}^{n-2} \Big[ \max(0, v_i - v_{\max})^2 + \max(0, |\omega_i| - \omega_{\max})^2 \Big]"/>
@@ -189,7 +214,7 @@ const Teb = () => {
                 ko={<Terms items={[
                     ["a_i", "구간 i와 i+1 사이에서 실현되는 병진 가속도"],
                     ["a_{\\max}", "로봇의 물리적 가속 한계"],
-                    ["f_{\\text{acc}}", "가속 한계 비용 (병진만 -- 회전 가속 항은 이 unicycle 데모에서 눈에 띄는 효과 없이 항 수만 늘려 제외했다)"],
+                    ["f_{\\text{acc}}", "가속 한계 비용 (병진만이며, 회전 가속 항은 이 unicycle 데모에서 눈에 띄는 효과 없이 항 수만 늘려 제외했다)"],
                     ["w_{\\text{acceleration}}", "가속 한계 가중치"],
                 ]}/>}
             />
@@ -218,33 +243,49 @@ const Teb = () => {
             />
             <T
                 en={<p>
-                    The sixth term is new to this page and is the piece that keeps the geometry honest for a
-                    robot that cannot slide sideways. Nothing so far stops the optimizer from moving{" "}
-                    <InlineMath math="p_i"/> in a direction its own heading <InlineMath math="\theta_i"/>{" "}
-                    disagrees with — the <strong>nonholonomic kinematics</strong> term penalizes exactly that,
-                    derived below from a two-pose circular-arc model:
+                    The paper's g2o edge instead minimizes the sum of <em>squared</em> interval errors{" "}
+                    <InlineMath math="\sum_k \Delta T_k^2"/>; the linear sum used here gives every segment the
+                    same constant gradient regardless of how large <InlineMath math="\Delta T_i"/> already is.
                 </p>}
                 ko={<p>
-                    여섯 번째 항은 이 페이지에서 새로 등장하며, 옆으로 미끄러질 수 없는 로봇에 대해
-                    기하를 정직하게 지켜 주는 조각이다. 지금까지는 최적화가 <InlineMath
-                    math="p_i"/>를 그 pose 자신의 heading <InlineMath math="\theta_i"/>와 어긋나는
-                    방향으로 옮기는 것을 막을 것이 없다. <strong>비홀로노믹 kinematics</strong> 항이
-                    정확히 그것을 페널티로 준다. 아래에서 two-pose 원호 모델로 유도한다:
+                    논문의 g2o edge는 대신 구간 시간의 <em>제곱</em> 오차 합{" "}
+                    <InlineMath math="\sum_k \Delta T_k^2"/>을 최소화한다. 여기서 쓰는 선형 합은{" "}
+                    <InlineMath math="\Delta T_i"/>가 이미 얼마나 크든 모든 구간에 같은 상수
+                    gradient를 준다.
+                </p>}
+            />
+            <T
+                en={<p>
+                    The sixth term is new relative to the plain Elastic Band page's terms, and is the piece
+                    that keeps the geometry honest for a robot that cannot slide sideways. Nothing so far stops
+                    the optimizer from moving <InlineMath math="p_i"/> in a direction its own heading{" "}
+                    <InlineMath math="\theta_i"/> disagrees with — the <strong>nonholonomic kinematics</strong>{" "}
+                    term, the defining constraint introduced by Rösmann et al. in the original 2012 TEB paper,
+                    penalizes exactly that. It is derived below from a two-pose circular-arc model:
+                </p>}
+                ko={<p>
+                    여섯 번째 항은 밋밋한 Elastic Band 페이지의 항들에 견주면 새로 등장하며, 옆으로
+                    미끄러질 수 없는 로봇에 대해 기하를 정직하게 지켜 주는 조각이다. 지금까지는
+                    최적화가 <InlineMath math="p_i"/>를 그 pose 자신의 heading{" "}
+                    <InlineMath math="\theta_i"/>와 어긋나는 방향으로 옮기는 것을 막을 것이 없다.{" "}
+                    <strong>비홀로노믹 kinematics</strong> 항, 즉 Rösmann과 동료들이 2012년 원 논문에서
+                    도입한 TEB의 정의적 제약이 정확히 그것을 페널티로 준다. 아래에서 two-pose 원호
+                    모델로 유도한다:
                 </p>}
             />
             <BlockMath math="h_i = (\cos\theta_i + \cos\theta_{i+1})\, \Delta y_i - (\sin\theta_i + \sin\theta_{i+1})\, \Delta x_i, \qquad f_{\text{kin}} = w_{\text{kinematics}} \sum_{i=0}^{n-2} h_i^2"/>
             <T
                 en={<Terms items={[
                     ["\\Delta x_i,\\ \\Delta y_i", "components of the chord d_i = p_{i+1} - p_i"],
-                    ["h_i", "two-pose arc residual — zero exactly when s_i and s_{i+1} lie on a common constant-curvature arc (new term)"],
-                    ["f_{\\text{kin}}", "nonholonomic kinematics cost (new term)"],
-                    ["w_{\\text{kinematics}}", "kinematics weight (new term) — typically the largest of the six, since a geometrically inconsistent pose chain undermines every other term's meaning"],
+                    ["h_i", "two-pose arc residual — zero exactly when s_i and s_{i+1} lie on a common constant-curvature arc (Rösmann et al. 2012)"],
+                    ["f_{\\text{kin}}", "nonholonomic kinematics cost (Rösmann et al. 2012)"],
+                    ["w_{\\text{kinematics}}", "kinematics weight — typically the largest of the six, since a geometrically inconsistent pose chain undermines every other term's meaning"],
                 ]}/>}
                 ko={<Terms items={[
                     ["\\Delta x_i,\\ \\Delta y_i", "chord d_i = p_{i+1} - p_i의 성분"],
-                    ["h_i", "two-pose 원호 잔차. s_i와 s_{i+1}이 공통의 등곡률 원호 위에 있을 때 정확히 0이 된다 (새로 도입된 항)"],
-                    ["f_{\\text{kin}}", "비홀로노믹 kinematics 비용 (새로 도입된 항)"],
-                    ["w_{\\text{kinematics}}", "kinematics 가중치 (새로 도입된 항). 보통 여섯 항 중 가장 크다. 기하적으로 앞뒤가 안 맞는 pose 사슬은 나머지 다섯 항의 의미 자체를 흔들기 때문이다"],
+                    ["h_i", "two-pose 원호 잔차. s_i와 s_{i+1}이 공통의 등곡률 원호 위에 있을 때 정확히 0이 된다 (Rösmann et al. 2012)"],
+                    ["f_{\\text{kin}}", "비홀로노믹 kinematics 비용 (Rösmann et al. 2012)"],
+                    ["w_{\\text{kinematics}}", "kinematics 가중치. 보통 여섯 항 중 가장 크다. 기하적으로 앞뒤가 안 맞는 pose 사슬은 나머지 다섯 항의 의미 자체를 흔들기 때문이다"],
                 ]}/>}
             />
             <TebOptimizationFigure/>
@@ -525,6 +566,32 @@ return (v, omega)`}/>
                 />
             </Proof>
 
+            <h2>{t("The Homotopy Trap", "Homotopy 함정")}</h2>
+            <T
+                en={<p>
+                    Every deformation step moves each pose a small, continuous distance, so the band can
+                    slide along an obstacle but can never jump <em>across</em> one: whichever side of an
+                    obstacle the reference path chose, the optimizer is confined to that homotopy class and
+                    only polishes the detour within it. The demo below makes the cost visible — a straight,
+                    2 m-wide corridor is open under the block, yet because the reference path rounds the
+                    block from above, the band dutifully optimizes the long way and the robot travels
+                    roughly 19 m where 7.5 m would do. Later work fixes exactly this by keeping several TEBs
+                    alive in parallel, one per distinct homotopy class, and switching to the cheapest
+                    (Rösmann et al. 2017, in the references).
+                </p>}
+                ko={<p>
+                    변형 한 스텝은 각 pose를 짧고 연속적인 거리만큼만 옮긴다. 그래서 밴드는 장애물을
+                    따라 미끄러질 수는 있어도 장애물을 <em>건너뛰지는</em> 못한다. reference path가
+                    장애물의 어느 쪽을 골랐든 최적화는 그 homotopy 부류 안에 갇혀, 그 안의 우회로를
+                    다듬을 뿐이다. 아래 데모가 그 대가를 눈으로 보여준다. 블록 아래로 폭 2m 직선 통로가
+                    열려 있는데도 reference path가 블록을 위로 돌기 때문에, 밴드는 충실하게 먼 길을
+                    최적화하고 로봇은 7.5m면 될 길을 약 19m 돌아간다. 후속 연구는 정확히 이 문제를,
+                    서로 다른 homotopy 부류마다 TEB를 하나씩 병렬로 살려 두고 가장 싼 것으로 갈아타는
+                    방식으로 고친다(참고문헌의 Rösmann 2017).
+                </p>}
+            />
+            <TebHomotopyDemo/>
+
             <h2>Demo</h2>
             <T
                 en={<p>
@@ -603,6 +670,12 @@ return (v, omega)`}/>
                        rel="noopener noreferrer">
                         IEEE Xplore 6309484
                     </a>
+                </li>
+                <li>
+                    C. Rösmann, F. Feiten, T. Wösch, F. Hoffmann, T. Bertram,{" "}
+                    <a href="https://doi.org/10.1109/ECMR.2013.6698833" target="_blank" rel="noopener noreferrer">
+                        <em>Efficient Trajectory Optimization Using a Sparse Model</em>
+                    </a>, Proceedings of the European Conference on Mobile Robots (ECMR) 2013.
                 </li>
                 <li>
                     C. Rösmann, F. Hoffmann, T. Bertram,{" "}

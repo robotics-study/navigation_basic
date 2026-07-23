@@ -5,6 +5,7 @@ import {BlockMath, InlineMath} from "../../../components/math/Tex";
 import Pseudocode from "../../../components/Pseudocode";
 import CodeTabs from "../../../components/CodeTabs";
 import VfhSandbox from "../../../components/panels/local/vfh/VfhSandbox";
+import VfhOpenFieldDemo from "../../../components/panels/local/vfh/VfhOpenFieldDemo";
 import VfhHistogramFigure from "../../../components/panels/local/vfh/VfhHistogramFigure";
 import vfhPy from "../../../../../python/navigation/local_planning/reactive/vfh.py?raw";
 import vfhCpp from "../../../../../cpp/src/local_planning/reactive/vfh.cpp?raw";
@@ -56,15 +57,35 @@ const Vfh = () => {
                         direction around the robot, how much nearby obstacle mass sits there?
                         Each sensed obstacle at bearing <InlineMath math="\beta"/> and
                         distance <InlineMath math="d"/> votes into the sector its bearing falls
-                        in, weighted by how close it is:
+                        in, weighted by how close it is. Borenstein &amp; Koren's original
+                        formulation (eq. 2) derives that weight from a cell's certainty value
+                        rather than distance alone:
                     </p>
-                    <BlockMath math="m = \left(1 - \frac{d}{r_w}\right)^{2}, \qquad 0 \le d \le r_w"/>
+                    <BlockMath math="m = (c^*)^2 (a - b \cdot d), \qquad 0 \le d \le r_w"/>
                     <Terms items={[
                         ["m", "the vote one obstacle contributes to its sector"],
+                        ["c^*", "the cell's certainty value from the occupancy grid — how confident the sensor model is that the cell is occupied"],
+                        ["a,\\ b", <>positive constants tuned so the magnitude reaches zero at the
+                            edge of the window, i.e. <InlineMath math="a = b \cdot r_w"/></>],
                         ["d", "distance from the robot to that obstacle"],
                         ["r_w", <>the window radius — obstacles farther than <InlineMath math="r_w"/> are
                             ignored entirely</>],
                         ["\\beta", "bearing of the obstacle relative to the robot (which sector it falls in)"],
+                    ]}/>
+                    <p>
+                        On a binary occupancy grid <InlineMath math="c^*"/> is just 0 or 1, so a
+                        hit cell contributes <InlineMath math="c^*=1"/> and the certainty term
+                        drops out, leaving a linear falloff with
+                        distance, <InlineMath math="1 - d/r_w"/>. This implementation instead
+                        squares that distance falloff — a deliberate deviation from the paper,
+                        meant to weight nearby cells more sharply than a linear term does:
+                    </p>
+                    <BlockMath math="m = \left(1 - \frac{d}{r_w}\right)^{2}, \qquad 0 \le d \le r_w"/>
+                    <Terms items={[
+                        ["m", "the vote one obstacle contributes to its sector, as implemented here"],
+                        ["d", "distance from the robot to that obstacle"],
+                        ["r_w", <>the window radius — obstacles farther than <InlineMath math="r_w"/> are
+                            ignored entirely</>],
                     ]}/>
                     <p>
                         Sum every obstacle's vote into its sector and the result is a histogram
@@ -78,15 +99,34 @@ const Vfh = () => {
                         힘 벡터 하나 대신 방위의 함수를 쓴다. 로봇 주변 각 방향마다, 그
                         근처에 장애물이 얼마나 몰려 있는가? 방위{" "}
                         <InlineMath math="\beta"/>, 거리 <InlineMath math="d"/>에서 감지된
-                        장애물은 자신의 방위가 속하는 sector에, 가까울수록 크게 표를 던진다:
+                        장애물은 자신의 방위가 속하는 sector에, 가까울수록 크게 표를 던진다.
+                        Borenstein &amp; Koren의 원 논문(식 2)은 이 가중치를 거리가 아니라
+                        cell의 certainty 값에서 이끌어낸다:
                     </p>
-                    <BlockMath math="m = \left(1 - \frac{d}{r_w}\right)^{2}, \qquad 0 \le d \le r_w"/>
+                    <BlockMath math="m = (c^*)^2 (a - b \cdot d), \qquad 0 \le d \le r_w"/>
                     <Terms items={[
                         ["m", "장애물 하나가 자기 sector에 던지는 표"],
+                        ["c^*", "occupancy grid의 certainty 값. 그 cell이 점유되어 있다고 센서 모델이 확신하는 정도"],
+                        ["a,\\ b", <>window 경계에서 magnitude가 0이 되도록 맞춘 양의 상수, 즉{" "}
+                            <InlineMath math="a = b \cdot r_w"/></>],
                         ["d", "로봇에서 그 장애물까지 거리"],
                         ["r_w", <><InlineMath math="r_w"/>보다 먼 장애물은 아예 무시하는 탐색
                             반경(window radius)</>],
                         ["\\beta", "로봇 기준 장애물의 방위(어느 sector에 속하는지 결정)"],
+                    ]}/>
+                    <p>
+                        binary occupancy grid에서는 <InlineMath math="c^*"/>가 0 아니면 1이라
+                        명중한 cell은 <InlineMath math="c^*=1"/>을 내고 certainty 항이 사라져,
+                        거리에 선형으로 비례하는 감쇠 <InlineMath math="1 - d/r_w"/>만 남는다.
+                        이 구현은 그 거리 감쇠를 대신 제곱한다. 논문에서 의도적으로 벗어난
+                        지점으로, 선형항보다 가까운 cell에 더 날카롭게 가중치를 준다:
+                    </p>
+                    <BlockMath math="m = \left(1 - \frac{d}{r_w}\right)^{2}, \qquad 0 \le d \le r_w"/>
+                    <Terms items={[
+                        ["m", "이 구현에서 장애물 하나가 자기 sector에 던지는 표"],
+                        ["d", "로봇에서 그 장애물까지 거리"],
+                        ["r_w", <><InlineMath math="r_w"/>보다 먼 장애물은 아예 무시하는 탐색
+                            반경(window radius)</>],
                     ]}/>
                     <p>
                         모든 장애물의 표를 각자의 sector에 누적하면 숫자 하나가 아니라
@@ -118,9 +158,14 @@ const Vfh = () => {
                     <li><strong>Density-scaled speed</strong>: the robot brakes on its own as
                         the chosen direction gets denser, without a separate braking rule bolted
                         on.</li>
-                    <li><strong>Threshold-sensitive</strong>: whether a gap counts as a valley
-                        at all is a single inequality against <InlineMath math="h[k]"/>; near
-                        the boundary, a small parameter change can open or close a passage.</li>
+                    <li><strong>Robust to threshold, mostly</strong>: Borenstein &amp; Koren
+                        report that VFH performance is largely insensitive to the threshold —
+                        their tests show factor-of-3–4 changes mainly rescaling valley width
+                        rather than flipping outcomes. The exception is marginal gaps: whether a
+                        gap counts as a valley at all is a single inequality
+                        against <InlineMath math="h_{\text{smooth}}[k]"/>, so near that boundary
+                        a slightly different threshold can flip a passage between open and
+                        blocked.</li>
                 </ul>}
                 ko={<ul>
                     <li><strong>무기억 반응형</strong>: 매 tick 현재 센서 뷰만으로 히스토그램을
@@ -136,9 +181,13 @@ const Vfh = () => {
                         둘 다 센서 해상도에 비해 작고 상수 시간에 가깝다.</li>
                     <li><strong>밀도 비례 감속</strong>: 별도 제동 규칙을 덧붙이지 않아도
                         선택된 방향이 빽빽해질수록 로봇이 스스로 속도를 줄인다.</li>
-                    <li><strong>threshold에 민감</strong>: gap이 valley로 인정되는지는{" "}
-                        <InlineMath math="h[k]"/>와의 부등식 하나로 결정된다. 경계 근처에서는
-                        파라미터를 살짝만 바꿔도 통로가 열리거나 닫힌다.</li>
+                    <li><strong>threshold에는 대체로 강건하다</strong>: Borenstein &amp;
+                        Koren은 VFH 성능이 threshold에 크게 민감하지 않다고 보고한다. 논문의
+                        실험에서 threshold를 3~4배 바꿔도 대개 valley 폭만 달라질 뿐 결과가
+                        뒤집히지는 않는다. 예외는 경계에 걸친 gap이다. gap이 valley로
+                        인정되는지는 <InlineMath math="h_{\text{smooth}}[k]"/>와의 부등식
+                        하나로 결정되므로, 그 경계 근처에서는 threshold를 살짝만 바꿔도 통로가
+                        열림과 막힘 사이에서 뒤집힌다.</li>
                 </ul>}
             />
 
@@ -180,7 +229,10 @@ return heading_command(θ_sel − θ, v)`}/>
                     <li>A circular moving average over <InlineMath math="w"/> sectors removes
                         single-sector noise before anything is classified as open or blocked —
                         without it, one lucky ray between two obstacles would register as a
-                        gap that is not really wide enough to drive through.</li>
+                        gap that is not really wide enough to drive through. Borenstein &amp;
+                        Koren's eq. (5) instead uses a triangular kernel that weights the center
+                        sector most heavily; this implementation uses a plain (uniform) moving
+                        average as a simpler stand-in.</li>
                     <li>A valley is a maximal run below threshold; runs narrower than the
                         smoothing window are treated as ripple and dropped unless they are the
                         only opening left.</li>
@@ -202,7 +254,9 @@ return heading_command(θ_sel − θ, v)`}/>
                     <li><InlineMath math="w"/> sector에 걸친 원형 이동평균이, 어떤 것을
                         열림/막힘으로 분류하기 전에 sector 하나짜리 잡음을 지운다. 이게 없으면
                         장애물 둘 사이로 우연히 뚫린 레이 한 줄이 실제로는 지나가기엔 너무
-                        좁은 gap을 열린 것으로 잘못 기록한다.</li>
+                        좁은 gap을 열린 것으로 잘못 기록한다. 논문 식 (5)는 중심 sector에
+                        가장 큰 가중치를 주는 삼각 커널을 쓰지만, 이 구현은 더 단순한 균일
+                        이동평균을 쓴다.</li>
                     <li>valley는 threshold 미만인 극대 구간이다. 스무딩 창보다 좁은 구간은
                         잔물결로 보고 버리되, 남은 opening이 그것뿐이면 예외로 살린다.</li>
                     <li>살아남은 valley들 사이의 tie-break는 먼저 goal 방위까지의 sector
@@ -261,7 +315,10 @@ return heading_command(θ_sel − θ, v)`}/>
                         <p>
                             When <InlineMath math="k_g \in V"/> and its distance to both borders
                             is <InlineMath math="\ge \mu"/>, the algorithm steers straight at the
-                            goal — that is the easy case. The interesting case is what happens
+                            goal — that is the easy case, and it is this implementation's own
+                            addition on top of the 1991 paper, which always steers to the
+                            midpoint <InlineMath math="(k_n + k_f)/2"/> regardless of where the
+                            goal sits inside the valley. The interesting case is what happens
                             otherwise, once <InlineMath math="w_V \ge w_{\text{wide}}"/>.
                         </p>
                         <p>
@@ -320,9 +377,12 @@ return heading_command(θ_sel − θ, v)`}/>
                         ]}/>
                         <p>
                             <InlineMath math="k_g \in V"/>이고 양쪽 경계까지 거리가{" "}
-                            <InlineMath math="\ge \mu"/>이면 goal을 직접 겨눈다. 쉬운 경우다.
-                            흥미로운 쪽은 그렇지 않을 때, 곧{" "}
-                            <InlineMath math="w_V \ge w_{\text{wide}}"/>일 때 벌어지는 일이다.
+                            <InlineMath math="\ge \mu"/>이면 goal을 직접 겨눈다. 쉬운
+                            경우이자, 1991년 논문에는 없는 이 구현만의 추가 규칙이다. 논문은
+                            goal이 valley 어디에 있든 항상 중점{" "}
+                            <InlineMath math="(k_n + k_f)/2"/>를 겨눈다. 흥미로운 쪽은 그렇지
+                            않을 때, 곧 <InlineMath math="w_V \ge w_{\text{wide}}"/>일 때
+                            벌어지는 일이다.
                         </p>
                         <p>
                             <strong>경계 자체를 겨누지 않는 이유.</strong> 경계 sector를
@@ -360,29 +420,61 @@ return heading_command(θ_sel − θ, v)`}/>
                 />
             </Collapsible>
 
+            <h2>{t("The Open-Field Zigzag", "개활지 지그재그")}</h2>
+            <T
+                en={<p>
+                    VFH's weakness shows up where you would least expect it: in the easiest possible
+                    scene. Steering is quantized to sector centers and re-decided from scratch every tick,
+                    with nothing carrying over from the previous decision. In clutter that is fine — the
+                    walls themselves pin the valley. But crossing an empty room straight toward the goal,
+                    nothing in the window anchors the choice, the steering target flickers between
+                    adjacent grid directions, and the heading-error gate cuts speed on every flip: the
+                    robot zigzags and takes roughly 2.4 times the ticks it needs when a wall runs beside
+                    the route. VFH+ (Ulrich &amp; Borenstein 1998) damps exactly this with a threshold
+                    hysteresis that makes each tick's decision sticky.
+                </p>}
+                ko={<p>
+                    VFH의 약점은 가장 뜻밖의 곳, 곧 가장 쉬운 장면에서 드러난다. 조향은 sector 중심으로
+                    양자화되고 매 tick 처음부터 다시 결정되며, 직전 결정에서 이어받는 것이 없다. 밀집
+                    지형에서는 벽 자체가 valley를 고정해 주니 문제가 없다. 하지만 빈 방을 goal 쪽으로
+                    곧장 가로지르면 window 안에 선택을 붙들어 줄 것이 없어 조향 목표가 인접 격자 방향
+                    사이에서 흔들리고, heading 오차 게이트가 뒤집힐 때마다 속도를 깎는다. 로봇은
+                    지그재그로 기며, 경로 옆에 벽이 있을 때의 2.4배쯤 tick을 쓴다. VFH+(Ulrich &amp;
+                    Borenstein 1998)가 threshold hysteresis로 매 tick의 결정에 관성을 주어 정확히 이
+                    진동을 억제한다.
+                </p>}
+            />
+            <VfhOpenFieldDemo/>
+
             <h2>Demo</h2>
             <T
                 en={<p>
-                    Both presets run VFH with the repository's tuned gains; only the maps are
-                    shaped for the demo. In the narrow corridor the walls flank the robot the
+                    Both presets run VFH with the same fixed gains as the repository config
+                    (smoothing, valley width, speed, and turning limits); only the maps are
+                    shaped for the demo. The threshold and window sliders below start at
+                    demo-friendly values rather than the config's tuned defaults (0.041
+                    and 1.32 m) — that starting point makes valleys open and close more
+                    visibly, so drag the sliders toward those numbers to see the tuned
+                    behavior. In the narrow corridor the walls flank the robot the
                     whole way, so the forward valley stays pinned and it tracks straight down the
                     middle, slowing where the central pinch crowds the histogram. In dense
                     clutter, several valleys open and close as the robot moves, and the rose
                     visibly reshapes each tick as the selected direction hops between them. Raise
                     the threshold slider high enough and watch valleys disappear one at a time
-                    until none are left. Open the space up and the heading wobbles as near-tied
-                    valleys flip — a known VFH limitation that VFH+ damps with hysteresis.
+                    until none are left.
                 </p>}
                 ko={<p>
-                    두 프리셋 모두 저장소의 튜닝된 VFH 게인을 그대로 쓰고, 맵만 데모에 맞게
-                    구성했다. 좁은 통로에서는 양쪽 벽이 로봇을 처음부터 끝까지 감싸 전방
+                    두 프리셋 모두 스무딩, valley 폭, 속도, 회전 한계 등 나머지 게인은 저장소
+                    config 값 그대로 쓰고, 맵만 데모에 맞게 구성했다. 다만 아래 threshold와
+                    window 슬라이더는 config의 튜닝된 기본값(threshold 0.041, window
+                    1.32m)이 아니라 valley가 열리고 닫히는 모습을 더 잘 보여주는 데모용 값에서
+                    시작한다. 튜닝된 동작을 보고 싶으면 슬라이더를 그 값 쪽으로 옮기면 된다.
+                    좁은 통로에서는 양쪽 벽이 로봇을 처음부터 끝까지 감싸 전방
                     valley가 고정되므로, 로봇이 통로 한가운데를 곧게 따라가다가 중앙 pinch에서
                     히스토그램이 몰리는 지점에서 느려진다. 밀집 프리셋에서는 로봇이 움직이는
                     동안 valley 여럿이 열리고 닫히고, 선택된 방향이 그 사이를 오가며 매 tick
                     장미 모양이 눈에 띄게 바뀐다. threshold 슬라이더를 충분히 올리면 valley가
-                    하나씩 사라지는 것도 볼 수 있다. 공간을 열어 두면 거의 동률인 valley들이
-                    뒤집히며 조향이 흔들리는데, VFH의 알려진 한계이고 VFH+가 hysteresis로
-                    억제한다.
+                    하나씩 사라지는 것도 볼 수 있다.
                 </p>}
             />
             <VfhSandbox/>

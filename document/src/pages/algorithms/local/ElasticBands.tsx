@@ -3,6 +3,7 @@ import {T, useTr} from "../../../libs/i18n";
 import Terms from "../../../components/math/Terms";
 import {BlockMath, InlineMath} from "../../../components/math/Tex";
 import ElasticBandsSandbox from "../../../components/panels/local/elastic_bands/ElasticBandsSandbox";
+import EbSymmetryStallDemo from "../../../components/panels/local/elastic_bands/EbSymmetryStallDemo";
 import BandForcesFigure from "../../../components/panels/local/elastic_bands/BandForcesFigure";
 import CodeTabs from "../../../components/CodeTabs";
 import Pseudocode from "../../../components/Pseudocode";
@@ -90,6 +91,139 @@ const ElasticBands = () => {
                 </p>}
             />
 
+            <Proof title={t(
+                "Why overlapping bubbles guarantee a collision-free corridor",
+                "겹치는 bubble이 왜 충돌 없는 통로를 보장하는가",
+            )}>
+                <T
+                    en={<>
+                        <p>
+                            <strong>Setup.</strong> Each bubble is the open disc of points closer to its center
+                            than the clearance read off the map, so it holds no obstacle:
+                        </p>
+                        <BlockMath math="B_i = \{\, x : \lVert x - c_i \rVert < \rho_i \,\}, \qquad \rho_i = \text{distance\_to\_nearest}(c_i)"/>
+                        <Terms items={[
+                            ["B_i", "the open disc occupied by bubble i"],
+                            ["x", "any world-space point"],
+                            ["c_i,\\ \\rho_i", "center and radius of bubble i"],
+                            ["\\text{distance\\_to\\_nearest}(c_i)", "distance from c_i to the nearest obstacle — so every obstacle point is at least \\rho_i away and no obstacle lies inside B_i"],
+                        ]}/>
+                        <p>
+                            <strong>Claim.</strong> If two consecutive bubbles overlap, the straight segment
+                            joining their centers is covered by their two discs. Take the overlap condition and
+                            parametrize the segment:
+                        </p>
+                        <BlockMath math="\lVert c_i - c_{i+1} \rVert < \rho_i + \rho_{i+1}, \qquad p(t) = (1-t)\,c_i + t\,c_{i+1}, \quad t \in [0, 1]"/>
+                        <Terms items={[
+                            ["c_i,\\ c_{i+1}", "centers of two consecutive bubbles"],
+                            ["\\rho_i,\\ \\rho_{i+1}", "their radii"],
+                            ["p(t)", "point sweeping the segment from c_i (at t=0) to c_{i+1} (at t=1)"],
+                            ["t", "arc parameter along that segment"],
+                        ]}/>
+                        <p>
+                            The distances from <InlineMath math="p(t)"/> to each endpoint are exact and linear
+                            in <InlineMath math="t"/>:
+                        </p>
+                        <BlockMath math="\lVert p(t) - c_i \rVert = t\,D, \qquad \lVert p(t) - c_{i+1} \rVert = (1-t)\,D, \qquad D = \lVert c_{i+1} - c_i \rVert"/>
+                        <Terms items={[
+                            ["D", "distance between the two centers, \\lVert c_{i+1} - c_i \\rVert"],
+                            ["t\\,D,\\ (1-t)\\,D", "distance from p(t) to c_i and to c_{i+1} respectively"],
+                        ]}/>
+                        <p>
+                            Suppose some point of the segment escaped <em>both</em> discs. Then both radii are
+                            exceeded at once:
+                        </p>
+                        <BlockMath math="t\,D \ge \rho_i \quad\text{and}\quad (1-t)\,D \ge \rho_{i+1}"/>
+                        <Terms items={[
+                            ["t\\,D \\ge \\rho_i", "p(t) lies outside bubble i"],
+                            ["(1-t)\\,D \\ge \\rho_{i+1}", "p(t) lies outside bubble i+1"],
+                        ]}/>
+                        <p>Adding the two inequalities makes the <InlineMath math="t"/> cancel:</p>
+                        <BlockMath math="D = t\,D + (1-t)\,D \ge \rho_i + \rho_{i+1}"/>
+                        <Terms items={[
+                            ["D \\ge \\rho_i + \\rho_{i+1}", "the two centers would be at least the summed radii apart"],
+                        ]}/>
+                        <p>
+                            This contradicts the overlap condition <InlineMath math="D < \rho_i + \rho_{i+1}"/>.
+                            So no point of the segment is outside both discs: every point lies in{" "}
+                            <InlineMath math="B_i \cup B_{i+1}"/>, which holds no obstacle. Chaining this over
+                            every consecutive pair along <InlineMath math="c_0 \to c_1 \to \cdots \to c_{N-1}"/>{" "}
+                            covers the whole polyline, so the corridor is collision-free end to end.
+                        </p>
+                        <p>
+                            <strong>Margin.</strong> The implementation does not settle for bare touching. Its
+                            maintenance step enforces a stricter overlap,
+                        </p>
+                        <BlockMath math="\lVert c_i - c_{i+1} \rVert < 0.7\,(\rho_i + \rho_{i+1})"/>
+                        <Terms items={[
+                            ["0.7", "the overlap factor, strictly below 1 — bubbles must genuinely interpenetrate rather than merely touch, leaving slack against the boundary case D = \\rho_i + \\rho_{i+1}"],
+                        ]}/>
+                    </>}
+                    ko={<>
+                        <p>
+                            <strong>가정.</strong> 각 bubble은 자기 중심에서 지도로 읽은 clearance보다 가까운
+                            점들의 열린 원반이므로, 장애물을 하나도 품지 않는다:
+                        </p>
+                        <BlockMath math="B_i = \{\, x : \lVert x - c_i \rVert < \rho_i \,\}, \qquad \rho_i = \text{distance\_to\_nearest}(c_i)"/>
+                        <Terms items={[
+                            ["B_i", "bubble i가 차지하는 열린 원반"],
+                            ["x", "임의의 world 좌표 점"],
+                            ["c_i,\\ \\rho_i", "bubble i의 중심과 반경"],
+                            ["\\text{distance\\_to\\_nearest}(c_i)", "c_i에서 가장 가까운 장애물까지의 거리. 그래서 모든 장애물 점은 최소 \\rho_i만큼 떨어져 있고 B_i 안에는 장애물이 없다"],
+                        ]}/>
+                        <p>
+                            <strong>주장.</strong> 인접한 두 bubble이 겹치면, 두 중심을 잇는 직선 구간은 두
+                            원반이 덮는다. 겹침 조건을 두고 그 구간을 매개변수로 나타낸다:
+                        </p>
+                        <BlockMath math="\lVert c_i - c_{i+1} \rVert < \rho_i + \rho_{i+1}, \qquad p(t) = (1-t)\,c_i + t\,c_{i+1}, \quad t \in [0, 1]"/>
+                        <Terms items={[
+                            ["c_i,\\ c_{i+1}", "인접한 두 bubble의 중심"],
+                            ["\\rho_i,\\ \\rho_{i+1}", "그 두 반경"],
+                            ["p(t)", "c_i(t=0)에서 c_{i+1}(t=1)까지 구간을 훑는 점"],
+                            ["t", "그 구간을 따르는 arc 매개변수"],
+                        ]}/>
+                        <p>
+                            <InlineMath math="p(t)"/>에서 두 끝점까지의 거리는 <InlineMath math="t"/>에 대해
+                            정확히 선형이다:
+                        </p>
+                        <BlockMath math="\lVert p(t) - c_i \rVert = t\,D, \qquad \lVert p(t) - c_{i+1} \rVert = (1-t)\,D, \qquad D = \lVert c_{i+1} - c_i \rVert"/>
+                        <Terms items={[
+                            ["D", "두 중심 사이의 거리 \\lVert c_{i+1} - c_i \\rVert"],
+                            ["t\\,D,\\ (1-t)\\,D", "p(t)에서 c_i까지, 그리고 c_{i+1}까지의 거리"],
+                        ]}/>
+                        <p>
+                            구간의 어떤 점이 <em>두</em> 원반을 모두 벗어난다고 하자. 그러면 두 반경을 동시에
+                            넘는다:
+                        </p>
+                        <BlockMath math="t\,D \ge \rho_i \quad\text{and}\quad (1-t)\,D \ge \rho_{i+1}"/>
+                        <Terms items={[
+                            ["t\\,D \\ge \\rho_i", "p(t)가 bubble i 밖에 있다"],
+                            ["(1-t)\\,D \\ge \\rho_{i+1}", "p(t)가 bubble i+1 밖에 있다"],
+                        ]}/>
+                        <p>두 부등식을 더하면 <InlineMath math="t"/>가 사라진다:</p>
+                        <BlockMath math="D = t\,D + (1-t)\,D \ge \rho_i + \rho_{i+1}"/>
+                        <Terms items={[
+                            ["D \\ge \\rho_i + \\rho_{i+1}", "두 중심이 반경의 합만큼은 떨어져 있다는 뜻"],
+                        ]}/>
+                        <p>
+                            이는 겹침 조건 <InlineMath math="D < \rho_i + \rho_{i+1}"/>과 모순이다. 따라서
+                            구간의 어떤 점도 두 원반을 동시에 벗어나지 못한다. 모든 점이{" "}
+                            <InlineMath math="B_i \cup B_{i+1}"/> 안에 있고, 그 합집합에는 장애물이 없다. 이를
+                            인접한 모든 쌍 <InlineMath math="c_0 \to c_1 \to \cdots \to c_{N-1}"/>을 따라 이어
+                            붙이면 폴리라인 전체를 덮으므로, 통로는 처음부터 끝까지 충돌이 없다.
+                        </p>
+                        <p>
+                            <strong>여유.</strong> 구현은 겨우 맞닿는 정도로 만족하지 않는다. maintenance
+                            단계가 더 엄격한 겹침을 강제한다.
+                        </p>
+                        <BlockMath math="\lVert c_i - c_{i+1} \rVert < 0.7\,(\rho_i + \rho_{i+1})"/>
+                        <Terms items={[
+                            ["0.7", "overlap factor. 1보다 엄격히 작아 bubble들이 겨우 맞닿는 게 아니라 실제로 서로 파고들게 하고, 경계 경우 D = \\rho_i + \\rho_{i+1}에 대한 여유를 남긴다"],
+                        ]}/>
+                    </>}
+                />
+            </Proof>
+
             <h2>{t("Forces on the Band", "밴드에 작용하는 힘")}</h2>
             <T
                 en={<p>
@@ -154,8 +288,10 @@ const ElasticBands = () => {
                 en={<p>
                     Summing over every occupied cell — not just the nearest one — matters when a bubble
                     starts out embedded inside a multi-cell obstacle (the raw reference path cut through it):
-                    the nearest single cell alone could point back inward, but the sum of pushes from every
-                    surrounding cell always points toward the obstacle's nearest edge. The last piece is{" "}
+                    the nearest single cell alone could point back inward, whereas the summed push from every
+                    surrounding cell generally points away from the obstacle's interior. A perfectly symmetric
+                    embedding is the exception: the opposing pushes cancel to a stagnation point — the
+                    Symmetry Stall section below demonstrates it live. The last piece is{" "}
                     <strong>tangent removal</strong>, applied to the repulsion only, and it is a new term this
                     section introduces:
                 </p>}
@@ -163,7 +299,9 @@ const ElasticBands = () => {
                     가장 가까운 셀 하나가 아니라 모든 점유 셀에 대해 합산하는 것은, bubble이 애초에 다중
                     셀 장애물 내부에서 시작할 때(원본 참조 경로가 그 장애물을 관통했을 때) 중요해진다.
                     가장 가까운 셀 하나만 보면 방향이 오히려 안쪽을 가리킬 수 있지만, 주변 모든 셀에서
-                    오는 힘을 합치면 언제나 장애물의 가장 가까운 가장자리 쪽을 향한다. 마지막 조각은
+                    오는 힘을 합치면 대체로 장애물 내부에서 벗어나는 쪽을 향한다. 완벽히 대칭인 배치는
+                    예외다. 서로 반대편의 힘이 상쇄되어 정지점이 된다. 아래 대칭 정체 섹션이 이를
+                    라이브로 보여준다. 마지막 조각은
                     반발력에만 적용하는 <strong>접선 제거</strong>다. 이 절에서 새로 도입하는 항이다:
                 </p>}
             />
@@ -182,16 +320,30 @@ const ElasticBands = () => {
             />
             <T
                 en={<p>
-                    Quinlan and Khatib remove the tangential part of the repulsion (and only the repulsion)
-                    because it does nothing useful: pushed along the band instead of off it, it just slides
-                    bubbles into each other. The contraction force's tangential component is kept for exactly
-                    the opposite reason — it is what spaces bubbles evenly along the chain.
+                    In the original method, Quinlan and Khatib remove the tangential component of the{" "}
+                    <em>total</em> force — contraction and repulsion together — projected onto the band, so a
+                    deformation step only ever moves a bubble sideways off the band. This implementation makes
+                    a deliberate different choice: it strips the tangential part of the <em>repulsion alone</em>{" "}
+                    (the formula above) and leaves the contraction untouched. The reason is that the repulsion's
+                    along-band component does nothing useful — pushed along the band instead of off it, it just
+                    slides bubbles into each other — whereas the contraction's along-band component is the very
+                    thing that shortens the band (the derivation below shows contraction is gradient descent on
+                    band length), so projecting it away would blunt that. Even bubble spacing is not what either
+                    tangential term buys: with the normalized contraction used here, a run of collinear bubbles
+                    produces zero contraction force no matter how far apart they sit, so spacing is restored not
+                    by any force but by the insert/delete maintenance step of the next section.
                 </p>}
                 ko={<p>
-                    Quinlan과 Khatib가 반발력의(오직 반발력만의) 접선 성분을 제거하는 이유는, 그 성분이
-                    아무 쓸모가 없기 때문이다. 밴드 밖으로 미는 대신 밴드를 따라 밀면 bubble들이 서로를
-                    향해 미끄러져 들어갈 뿐이다. 수축력의 접선 성분은 정반대 이유로 남겨 둔다. 그것이 바로
-                    bubble들을 사슬 위에 고르게 배치해 주는 힘이기 때문이다.
+                    원 논문에서 Quinlan과 Khatib는 밴드에 투영한 <em>총 힘</em>, 곧 수축력과 반발력을 합친
+                    힘 전체의 접선 성분을 제거한다. 그래서 변형 한 스텝은 bubble을 오직 밴드에서 옆으로
+                    벗어나는 방향으로만 옮긴다. 이 구현은 의도적으로 다른 선택을 한다. <em>반발력만의</em>{" "}
+                    접선 성분을 벗겨 내고(위 수식) 수축력은 그대로 둔다. 반발력의 밴드 방향 성분은 쓸모가
+                    없다. 밴드 밖으로 미는 대신 밴드를 따라 밀면 bubble들이 서로를 향해 미끄러져 들어갈
+                    뿐이다. 반면 수축력의 밴드 방향 성분은 밴드를 짧게 당기는 바로 그 성분이라(아래 유도에서
+                    보듯 수축력은 밴드 길이의 gradient descent다), 이것까지 투영으로 없애면 그 작용이
+                    무뎌진다. bubble을 고르게 벌려 놓는 일도 두 접선 성분 어느 쪽의 몫이 아니다. 여기서 쓰는
+                    정규화된 수축력은 일직선으로 늘어선 bubble들에 대해 간격과 무관하게 0이 되므로, 간격은
+                    어떤 힘이 아니라 다음 절의 삽입·삭제 maintenance 단계가 되돌린다.
                 </p>}
             />
             <BandForcesFigure/>
@@ -287,9 +439,10 @@ return (v, omega)`}/>
                         after repair, the obstruction is real, not just an initialization artifact — hand off
                         to the broken-band path.</li>
                     <li>Front-pruning: drop bubbles the robot has already walked past — its position sits
-                        inside the next bubble's own clearance disc. This never touches index 0 directly; it
-                        only ever removes bubble 1 and shifts everything down, so the anchor always survives
-                        to be re-pinned next.</li>
+                        inside the next bubble's own clearance disc. Each drop deletes the old front at
+                        index 0; the bubble that followed it becomes the new head, which the very next lines
+                        re-pin to the robot's pose. So the anchor role never disappears — it is simply carried
+                        by whichever bubble is now at the front.</li>
                     <li>Re-pin the anchor to the pose the robot actually reached this tick, not the pose it
                         was commanded toward.</li>
                     <li>Deform a fixed number of times — no early exit, even if the band looks settled after
@@ -322,9 +475,10 @@ return (v, omega)`}/>
                     <li>이제야 유효성 검사를 한다. repair 뒤에도 어떤 bubble이 여전히 최소 반경 미만이면,
                         그것은 초기화 부작용이 아니라 진짜 봉쇄다. broken 처리 경로로 넘긴다.</li>
                     <li>front-pruning. 로봇이 이미 지나친 bubble을 버린다. 로봇 위치가 다음 bubble
-                        자신의 clearance 원 안에 들어와 있으면 지운다. 이 과정은 index 0을 직접 건드리지
-                        않는다. 항상 bubble 1만 지우고 나머지를 앞으로 당길 뿐이라, 앵커는 언제나 다음
-                        재고정을 받을 수 있게 남는다.</li>
+                        자신의 clearance 원 안에 들어와 있으면 지운다. 한 번 버릴 때마다 index 0의 옛
+                        앞머리를 삭제하고, 뒤따르던 bubble이 새 앞머리가 되며, 바로 다음 줄에서 그 bubble을
+                        로봇 pose로 다시 고정한다. 그래서 앵커 역할은 사라지지 않고, 그때그때 맨 앞에 오는
+                        bubble이 이어받는다.</li>
                     <li>앵커를 명령했던 pose가 아니라 로봇이 이번 tick 실제로 도달한 pose로 다시
                         고정한다.</li>
                     <li>고정 횟수만큼 변형한다. 한 번 돌려 보고 안정돼 보여도 조기 종료하지 않는다. 고정
@@ -443,6 +597,32 @@ return (v, omega)`}/>
                     </>}
                 />
             </Proof>
+
+            <h2>{t("The Symmetry Stall", "대칭 정체")}</h2>
+            <T
+                en={<p>
+                    The band's whole engine is a sum of pushes, and sums can cancel. When an obstacle
+                    pierces the band <em>dead-center</em>, every occupied cell above the centerline has a
+                    mirror image below it: the summed repulsion on a bubble sitting exactly on that line is
+                    zero, the deformation force vanishes, and the band stays impaled on the block while the
+                    robot stalls at the start. The demo below reproduces it with the same parameters the
+                    main demo uses — only the geometry differs, and the cell-aligned block makes the mirror
+                    symmetry exact. This is why the main demo seats its obstacle asymmetrically, and it is
+                    the band-method cousin of the local-minimum trap on the Potential Fields page: both are
+                    force sums that a symmetric scene can silence.
+                </p>}
+                ko={<p>
+                    밴드를 움직이는 엔진은 결국 미는 힘들의 합이고, 합은 상쇄될 수 있다. 장애물이 밴드를{" "}
+                    <em>정확히 가운데로</em> 관통하면 중심선 위쪽의 모든 점유 셀에 아래쪽 거울상이
+                    존재한다. 중심선 위에 놓인 bubble이 받는 합산 반발은 0이고, 변형 힘이 사라져 밴드는
+                    블록에 꽂힌 채로 남고, 로봇은 출발점에서 정체된다. 아래 데모는 메인 데모와 같은
+                    파라미터로 이를 재현한다. 다른 것은 기하뿐이고, 셀 경계에 맞춘 블록이 거울 대칭을
+                    정확하게 만든다. 메인 데모가 장애물을 비대칭으로 걸쳐 놓는 이유가 이것이고,
+                    Potential Fields 페이지의 local minimum 함정과 사촌 관계다. 둘 다 대칭인 장면이
+                    침묵시킬 수 있는 힘의 합이다.
+                </p>}
+            />
+            <EbSymmetryStallDemo/>
 
             <h2>Demo</h2>
             <T

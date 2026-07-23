@@ -71,14 +71,13 @@ const PotentialFields = () => {
                 en={<p>
                     Linear in distance, so it never vanishes and never explodes: far from the
                     goal it pulls hard, close to the goal it eases off on its own. The repulsive
-                    term is FIRAS (Force Induced by an Artificial Repulsive potential Surface,
-                    Khatib 1986) — the only force that is aware obstacles exist at all:
+                    term is the FIRAS function (an acronym coined in Khatib's French-language
+                    thesis, 1986) — the only force that is aware obstacles exist at all:
                 </p>}
                 ko={<p>
                     거리에 선형이라 사라지지도, 터지지도 않는다. 목표에서 멀면 세게 당기고
-                    가까우면 스스로 누그러진다. 반발항은 FIRAS(Force Induced by an Artificial
-                    Repulsive potential Surface, Khatib 1986)다. 장애물의 존재를 아는 유일한
-                    힘이다:
+                    가까우면 스스로 누그러진다. 반발항은 FIRAS 함수다(Khatib의 프랑스어
+                    학위논문에서 나온 약어다). 장애물의 존재를 아는 유일한 힘이다:
                 </p>}
             />
             <BlockMath math="F_{\text{rep}} = \sum_{o\,\in\,\mathcal{O}(p,\rho_0)} k_{\text{rep}} \left(\frac{1}{d} - \frac{1}{\rho_0}\right) \frac{1}{d^2} \, \frac{p - o}{d}, \qquad d = \max\!\bigl(\lVert p - o \rVert,\, d_{\min}\bigr)"/>
@@ -267,61 +266,155 @@ return heading_command(wrap_to_pi(theta_d - theta), k_omega, v, max_omega)  # 7`
             <Proof title={t("Proof: the symmetric U-trap has a zero-force equilibrium",
                 "증명: 대칭 U-trap에는 합력 0인 평형점이 있다")}>
                 <>
-                        <p>
-                            <strong>Setup.</strong> Place the robot at the origin with the goal
-                            on the <InlineMath math="+x"/> axis, and two obstacles mirrored
-                            across that axis — the front wall of a U-shaped trap and its two
-                            symmetric side walls, exactly as in <code>pf_trap01</code>. Let{" "}
-                            <InlineMath math="\Delta = g_x - p_x > 0"/> be the remaining distance
-                            to the goal, and let each side obstacle sit at offset{" "}
-                            <InlineMath math="(d_x, \pm d_y)"/> from the robot, at equal distance{" "}
-                            <InlineMath math="d = \sqrt{d_x^2+d_y^2}"/>.
-                        </p>
+                        <T
+                            en={<p>
+                                <strong>Setup.</strong> Put the robot on the goal axis at axial
+                                position <InlineMath math="p_x"/>, with the goal ahead at{" "}
+                                <InlineMath math="g_x > p_x"/>, and model the closed end of the U
+                                by the two occupied cells that straddle the axis — the wall the
+                                figure below shows directly between the robot and the goal, exactly
+                                as in <code>pf_trap01</code>. They sit symmetrically ahead of the
+                                robot at offset <InlineMath math="(d_x, \pm d_y)"/>, at equal
+                                distance <InlineMath math="d = \sqrt{d_x^2+d_y^2}"/>. The trap's
+                                side walls add only laterally-opposed pushes that cancel in mirror
+                                pairs, so they never enter the axial balance and we track the front
+                                pair alone. Write <InlineMath math="\Delta(p_x) = g_x - p_x"/> for
+                                the remaining distance to the goal.
+                            </p>}
+                            ko={<p>
+                                <strong>설정.</strong> 로봇을 목표 축 위 축 방향 위치{" "}
+                                <InlineMath math="p_x"/>에 두고, 목표는 앞쪽{" "}
+                                <InlineMath math="g_x > p_x"/>에 둔다. U자의 닫힌 끝은 축을 사이에
+                                두고 마주 놓인 점유 셀 둘로 모델링한다. 아래 그림이 로봇과 목표
+                                사이를 정면으로 막는 벽으로 그리는 것과 같고, <code>pf_trap01</code>과도
+                                일치한다. 두 셀은 로봇 앞쪽에 대칭으로 오프셋{" "}
+                                <InlineMath math="(d_x, \pm d_y)"/>, 같은 거리{" "}
+                                <InlineMath math="d = \sqrt{d_x^2+d_y^2}"/>에 놓인다. 함정의 좌우
+                                벽은 거울쌍으로 서로 상쇄되는 옆 방향 반발만 더하므로 축 방향
+                                균형에는 들어오지 않는다. 그래서 정면 셀 쌍만 추적한다. 목표까지
+                                남은 거리는 <InlineMath math="\Delta(p_x) = g_x - p_x"/>로 쓴다.
+                            </p>}
+                        />
                         <BlockMath math="F_{\text{att}} = (k_{\text{att}}\Delta,\ 0), \qquad F_{\text{rep}} = \left(-2\varphi(d)\,\frac{d_x}{d},\ 0\right), \qquad \varphi(d) = k_{\text{rep}}\left(\frac{1}{d}-\frac{1}{\rho_0}\right)\frac{1}{d^2}"/>
                         <Terms items={[
                             ["F_{\\text{att}}", t("the attractive force at the robot's position", "로봇 위치에서의 인력")],
-                            ["F_{\\text{rep}}", t("the summed repulsive force from the two mirrored side obstacles",
-                                "좌우 대칭 장애물 둘에서 오는 합산 반발")],
-                            ["\\Delta", t("remaining distance to the goal along the axis", "축을 따른 목표까지 남은 거리")],
+                            ["F_{\\text{rep}}", t("the summed repulsive force from the two mirrored front-wall cells",
+                                "축을 사이에 둔 정면 벽 셀 둘에서 오는 합산 반발")],
+                            ["\\Delta", t("remaining distance to the goal along the axis, g_x - p_x", "축을 따른 목표까지 남은 거리, g_x - p_x")],
                             ["k_{\\text{att}},\\,k_{\\text{rep}}", t("attractive / repulsive gains", "인력 / 반발 게인")],
-                            ["d_x,\\,d_y", t("longitudinal / lateral offset from the robot to each side obstacle",
-                                "로봇에서 각 측면 장애물까지의 축 방향 / 옆 방향 오프셋")],
-                            ["d", t("distance to each side obstacle, \\sqrt{d_x^2+d_y^2}", "각 측면 장애물까지 거리")],
+                            ["d_x,\\,d_y", t("longitudinal (toward-goal) / lateral offset from the robot to each front-wall cell",
+                                "로봇에서 각 정면 벽 셀까지의 축 방향(목표 쪽) / 옆 방향 오프셋")],
+                            ["d", t("distance to each front-wall cell, \\sqrt{d_x^2+d_y^2}", "각 정면 벽 셀까지 거리")],
                             ["\\rho_0", t("influence radius", "영향 반경")],
                             ["\\varphi(d)", t(
                                 "the new term: the FIRAS magnitude a single obstacle at distance d contributes",
                                 "새로 추가된 항: 거리 d인 장애물 하나가 만드는 FIRAS 크기")],
                         ]}/>
-                        <p>
-                            {t(
-                                "The lateral (y) components of the two side forces are equal and opposite by the mirror symmetry, so they cancel exactly — only the longitudinal component survives, opposing the goal's pull.",
-                                "두 측면 힘의 옆(y) 성분은 거울 대칭으로 크기가 같고 부호가 반대라 정확히 상쇄된다. 축 방향 성분만 남아 목표의 인력과 맞선다.",
-                            )}
-                        </p>
-                        <p>
-                            {t(
-                                "φ is strictly decreasing on (d_min, ρ₀) — both 1/d − 1/ρ₀ and 1/d² shrink as d grows — and it brackets k_att·Δ whenever the trap is tight enough relative to the gains:",
-                                "φ는 (d_min, ρ₀) 위에서 단조 감소한다. d가 커질수록 1/d − 1/ρ₀와 1/d² 모두 줄어들기 때문이다. 함정이 게인 대비 충분히 좁으면 φ가 k_att·Δ를 사이에 둔다:",
-                            )}
-                        </p>
-                        <BlockMath math="0 = \varphi(\rho_0) \;<\; k_{\text{att}}\,\Delta \;<\; \varphi(d_{\min}) = k_{\text{rep}}\left(\frac{1}{d_{\min}}-\frac{1}{\rho_0}\right)\frac{1}{d_{\min}^2}"/>
+                        <T
+                            en={<p>
+                                The lateral (<InlineMath math="y"/>) components of the two forces
+                                are equal and opposite by the mirror symmetry, so they cancel
+                                exactly — only the backward longitudinal component survives,
+                                opposing the goal's pull. Track that single axial balance as a
+                                function of how far the robot has advanced up the corridor: let{" "}
+                                <InlineMath math="G(p_x)"/> be the net force projected on the axis,
+                                counted positive toward the goal.
+                            </p>}
+                            ko={<p>
+                                두 힘의 옆(<InlineMath math="y"/>) 성분은 거울 대칭으로 크기가 같고
+                                부호가 반대라 정확히 상쇄된다. 목표를 되받아 미는 축 방향 성분만
+                                남는다. 이 하나뿐인 축 방향 균형을 로봇이 통로를 따라 얼마나
+                                전진했는지의 함수로 추적한다. 축에 사영한 합력을 목표 쪽을 양으로
+                                해서 <InlineMath math="G(p_x)"/>라 하자.
+                            </p>}
+                        />
+                        <BlockMath math="G(p_x) = k_{\text{att}}\,\Delta(p_x) \;-\; 2\,\varphi\bigl(d(p_x)\bigr)\,\frac{d_x(p_x)}{d(p_x)}"/>
                         <Terms items={[
-                            ["\\varphi(\\rho_0)", t("φ evaluated at d = ρ₀ — zero, since the FIRAS term vanishes at the influence boundary",
-                                "d = ρ₀에서의 φ. 영향 경계에서 FIRAS 항이 사라지므로 0")],
-                            ["k_{\\text{att}}\\,\\Delta", t("the (constant) magnitude of the attractive pull",
-                                "인력 크기(상수)")],
-                            ["\\varphi(d_{\\min})", t("φ evaluated at the contact clamp — its largest value, achieved as the robot nears the wall",
-                                "접촉 클램프에서의 φ. 로봇이 벽에 가까워질 때 도달하는 최댓값")],
+                            ["G(p_x)", t(
+                                "the new term: the net force projected on the corridor axis (positive toward the goal) when the robot sits at axial position p_x",
+                                "새로 추가된 항: 로봇이 축 방향 위치 p_x에 있을 때 통로 축에 사영한 합력(목표 쪽이 양)")],
+                            ["p_x", t("the robot's position along the goal axis, increasing as it advances toward the goal",
+                                "목표 축을 따른 로봇 위치, 목표로 전진할수록 커진다")],
+                            ["\\Delta(p_x)", t("remaining axial distance to the goal, g_x - p_x, shrinking as p_x grows",
+                                "목표까지 남은 축 방향 거리, g_x - p_x, p_x가 커지면 줄어든다")],
+                            ["d_x(p_x)", t("axial offset from the robot to the front-wall cells, shrinking as the robot approaches",
+                                "로봇에서 정면 벽 셀까지의 축 방향 오프셋, 로봇이 다가갈수록 줄어든다")],
+                            ["d(p_x)", t("distance to each front-wall cell, floored at d_min", "각 정면 벽 셀까지 거리, d_min 아래로 클램프")],
+                            ["\\varphi", t("the FIRAS magnitude, \\varphi(d)=k_{\\text{rep}}(1/d-1/\\rho_0)/d^2",
+                                "FIRAS 크기, \\varphi(d)=k_{\\text{rep}}(1/d-1/\\rho_0)/d^2")],
+                            ["k_{\\text{att}}", t("attractive gain", "인력 게인")],
+                        ]}/>
+                        <T
+                            en={<p>
+                                As the robot moves up the axis, <InlineMath math="d(p_x)"/> decreases
+                                monotonically, so <InlineMath math="\varphi"/> climbs while{" "}
+                                <InlineMath math="\Delta(p_x)"/> falls: the forward pull weakens and
+                                the backward push strengthens together. Evaluate <InlineMath math="G"/>{" "}
+                                at the two ends of the approach. At the trap mouth the robot is still
+                                farther than <InlineMath math="\rho_0"/> from the wall, the FIRAS term
+                                is exactly zero, and only the pull remains. Deep in the trap the clamp
+                                binds at <InlineMath math="d_{\min}"/>, the FIRAS magnitude reaches its
+                                largest value, and — when the corridor is tight enough relative to the
+                                gains — the backward push overwhelms the by-now-small pull.
+                            </p>}
+                            ko={<p>
+                                로봇이 축을 따라 올라가면 <InlineMath math="d(p_x)"/>가 단조 감소하므로{" "}
+                                <InlineMath math="\varphi"/>는 오르고 <InlineMath math="\Delta(p_x)"/>는
+                                내려간다. 앞으로 당기는 힘은 약해지고 뒤로 미는 힘은 함께 세진다.
+                                접근 구간의 양 끝에서 <InlineMath math="G"/>를 따져 본다. 함정 입구에서는
+                                로봇이 아직 벽에서 <InlineMath math="\rho_0"/>보다 멀어 FIRAS 항이 정확히
+                                0이고 인력만 남는다. 함정 깊숙한 곳에서는 클램프가{" "}
+                                <InlineMath math="d_{\min}"/>에서 걸려 FIRAS 크기가 최댓값에 이르고,
+                                통로가 게인 대비 충분히 좁으면 뒤로 미는 힘이 이제는 작아진 인력을
+                                압도한다.
+                            </p>}
+                        />
+                        <BlockMath math="G(p_{\text{mouth}}) = k_{\text{att}}\,\Delta_{\text{mouth}} \;>\; 0 \;>\; k_{\text{att}}\,\Delta_{\text{deep}} - 2\,\varphi(d_{\min})\,\frac{d_x}{d_{\min}} = G(p_{\text{deep}})"/>
+                        <Terms items={[
+                            ["p_{\\text{mouth}}", t("axial position where the robot first reaches the influence boundary, d(p_{\\text{mouth}}) = \\rho_0",
+                                "로봇이 영향 경계에 처음 닿는 축 방향 위치, d(p_{\\text{mouth}}) = \\rho_0")],
+                            ["\\Delta_{\\text{mouth}}", t("remaining distance to the goal at the mouth, g_x - p_{\\text{mouth}} > 0",
+                                "입구에서 목표까지 남은 거리, g_x - p_{\\text{mouth}} > 0")],
+                            ["p_{\\text{deep}}", t("axial position near the closed end where the clamp binds, d(p_{\\text{deep}}) = d_{\\min}",
+                                "닫힌 끝 근처에서 클램프가 걸리는 축 방향 위치, d(p_{\\text{deep}}) = d_{\\min}")],
+                            ["\\Delta_{\\text{deep}}", t("remaining distance there, still positive — the robot is short of the goal",
+                                "그 지점에서 남은 거리, 여전히 양수. 로봇은 목표에 못 미친다")],
+                            ["\\varphi(d_{\\min})", t("the largest FIRAS magnitude, reached when the robot is pressed to the wall",
+                                "로봇이 벽에 밀착했을 때 도달하는 FIRAS 최대 크기")],
                             ["d_{\\min}", t("the footprint radius, the closest d can get before clamping",
                                 "footprint 반경, 클램프 전 d가 도달할 수 있는 최솟값")],
+                            ["d_x", t("axial offset to the front-wall cells at p_{\\text{deep}}, positive since the robot is still short of the wall",
+                                "p_{\\text{deep}}에서 정면 벽 셀까지의 축 방향 오프셋, 로봇이 아직 벽 앞이라 양수")],
                         ]}/>
-                        <p>
-                            {t(
-                                "φ is continuous, so by the intermediate value theorem some d* strictly between d_min and ρ₀ satisfies φ(d*) = k_att·Δ. At that separation, F_rep exactly cancels F_att and the lateral components are already zero — the resultant vanishes at a point strictly short of the goal.",
-                                "φ는 연속이므로 중간값 정리에 의해 d_min과 ρ₀ 사이 어떤 d*에서 φ(d*) = k_att·Δ가 성립한다. 그 거리에서 F_rep는 F_att와 정확히 상쇄되고 옆 성분은 이미 0이므로, 합력은 목표에 못 미친 지점에서 사라진다.",
-                            )}
-                            {" "}<InlineMath math="\blacksquare"/>
-                        </p>
+                        <T
+                            en={<p>
+                                <InlineMath math="G"/> is continuous in <InlineMath math="p_x"/>{" "}
+                                (<InlineMath math="\varphi"/> is continuous on{" "}
+                                <InlineMath math="(d_{\min},\rho_0]"/> and the geometry varies
+                                smoothly), and it changes sign from positive at{" "}
+                                <InlineMath math="p_{\text{mouth}}"/> to negative at{" "}
+                                <InlineMath math="p_{\text{deep}}"/>. By the intermediate value
+                                theorem some axial position <InlineMath math="p_x^\ast"/> between
+                                them satisfies <InlineMath math="G(p_x^\ast) = 0"/>. There the axial
+                                pull and push cancel and the lateral components are already zero by
+                                symmetry, so the full resultant vanishes at a stationary point with{" "}
+                                <InlineMath math="\Delta(p_x^\ast) > 0"/>, strictly short of the goal.
+                                {" "}<InlineMath math="\blacksquare"/>
+                            </p>}
+                            ko={<p>
+                                <InlineMath math="G"/>는 <InlineMath math="p_x"/>에 대해 연속이고
+                                (<InlineMath math="\varphi"/>가 <InlineMath math="(d_{\min},\rho_0]"/>에서
+                                연속이고 기하도 매끄럽게 변한다), 부호가{" "}
+                                <InlineMath math="p_{\text{mouth}}"/>에서 양수였다가{" "}
+                                <InlineMath math="p_{\text{deep}}"/>에서 음수로 바뀐다. 중간값 정리에
+                                의해 둘 사이 어떤 축 방향 위치 <InlineMath math="p_x^\ast"/>에서{" "}
+                                <InlineMath math="G(p_x^\ast) = 0"/>이 성립한다. 그 지점에서 축 방향
+                                인력과 반발이 상쇄되고 옆 성분은 대칭으로 이미 0이므로, 합력은{" "}
+                                <InlineMath math="\Delta(p_x^\ast) > 0"/>인 정류점, 곧 목표에 못 미친
+                                지점에서 사라진다.
+                                {" "}<InlineMath math="\blacksquare"/>
+                            </p>}
+                        />
                         <p>
                             {t(
                                 "This is not a bug to patch — it is the price of a controller with no memory of where it has already been. Koren & Borenstein (1991) catalog this and other pathologies (oscillation in narrow corridors, cycling between closely spaced obstacles) as the standard critique of purely reactive potential fields; VFH's histogram, on a later page, is one direct response.",
