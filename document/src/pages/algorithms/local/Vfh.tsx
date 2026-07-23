@@ -5,6 +5,7 @@ import {BlockMath, InlineMath} from "../../../components/math/Tex";
 import Pseudocode from "../../../components/Pseudocode";
 import CodeTabs from "../../../components/CodeTabs";
 import VfhSandbox from "../../../components/panels/local/vfh/VfhSandbox";
+import VfhOpenFieldDemo from "../../../components/panels/local/vfh/VfhOpenFieldDemo";
 import VfhHistogramFigure from "../../../components/panels/local/vfh/VfhHistogramFigure";
 import vfhPy from "../../../../../python/navigation/local_planning/reactive/vfh.py?raw";
 import vfhCpp from "../../../../../cpp/src/local_planning/reactive/vfh.cpp?raw";
@@ -419,10 +420,36 @@ return heading_command(θ_sel − θ, v)`}/>
                 />
             </Collapsible>
 
+            <h2>{t("The Open-Field Zigzag", "개활지 지그재그")}</h2>
+            <T
+                en={<p>
+                    VFH's weakness shows up where you would least expect it: in the easiest possible
+                    scene. Steering is quantized to sector centers and re-decided from scratch every tick,
+                    with nothing carrying over from the previous decision. In clutter that is fine — the
+                    walls themselves pin the valley. But crossing an empty room straight toward the goal,
+                    nothing in the window anchors the choice, the steering target flickers between
+                    adjacent grid directions, and the heading-error gate cuts speed on every flip: the
+                    robot zigzags and takes roughly 2.4 times the ticks it needs when a wall runs beside
+                    the route. VFH+ (Ulrich &amp; Borenstein 1998) damps exactly this with a threshold
+                    hysteresis that makes each tick's decision sticky.
+                </p>}
+                ko={<p>
+                    VFH의 약점은 가장 뜻밖의 곳, 곧 가장 쉬운 장면에서 드러난다. 조향은 sector 중심으로
+                    양자화되고 매 tick 처음부터 다시 결정되며, 직전 결정에서 이어받는 것이 없다. 밀집
+                    지형에서는 벽 자체가 valley를 고정해 주니 문제가 없다. 하지만 빈 방을 goal 쪽으로
+                    곧장 가로지르면 window 안에 선택을 붙들어 줄 것이 없어 조향 목표가 인접 격자 방향
+                    사이에서 흔들리고, heading 오차 게이트가 뒤집힐 때마다 속도를 깎는다. 로봇은
+                    지그재그로 기며, 경로 옆에 벽이 있을 때의 2.4배쯤 tick을 쓴다. VFH+(Ulrich &amp;
+                    Borenstein 1998)가 threshold hysteresis로 매 tick의 결정에 관성을 주어 정확히 이
+                    진동을 억제한다.
+                </p>}
+            />
+            <VfhOpenFieldDemo/>
+
             <h2>Demo</h2>
             <T
                 en={<p>
-                    All three presets run VFH with the same fixed gains as the repository config
+                    Both presets run VFH with the same fixed gains as the repository config
                     (smoothing, valley width, speed, and turning limits); only the maps are
                     shaped for the demo. The threshold and window sliders below start at
                     demo-friendly values rather than the config's tuned defaults (0.041
@@ -434,14 +461,10 @@ return heading_command(θ_sel − θ, v)`}/>
                     clutter, several valleys open and close as the robot moves, and the rose
                     visibly reshapes each tick as the selected direction hops between them. Raise
                     the threshold slider high enough and watch valleys disappear one at a time
-                    until none are left. The open-zigzag preset is the honest failure case: crossing
-                    an empty room straight toward the goal, with nothing in the window to pin the
-                    valley, the steering target flickers across the sector grid every tick and the
-                    robot zigzags and crawls — a known VFH limitation that VFH+ damps with
-                    hysteresis.
+                    until none are left.
                 </p>}
                 ko={<p>
-                    세 프리셋 모두 스무딩, valley 폭, 속도, 회전 한계 등 나머지 게인은 저장소
+                    두 프리셋 모두 스무딩, valley 폭, 속도, 회전 한계 등 나머지 게인은 저장소
                     config 값 그대로 쓰고, 맵만 데모에 맞게 구성했다. 다만 아래 threshold와
                     window 슬라이더는 config의 튜닝된 기본값(threshold 0.041, window
                     1.32m)이 아니라 valley가 열리고 닫히는 모습을 더 잘 보여주는 데모용 값에서
@@ -451,10 +474,7 @@ return heading_command(θ_sel − θ, v)`}/>
                     히스토그램이 몰리는 지점에서 느려진다. 밀집 프리셋에서는 로봇이 움직이는
                     동안 valley 여럿이 열리고 닫히고, 선택된 방향이 그 사이를 오가며 매 tick
                     장미 모양이 눈에 띄게 바뀐다. threshold 슬라이더를 충분히 올리면 valley가
-                    하나씩 사라지는 것도 볼 수 있다. open 지그재그 프리셋은 정직한 실패
-                    사례다. 빈 방을 goal 쪽으로 곧장 가로지르면 window 안에 valley를 고정해 줄
-                    것이 없어 조향 목표가 매 tick sector 격자 위에서 흔들리고, 로봇은 지그재그로
-                    기어간다. VFH의 알려진 한계이고 VFH+가 hysteresis로 억제한다.
+                    하나씩 사라지는 것도 볼 수 있다.
                 </p>}
             />
             <VfhSandbox/>
