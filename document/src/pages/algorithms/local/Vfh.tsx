@@ -422,7 +422,7 @@ return heading_command(θ_sel − θ, v)`}/>
             <h2>Demo</h2>
             <T
                 en={<p>
-                    Both presets run VFH with the same fixed gains as the repository config
+                    All three presets run VFH with the same fixed gains as the repository config
                     (smoothing, valley width, speed, and turning limits); only the maps are
                     shaped for the demo. The threshold and window sliders below start at
                     demo-friendly values rather than the config's tuned defaults (0.041
@@ -434,11 +434,14 @@ return heading_command(θ_sel − θ, v)`}/>
                     clutter, several valleys open and close as the robot moves, and the rose
                     visibly reshapes each tick as the selected direction hops between them. Raise
                     the threshold slider high enough and watch valleys disappear one at a time
-                    until none are left. Open the space up and the heading wobbles as near-tied
-                    valleys flip — a known VFH limitation that VFH+ damps with hysteresis.
+                    until none are left. The open-zigzag preset is the honest failure case: crossing
+                    an empty room straight toward the goal, with nothing in the window to pin the
+                    valley, the steering target flickers across the sector grid every tick and the
+                    robot zigzags and crawls — a known VFH limitation that VFH+ damps with
+                    hysteresis.
                 </p>}
                 ko={<p>
-                    두 프리셋 모두 스무딩, valley 폭, 속도, 회전 한계 등 나머지 게인은 저장소
+                    세 프리셋 모두 스무딩, valley 폭, 속도, 회전 한계 등 나머지 게인은 저장소
                     config 값 그대로 쓰고, 맵만 데모에 맞게 구성했다. 다만 아래 threshold와
                     window 슬라이더는 config의 튜닝된 기본값(threshold 0.041, window
                     1.32m)이 아니라 valley가 열리고 닫히는 모습을 더 잘 보여주는 데모용 값에서
@@ -448,9 +451,10 @@ return heading_command(θ_sel − θ, v)`}/>
                     히스토그램이 몰리는 지점에서 느려진다. 밀집 프리셋에서는 로봇이 움직이는
                     동안 valley 여럿이 열리고 닫히고, 선택된 방향이 그 사이를 오가며 매 tick
                     장미 모양이 눈에 띄게 바뀐다. threshold 슬라이더를 충분히 올리면 valley가
-                    하나씩 사라지는 것도 볼 수 있다. 공간을 열어 두면 거의 동률인 valley들이
-                    뒤집히며 조향이 흔들리는데, VFH의 알려진 한계이고 VFH+가 hysteresis로
-                    억제한다.
+                    하나씩 사라지는 것도 볼 수 있다. open 지그재그 프리셋은 정직한 실패
+                    사례다. 빈 방을 goal 쪽으로 곧장 가로지르면 window 안에 valley를 고정해 줄
+                    것이 없어 조향 목표가 매 tick sector 격자 위에서 흔들리고, 로봇은 지그재그로
+                    기어간다. VFH의 알려진 한계이고 VFH+가 hysteresis로 억제한다.
                 </p>}
             />
             <VfhSandbox/>

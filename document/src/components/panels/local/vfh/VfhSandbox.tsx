@@ -59,11 +59,24 @@ const clutterMap = (): GridMap => {
 const CLUTTER_START: Pose = [1.25, 1.25, 0]
 const CLUTTER_GOAL: [number, number] = [8.75, 8.75]
 
-type Preset = "narrow" | "clutter";
+// "open zigzag": 경계 벽뿐인 빈 방을 정동쪽으로 가로지르는 최악 케이스 — 전 sector가
+// 자유이면 valley가 [0..n-1]로 한 바퀴 감기며 인위적 경계가 seam(sector 0/n-1)에 생기고,
+// 정동쪽 goal bearing이 바로 그 경계에 걸려 goal-직진 조건이 실패한다. 경계 기준
+// wide-valley 조향이 tick마다 양쪽 경계 사이를 뒤집어 로봇이 지그재그로 긴다(cos-gate가
+// 전진도 깎는다). 실측: 같은 7.5m 직선을 벽 옆에서는 168 tick·ω 부호 반전 27회에 가는데,
+// 완전 개활지에서는 408 tick·반전 100회다. VFH+가 hysteresis로 억제한 고전적 한계.
+const openMap = (): GridMap => buildGrid("vfh_open", () => false)
+const OPEN_START: Pose = [1.25, 5.0, 0]
+const OPEN_GOAL: [number, number] = [8.75, 5.0]
 
-const presetMap = (preset: Preset): GridMap => preset === "narrow" ? narrowMap() : clutterMap()
-const presetStart = (preset: Preset): Pose => preset === "narrow" ? NARROW_START : CLUTTER_START
-const presetGoal = (preset: Preset): [number, number] => preset === "narrow" ? NARROW_GOAL : CLUTTER_GOAL
+type Preset = "narrow" | "clutter" | "open";
+
+const presetMap = (preset: Preset): GridMap =>
+    preset === "narrow" ? narrowMap() : preset === "clutter" ? clutterMap() : openMap()
+const presetStart = (preset: Preset): Pose =>
+    preset === "narrow" ? NARROW_START : preset === "clutter" ? CLUTTER_START : OPEN_START
+const presetGoal = (preset: Preset): [number, number] =>
+    preset === "narrow" ? NARROW_GOAL : preset === "clutter" ? CLUTTER_GOAL : OPEN_GOAL
 
 // configs/local_planning/vfh.yaml 기본값 — sandbox 슬라이더가 없는 나머지 파라미터
 // (smoothing_window, wide_valley_sectors, h_m, k_omega, max_speed, max_omega)와
@@ -125,7 +138,7 @@ const VfhScene = ({panel = 340}: {panel?: number}) => {
             footer={
                 <div className="flex flex-col items-center gap-1.5">
                     <div className="flex items-center gap-1.5 text-xs">
-                        {(["narrow", "clutter"] as const).map((p) => (
+                        {(["narrow", "clutter", "open"] as const).map((p) => (
                             <button key={p} type="button" onClick={() => applyPreset(p)}
                                     className={cn(
                                         "px-2 py-0.5 rounded border",
@@ -133,7 +146,9 @@ const VfhScene = ({panel = 340}: {panel?: number}) => {
                                             ? "border-[var(--accent)] text-[var(--accent)] font-semibold"
                                             : "border-border hover:bg-surface",
                                     )}>
-                                {p === "narrow" ? t("narrow passage", "좁은 통로") : t("dense clutter", "밀집")}
+                                {p === "narrow" ? t("narrow passage", "좁은 통로")
+                                    : p === "clutter" ? t("dense clutter", "밀집")
+                                        : t("open zigzag", "open 지그재그")}
                             </button>
                         ))}
                     </div>
@@ -159,6 +174,12 @@ const VfhScene = ({panel = 340}: {panel?: number}) => {
                             "sectors — how finely direction is discretized; more is smoother, fewer coarsens steering and worsens the wobble",
                             "sector 수: 방향 이산화 해상도. 많을수록 조향이 매끄럽고, 적으면 거칠어져 흔들림이 커진다",
                         )}</span>
+                    </div>
+                    <div className="text-xs text-muted text-center max-w-[24rem]">
+                        {t(
+                            "open zigzag = the weakness preset: with nothing in the window the steering target flickers across the sector grid, so the robot crawls the same straight line in roughly 2.4x the time it needs beside a wall — the oscillation VFH+ later damped with hysteresis",
+                            "open 지그재그 = 약점 프리셋. window 안에 아무것도 없으면 조향 목표가 sector 격자 위에서 tick마다 흔들려, 벽 옆에서 달릴 때의 2.4배쯤 걸려 같은 직선을 긴다. VFH+가 나중에 hysteresis로 억제한 바로 그 진동이다",
+                        )}
                     </div>
                     <div className="text-xs text-muted text-center">
                         {t("draw walls, drag the endpoints, or raise threshold until a valley closes",
