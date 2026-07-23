@@ -1,14 +1,19 @@
 #pragma once
 
+#include <cstdio>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 #include "navigation/core/params.hpp"
 #include "navigation/core/planner.hpp"
 #include "navigation/core/trace.hpp"
 #include "navigation/local_planning/simulation.hpp"
+#include "navigation/local_planning/velocity/agent_scenario.hpp"
+#include "navigation/local_planning/velocity/agent_sim.hpp"
+#include "navigation/local_planning/velocity/velocity_obstacle.hpp"
 #include "navigation/maps/loader.hpp"
 #include "navigation/maps/occupancy_grid.hpp"
 
@@ -195,6 +200,64 @@ inline int run_local(int argc, char** argv, const std::string& name, Factory fac
             << ",\"distance_traveled\":" << result.distance_traveled
             << ",\"min_clearance\":" << result.min_clearance << ",\"steps\":" << result.steps
             << "}\n";
+  return 0;
+}
+
+// Multi-agent assembly for the velocity-obstacle family (VO/RVO/ORCA): wires
+// an AgentScenario (N bodies, one goal each, some possibly scripted
+// non-cooperative movers) instead of run_local's single-agent Scenario, and
+// hands the run to simulate_agents, whose tick loop owns termination + the
+// per-body trace order. `Factory` is any callable `(const ParamSet&) ->
+// ConcretePlanner` (deduced, not std::function), mirroring run_local.
+template <class Factory>
+inline int run_agents(int argc, char** argv, const std::string& name, Factory factory) {
+  Args a = parse_args(argc, argv);
+  auto params = navigation::core::ParamSet::from_yaml(a.params);
+  auto map = navigation::maps::load_map(a.map, resolve_seed(a, params), a.connectivity);
+  auto& grid = as_grid(*map);
+  auto scenario = navigation::local_planning::load_agent_scenario(a.scenario);
+
+  navigation::local_planning::SimConfig config{
+      params.get_float("control_dt"),     params.get_int("max_steps"),
+      params.get_float("goal_tolerance"), params.get_float("footprint_radius"),
+      params.get_int("stall_window"),     params.get_float("stall_distance")};
+
+  // `planner_ptrs[k]` is nullptr iff the agent is scripted (non-cooperative
+  // mover), matching simulate_agents' contract. `owned_planners` is reserved
+  // to its upper bound (every agent could be planner-driven) up front so
+  // later push_back calls never reallocate and invalidate the pointers taken
+  // into planner_ptrs.
+  using ConcretePlanner = decltype(factory(params));
+  std::vector<ConcretePlanner> owned_planners;
+  owned_planners.reserve(scenario.agents.size());
+  std::vector<navigation::local_planning::VelocityObstaclePlanner*> planner_ptrs;
+  planner_ptrs.reserve(scenario.agents.size());
+  for (const auto& spec : scenario.agents) {
+    if (spec.scripted_velocity.has_value()) {
+      planner_ptrs.push_back(nullptr);
+    } else {
+      owned_planners.push_back(factory(params));
+      planner_ptrs.push_back(&owned_planners.back());
+    }
+  }
+
+  std::ofstream fs(a.trace);
+  if (!fs) throw std::runtime_error("demo: cannot open trace file " + a.trace);
+  navigation::core::TraceRecorder rec(fs);
+  rec.planning_started(name, a.map, params.values());
+  auto results =
+      navigation::local_planning::simulate_agents(planner_ptrs, scenario.agents, grid, config, &rec);
+
+  std::cout << "[";
+  for (size_t k = 0; k < results.size(); ++k) {
+    if (k) std::cout << ",";
+    char clearance[32];
+    std::snprintf(clearance, sizeof(clearance), "%.4f", results[k].min_pair_clearance);
+    std::cout << "{\"agent\":" << k << ",\"status\":\"" << sim_status_str(results[k].status)
+              << "\",\"steps\":" << results[k].steps << ",\"min_pair_clearance\":" << clearance
+              << "}";
+  }
+  std::cout << "]\n";
   return 0;
 }
 
