@@ -179,8 +179,8 @@ const VfhHistogramFigure = () => {
     const t = useTr()
     return <CanvasFigure
         label={t(
-            "Two obstacle clusters raise two humps in the polar histogram; sectors whose density stays below the threshold (dashed ring) form open valleys. VFH steers into the valley nearest the goal bearing — straight at the goal when its sector is open, otherwise just inside the valley's near border. Lower the threshold and the valleys narrow and close.",
-            "장애물 뭉치 둘이 폴라 히스토그램에 봉우리 두 개를 세운다. 밀도가 threshold(점선 원) 미만인 sector들이 열린 valley다. VFH는 goal 방향에 가장 가까운 valley로 조향한다. goal sector가 열려 있으면 goal로 직행하고, 아니면 valley의 goal 쪽 경계 안쪽을 겨눈다. threshold를 내리면 valley가 좁아지다 닫힌다.",
+            "Two obstacle clusters raise two humps in the polar histogram; sectors whose density stays below the threshold (dashed ring) form open valleys. VFH steers into the valley nearest the goal bearing — straight at the goal when its sector is open, otherwise near the goal side of the selected valley. Lower the threshold and the valleys narrow and close.",
+            "장애물 뭉치 둘이 폴라 히스토그램에 봉우리 두 개를 세운다. 밀도가 threshold(점선 원) 미만인 sector들이 열린 valley다. VFH는 goal 방향에 가장 가까운 valley로 조향한다. goal sector가 열려 있으면 goal로 직행하고, 아니면 선택된 valley에서 goal 쪽에 가까운 지점을 겨눈다. threshold를 내리면 valley가 좁아지다 닫힌다.",
         )}
         tight bodyClassName="w-fit" className="w-full"
         modal={<Scene scale={modalScale(SIZE, SIZE)}/>}
