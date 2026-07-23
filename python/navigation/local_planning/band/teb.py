@@ -19,8 +19,14 @@ from navigation.core.planner import ObstacleLocalPlanner
 from navigation.core.trace import TraceRecorder
 from navigation.core.types import LocalTask, Point, Pose, RobotState, VelocityCommand
 
-from .._geometry import advance_progress_index, closest_point_on_segment, sq_dist, wrap_to_pi
-from ._band import nearest_occupied, resample_polyline
+from .._geometry import (
+    advance_progress_index,
+    closest_point_on_segment,
+    nearest_occupied,
+    sq_dist,
+    wrap_to_pi,
+)
+from ._band import resample_polyline
 
 # Below this squared norm a unit-vector division (or segment-direction atan2) is
 # unstable, so the term/direction is skipped instead -- same 1e-12 threshold as

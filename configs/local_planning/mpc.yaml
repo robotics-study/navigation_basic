@@ -64,7 +64,7 @@ params:
     max: 3.0
     description: >-
       장애물 페널티가 활성화되는 거리 d_min (meters). 최근접 occupied cell까지의 연속
-      거리로 clearance를 계산한다.
+      거리로 clearance를 계산한다. (mppi.yaml과 동일)
   - name: v_max
     type: float
     default: 0.8
@@ -76,7 +76,7 @@ params:
     default: 1.5
     min: 0.1
     max: 5.0
-    description: 최대 각속도 (rad/s).
+    description: 최대 각속도 (rad/s). (mppi.yaml과 동일)
   - name: a_max
     type: float
     default: 1.5
