@@ -74,6 +74,7 @@ const PurePursuitScene = ({panel = 340}: {panel?: number}) => {
 
     return (
         <LocalTracePlayer footprintRadius={SIM_DEFAULTS.footprintRadius} showLookahead showHeadingRay
+            durationMs={9000}
             map={map} events={events} startPose={start} goal={CORNER_GOAL}
             referencePath={CORNER_PATH} panel={panel}
             onPaintCell={paintCell}
@@ -102,8 +103,8 @@ const PurePursuitScene = ({panel = 340}: {panel?: number}) => {
                             "L_d는 로봇이 앞을 얼마나 멀리 겨냥하는지다. 올리면 부드럽고 빠르지만 코너를 크게 벌리고, 내리면 경로에 바짝 붙되 코너마다 크게 감속한다.")}
                     </div>
                     <div className="text-xs text-muted text-center max-w-[26rem]">
-                        {t("teal arrow = current heading · blue dashed line = aim at the lookahead point; the gap between them is the angle α that sets the commanded curvature",
-                            "청록 화살표 = 현재 heading · 파란 점선 = lookahead 점 겨냥. 둘 사이 벌어진 각이 명령 곡률을 정하는 α다.")}
+                        {t("amber arrow = current heading · blue dashed line = aim at the lookahead point; the gap between them is the angle α that sets the commanded curvature",
+                            "주황 화살표 = 현재 heading · 파란 점선 = lookahead 점 겨냥. 둘 사이 벌어진 각이 명령 곡률을 정하는 α다.")}
                     </div>
                     <div className="text-xs text-muted text-center tabular-nums">
                         {t("short L_d hugs every corner and slows into it · long L_d stays fast but cuts corners wide",
