@@ -40,7 +40,7 @@ const CORNER_CUTTING_GOAL: [number, number] = [8.75, 8.75]
 
 // "Sharp corner": 폭 1.5m짜리 L자 복도(직선 뒤 90도 급코너, 코너 뒤 통로도 0.9m 규칙을
 // 만족)만 남기고 나머지는 전부 벽으로 채운다 -- 회전율 한계 + kinematics 항이 코너에서
-// ΔT를 늘려 v = ell/ΔT가 떨어지는 감속을 speedTrail 굵기로 보여준다(직선 구간 자체는
+// ΔT를 늘려 v = ell/ΔT가 떨어지는 감속을 trail 의 옅어지는 색으로 보여준다(직선 구간 자체는
 // 어떤 비용 항도 감속시키지 않는다). 폭 1.0m(0.9m 규칙의 최소치에 가까움)에서는 TEB가
 // 코너를 자르며 중심선에서 0.2m 이상 벗어나 실제로 벽에 닿는 것을 실행 검증으로
 // 확인했다 -- 1.5m로 여유를 둔다.
@@ -76,7 +76,7 @@ const W_VELOCITY = 10.0
 const W_ACCELERATION = 5.0
 const W_KINEMATICS = 50.0
 // yaml 기본값(1.5)에서는 두 프리셋 모두 실제 최적화된 궤적의 회전율이 한계에 거의
-// 닿지 않아(실행 검증 결과 최대 ~1.1 rad/s) sharp corner에서 speedTrail 굵기 차이가
+// 닿지 않아(실행 검증 결과 최대 ~1.1 rad/s) sharp corner에서 trail 색 차이가
 // 거의 안 보인다 -- 0.5로 낮춰야 코너 부근 평균 속도가 far-from-corner 대비 뚜렷하게
 // 떨어지는(실행 검증: near 0.39 m/s vs far 0.71 m/s) 것을 확인했다. 두 프리셋 모두 이
 // 값에서 REACHED로 끝난다.

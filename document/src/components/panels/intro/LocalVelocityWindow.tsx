@@ -18,13 +18,15 @@ const A_V = 0.35;                  // 가속 한계 × dt (창 반높이, m/s)
 const A_OM = 0.6;                  // 각가속 한계 × dt (창 반너비, rad/s)
 const A_BRAKE = 0.22;              // 제동 감속 v̇_b (m/s²) — 경계가 v 축 범위 안에 들어오는 값
 const ROBOT_R = 0.12;              // m
-const OBST: [number, number] = [0.22, 1.0];   // 로봇 기준 (x: 좌+, y: 전방) — 전방 약간 오른쪽
+const OBST_X = 0.22;               // 로봇 기준 좌우 offset (전방 약간 오른쪽)
 const OBST_R = 0.28;
 const GOAL: [number, number] = [-0.35, 2.3];   // 장애물 왼쪽 뒤편
 const S_MAX = 4;                   // 충돌 거리 탐색 상한 (m)
 
 // 곡률 κ 원호를 따라 장애물(로봇 반경으로 팽창)까지의 거리. 로봇은 원점, 전방 +y.
-function arcDistToObstacle(kappa: number): number {
+// 장애물 거리 obstY 는 슬라이더로 움직인다 — admissible 영역이 장면에 따라 변하는 것을
+// 보여주는 것이 이 figure 의 핵심 조작이다.
+function arcDistToObstacle(kappa: number, obstY: number): number {
     const rHit = OBST_R + ROBOT_R
     let x = 0
     let y = 0
@@ -34,14 +36,14 @@ function arcDistToObstacle(kappa: number): number {
         x += -Math.sin(th) * ds
         y += Math.cos(th) * ds
         th += kappa * ds
-        if (Math.hypot(x - OBST[0], y - OBST[1]) <= rHit) return s
+        if (Math.hypot(x - OBST_X, y - obstY) <= rHit) return s
     }
     return Infinity
 }
 
-const admissibleV = (v: number, om: number): boolean => {
+const admissibleV = (v: number, om: number, obstY: number): boolean => {
     if (v <= 0) return true
-    const dist = arcDistToObstacle(om / v)
+    const dist = arcDistToObstacle(om / v, obstY)
     return v <= Math.sqrt(2 * A_BRAKE * dist)
 }
 
@@ -86,6 +88,7 @@ const Scene = ({scale = 1}: {scale?: number}) => {
     const t = useTr()
     const [vc, setVc] = useState(0.55)
     const [oc, setOc] = useState(0.0)
+    const [obstY, setObstY] = useState(1.0)
 
     const wLo = clamp(vc - A_V, 0.02, V_MAX)
     const wHi = clamp(vc + A_V, 0.02, V_MAX)
@@ -102,12 +105,12 @@ const Scene = ({scale = 1}: {scale?: number}) => {
             const v = V_MAX * (1 - (ir + 0.5) / NR)
             for (let ic = 0; ic < NC; ic++) {
                 const om = -OM_MAX + ((ic + 0.5) / NC) * 2 * OM_MAX
-                row.push(admissibleV(v, om))
+                row.push(admissibleV(v, om, obstY))
             }
             g.push(row)
         }
         return g
-    }, [])
+    }, [obstY])
 
     // 논문 목적함수: heading(예측 pose에서 goal을 향한 정렬) + clearance + velocity.
     const best = useMemo(() => {
@@ -118,7 +121,7 @@ const Scene = ({scale = 1}: {scale?: number}) => {
             const v = wLo + (iv / steps) * (wHi - wLo)
             for (let io = 0; io <= steps; io++) {
                 const om = wLeft + (io / steps) * (wRight - wLeft)
-                if (!admissibleV(v, om)) continue
+                if (!admissibleV(v, om, obstY)) continue
                 const kappa = v > 0 ? om / v : 0
                 const s = v * T
                 const thEnd = kappa * s
@@ -127,14 +130,14 @@ const Scene = ({scale = 1}: {scale?: number}) => {
                 const [ex, ey] = pts[pts.length - 1]
                 const angToGoal = Math.atan2(-(GOAL[0] - ex), GOAL[1] - ey)
                 const heading = 1 - Math.abs(angToGoal - thEnd) / Math.PI
-                const dist = arcDistToObstacle(kappa)
+                const dist = arcDistToObstacle(kappa, obstY)
                 const clear = Math.min(dist, 2) / 2
                 const J = 2.0 * heading + 0.3 * clear + 0.6 * (v / V_MAX)
                 if (!bestCmd || J > bestCmd.J) bestCmd = {v, om, J}
             }
         }
         return bestCmd
-    }, [wLo, wHi, wLeft, wRight])
+    }, [wLo, wHi, wLeft, wRight, obstY])
 
     // 왼쪽 장면에 그릴 후보 원호들 (window 모서리 + 중앙 열) — admissible 여부로 색 구분.
     const sampleArcs = useMemo(() => {
@@ -143,14 +146,14 @@ const Scene = ({scale = 1}: {scale?: number}) => {
         for (let io = 0; io <= 6; io++) {
             const om = wLeft + (io / 6) * (wRight - wLeft)
             const v = wHi
-            const ok = admissibleV(v, om)
+            const ok = admissibleV(v, om, obstY)
             const kappa = v > 0 ? om / v : 0
-            const dist = arcDistToObstacle(kappa)
+            const dist = arcDistToObstacle(kappa, obstY)
             const len = ok ? v * T : Math.min(dist, v * T)
             arcs.push({pts: arcPoints(kappa, Math.max(len, 0.05)), ok})
         }
         return arcs
-    }, [wLeft, wRight, wHi])
+    }, [wLeft, wRight, wHi, obstY])
 
     return (
         <div className="flex flex-col items-center gap-2">
@@ -165,7 +168,7 @@ const Scene = ({scale = 1}: {scale?: number}) => {
                         <Text x={sx(GOAL[0]) + 8} y={sy(GOAL[1]) - 6} text={t("goal", "목표")}
                               fontSize={11} fill={PATH_COLOR} fontStyle="bold"/>
                         {/* 장애물 */}
-                        <Circle x={sx(OBST[0])} y={sy(OBST[1])} radius={OBST_R * SCALE}
+                        <Circle x={sx(OBST_X)} y={sy(obstY)} radius={OBST_R * SCALE}
                                 fill={colors.text} opacity={0.75}/>
                         {/* 후보 원호: admissible = 회색, 위험(제때 못 멈춤) = 경고색 */}
                         {sampleArcs.map((a, i) => (
@@ -258,17 +261,31 @@ const Scene = ({scale = 1}: {scale?: number}) => {
                            className="flex-1 accent-[var(--accent)]"
                            aria-label={t("current angular velocity", "현재 각속도")}/>
                 </label>
+                <label className="flex items-center gap-2">
+                    <span className="w-14 shrink-0">d = {obstY.toFixed(2)}</span>
+                    <input type="range" min={0.55} max={2.2} step={0.01} value={obstY}
+                           onChange={(e) => setObstY(parseFloat(e.target.value))}
+                           className="flex-1 accent-[var(--accent)]"
+                           aria-label={t("obstacle distance", "장애물 거리")}/>
+                </label>
             </div>
             <div className="text-xs text-muted text-center">
-                <span style={{color: "var(--accent)"}} className="font-semibold">dynamic window</span>
-                {" · "}
-                <span style={{color: "var(--accent-2)"}} className="font-semibold">
-                    {t("chosen command and its arc", "선택된 명령과 그 원호")}
-                </span>
-                {" · "}
-                <span style={{color: PATH_COLOR}} className="font-semibold">
-                    {t("cannot stop before the obstacle", "장애물 앞에서 못 멈추는 명령")}
-                </span>
+                {t("v, ω move the window over the map; d moves the obstacle and reshapes the red region",
+                    "v, ω는 창을 옮기고, d는 장애물을 옮겨 빨간 영역 자체를 바꾼다")}
+            </div>
+            {/* 색 범례 — 상태 표시가 아니라 세 색의 의미 설명이다 (견본으로 명시) */}
+            <div className="text-xs text-muted text-center flex items-center justify-center gap-3 flex-wrap">
+                {([
+                    ["var(--accent)", t("dynamic window", "dynamic window")],
+                    ["var(--accent-2)", t("chosen command and its arc", "선택된 명령과 그 원호")],
+                    [PATH_COLOR, t("cannot stop before the obstacle", "장애물 앞에서 못 멈추는 명령")],
+                ] as const).map(([c, label]) => (
+                    <span key={label} className="inline-flex items-center gap-1.5">
+                        <span aria-hidden="true" className="inline-block w-2.5 h-2.5 rounded-sm"
+                              style={{background: c}}/>
+                        <span className="font-semibold" style={{color: c}}>{label}</span>
+                    </span>
+                ))}
             </div>
         </div>
     )

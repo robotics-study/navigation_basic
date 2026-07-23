@@ -351,22 +351,29 @@ const LocalTracePlayer = ({
         </Group>
     }
 
-    // 속도 비례 굵기 trail — RPP의 규제 감속, DWA의 급정지가 선 굵기로 보인다.
-    // 속도 데이터가 없으면(구 trace) 일정 굵기로 그린다.
+    // 균일 굵기 trail, 감속 구간은 색이 옅어진다 — 굵기를 속도에 비례시키면 선이
+    // 두꺼워졌다 얇아졌다 해 렌더링 결함처럼 읽힌다. 속도 데이터가 없으면 단색.
+    const hexLerp = (a: string, b: string, f: number): string => {
+        const pa = [1, 3, 5].map((i) => parseInt(a.slice(i, i + 2), 16))
+        const pb = [1, 3, 5].map((i) => parseInt(b.slice(i, i + 2), 16))
+        const px = pa.map((v, i) => Math.round(v + (pb[i] - v) * f))
+        return `#${px.map((v) => v.toString(16).padStart(2, "0")).join("")}`
+    }
     const speedTrail = (trail: RobotTick[], color: string) => {
         const wBase = Math.max(2, cellPx * 0.2)
+        const canLerp = /^#[0-9a-fA-F]{6}$/.test(color) && /^#[0-9a-fA-F]{6}$/.test(colors.muted)
         return <Shape key="trail" listening={false} sceneFunc={(ctx, shape) => {
             for (let i = 1; i < trail.length; i++) {
                 const [x0, y0] = toPixel(trail[i - 1].pose[0], trail[i - 1].pose[1])
                 const [x1, y1] = toPixel(trail[i].pose[0], trail[i].pose[1])
                 const v = trail[i].v
-                const f = vmax > 0 && v !== undefined ? 0.25 + 0.75 * (v / vmax) : 1
+                const f = vmax > 0 && v !== undefined ? Math.min(1, v / vmax) : 1
                 ctx.beginPath()
                 ctx.moveTo(x0, y0)
                 ctx.lineTo(x1, y1)
-                ctx.setAttr("lineWidth", wBase * f)
+                ctx.setAttr("lineWidth", wBase)
                 ctx.setAttr("lineCap", "round")
-                ctx.setAttr("strokeStyle", color)
+                ctx.setAttr("strokeStyle", canLerp && f < 1 ? hexLerp(colors.muted, color, 0.25 + 0.75 * f) : color)
                 ctx.setAttr("globalAlpha", 0.9)
                 ctx.stroke()
             }
@@ -682,6 +689,11 @@ const LocalTracePlayer = ({
                 {finished && status
                     ? `${statusLabel(status)} · ${timeline.robot.length} ticks`
                     : `${t("step", "step")} ${step}/${timeline.steps}`}
+                {vmax > 0 && (
+                    <span className="text-muted font-normal">
+                        {" · "}{t("faded trail = braking", "색이 옅은 구간 = 감속")}
+                    </span>
+                )}
             </div>
 
             {footer}
