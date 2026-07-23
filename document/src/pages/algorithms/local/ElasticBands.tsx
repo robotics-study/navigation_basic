@@ -3,6 +3,7 @@ import {T, useTr} from "../../../libs/i18n";
 import Terms from "../../../components/math/Terms";
 import {BlockMath, InlineMath} from "../../../components/math/Tex";
 import ElasticBandsSandbox from "../../../components/panels/local/elastic_bands/ElasticBandsSandbox";
+import EbSymmetryStallDemo from "../../../components/panels/local/elastic_bands/EbSymmetryStallDemo";
 import BandForcesFigure from "../../../components/panels/local/elastic_bands/BandForcesFigure";
 import CodeTabs from "../../../components/CodeTabs";
 import Pseudocode from "../../../components/Pseudocode";
@@ -289,8 +290,8 @@ const ElasticBands = () => {
                     starts out embedded inside a multi-cell obstacle (the raw reference path cut through it):
                     the nearest single cell alone could point back inward, whereas the summed push from every
                     surrounding cell generally points away from the obstacle's interior. A perfectly symmetric
-                    embedding is the exception: the opposing pushes cancel to a stagnation point, which is
-                    exactly why the demo seats the obstacle asymmetrically across the band. The last piece is{" "}
+                    embedding is the exception: the opposing pushes cancel to a stagnation point — the
+                    Symmetry Stall section below demonstrates it live. The last piece is{" "}
                     <strong>tangent removal</strong>, applied to the repulsion only, and it is a new term this
                     section introduces:
                 </p>}
@@ -299,8 +300,8 @@ const ElasticBands = () => {
                     셀 장애물 내부에서 시작할 때(원본 참조 경로가 그 장애물을 관통했을 때) 중요해진다.
                     가장 가까운 셀 하나만 보면 방향이 오히려 안쪽을 가리킬 수 있지만, 주변 모든 셀에서
                     오는 힘을 합치면 대체로 장애물 내부에서 벗어나는 쪽을 향한다. 완벽히 대칭인 배치는
-                    예외다. 서로 반대편의 힘이 상쇄되어 정지점이 되므로, 데모는 바로 그 이유로 장애물을
-                    밴드에 비대칭으로 걸쳐 놓는다. 마지막 조각은
+                    예외다. 서로 반대편의 힘이 상쇄되어 정지점이 된다. 아래 대칭 정체 섹션이 이를
+                    라이브로 보여준다. 마지막 조각은
                     반발력에만 적용하는 <strong>접선 제거</strong>다. 이 절에서 새로 도입하는 항이다:
                 </p>}
             />
@@ -596,6 +597,32 @@ return (v, omega)`}/>
                     </>}
                 />
             </Proof>
+
+            <h2>{t("The Symmetry Stall", "대칭 정체")}</h2>
+            <T
+                en={<p>
+                    The band's whole engine is a sum of pushes, and sums can cancel. When an obstacle
+                    pierces the band <em>dead-center</em>, every occupied cell above the centerline has a
+                    mirror image below it: the summed repulsion on a bubble sitting exactly on that line is
+                    zero, the deformation force vanishes, and the band stays impaled on the block while the
+                    robot stalls at the start. The demo below reproduces it with the same parameters the
+                    main demo uses — only the geometry differs, and the cell-aligned block makes the mirror
+                    symmetry exact. This is why the main demo seats its obstacle asymmetrically, and it is
+                    the band-method cousin of the local-minimum trap on the Potential Fields page: both are
+                    force sums that a symmetric scene can silence.
+                </p>}
+                ko={<p>
+                    밴드를 움직이는 엔진은 결국 미는 힘들의 합이고, 합은 상쇄될 수 있다. 장애물이 밴드를{" "}
+                    <em>정확히 가운데로</em> 관통하면 중심선 위쪽의 모든 점유 셀에 아래쪽 거울상이
+                    존재한다. 중심선 위에 놓인 bubble이 받는 합산 반발은 0이고, 변형 힘이 사라져 밴드는
+                    블록에 꽂힌 채로 남고, 로봇은 출발점에서 정체된다. 아래 데모는 메인 데모와 같은
+                    파라미터로 이를 재현한다. 다른 것은 기하뿐이고, 셀 경계에 맞춘 블록이 거울 대칭을
+                    정확하게 만든다. 메인 데모가 장애물을 비대칭으로 걸쳐 놓는 이유가 이것이고,
+                    Potential Fields 페이지의 local minimum 함정과 사촌 관계다. 둘 다 대칭인 장면이
+                    침묵시킬 수 있는 힘의 합이다.
+                </p>}
+            />
+            <EbSymmetryStallDemo/>
 
             <h2>Demo</h2>
             <T
