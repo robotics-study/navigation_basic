@@ -162,6 +162,9 @@ export interface LocalTracePlayerProps {
     footprintRadius?: number;
     // 추종 계열: 로봇 중심 lookahead 원(반경 = 로봇→이번 tick 후보점 거리)을 그린다.
     showLookahead?: boolean;
+    // 추종 계열: 차량 위에 현재 heading ray를 덧그린다. 차체 회전만으로는 향한 방향이
+    // 흐릿해서, lookahead 겨냥선과의 사이 각(α)을 눈으로 보이게 하는 용도다.
+    showHeadingRay?: boolean;
     // Stanley: crosstrack 선분(측정점→참조 경로 최근접점)을 그린다. Stanley는 오차를
     // 로봇 중심이 아니라 전륜축에서 재므로, crosstrackWheelbase가 주어지면 측정점을
     // pose에서 heading 방향으로 그만큼 앞선 전륜축으로 옮긴다.
@@ -185,7 +188,7 @@ export interface LocalTracePlayerProps {
 
 const LocalTracePlayer = ({
                               map, events, startPose, goal, referencePath, footprintRadius,
-                              showLookahead, showCrosstrack, crosstrackWheelbase, showBand = true,
+                              showLookahead, showHeadingRay, showCrosstrack, crosstrackWheelbase, showBand = true,
                               auxCircleRadius, panel = 340,
                               autoPlay = true, onPaintCell, onMoveStart, onMoveGoal, onReset, footer,
                           }: LocalTracePlayerProps) => {
@@ -325,9 +328,8 @@ const LocalTracePlayer = ({
         [timeline],
     )
 
-    const headingArrow = (pose: Pose) => {
+    const headingArrow = (pose: Pose, len = cellPx * 0.9) => {
         const [px, py] = toPixel(pose[0], pose[1])
-        const len = cellPx * 0.9
         // world θ(ccw, +x 기준) → canvas 회전은 y축 반전 때문에 부호가 반대다(GridCanvas와 동일 관례).
         const dx = Math.cos(-pose[2]) * len
         const dy = Math.sin(-pose[2]) * len
@@ -644,6 +646,9 @@ const LocalTracePlayer = ({
                     })()}
                     {/* 로봇: footprint + 차량 (없으면 heading 화살표만) */}
                     {footprintRadius ? vehicle(currentPose, footprintRadius) : headingArrow(currentPose)}
+                    {/* heading ray: 차체보다 길게 뽑아 lookahead 겨냥선과의 각(α)이 보이게 한다 */}
+                    {showHeadingRay && footprintRadius !== undefined &&
+                        headingArrow(currentPose, Math.max(cellPx * 1.6, footprintRadius * pxPerWorld * 2.2))}
                     {/* 시작/목표 마커 */}
                     <Circle x={startPx[0]} y={startPx[1]} radius={cellPx * 0.2} fill={colors.accent}
                             stroke={colors.bg} strokeWidth={Math.max(1, cellPx * 0.05)}
