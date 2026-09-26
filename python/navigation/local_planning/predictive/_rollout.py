@@ -35,8 +35,10 @@ OMEGA_EPS = 1e-9
 # Extra query band beyond the obstacle-penalty activation distance. The hinge
 # term is nonzero only where clearance c_k < min_obstacle_dist, i.e. where the
 # nearest occupied cell is within min_obstacle_dist + footprint_radius; querying
-# one half-cell further lets the finite-difference gradient see an obstacle just
-# as it enters the active band instead of only once c_k has already crossed it.
+# one whole grid cell further lets the finite-difference gradient see an obstacle
+# just as it enters the active band instead of only once c_k has already crossed
+# it. 0.5 is exactly one cell at the resolution every map in maps/grid/ uses,
+# so this is a cell, not a fraction of one.
 _QUERY_MARGIN = 0.5
 
 
