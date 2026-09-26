@@ -12,8 +12,9 @@ import {NumpyRandom} from "./numpy_rng";
 
 // 장애물 페널티 활성 거리 너머로 더 질의하는 여유. hinge 항은 clearance c_k <
 // min_obstacle_dist인 곳(최근접 occupied가 min_obstacle_dist + footprint_radius 안)에서만
-// nonzero라, 반 셀 더 질의해야 유한차분 gradient가 장애물이 활성 대역에 막 들어오는
-// 순간을 본다 (py _rollout._QUERY_MARGIN 미러).
+// nonzero라, 격자 셀 하나만큼 더 질의해야 유한차분 gradient가 장애물이 활성 대역에 막
+// 들어오는 순간을 본다. 0.5는 maps/grid/ 모든 맵이 쓰는 해상도에서 정확히 셀 하나다
+// (py _rollout._QUERY_MARGIN 미러).
 const QUERY_MARGIN = 0.5
 
 // box 투영/가속 clamp 공용 헬퍼 (py _rollout.clamp 미러).
