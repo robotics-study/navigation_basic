@@ -1,12 +1,12 @@
-"""Shared geometry for the band family (Elastic Bands, TEB).
+"""Arc-length polyline geometry for the band family (Elastic Bands, TEB).
 
 Both members represent their state as a polyline (bubble centers / poses) that
-gets deformed against the obstacle field each tick, so both need the same two
-primitives: the closest occupied cell to a point (bubble clearance / obstacle
-gradient) and arc-length resampling of a polyline (band initialization / TEB's
-progress projection). Kept as free functions, mirroring the
-`local_planning/_geometry.py` precedent for machinery shared across a family's
-planners rather than owned by one.
+gets deformed against the obstacle field each tick, so both need arc-length
+sampling/resampling of a polyline (band initialization / TEB's progress
+projection). Kept as free functions, mirroring the `local_planning/_geometry.py`
+precedent for machinery shared across a family's planners rather than owned by
+one. (Nearest-occupied lookup, once band-only, now lives in the category-shared
+`_geometry.py` since the predictive family reuses it too.)
 """
 
 from __future__ import annotations
@@ -14,30 +14,9 @@ from __future__ import annotations
 import math
 from collections.abc import Sequence
 
-from navigation.core.capabilities import ObstacleQuery
 from navigation.core.types import Point
 
 from .._geometry import sq_dist
-
-
-def nearest_occupied(space: ObstacleQuery, p: Point, radius: float) -> tuple[Point | None, float]:
-    """Closest occupied cell center to ``p`` within ``radius``, and the
-    continuous (non-quantized) distance to it -- (None, inf) if none.
-
-    Strict ``<`` keeps the first tie in ``occupied_within``'s row/col-ascending
-    list, so a symmetric cluster of equidistant cells resolves the same way in
-    every language rather than depending on iteration/comparison order.
-    """
-    best: Point | None = None
-    best_sq = float("inf")
-    for o in space.occupied_within(p, radius):
-        d = sq_dist(p, o)
-        if d < best_sq:
-            best_sq = d
-            best = o
-    if best is None:
-        return None, float("inf")
-    return best, math.sqrt(best_sq)
 
 
 def point_at_arclength(points: Sequence[Point], s: float) -> Point:

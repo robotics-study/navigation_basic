@@ -3,20 +3,22 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <optional>
+#include <utility>
 #include <vector>
 
+#include "navigation/core/capabilities.hpp"
 #include "navigation/core/types.hpp"
 
-// Angle utility shared across the local_planning category. Header-only, small
-// enough that a .cpp would only add a translation unit for no benefit — the
-// exact-arc unicycle integrator and the reactive steering law both need a
-// canonical heading range so pose theta stays comparable tick to tick.
-//
-// Also holds the polyline primitives (nearest point on a segment, squared
-// distance, monotonic progress-index advance) needed by both the tracking
-// family (path.hpp's lookahead circle) and the band family (arc-length
-// progress projection) — promoted out of tracking/path.{hpp,cpp} so a new
-// family can reuse them without an include across families.
+// Geometry shared across the local_planning category. The angle utility and the
+// polyline primitives (nearest point on a segment, squared distance, monotonic
+// progress-index advance) stay inline in this header — each needed by both the
+// tracking family (path.hpp's lookahead circle) and the band family (arc-length
+// progress projection), promoted out of tracking/path.{hpp,cpp} so a new family
+// can reuse them without an include across families. The nearest-occupied
+// lookup, once band-only, is declared here and defined in geometry.cpp since the
+// predictive family (MPC/MPPI obstacle cost) reuses the exact same helper the
+// band family uses for bubble/pose clearance.
 namespace navigation::local_planning {
 
 // Normalizes `angle` (radians) to (-pi, pi].
@@ -64,5 +66,14 @@ inline int advance_progress_index(const std::vector<core::Point>& path, const co
   }
   return best_index;
 }
+
+// Closest occupied cell center to p within radius, and the continuous
+// (non-quantized) distance to it -- nullopt (with distance +inf) if none.
+// Strict `<` keeps the first tie in occupied_within's row/col-ascending list,
+// so a symmetric cluster of equidistant cells resolves the same way in every
+// language rather than depending on iteration/comparison order. Defined in
+// geometry.cpp (not inline) since it loops over an obstacle query.
+std::pair<std::optional<core::Point>, double> nearest_occupied(const core::ObstacleQuery& space,
+                                                               const core::Point& p, double radius);
 
 }  // namespace navigation::local_planning

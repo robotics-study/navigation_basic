@@ -127,3 +127,26 @@ export function occupiedWithin(map: GridMap, center: Point, radius: number): Poi
     }
     return out
 }
+
+// radius 내 최근접 occupied cell 중심과 그 연속 거리 — occupiedWithin의 row/col 오름차순
+// 리스트에서 strict '<'로 첫 동률을 유지한다(3언어 결정론). radius 내 occupied가 없으면
+// [null, Infinity]. 셀 양자화 계단인 distanceToNearest와 달리 질의점 p에 대해 연속이라,
+// 유한차분/gradient 옵티마이저(teb·predictive)가 셀 내부에서도 유효한 clearance를 얻는다.
+// band 패밀리(teb) 전용이던 것을 predictive가 두 번째 소비자로 필요로 해, 격자 질의
+// primitive occupiedWithin/distanceToNearest 옆으로 승격했다(py local_planning/_geometry
+// nearest_occupied 미러).
+export function nearestOccupied(map: GridMap, p: Point, radius: number): [Point | null, number] {
+    let best: Point | null = null
+    let bestSq = Infinity
+    for (const o of occupiedWithin(map, p, radius)) {
+        const dx = p[0] - o[0]
+        const dy = p[1] - o[1]
+        const d = dx * dx + dy * dy
+        if (d < bestSq) {
+            bestSq = d
+            best = o
+        }
+    }
+    if (best === null) return [null, Infinity]
+    return [best, Math.sqrt(bestSq)]
+}

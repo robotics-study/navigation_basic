@@ -21,7 +21,7 @@ from conftest import REPO_ROOT
 from navigation.core.params import ParamError, ParamSet
 from navigation.core.trace import TraceRecorder
 from navigation.core.types import LocalTask, RobotState
-from navigation.local_planning.band._band import nearest_occupied
+from navigation.local_planning._geometry import nearest_occupied
 from navigation.local_planning.band.teb import TebPlanner
 from navigation.local_planning.simulation import SimConfig, SimStatus, integrate_unicycle, simulate
 from navigation.maps.loader import load_map, load_scenario

@@ -31,4 +31,6 @@ export {runStanley} from "../src/libs/algorithms/stanley";
 export {runRegulatedPurePursuit} from "../src/libs/algorithms/regulated_pure_pursuit";
 export {runElasticBands} from "../src/libs/algorithms/elastic_bands";
 export {runTeb} from "../src/libs/algorithms/teb";
+export {runMpc} from "../src/libs/algorithms/mpc";
+export {runMppi} from "../src/libs/algorithms/mppi";
 export {parseGridMap} from "../src/libs/grid";
