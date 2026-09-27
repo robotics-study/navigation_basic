@@ -163,6 +163,18 @@ bool OccupancyGrid2D::is_blocked(const Cell& s) const {
   return !is_free(s.row, s.col);
 }
 
+std::vector<Cell> OccupancyGrid2D::occupied_cells() const {
+  // Row-major scan in the exact order Python's np.argwhere(~free) yields, so both
+  // languages seed an LPA* model from byte-identical enumeration.
+  std::vector<Cell> out;
+  for (int row = 0; row < rows_; ++row) {
+    for (int col = 0; col < cols_; ++col) {
+      if (!free_[static_cast<size_t>(row) * cols_ + col]) out.push_back(Cell{row, col});
+    }
+  }
+  return out;
+}
+
 double OccupancyGrid2D::heuristic(const Cell& a, const Cell& b) const {
   int dr = std::abs(a.row - b.row);
   int dc = std::abs(a.col - b.col);

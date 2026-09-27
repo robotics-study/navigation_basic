@@ -17,6 +17,10 @@ export interface GridTimeline {
     // 실행형 planner(D* Lite 등)의 주행·감지 이벤트. 비어 있으면 일반 one-shot 탐색.
     robot: Array<{step: number; cell: Cell}>;
     revealed: Array<{step: number; cell: Cell}>;
+    // lifelong replanner(LPA*)의 cost change(obstacle_changed): 반전 후 상태 blocked와
+    // 이벤트 순서. D* Lite 의 fog-in(revealed)과 달리 배경은 round 0 부터 알던
+    // ground-truth 지도로 고정이고, 각 반전이 그 시점에 셀을 다시 칠한다.
+    changes: Array<{step: number; cell: Cell; blocked: boolean}>;
     // anytime planner(ARA* 등)는 path_found를 여러 번 방출한다 — 개선 순서대로 쌓인다.
     // cost가 이벤트에 없으면 8-connected unit/√2 스텝 합으로 계산해 채운다.
     paths: Array<{step: number; path: Cell[]; cost: number}>;
@@ -88,6 +92,7 @@ export function buildGridTimeline(events: TraceEvent[]): GridTimeline {
         samples: [],
         robot: [],
         revealed: [],
+        changes: [],
         paths: [],
         path: [],
         pathStates: [],
@@ -137,6 +142,11 @@ export function buildGridTimeline(events: TraceEvent[]): GridTimeline {
             case "obstacle_revealed": {
                 const cell = asCell(ev.state)
                 if (cell) timeline.revealed.push({step, cell})
+                break
+            }
+            case "obstacle_changed": {
+                const cell = asCell(ev.state)
+                if (cell) timeline.changes.push({step, cell, blocked: ev.blocked ?? true})
                 break
             }
             case "path_found":

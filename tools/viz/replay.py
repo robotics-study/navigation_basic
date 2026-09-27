@@ -167,6 +167,11 @@ class Scene:
     robot_headings: list[float] = field(default_factory=list)
     revealed: list[Point] = field(default_factory=list)
     revealed_orders: list[int] = field(default_factory=list)
+    # Lifelong replanning (LPA*): cells whose occupancy flipped mid-run (obstacle_changed,
+    # with the post-flip state). Unlike D* Lite's fog-in, the background stays the
+    # ground-truth map — LPA* knows it from round 0 — and each flip repaints its cell.
+    changes: list[tuple[Point, bool]] = field(default_factory=list)  # (pos, now_blocked)
+    change_orders: list[int] = field(default_factory=list)
     # Local planning (Potential Fields): attractive/repulsive force vectors at the
     # pose in force order, one force_computed event per control tick.
     forces: list[tuple[Point, Point, Point]] = field(default_factory=list)  # (pos, F_att, F_rep)
@@ -345,6 +350,10 @@ def build_scene(
             scene.revealed.append(to_world(ev["state"]))
             scene.revealed_orders.append(order)
             order += 1
+        elif name == "obstacle_changed" and "state" in ev:
+            scene.changes.append((to_world(ev["state"]), bool(ev.get("blocked", True))))
+            scene.change_orders.append(order)
+            order += 1
         elif name == "force_computed" and "state" in ev:
             data = ev.get("data") or {}
             f_att = (float(data.get("fx_att", 0.0)), float(data.get("fy_att", 0.0)))
@@ -402,7 +411,9 @@ def _draw(
     # so its background is all-free and the true walls fog in cell by cell. Local
     # planners execute on a KNOWN map, so robot_moved alone (no reveals) must NOT flip
     # the background — only a planner that actually senses obstacles (obstacle_revealed,
-    # D* Lite family) has belief != ground truth.
+    # D* Lite family) has belief != ground truth. LPA* traces have neither: its model IS
+    # the ground truth from round 0, and obstacle_changed flips repaint single cells via
+    # the change overlay below instead.
     dynamic = bool(scene.revealed)
     if dynamic:
         ax.imshow(
@@ -483,6 +494,20 @@ def _draw(
                 np.ma.masked_invalid(overlay), cmap="gray", origin="upper",
                 extent=scene.extent, vmin=0.0, vmax=1.0, interpolation="nearest", zorder=1.5,
             )
+    n_changes = bisect_right(scene.change_orders, cutoff)
+    if n_changes:
+        # LPA* (lifelong): the ground-truth background above is what the planner knew
+        # from round 0; each obstacle_changed repaints its cell to the post-flip value
+        # (occupied -> dark over free ground truth, freed -> light over walled ground
+        # truth) at exactly its event order.
+        overlay = np.full(scene.grid.free_mask().shape, np.nan)
+        for (p, blocked_now) in scene.changes[:n_changes]:
+            row, col = scene.grid.world_to_cell(p[0], p[1])
+            overlay[row, col] = 0.0 if blocked_now else 1.0
+        ax.imshow(
+            np.ma.masked_invalid(overlay), cmap="gray", origin="upper",
+            extent=scene.extent, vmin=0.0, vmax=1.0, interpolation="nearest", zorder=1.6,
+        )
     # Executed trail: D* Lite (dynamic background above) and every local planner (known,
     # static background) both walk one cell/pose per robot_moved, so this no longer
     # nests under `dynamic` — only the fog overlay above is background-mode-specific.
@@ -688,7 +713,7 @@ def _draw(
         robot_shown=n_robot > 0, revealed_shown=n_revealed > 0, headings_shown=drew_headings,
         reference_path_shown=reference_path_shown, force_shown=n_force > 0,
         histogram_shown=n_hist > 0, band_shown=n_band > 0, candidate_shown=bool(tick_candidates),
-        rollout_shown=rollouts_shown, agents_shown=agents_shown,
+        rollout_shown=rollouts_shown, agents_shown=agents_shown, changed_shown=n_changes > 0,
     )
 
 
@@ -773,7 +798,7 @@ def _draw_legend(
     robot_shown: bool = False, revealed_shown: bool = False, headings_shown: bool = False,
     reference_path_shown: bool = False, force_shown: bool = False,
     histogram_shown: bool = False, band_shown: bool = False, candidate_shown: bool = False,
-    rollout_shown: bool = False, agents_shown: bool = False,
+    rollout_shown: bool = False, agents_shown: bool = False, changed_shown: bool = False,
 ) -> None:
     from matplotlib.lines import Line2D
 
@@ -789,6 +814,15 @@ def _draw_legend(
     if revealed_shown:
         handles.append(_mark_proxy((0.1, 0.1, 0.1, 1.0)))
         labels.append("sensed obstacle")
+    if changed_shown:
+        # LPA* revisions flip single cells; the glyph matches what the overlay paints.
+        handles.append(_mark_proxy((0.1, 0.1, 0.1, 1.0)))
+        labels.append("revision -> occupied")
+        handles.append(Line2D(
+            [0], [0], marker="s", linestyle="none", markerfacecolor=(1.0, 1.0, 1.0, 1.0),
+            markeredgecolor="#94a3b8", markersize=6,
+        ))
+        labels.append("revision -> free")
     if reference_path_shown:
         handles.append(Line2D([0], [0], color=_REFERENCE_PATH_COLOR, linewidth=1.4, linestyle="--"))
         labels.append("reference path")

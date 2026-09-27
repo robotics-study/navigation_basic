@@ -2,7 +2,7 @@
 
 Organised by lineage into two sub-packages:
 - `search` — graph-search planners: BFS, Dijkstra, A* (`DiscreteSpace`), Theta*
-  (`LineOfSightSpace`), D* Lite (`DynamicGridSpace`).
+  (`LineOfSightSpace`), LPA* and D* Lite (`DynamicGridSpace`).
 - `sampling` — sampling-based planners (`SamplingSpace`): RRT family, PRM
   family, FMT*, BIT*.
 
@@ -41,6 +41,7 @@ from .search import (
     DStarLite,
     HybridAStar,
     LazyThetaStar,
+    LpaStar,
     ThetaStar,
     VisibilityAStarPlanner,
 )
@@ -52,6 +53,7 @@ __all__ = [
     "JPS",
     "ARAStar",
     "ADStar",
+    "LpaStar",
     "DStarLite",
     "ThetaStar",
     "LazyThetaStar",

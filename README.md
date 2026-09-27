@@ -52,14 +52,14 @@ visualization, interactive in-browser demos, and a benchmark matrix.*
 |---|---|---|
 | [BFS](https://robotics-study.github.io/navigation_basic/algo/bfs) — Moore 1959 | [Dijkstra](https://robotics-study.github.io/navigation_basic/algo/dijkstra) — Dijkstra 1959 | [A*](https://robotics-study.github.io/navigation_basic/algo/astar) — Hart et al. 1968 |
 | [JPS](https://robotics-study.github.io/navigation_basic/algo/jps) — Harabor & Grastien 2011 | [Theta*](https://robotics-study.github.io/navigation_basic/algo/theta_star) — Nash et al. 2007 | [Lazy Theta*](https://robotics-study.github.io/navigation_basic/algo/lazy_theta_star) — Nash, Koenig & Tovey 2010 |
-| [Visibility A*](https://robotics-study.github.io/navigation_basic/algo/visibility_astar) — cell-centre any-angle | [Anya](https://robotics-study.github.io/navigation_basic/algo/anya) — Harabor et al. 2016 | [D* Lite](https://robotics-study.github.io/navigation_basic/algo/dstar_lite) — Koenig & Likhachev 2002 |
-| [ARA*](https://robotics-study.github.io/navigation_basic/algo/ara_star) — Likhachev, Gordon & Thrun 2003 | [AD*](https://robotics-study.github.io/navigation_basic/algo/ad_star) — Likhachev et al. 2005 | [Hybrid A*](https://robotics-study.github.io/navigation_basic/algo/hybrid_astar) — Dolgov et al. 2008 |
-| [PRM](https://robotics-study.github.io/navigation_basic/algo/prm) — Kavraki et al. 1996 | [PRM*](https://robotics-study.github.io/navigation_basic/algo/prm_star) — Karaman & Frazzoli 2011 | [RRT](https://robotics-study.github.io/navigation_basic/algo/rrt) — LaValle 1998 |
-| [RRT-Connect](https://robotics-study.github.io/navigation_basic/algo/rrt_connect) — Kuffner & LaValle 2000 | [RRT*](https://robotics-study.github.io/navigation_basic/algo/rrt_star) — Karaman & Frazzoli 2011 | [Informed RRT*](https://robotics-study.github.io/navigation_basic/algo/informed_rrt_star) — Gammell et al. 2014 |
-| [Fast-RRT](https://robotics-study.github.io/navigation_basic/algo/fast_rrt) — Wu et al. 2021 | [FMT*](https://robotics-study.github.io/navigation_basic/algo/fmt_star) — Janson et al. 2015 | [BIT*](https://robotics-study.github.io/navigation_basic/algo/bit_star) — Gammell et al. 2015 |
-| [ABIT*](https://robotics-study.github.io/navigation_basic/algo/abit_star) — Strub & Gammell 2020 | [AIT*](https://robotics-study.github.io/navigation_basic/algo/ait_star) — Strub & Gammell 2020 | [EIT*](https://robotics-study.github.io/navigation_basic/algo/eit_star) — Strub & Gammell 2022 |
-| [FCIT*](https://robotics-study.github.io/navigation_basic/algo/fcit_star) — Wilson et al. 2025 | [SST](https://robotics-study.github.io/navigation_basic/algo/sst) — Li, Littlefield & Bekris 2016 | [Kinodynamic RRT*](https://robotics-study.github.io/navigation_basic/algo/kinodynamic_rrt_star) — Webb & van den Berg 2013 |
-| [LQR-RRT*](https://robotics-study.github.io/navigation_basic/algo/lqr_rrt_star) — Perez et al. 2012 | | |
+| [Visibility A*](https://robotics-study.github.io/navigation_basic/algo/visibility_astar) — cell-centre any-angle | [Anya](https://robotics-study.github.io/navigation_basic/algo/anya) — Harabor et al. 2016 | [LPA*](https://robotics-study.github.io/navigation_basic/algo/lpa_star) — Koenig & Likhachev 2001 |
+| [D* Lite](https://robotics-study.github.io/navigation_basic/algo/dstar_lite) — Koenig & Likhachev 2002 | [ARA*](https://robotics-study.github.io/navigation_basic/algo/ara_star) — Likhachev, Gordon & Thrun 2003 | [AD*](https://robotics-study.github.io/navigation_basic/algo/ad_star) — Likhachev et al. 2005 |
+| [Hybrid A*](https://robotics-study.github.io/navigation_basic/algo/hybrid_astar) — Dolgov et al. 2008 | [PRM](https://robotics-study.github.io/navigation_basic/algo/prm) — Kavraki et al. 1996 | [PRM*](https://robotics-study.github.io/navigation_basic/algo/prm_star) — Karaman & Frazzoli 2011 |
+| [RRT](https://robotics-study.github.io/navigation_basic/algo/rrt) — LaValle 1998 | [RRT-Connect](https://robotics-study.github.io/navigation_basic/algo/rrt_connect) — Kuffner & LaValle 2000 | [RRT*](https://robotics-study.github.io/navigation_basic/algo/rrt_star) — Karaman & Frazzoli 2011 |
+| [Informed RRT*](https://robotics-study.github.io/navigation_basic/algo/informed_rrt_star) — Gammell et al. 2014 | [Fast-RRT](https://robotics-study.github.io/navigation_basic/algo/fast_rrt) — Wu et al. 2021 | [FMT*](https://robotics-study.github.io/navigation_basic/algo/fmt_star) — Janson et al. 2015 |
+| [BIT*](https://robotics-study.github.io/navigation_basic/algo/bit_star) — Gammell et al. 2015 | [ABIT*](https://robotics-study.github.io/navigation_basic/algo/abit_star) — Strub & Gammell 2020 | [AIT*](https://robotics-study.github.io/navigation_basic/algo/ait_star) — Strub & Gammell 2020 |
+| [EIT*](https://robotics-study.github.io/navigation_basic/algo/eit_star) — Strub & Gammell 2022 | [FCIT*](https://robotics-study.github.io/navigation_basic/algo/fcit_star) — Wilson et al. 2025 | [SST](https://robotics-study.github.io/navigation_basic/algo/sst) — Li, Littlefield & Bekris 2016 |
+| [Kinodynamic RRT*](https://robotics-study.github.io/navigation_basic/algo/kinodynamic_rrt_star) — Webb & van den Berg 2013 | [LQR-RRT*](https://robotics-study.github.io/navigation_basic/algo/lqr_rrt_star) — Perez et al. 2012 | |
 
 > 사이트 소스는 `document/` (React + Vite SPA). `main` 에 push 되면 GitHub Actions 가
 > 빌드해 GitHub Pages 로 배포한다 (`.github/workflows/deploy.yml`).
@@ -80,6 +80,7 @@ visualization, interactive in-browser demos, and a benchmark matrix.*
 | global_planning | ARA* | ✅ | ✅ | Likhachev, Gordon & Thrun (2003) |
 | global_planning | AD* | ✅ | ✅ | Likhachev, Ferguson, Gordon, Stentz & Thrun (2005) |
 | global_planning | JPS | ✅ | ✅ | Harabor & Grastien (2011) |
+| global_planning | LPA* | ✅ | ✅ | Koenig & Likhachev (2001) · Koenig, Likhachev & Furcy (2004) |
 | global_planning | D* Lite | ✅ | ✅ | Koenig & Likhachev (2002) |
 | global_planning | Theta* | ✅ | ✅ | Nash, Daniel, Koenig & Felner (2007) |
 | global_planning | Lazy Theta* | ✅ | ✅ | Nash, Koenig & Tovey (2010) |

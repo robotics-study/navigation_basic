@@ -1,0 +1,5 @@
+algorithm: lpa_star
+category: global_planning
+# LPA*는 튜닝 파라미터가 없다 (논문 단순 버전의 유일한 자유도가 고정 start/goal
+# 이고, 휴리스틱은 OccupancyGrid2D의 octile로 고정).
+params: []

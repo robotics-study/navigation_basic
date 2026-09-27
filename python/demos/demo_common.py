@@ -10,10 +10,12 @@ from __future__ import annotations
 import argparse
 import json
 from collections.abc import Callable
+from typing import Protocol
 
+from navigation.core.capabilities import Capability, DynamicGridSpace
 from navigation.core.params import ParamSet
 from navigation.core.planner import GlobalPlanner, LocalPlanner
-from navigation.core.trace import open_trace
+from navigation.core.trace import TraceRecorder, open_trace
 from navigation.core.types import Cell, LocalTask, PlanResult, Point, Pose, RobotState
 from navigation.local_planning.simulation import SimConfig, simulate
 from navigation.local_planning.velocity._velocity_obstacle import VelocityObstaclePlanner
@@ -25,6 +27,30 @@ from navigation.maps.occupancy_grid import OccupancyGrid2D
 PlannerFactory = Callable[[ParamSet], GlobalPlanner]
 LocalPlannerFactory = Callable[[ParamSet], LocalPlanner]
 VelocityPlannerFactory = Callable[[ParamSet], VelocityObstaclePlanner]
+
+
+class ReplanningPlanner(Protocol):
+    """A lifelong replanner (LPA*): fixed start/goal, plan() re-runs after each
+    cost-change batch the scenario declares. Structural protocol (same trick as the
+    capability Protocols) so demo_common stays free of algorithm imports."""
+
+    @property
+    def name(self) -> str: ...
+
+    def required_capabilities(self) -> set[Capability]: ...
+
+    def plan(
+        self,
+        space: DynamicGridSpace[Cell],
+        start: Cell,
+        goal: Cell,
+        recorder: TraceRecorder | None = ...,
+    ) -> PlanResult[Cell]: ...
+
+    def apply_revision(self, cells: list[Cell], blocked: bool) -> None: ...
+
+
+ReplanningFactory = Callable[[ParamSet], ReplanningPlanner]
 
 
 def _parse_args(name: str) -> argparse.Namespace:
@@ -70,6 +96,32 @@ def run_discrete(name: str, factory: PlannerFactory) -> None:
     with open_trace(args.trace) as recorder:
         recorder.planning_started(planner.name, args.map, params.values())
         result = planner.plan(grid, start, goal, recorder)
+    _report(planner.name, result)
+
+
+def run_replan(name: str, factory: ReplanningFactory) -> None:
+    # Lifelong-replanning assembly (LPA*): one plan() per round — round 0 on the
+    # base map, then every scenario `revisions:` batch is handed to the planner
+    # before it re-plans from its retained search state. The scenario carries no
+    # robot motion: LPA* plans a fresh full path each round (no execution model).
+    args = _parse_args(name)
+    params, grid, start_world, goal_world = _load(args)
+    planner = factory(params)
+    start: Cell = grid.world_to_cell(*start_world)
+    goal: Cell = grid.world_to_cell(*goal_world)
+    scenario = load_scenario(args.scenario)
+    # World-coord revision cells -> grid cells (coordinate frames stay owned by
+    # the map layer, per the repo rule).
+    batches = [
+        ([grid.world_to_cell(x, y) for x, y in rev.cells], rev.blocked)
+        for rev in scenario.revisions
+    ]
+    with open_trace(args.trace) as recorder:
+        recorder.planning_started(planner.name, args.map, params.values())
+        result = planner.plan(grid, start, goal, recorder)
+        for cells, blocked in batches:
+            planner.apply_revision(cells, blocked)
+            result = planner.plan(grid, start, goal, recorder)
     _report(planner.name, result)
 
 

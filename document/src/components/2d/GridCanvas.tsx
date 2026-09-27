@@ -34,6 +34,10 @@ interface GridCanvasProps {
     carLength?: number;
     // sandbox 상호작용 — 핸들러가 있을 때만 활성화된다.
     onPaintCell?: (row: number, col: number, occupied: boolean) => void;
+    // 페인팅 붓이 읽는 점유 배열 (기본: map.occupied). lifelong replanner(LPA*)
+    // sandbox에서는 배경(ground truth)과 무관하게 반전까지 반영된 모델 상태를 넘긴다 —
+    // 그려진 벽은 배경과 다를 수 있으므로 붓 기준도 모델이어야 한다.
+    paintOccupied?: boolean[];
     onMoveStart?: (cell: Cell) => void;
     onMoveGoal?: (cell: Cell) => void;
 }
@@ -42,7 +46,7 @@ const GridCanvas = ({
                         map, panel, timeline, step = Infinity, start, goal,
                         showTree = false, overlayPath, truePath, shadowCells, carPose, goalPose,
                         carLength = 1.35,
-                        onPaintCell, onMoveStart, onMoveGoal,
+                        onPaintCell, paintOccupied, onMoveStart, onMoveGoal,
                     }: GridCanvasProps) => {
     const colors = useCanvasColors();
     const cell = panel / Math.max(map.width, map.height);
@@ -114,6 +118,14 @@ const GridCanvas = ({
     const robotTrail = useMemo(
         () => executed ? timeline!.robot.filter((r) => r.step <= step).map((r) => r.cell) : [],
         [executed, timeline, step],
+    )
+    // lifelong replanner(LPA*): 배경은 round 0부터 알던 ground-truth 지도다 — LPA*는
+    // 세계를 감지하지 않으므로 executed(주행 재생)와 무관하게 벽을 진하게 그린다.
+    // obstacle_changed가 그 이벤트 시점부터 셀을 반전 상태로 다시 칠한다:
+    // blocked → 정적 벽과 같은 색, freed → 캔버스 배경색으로 벽을 완전히 덮음.
+    const changesVisible = useMemo(
+        () => timeline ? timeline.changes.filter((c) => c.step <= step) : [],
+        [timeline, step],
     )
 
     // 벽 페인팅: pointer down 시 첫 셀의 반전값을 붓 값으로 삼아 드래그 내내 유지한다.
@@ -200,7 +212,7 @@ const GridCanvas = ({
                    // 시작/골 근처에서 드래그를 시작하면 페인팅이 아니라 endpoint 이동이다.
                    const pos = e.target.getStage()?.getPointerPosition()
                    if (pos && (nearMarker(start, pos.x, pos.y) || nearMarker(goal, pos.x, pos.y))) return
-                   paintValue.current = !map.occupied[c[0] * map.width + c[1]]
+                   paintValue.current = !(paintOccupied ?? map.occupied)[c[0] * map.width + c[1]]
                    paint(c)
                }}
                onPointerMove={(e) => {
@@ -253,6 +265,14 @@ const GridCanvas = ({
                 {revealedVisible.map((r, i) => (
                     <Rect key={`rv${i}`} x={r.cell[1] * cell} y={r.cell[0] * cell}
                           width={cell} height={cell} fill={colors.text} opacity={0.78}/>
+                ))}
+                {/* lifelong replanner(LPA*) revision — 반전 시점 이후에만 보인다 */}
+                {changesVisible.map((c, i) => c.blocked ? (
+                    <Rect key={`ch${i}`} x={c.cell[1] * cell} y={c.cell[0] * cell}
+                          width={cell} height={cell} fill={colors.text} opacity={0.78}/>
+                ) : (
+                    <Rect key={`ch${i}`} x={c.cell[1] * cell} y={c.cell[0] * cell}
+                          width={cell} height={cell} fill={colors.surface} opacity={1}/>
                 ))}
                 {/* grid 선 — 셀이 충분히 클 때만 (작으면 노이즈) */}
                 {cell >= 9 && Array.from({length: map.width + 1}, (_, k) => (

@@ -53,11 +53,15 @@ class SamplingSpace {
   virtual State steer(const State& a, const State& b, double eta) const = 0;
 };
 
-// Dynamic-replanning search view for D* Lite (Koenig & Likhachev 2002). Standalone
-// (NOT a DiscreteSpace): its neighbor query takes a belief — the planner's own set
-// of currently-known blocked cells — instead of reading ground truth, so it cannot
-// share the truth-baked neighbors() of DiscreteSpace. Only maps with real occupancy
-// + geometry can answer it (GraphMap/TopologyMap have none).
+// Dynamic-replanning search view for D* Lite (Koenig & Likhachev 2002) and LPA*
+// (Koenig, Likhachev & Furcy 2004). Standalone (NOT a DiscreteSpace): its neighbor
+// query takes a belief — the planner's own set of currently-known blocked cells —
+// instead of reading ground truth, so it cannot share the truth-baked neighbors()
+// of DiscreteSpace. Only maps with real occupancy + geometry can answer it
+// (GraphMap/TopologyMap have none). The two consumers differ only in how their
+// model gets its cells: D* Lite grows an initially-empty belief by sensing
+// (is_blocked), LPA* seeds a complete model from occupied_cells() at plan time
+// and flips single cells as costs change.
 template <class State>
 class DynamicGridSpace {
  public:
@@ -71,6 +75,11 @@ class DynamicGridSpace {
   // Ground-truth sensor: true iff `s` is occupied OR out of bounds. The only method
   // that reads real occupancy; called only on cells inside the sensor footprint.
   virtual bool is_blocked(const State& s) const = 0;
+  // Every currently-occupied in-bounds cell, row ascending then column ascending
+  // (deterministic across runs/languages). For planners that seed a COMPLETE model
+  // (LPA*). Out-of-bounds is not enumerable and stays handled by passable_neighbors'
+  // bounds check.
+  virtual std::vector<State> occupied_cells() const = 0;
 };
 
 // Continuous SE(2) collision view for kinodynamic planners (Hybrid A*, Dolgov,

@@ -95,6 +95,15 @@ class TraceRecorder {
   void obstacle_revealed(const State& s) {
     ev_state("obstacle_revealed", to_trace(s), nullptr, nullptr);
   }
+  // Lifelong replanning (LPA*): a cell whose true occupancy flipped — the cost
+  // change the planner is TOLD about (vs obstacle_revealed, what a sensoring robot
+  // discovers itself). `blocked` is the post-flip state: true builds a wall, false
+  // removes one. A top-level boolean like planning_finished's success (the numeric
+  // data map cannot carry bools), so both recorders serialize it identically.
+  template <class State>
+  void obstacle_changed(const State& s, bool blocked) {
+    ev_obstacle_changed(to_trace(s), blocked);
+  }
   // Potential Fields: attractive/repulsive force decomposition at the current
   // pose (Khatib 1986). `data` carries {fx_att, fy_att, fx_rep, fy_rep, fx, fy}.
   template <class State>
@@ -147,6 +156,7 @@ class TraceRecorder {
   void ev_bins(const char* event, const std::vector<double>& s, const std::vector<double>& bins,
                const EventData* data);
   void ev_robot_moved(const std::vector<double>& s, int agent, const EventData* data);
+  void ev_obstacle_changed(const std::vector<double>& s, bool blocked);
   void ev_velocity_obstacle(const std::vector<double>& s,
                             const std::vector<std::vector<double>>& constraints,
                             const EventData* data);

@@ -11,6 +11,7 @@ export type TraceEventType =
     | "conflict_found"
     | "robot_moved"
     | "obstacle_revealed"
+    | "obstacle_changed"
     | "force_computed"
     | "histogram_updated"
     | "band_updated"
@@ -34,6 +35,10 @@ export interface TraceEvent {
     scenario?: string;
     success?: boolean;
     metrics?: Record<string, number>;
+    // obstacle_changed 전용: 반전 후 셀의 점유 상태. true 면 그 셀이 occupied 로
+    // 바뀌고(벽 생성), false 면 free 로 되돌아간다(벽 제거). obstacle_revealed
+    // (D* Lite 계열의 sensing)와 달리 세계의 실제 점유가 바뀐다는 것이 계약이다.
+    blocked?: boolean;
     // 알고리즘별 부가 정보 (예: visibility A*의 interval run, robot_moved의 {v, omega},
     // force_computed의 {fx_att, fy_att, fx_rep, fy_rep, fx, fy}) — 렌더러는 몰라도 된다.
     data?: Record<string, unknown>;

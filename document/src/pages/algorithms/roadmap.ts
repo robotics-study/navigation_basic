@@ -26,6 +26,15 @@ export const ALGO_BLURBS: AlgoBlurb[] = [
         },
     },
     {
+        slug: "lpa_star",
+        blurb: {
+            en: "A* that never starts over: when a known map's costs change, repair only " +
+                "what the change invalidated with g/rhs — the fixed-start twin of D* Lite.",
+            ko: "다시 시작하지 않는 A*. 알려진 지도의 cost가 바뀌면 변경이 무효화한 부분만 " +
+                "g/rhs를 수리해 고친다. start가 고정된 D* Lite의 쌍둥이.",
+        },
+    },
+    {
         slug: "dstar_lite",
         blurb: {
             en: "Planning when the map is a guess: drive, sense, and repair only the part " +

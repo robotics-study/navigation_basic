@@ -1,0 +1,13 @@
+map: ../grid/lpa_replan01.yaml
+start: [1.25, 3.25]
+goal: [7.25, 3.25]
+# Cost-change batches (world coords; the demo driver converts to cells). Round 0
+# crosses at row 10 through the col-8 gap (cost exactly 12). Revision 1 walls the
+# whole gap off and forces a detour through the top gate, revision 2 re-frees the
+# row-10 cell (free in the base map, blocked by revision 1) and restores the
+# straight crossing — revisions are reversible cost changes on the same cells.
+revisions:
+  - cells: [[4.25, 4.25], [4.25, 3.75], [4.25, 3.25], [4.25, 2.75]]
+    blocked: true
+  - cells: [[4.25, 3.25]]
+    blocked: false

@@ -9,6 +9,14 @@
 
 namespace navigation::maps {
 
+// One cost-change batch (spec/map_formats.md `revisions`): every cell containing
+// one of `cells` (world coords) flips to `blocked` between two plan() rounds. Only
+// lifelong replanners (LPA*) consume revisions; static planners ignore the field.
+struct Revision {
+  std::vector<core::Point> cells;
+  bool blocked = true;
+};
+
 // Single-agent problem definition resolved from a scenario yaml. start/goal are
 // world coordinates for grid/continuous maps.
 struct Scenario {
@@ -22,6 +30,10 @@ struct Scenario {
   // Optional reference path (world points) for path-tracking local planners.
   // Empty = no reference path; defaulted so existing scenarios load unchanged.
   std::vector<core::Point> reference_path;
+  // Optional cost-change batches for lifelong replanners (LPA*). World coords like
+  // start/goal — the demo driver converts to cells via world_to_cell. Defaulted to
+  // empty so every pre-LPA* scenario loads unchanged.
+  std::vector<Revision> revisions;
 };
 
 // Dispatches on the yaml `type` field. Only occupancy_grid is implemented in

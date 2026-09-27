@@ -55,6 +55,10 @@ class OccupancyGrid2D final : public core::MapBase,
   std::vector<std::pair<Cell, double>> passable_neighbors(
       const Cell& s, const std::set<Cell>& blocked) const override;
   bool is_blocked(const Cell& s) const override;
+  // Ground-truth enumeration for LPA*'s complete-model seeding: every occupied
+  // in-bounds cell, row ascending then column ascending (bit-identical to the
+  // Python mirror's row-major mask scan).
+  std::vector<Cell> occupied_cells() const override;
 
   bool is_collision(const Footprint& footprint, const Pose& pose) const override;
   double distance_to_nearest(const Point& p) const override;

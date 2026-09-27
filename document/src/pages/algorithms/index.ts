@@ -9,7 +9,7 @@ import {IAlgoData} from "../../../types/global";
 // 트리(RRT 계열) → 최적 트리(RRT* 계열) → batch(FMT*→BIT*→…→FCIT*) → kinodynamic
 // (SST→Kinodynamic→LQR) 순 — LQR 이 SST 를 전제하므로 kinodynamic 그룹을 뒤에 묶는다.
 // graph search 는 기반 탐색(BFS→Dijkstra→A*) →
-// grid 가속(JPS) → any-angle(Theta* 계열) → incremental·anytime(D* Lite→ARA*→AD*) →
+// grid 가속(JPS) → any-angle(Theta* 계열) → incremental·anytime(LPA*→D* Lite→ARA*→AD*) →
 // 연속 상태(Hybrid A*).
 const data: IAlgoData[] = [
     // ---- Graph search ----
@@ -133,6 +133,23 @@ const data: IAlgoData[] = [
             {en: "Turning at Corners", ko: "모서리에서 꺾는다"},
             {en: "Properties and Complexity", ko: "성질과 복잡도"},
             {en: "The Algorithm", ko: "알고리즘"},
+            {en: "Demo", ko: "Demo"},
+            {en: "Implementation", ko: "Implementation"},
+            {en: "References", ko: "References"},
+        ],
+    },
+    {
+        slug: "lpa_star",
+        title: {en: "LPA*", ko: "LPA*"},
+        category: "search",
+        supportedExample: {python: true, "c++": true},
+        contents: lazy(() => import("./global/search/LpaStar")),
+        sections: [
+            {en: "When the Known Map Changes", ko: "알고 있는 지도가 바뀔 때"},
+            {en: "Forward Search and the g/rhs Pair", ko: "Forward 탐색과 g/rhs"},
+            {en: "Properties and Complexity", ko: "성질과 복잡도"},
+            {en: "The Algorithm", ko: "알고리즘"},
+            {en: "Why the Repaired g Is Optimal", ko: "수리된 g가 최적인 이유"},
             {en: "Demo", ko: "Demo"},
             {en: "Implementation", ko: "Implementation"},
             {en: "References", ko: "References"},

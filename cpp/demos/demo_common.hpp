@@ -143,6 +143,40 @@ inline int run_kinodynamic(const Args& a, const navigation::core::ParamSet& para
   return 0;
 }
 
+// Lifelong-replanning assembly (LPA*): one plan() per round — round 0 on the base
+// map, then every scenario `revisions:` batch is handed to the planner before it
+// re-plans from its retained search state. The scenario carries no robot motion:
+// LPA* plans a fresh full path each round (no execution model). Mirrors Python's
+// run_replan; the LAST round's result is what gets summarized.
+template <class Planner>
+inline int run_replan(const Args& a, const navigation::core::ParamSet& params, Planner& planner) {
+  auto map = navigation::maps::load_map(a.map, resolve_seed(a, params), a.connectivity);
+  auto& grid = as_grid(*map);
+  navigation::maps::Scenario sc = navigation::maps::load_scenario(a.scenario);
+  navigation::core::Cell start = grid.world_to_cell(sc.start.x, sc.start.y);
+  navigation::core::Cell goal = grid.world_to_cell(sc.goal.x, sc.goal.y);
+
+  std::ofstream fs(a.trace);
+  if (!fs) throw std::runtime_error("demo: cannot open trace file " + a.trace);
+  navigation::core::TraceRecorder rec(fs);
+  rec.planning_started(planner.name(), a.map, params.values());
+  auto res = planner.plan(grid, start, goal, &rec);
+  for (const auto& rev : sc.revisions) {
+    // World-coord revision cells -> grid cells (coordinate frames stay owned by
+    // the map layer, per the repo rule).
+    std::vector<navigation::core::Cell> cells;
+    for (const auto& p : rev.cells) cells.push_back(grid.world_to_cell(p.x, p.y));
+    planner.apply_revision(cells, rev.blocked);
+    res = planner.plan(grid, start, goal, &rec);
+  }
+
+  std::cout << "{\"algorithm\":\"" << planner.name() << "\",\"success\":"
+            << (res.success ? "true" : "false") << ",\"path_cost\":" << res.cost
+            << ",\"path_len\":" << res.path.size() << ",\"expanded_nodes\":"
+            << res.stats.expanded_nodes << "}\n";
+  return 0;
+}
+
 // `SimStatus` is exhaustively matched (no default:) so adding a new terminal
 // status trips -Wswitch here as a forcing function to update this table.
 inline const char* sim_status_str(navigation::local_planning::SimStatus status) {

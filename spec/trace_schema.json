@@ -27,6 +27,7 @@
         "conflict_found",
         "robot_moved",
         "obstacle_revealed",
+        "obstacle_changed",
         "force_computed",
         "histogram_updated",
         "band_updated",
@@ -56,6 +57,10 @@
       "type": "array",
       "items": { "$ref": "#/$defs/state" },
       "description": "path_found / planning_finished 에서의 경로 (agent 필드가 있으면 해당 agent의 경로)."
+    },
+    "blocked": {
+      "type": "boolean",
+      "description": "obstacle_changed 전용: 반전 후 셀의 점유 상태. true 면 그 셀이 occupied 로 바뀌고(벽 생성), false 면 free 로 되돌아간다(벽 제거). LPA* 같은 lifelong replanner 의 cost change 이벤트. obstacle_revealed(D* Lite 계열의 sensing)와 달리 세계의 실제 점유가 바뀐다는 것이 계약이다."
     },
     "algorithm": {
       "type": "string",

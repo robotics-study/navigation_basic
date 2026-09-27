@@ -48,12 +48,16 @@ class LineOfSightSpace(DiscreteSpace[StateT], Protocol[StateT]):
 
 
 class DynamicGridSpace(Protocol[StateT]):
-    """Dynamic-replanning search view for D* Lite (Koenig & Likhachev 2002).
+    """Dynamic-replanning search view for D* Lite (Koenig & Likhachev 2002) and
+    LPA* (Koenig, Likhachev & Furcy 2004).
 
     Standalone (NOT a DiscreteSpace): neighbor enumeration takes a *belief* — the
     planner's own set of known blocked cells — instead of reading ground truth, so
     it cannot share the truth-baked ``neighbors()``. Structural, so one concrete
-    grid satisfies DiscreteSpace and this without a class hierarchy."""
+    grid satisfies DiscreteSpace and this without a class hierarchy. The two
+    consumers differ only in how their model gets its cells: D* Lite grows an
+    initially-empty belief by sensing (``is_blocked``), LPA* seeds a complete model
+    from ``occupied_cells()`` at plan time and flips single cells as costs change."""
 
     def passable_neighbors(
         self, s: StateT, blocked: set[StateT]
@@ -64,6 +68,12 @@ class DynamicGridSpace(Protocol[StateT]):
 
     def is_blocked(self, s: StateT) -> bool:
         """Ground-truth sensor: True iff ``s`` is occupied or out of bounds."""
+        ...
+
+    def occupied_cells(self) -> list[StateT]:
+        """Every currently-occupied in-bounds cell, row ascending then column
+        ascending (deterministic across runs/languages). Out-of-bounds is not
+        enumerable and stays handled by ``passable_neighbors``' bounds check."""
         ...
 
 

@@ -1,4 +1,5 @@
 #include <cmath>
+#include <stdexcept>
 #include <vector>
 
 #include <gtest/gtest.h>
@@ -7,6 +8,7 @@
 #include "navigation/global_planning/search/bfs.hpp"
 #include "navigation/global_planning/search/dijkstra.hpp"
 #include "navigation/global_planning/search/dstar_lite.hpp"
+#include "navigation/global_planning/search/lpa_star.hpp"
 #include "navigation/global_planning/search/theta_star.hpp"
 #include "test_util.hpp"
 
@@ -105,6 +107,62 @@ TEST(Discrete, ThetaStarBendsAroundObstacle) {
   EXPECT_LT(rt.cost, astar.plan(g, start, goal, nullptr).cost);
 }
 
+// LPA*: round 0 with no revisions is plain A* (same octile heuristic): the cost must
+// equal A*'s exactly, and the heuristic must not expand more than uninformed Dijkstra.
+TEST(Discrete, LpaStarMatchesAstarAndExpandsNoMoreThanDijkstra) {
+  auto g = test::make_grid(std::vector<std::string>(9, std::string(9, '.')));
+  Cell start{8, 0}, goal{0, 8};
+  global_planning::LpaStarPlanner lpa(cfg("lpa_star"));
+  auto rl = lpa.plan(g, start, goal, nullptr);
+  ASSERT_TRUE(rl.success);
+  EXPECT_EQ(rl.path.front(), start);
+  EXPECT_EQ(rl.path.back(), goal);
+  global_planning::AstarPlanner astar(cfg("astar"));
+  global_planning::DijkstraPlanner dij(cfg("dijkstra"));
+  EXPECT_NEAR(rl.cost, astar.plan(g, start, goal, nullptr).cost, 1e-9);
+  EXPECT_LE(rl.stats.expanded_nodes, dij.plan(g, start, goal, nullptr).stats.expanded_nodes);
+}
+
+// Lifelong cycle on ONE cell (the demo scenario in miniature): gate open -> cost
+// equals A* on the open grid; blocking the gate seals the map (no path); freeing
+// THE SAME cell again restores optimality. Revisions are reversible, and only the
+// planner's own model (never the static ground truth) tracks both directions.
+TEST(Discrete, LpaStarReplansOnReversibleWallAndBack) {
+  auto g = test::make_grid({".....", "..#..", "..#.."});
+  Cell start{1, 0}, goal{1, 4};
+  global_planning::LpaStarPlanner lpa(cfg("lpa_star"));
+  auto r_open = lpa.plan(g, start, goal, nullptr);
+  ASSERT_TRUE(r_open.success);
+  EXPECT_EQ(r_open.stats.iterations, 0);  // round 0 is the initial burst, not a replan
+  global_planning::AstarPlanner astar(cfg("astar"));
+  EXPECT_NEAR(r_open.cost, astar.plan(g, start, goal, nullptr).cost, 1e-9);
+  lpa.apply_revision({Cell{0, 2}}, true);  // free in the base map -> sealed column
+  auto r_sealed = lpa.plan(g, start, goal, nullptr);
+  EXPECT_FALSE(r_sealed.success);
+  EXPECT_TRUE(r_sealed.path.empty());
+  EXPECT_EQ(r_sealed.cost, 0.0);
+  EXPECT_EQ(r_sealed.stats.iterations, 1);
+  lpa.apply_revision({Cell{0, 2}}, false);  // the reversible half: open it again
+  auto r_back = lpa.plan(g, start, goal, nullptr);
+  ASSERT_TRUE(r_back.success);
+  EXPECT_TRUE(path_is_connected(g, r_back.path));
+  bool through_gate = false;
+  for (const auto& c : r_back.path) through_gate = through_gate || (c.row == 0 && c.col == 2);
+  EXPECT_TRUE(through_gate);  // the reopened gate is the only crossing again
+  EXPECT_NEAR(r_back.cost, r_open.cost, 1e-9);
+  EXPECT_EQ(r_back.stats.iterations, 2);
+}
+
+// Fixed start/goal IS the algorithm (re-rooting is D* Lite's job), and a revision
+// before the first plan() has no model to repair.
+TEST(Discrete, LpaStarRejectsMisuse) {
+  auto g = test::make_grid({"...", "...", "..."});
+  global_planning::LpaStarPlanner lpa(cfg("lpa_star"));
+  EXPECT_THROW(lpa.apply_revision({Cell{0, 0}}, true), std::runtime_error);
+  lpa.plan(g, Cell{1, 0}, Cell{1, 2}, nullptr);
+  EXPECT_THROW(lpa.plan(g, Cell{1, 0}, Cell{2, 2}, nullptr), std::invalid_argument);
+}
+
 // D* Lite: reaches the goal and — on an all-free grid it never has to replan (nothing
 // is ever sensed as blocked), so the executed trajectory is the freespace optimum.
 TEST(Discrete, DStarLiteReachesGoalWithoutReplanOnOpenGrid) {
@@ -188,6 +246,11 @@ TEST(Discrete, NoPathWhenWalledOff) {
   EXPECT_FALSE(rds.success);
   EXPECT_TRUE(rds.path.empty());
   EXPECT_EQ(rds.cost, 0.0);
+  global_planning::LpaStarPlanner lpa(cfg("lpa_star"));
+  auto rl = lpa.plan(g, start, goal, nullptr);
+  EXPECT_FALSE(rl.success);
+  EXPECT_TRUE(rl.path.empty());
+  EXPECT_EQ(rl.cost, 0.0);
 }
 
 // (c) param validation failure -----------------------------------------------

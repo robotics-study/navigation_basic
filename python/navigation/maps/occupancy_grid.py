@@ -197,6 +197,12 @@ class OccupancyGrid2D(MapBase):
         # Occupied OR out of bounds — is_free_cell is already false for both.
         return not self.is_free_cell(*s)
 
+    def occupied_cells(self) -> list[Cell]:
+        # Ground-truth enumeration for planners that seed a COMPLETE model (LPA*):
+        # np.argwhere walks the mask row-major, so the order is deterministic and
+        # matches the C++ mirror's row-major scan bit-for-bit.
+        return [(int(r), int(c)) for r, c in np.argwhere(~self._free)]
+
     def heuristic(self, a: Cell, b: Cell) -> float:
         dr = abs(a[0] - b[0])
         dc = abs(a[1] - b[1])
