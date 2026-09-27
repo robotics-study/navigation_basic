@@ -100,12 +100,12 @@ const Home = () => {
 
             <div className="lander-cats">
                 {SECTIONS.map((sec, si) => {
-                    const multiCat = sec.categories.length > 1
+                    const splitCats = sec.categories.length > 1
                     return (
                         <div key={sec.key} className="lander-cat">
                             <div className="part-head">
                                 <h3>
-                                    <span className="part-index">{["I", "II", "III"][si]}</span>
+                                    <span className="part-index">{["I", "II"][si]}</span>
                                     {pick(lang, sec.title)}
                                     <a className="part-intro" onClick={() => goSection(sec.key)}>
                                         Introduction →
@@ -119,7 +119,7 @@ const Home = () => {
                                 const hasIntro = categoryIntros.some((c) => c.key === catKey)
                                 return (
                                     <div key={catKey}>
-                                        {multiCat && (
+                                        {splitCats && (
                                             <h4 className="cat-head">
                                                 {pick(lang, cat.title)}
                                                 {hasIntro && (

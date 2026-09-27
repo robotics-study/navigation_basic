@@ -126,7 +126,7 @@ the sibling MRMP repo.*
 ```bash
 # Python (>= 3.10) — navigation 패키지 + viz/dev extras
 cd python && pip install -e ".[dev,viz]" && cd ..
-pytest python/tests            # 783 passed (110 skipped on this machine)
+pytest python/tests            # 783 passed, 110 skipped
 
 # C++ (C++20, CMake >= 3.20, GoogleTest 는 FetchContent 자동)
 cmake -S cpp -B cpp/build -DCMAKE_BUILD_TYPE=Release
