@@ -33,4 +33,7 @@ export {runElasticBands} from "../src/libs/algorithms/elastic_bands";
 export {runTeb} from "../src/libs/algorithms/teb";
 export {runMpc} from "../src/libs/algorithms/mpc";
 export {runMppi} from "../src/libs/algorithms/mppi";
+export {runVo} from "../src/libs/algorithms/vo";
+export {runRvo} from "../src/libs/algorithms/rvo";
+export {runOrca} from "../src/libs/algorithms/orca";
 export {parseGridMap} from "../src/libs/grid";

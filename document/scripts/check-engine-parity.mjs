@@ -282,7 +282,42 @@ const RUNNERS = {
         goalTolerance: p.goal_tolerance, footprintRadius: p.footprint_radius,
         stallWindow: p.stall_window, stallDistance: p.stall_distance,
     }),
+    // 다중(VO/RVO/ORCA): trace에 path_found가 없어 start/goal을 head_on 시나리오
+    // 값으로 하드코딩한다(sst/lqr/hybrid이 시나리오 goal을 하드코딩하는 것과 같은 관행).
+    // maps/scenarios/velocity/head_on.yaml: 두 몸체 모두 planner 구동.
+    vo: (m, s, g, p) => engines.runVo({
+        map: m, agents: HEAD_ON_AGENTS,
+        maxSpeed: p.max_speed, maxOmega: p.max_omega, headingGain: p.heading_gain,
+        agentRadius: p.agent_radius, neighborDist: p.neighbor_dist, timeHorizon: p.time_horizon,
+        obstacleRadius: p.obstacle_radius, speedSamples: p.speed_samples, angleSamples: p.angle_samples,
+        controlDt: p.control_dt, maxSteps: p.max_steps, goalTolerance: p.goal_tolerance,
+        footprintRadius: p.footprint_radius, stallWindow: p.stall_window, stallDistance: p.stall_distance,
+    }),
+    rvo: (m, s, g, p) => engines.runRvo({
+        map: m, agents: HEAD_ON_AGENTS,
+        maxSpeed: p.max_speed, maxOmega: p.max_omega, headingGain: p.heading_gain,
+        agentRadius: p.agent_radius, neighborDist: p.neighbor_dist, timeHorizon: p.time_horizon,
+        obstacleRadius: p.obstacle_radius, speedSamples: p.speed_samples, angleSamples: p.angle_samples,
+        reciprocity: p.reciprocity,
+        controlDt: p.control_dt, maxSteps: p.max_steps, goalTolerance: p.goal_tolerance,
+        footprintRadius: p.footprint_radius, stallWindow: p.stall_window, stallDistance: p.stall_distance,
+    }),
+    orca: (m, s, g, p) => engines.runOrca({
+        map: m, agents: HEAD_ON_AGENTS,
+        maxSpeed: p.max_speed, maxOmega: p.max_omega, headingGain: p.heading_gain,
+        agentRadius: p.agent_radius, neighborDist: p.neighbor_dist, timeHorizon: p.time_horizon,
+        timeHorizonObst: p.time_horizon_obst, obstacleRadius: p.obstacle_radius,
+        controlDt: p.control_dt, maxSteps: p.max_steps, goalTolerance: p.goal_tolerance,
+        footprintRadius: p.footprint_radius, stallWindow: p.stall_window, stallDistance: p.stall_distance,
+    }),
 };
+
+// maps/scenarios/velocity/head_on.yaml를 JS로 옮긴 것(위 세 RUNNER가 공유).
+// 두 몸체 모두 scriptedVelocity가 없어 planner가 직접 구동한다.
+const HEAD_ON_AGENTS = [
+    {start: {pose: [2.5, 7.05, 0.0], v: 0, omega: 0}, goal: [12.5, 7.05], radius: 0.3},
+    {start: {pose: [12.5, 7.95, 3.14159], v: 0, omega: 0}, goal: [2.5, 7.95], radius: 0.3},
+];
 
 // exact: 연산 순서·tie-break 까지 py 를 미러 → expanded_nodes 도 일치해야 한다.
 const CHECKS = [
@@ -369,6 +404,15 @@ const CHECKS = [
     // 무관한 회귀(미도달·스텝 급변·NaN)는 잡는다.
     {algo: "mppi", maps: ["open01"],
      metricKeys: [{key: "steps", tol: 8}, {key: "distance_traveled", tol: 0.2}]},
+    // 다중 속도장류 3종: open_arena 맵의 head_on 시나리오(두 몸체 모두 planner 구동).
+    // metric은 ego 중심(agent 0): steps는 정수 exact, min_pair_clearance는 다른
+    // 폐루프 엔진들과 같은 이유로 1e-3 ULP 여유를 둔다. success는 양쪽 모두 true.
+    {algo: "vo", maps: ["open_arena"], multiAgent: true,
+     metricKeys: [{key: "steps", tol: 0}, {key: "min_pair_clearance", tol: 1e-3}]},
+    {algo: "rvo", maps: ["open_arena"], multiAgent: true,
+     metricKeys: [{key: "steps", tol: 0}, {key: "min_pair_clearance", tol: 1e-3}]},
+    {algo: "orca", maps: ["open_arena"], multiAgent: true,
+     metricKeys: [{key: "steps", tol: 0}, {key: "min_pair_clearance", tol: 1e-3}]},
 ];
 
 let failures = 0;
@@ -383,12 +427,18 @@ for (const check of CHECKS) {
         }
         const started = events[0];
         const expected = finalOf(events);
-        const path = lastPath(events);
-        if (!path) continue;
         const map = loadMap(name);
-        const start = path[0];
-        const goal = path[path.length - 1];
-        const got = finalOf(RUNNERS[algo](map, start, goal, started.params ?? {}));
+        let got;
+        if (check.multiAgent) {
+            // 다중 에이전트 trace에는 path_found가 없다 -- start/goal은 RUNNERS에
+            // 시나리오 값으로 하드코딩돼 있고 (s/g 자리에 undefined를 넘긴다) 비교는
+            // ego 중심 planning_finished metric으로만 이루어진다.
+            got = finalOf(RUNNERS[algo](map, undefined, undefined, started.params ?? {}));
+        } else {
+            const path = lastPath(events);
+            if (!path) continue;
+            got = finalOf(RUNNERS[algo](map, path[0], path[path.length - 1], started.params ?? {}));
+        }
 
         const problems = [];
         if (Boolean(got.success) !== Boolean(expected.success)) {
