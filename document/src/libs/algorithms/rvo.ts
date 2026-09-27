@@ -64,23 +64,12 @@ export function runRvo(opts: RvoOptions): TraceEvent[] {
 
     const commandFn = makeRvoCommandFn(opts.map, opts)
     const commandFns = opts.agents.map((a) => (a.scriptedVelocity === undefined ? commandFn : null))
-    const results = simulateAgents(commandFns, opts.agents, opts.map, {
+    // simulate_agents의 미러인 simulateAgents가 robot_moved와 ego 중심
+    // planning_finished를 직접 방출한다(agent_sim.py와 동일).
+    simulateAgents(commandFns, opts.agents, opts.map, {
         controlDt: opts.controlDt, maxSteps: opts.maxSteps, goalTolerance: opts.goalTolerance,
         footprintRadius: opts.footprintRadius, stallWindow: opts.stallWindow, stallDistance: opts.stallDistance,
     }, emit)
-
-    // vo.ts와 동일한 데모 전용 확장 -- agent_sim.py에는 없는 종료 이벤트.
-    const ego = results[0]
-    emit({
-        event: "planning_finished",
-        success: ego.status === "reached",
-        metrics: {
-            steps: ego.steps,
-            collided: ego.status === "collision" ? 1 : 0,
-            stalled: ego.status === "stalled" ? 1 : 0,
-            min_pair_clearance: ego.minPairClearance,
-        },
-    })
 
     return events
 }

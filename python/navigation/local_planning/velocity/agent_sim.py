@@ -76,6 +76,13 @@ def simulate_agents(
     agent is near its own goal, `preferred_velocity` alone drives it toward
     (0, 0), so it settles in place naturally and keeps contributing an
     (approximately stationary) DynamicObstacle snapshot to its neighbors.
+
+    With a recorder the run ends on one ego-centric (agent 0) `planning_finished`
+    event, the multi-agent analogue of the single-robot simulator's `_finish`:
+    steps/min_pair_clearance are shared by every body (one tick counter, one
+    pairwise minimum), while success/collided/stalled carry only agent 0's status.
+    The live TS engines emit the identical event, which is what the engine-parity
+    harness compares against.
     """
     n = len(specs)
     footprint = Footprint(config.footprint_radius)
@@ -167,7 +174,7 @@ def simulate_agents(
             break
         steps = step
 
-    return [
+    results = [
         AgentResult(
             status=SimStatus.REACHED if reached[k] else terminal,
             steps=steps,
@@ -176,3 +183,20 @@ def simulate_agents(
         )
         for k in range(n)
     ]
+    # Ego-centric (agent 0) terminal event, mirroring the single-robot
+    # simulator's _finish. steps/min_pair_clearance are shared by every body (one
+    # tick counter, one pairwise minimum); success/collided/stalled carry only
+    # agent 0's status -- a scripted mover has no goal to reach and another
+    # agent's failure must not mask ego's outcome.
+    if recorder is not None:
+        ego = results[0]
+        recorder.planning_finished(
+            ego.status is SimStatus.REACHED,
+            {
+                "steps": float(ego.steps),
+                "collided": 1.0 if ego.status is SimStatus.COLLISION else 0.0,
+                "stalled": 1.0 if ego.status is SimStatus.STALLED else 0.0,
+                "min_pair_clearance": ego.min_pair_clearance,
+            },
+        )
+    return results

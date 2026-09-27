@@ -167,3 +167,30 @@ def test_penetrated_obstacle_commands_standstill(tmp_path: Path) -> None:
     assert "constraints" not in events[0]
     assert events[0]["data"]["new_vx"] == 0.0
     assert events[0]["data"]["new_vy"] == 0.0
+
+
+# --- the trace ends with one ego-centric planning_finished ----------------------
+def test_trace_ends_with_ego_centric_planning_finished(tmp_path: Path) -> None:
+    """simulate_agents closes the trace with a single planning_finished carrying
+    agent 0's status as success/collided/stalled plus the shared steps /
+    min_pair_clearance. This is what the live TS engines emit too and what the
+    engine-parity harness compares."""
+    params = _config(tmp_path)
+    scenario = load_agent_scenario(_MAPS_DIR / "scenarios" / "velocity" / "head_on.yaml")
+    grid = load_map(scenario.map_path)
+    buf = io.StringIO()
+    recorder = TraceRecorder(buf)
+    results = simulate_agents(
+        [Orca(params) for _ in scenario.agents], list(scenario.agents), grid,
+        _sim_config(params), recorder)
+
+    events = [json.loads(line) for line in buf.getvalue().splitlines()]
+    finished = [e for e in events if e["event"] == "planning_finished"]
+    assert len(finished) == 1
+    event = finished[0]
+    ego = results[0]
+    assert event["success"] is True
+    assert event["metrics"]["steps"] == float(ego.steps)
+    assert event["metrics"]["collided"] == 0.0
+    assert event["metrics"]["stalled"] == 0.0
+    assert event["metrics"]["min_pair_clearance"] == pytest.approx(ego.min_pair_clearance)

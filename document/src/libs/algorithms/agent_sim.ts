@@ -109,6 +109,9 @@ function integrateAll(
 // planner가 하나라도 딸려 있고(scripted 전용 agent는 REACHED에 관여하지
 // 않는다), agent_sim.py와 동일한 종료 우선순위(충돌 > 전원 도달 > 정체 >
 // 시간초과)로 REACHED/COLLISION/STALLED/TIMEOUT까지 N-body를 폐루프로 돌린다.
+// agent_sim.py처럼 종료 시 ego 중심(agent 0) planning_finished를 방출한다.
+// steps/min_pair_clearance는 모든 몸체가 공유하고 success/collided/stalled는
+// agent 0의 상태만 담는다.
 export function simulateAgents(
     commandFns: (AgentCommandFn | null)[], specs: AgentSpec[], map: GridMap,
     config: AgentSimConfig, emit: EmitFn,
@@ -176,10 +179,27 @@ export function simulateAgents(
         steps = step
     }
 
-    return specs.map((_, k) => ({
+    const results = specs.map((_, k): AgentResult => ({
         status: reached[k] ? "reached" : terminal,
         steps,
         trajectory: trajectories[k],
         minPairClearance,
     }))
+    // ego 중심(agent 0) 종료 이벤트. 단일 로봇 시뮬레이터의 finish에 대한
+    // 다중 에이전트 대응물이다. steps/min_pair_clearance는 모든 몸체가 공유하고
+    // (tick 카운터·페어 최소값은 하나) success/collided/stalled는 agent 0의
+    // 상태만 담는다. scripted mover에는 도달할 goal이 없고 다른 agent의 실패가
+    // ego의 결과를 가리면 안 된다.
+    const ego = results[0]
+    emit({
+        event: "planning_finished",
+        success: ego.status === "reached",
+        metrics: {
+            steps: ego.steps,
+            collided: ego.status === "collision" ? 1 : 0,
+            stalled: ego.status === "stalled" ? 1 : 0,
+            min_pair_clearance: ego.minPairClearance,
+        },
+    })
+    return results
 }

@@ -50,6 +50,13 @@ struct AgentResult {
 // agent is near its own goal, preferred_velocity alone drives it toward
 // (0, 0), so it settles in place naturally and keeps contributing an
 // (approximately stationary) DynamicObstacle snapshot to its neighbors.
+//
+// With a recorder the run ends on one ego-centric (agent 0) planning_finished
+// event, the multi-agent analogue of the single-robot simulator's finish:
+// steps/min_pair_clearance are shared by every body (one tick counter, one
+// pairwise minimum), while success/collided/stalled carry only agent 0's status.
+// The live TS engines emit the identical event, which is what the engine-parity
+// harness compares against.
 std::vector<AgentResult> simulate_agents(const std::vector<VelocityObstaclePlanner*>& planners,
                                          const std::vector<AgentSpec>& specs,
                                          core::ObstacleQuery& space, const SimConfig& config,

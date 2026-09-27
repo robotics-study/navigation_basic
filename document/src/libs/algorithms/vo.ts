@@ -56,25 +56,12 @@ export function runVo(opts: VoOptions): TraceEvent[] {
 
     const commandFn = makeVoCommandFn(opts.map, opts)
     const commandFns = opts.agents.map((a) => (a.scriptedVelocity === undefined ? commandFn : null))
-    const results = simulateAgents(commandFns, opts.agents, opts.map, {
+    // simulate_agents의 미러인 simulateAgents가 robot_moved와 ego 중심
+    // planning_finished를 직접 방출한다(agent_sim.py와 동일).
+    simulateAgents(commandFns, opts.agents, opts.map, {
         controlDt: opts.controlDt, maxSteps: opts.maxSteps, goalTolerance: opts.goalTolerance,
         footprintRadius: opts.footprintRadius, stallWindow: opts.stallWindow, stallDistance: opts.stallDistance,
     }, emit)
-
-    // agent_sim.py의 simulate_agents는 AgentResult 리스트만 반환하고(테스트 assertion용),
-    // planning_finished는 방출하지 않는다 -- 이 이벤트는 브라우저 플레이어가 종료 상태
-    // 배지를 그리기 위한 데모 전용 확장이다(단일 로봇 엔진들의 runClosedLoop와 동일한 필드).
-    const ego = results[0]
-    emit({
-        event: "planning_finished",
-        success: ego.status === "reached",
-        metrics: {
-            steps: ego.steps,
-            collided: ego.status === "collision" ? 1 : 0,
-            stalled: ego.status === "stalled" ? 1 : 0,
-            min_pair_clearance: ego.minPairClearance,
-        },
-    })
 
     return events
 }

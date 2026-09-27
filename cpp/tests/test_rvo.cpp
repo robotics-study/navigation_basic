@@ -257,3 +257,37 @@ TEST(Rvo, PenetratedObstacleCommandsStandstill) {
   EXPECT_DOUBLE_EQ(find_data_value(events[0], "new_vx"), 0.0);
   EXPECT_DOUBLE_EQ(find_data_value(events[0], "new_vy"), 0.0);
 }
+
+// --- the trace ends with one ego-centric planning_finished ---------------------
+TEST(Rvo, TraceEndsWithEgoCentricPlanningFinished) {
+  // simulate_agents closes the trace with a single planning_finished carrying
+  // agent 0's status as success/collided/stalled plus the shared steps /
+  // min_pair_clearance. This is what the live TS engines emit too and what the
+  // engine-parity harness compares.
+  auto params = ParamSet::from_yaml(config_path());
+  auto scenario = load_agent_scenario(test::repo_path("maps/scenarios/velocity/head_on.yaml"));
+  auto map = maps::load_map(scenario.map_path);
+  auto& grid = as_grid(*map);
+
+  std::ostringstream os;
+  core::TraceRecorder rec(os);
+  std::vector<Rvo> planners;
+  planners.reserve(scenario.agents.size());
+  for (size_t i = 0; i < scenario.agents.size(); ++i) planners.emplace_back(params);
+  std::vector<VelocityObstaclePlanner*> ptrs;
+  ptrs.reserve(planners.size());
+  for (Rvo& p : planners) ptrs.push_back(&p);
+  auto results = simulate_agents(ptrs, scenario.agents, grid, sim_config_from(params), &rec);
+
+  std::vector<std::string> finished;
+  for (const std::string& line : split_lines(os.str())) {
+    if (line.find("\"planning_finished\"") != std::string::npos) finished.push_back(line);
+  }
+  ASSERT_EQ(finished.size(), 1u);
+  const std::string& event = finished[0];
+  EXPECT_NE(event.find("\"success\":true"), std::string::npos);
+  EXPECT_NEAR(find_data_value(event, "steps"), static_cast<double>(results[0].steps), 1e-9);
+  EXPECT_DOUBLE_EQ(find_data_value(event, "collided"), 0.0);
+  EXPECT_DOUBLE_EQ(find_data_value(event, "stalled"), 0.0);
+  EXPECT_NEAR(find_data_value(event, "min_pair_clearance"), results[0].min_pair_clearance, 1e-9);
+}

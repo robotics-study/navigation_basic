@@ -158,6 +158,20 @@ std::vector<AgentResult> simulate_agents(const std::vector<VelocityObstaclePlann
     results.push_back(AgentResult{reached[k] ? SimStatus::REACHED : terminal, steps,
                                   trajectories[k], min_pair_clearance});
   }
+  // Ego-centric (agent 0) terminal event, mirroring the single-robot
+  // simulator's _finish. steps/min_pair_clearance are shared by every body (one
+  // tick counter, one pairwise minimum); success/collided/stalled carry only
+  // agent 0's status -- a scripted mover has no goal to reach and another
+  // agent's failure must not mask ego's outcome.
+  if (recorder != nullptr) {
+    const AgentResult& ego = results.front();
+    recorder->planning_finished(
+        ego.status == SimStatus::REACHED,
+        core::TraceRecorder::EventData{{"steps", static_cast<double>(ego.steps)},
+                                      {"collided", ego.status == SimStatus::COLLISION ? 1.0 : 0.0},
+                                      {"stalled", ego.status == SimStatus::STALLED ? 1.0 : 0.0},
+                                      {"min_pair_clearance", ego.min_pair_clearance}});
+  }
   return results;
 }
 
