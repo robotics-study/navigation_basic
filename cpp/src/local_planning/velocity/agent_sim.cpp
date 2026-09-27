@@ -162,8 +162,10 @@ std::vector<AgentResult> simulate_agents(const std::vector<VelocityObstaclePlann
   // simulator's _finish. steps/min_pair_clearance are shared by every body (one
   // tick counter, one pairwise minimum); success/collided/stalled carry only
   // agent 0's status -- a scripted mover has no goal to reach and another
-  // agent's failure must not mask ego's outcome.
-  if (recorder != nullptr) {
+  // agent's failure must not mask ego's outcome. An empty spec list has no ego
+  // status to report, so both languages skip the event rather than index past
+  // the end on that degenerate input.
+  if (recorder != nullptr && !results.empty()) {
     const AgentResult& ego = results.front();
     recorder->planning_finished(
         ego.status == SimStatus::REACHED,

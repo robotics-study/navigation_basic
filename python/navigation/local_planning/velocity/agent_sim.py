@@ -187,8 +187,10 @@ def simulate_agents(
     # simulator's _finish. steps/min_pair_clearance are shared by every body (one
     # tick counter, one pairwise minimum); success/collided/stalled carry only
     # agent 0's status -- a scripted mover has no goal to reach and another
-    # agent's failure must not mask ego's outcome.
-    if recorder is not None:
+    # agent's failure must not mask ego's outcome. An empty spec list has no ego
+    # status to report (and C++ must not index past the end), so both languages
+    # skip the event rather than raise on that degenerate input.
+    if recorder is not None and results:
         ego = results[0]
         recorder.planning_finished(
             ego.status is SimStatus.REACHED,

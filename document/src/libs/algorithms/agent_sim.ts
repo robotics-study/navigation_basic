@@ -189,7 +189,9 @@ export function simulateAgents(
     // 다중 에이전트 대응물이다. steps/min_pair_clearance는 모든 몸체가 공유하고
     // (tick 카운터·페어 최소값은 하나) success/collided/stalled는 agent 0의
     // 상태만 담는다. scripted mover에는 도달할 goal이 없고 다른 agent의 실패가
-    // ego의 결과를 가리면 안 된다.
+    // ego의 결과를 가리면 안 된다. 빈 spec 목록에 ego 상태는 없으므로(퇴화 입력)
+    // 두 언어와 동일하게 이벤트를 건너뛴다.
+    if (results.length === 0) return results
     const ego = results[0]
     emit({
         event: "planning_finished",
