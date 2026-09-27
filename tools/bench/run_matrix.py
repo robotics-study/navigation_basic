@@ -34,6 +34,7 @@ _REQUIRED: dict[str, Capability] = {
     # it), so a discrete-only map is correctly marked incompatible for Theta*.
     "jps": Capability.DYNAMIC_GRID_SPACE,
     "ad_star": Capability.DYNAMIC_GRID_SPACE,
+    "lpa_star": Capability.DYNAMIC_GRID_SPACE,
     "theta_star": Capability.LINE_OF_SIGHT_SPACE,
     "lazy_theta_star": Capability.LINE_OF_SIGHT_SPACE,
     "visibility_astar": Capability.LINE_OF_SIGHT_SPACE,
@@ -73,7 +74,7 @@ _REQUIRED: dict[str, Capability] = {
     "mpc": Capability.OBSTACLE_QUERY,
     "mppi": Capability.OBSTACLE_QUERY,
 }
-_ORDER = ["bfs", "dijkstra", "astar", "ara_star", "jps", "ad_star", "dstar_lite", "theta_star",
+_ORDER = ["bfs", "dijkstra", "astar", "ara_star", "jps", "ad_star", "lpa_star", "dstar_lite", "theta_star",
           "lazy_theta_star", "visibility_astar", "anya", "hybrid_astar",
           "rrt", "rrt_connect", "rrt_star", "prm_star", "lqr_rrt_star", "kinodynamic_rrt_star",
           "informed_rrt_star", "prm", "fmt_star", "bit_star", "abit_star", "sst",

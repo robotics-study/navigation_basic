@@ -13,7 +13,7 @@ from conftest import config, grid_from, open_grid, write_config
 from navigation.core.params import ParamError, ParamSet
 from navigation.core.trace import TraceRecorder
 from navigation.core.types import Cell
-from navigation.global_planning import BFS, AStar, Dijkstra, DStarLite, ThetaStar
+from navigation.global_planning import BFS, AStar, Dijkstra, DStarLite, LpaStar, ThetaStar
 
 _OPTIMAL_DIAG = 4 * math.sqrt(2)  # (4,0)->(0,4) on an open 8-connected grid
 
@@ -70,12 +70,95 @@ def test_no_path_when_walled_off() -> None:
         Dijkstra(config("dijkstra")),
         AStar(config("astar")),
         ThetaStar(config("theta_star")),
+        LpaStar(config("lpa_star")),
         DStarLite(config("dstar_lite")),
     ):
         res = planner.plan(grid, (0, 0), (0, 4))
         assert not res.success
         assert res.path == []
         assert res.cost == 0.0
+
+
+def test_lpa_star_matches_astar_and_expands_no_more_than_dijkstra() -> None:
+    # Round 0 with no revisions is plain A* (same octile heuristic): the cost must
+    # equal A*'s exactly, and the heuristic must not expand more than uninformed
+    # Dijkstra on the same open grid.
+    grid = open_grid(9, 9)
+    start, goal = (8, 0), (0, 8)
+    res = LpaStar(config("lpa_star")).plan(grid, start, goal)
+    assert res.success and res.path[0] == start and res.path[-1] == goal
+    ast = AStar(config("astar")).plan(grid, start, goal)
+    dj = Dijkstra(config("dijkstra")).plan(grid, start, goal)
+    assert res.cost == pytest.approx(ast.cost)
+    assert res.stats.expanded_nodes <= dj.stats.expanded_nodes
+
+
+def test_lpa_star_replans_on_a_reversible_wall_and_back() -> None:
+    # Lifelong cycle on ONE cell (the demo scenario in miniature): gate open -> cost
+    # equals A* on the open grid; blocking the gate seals the map (no path); freeing
+    # THE SAME cell again restores optimality. Revisions are reversible, and only the
+    # planner's own model (never the static ground truth) tracks both directions.
+    opened = [".....", "..#..", "..#.."]
+    start, goal = (1, 0), (1, 4)
+    grid = grid_from(opened)
+    planner = LpaStar(config("lpa_star"))
+    res_open = planner.plan(grid, start, goal)
+    assert res_open.success and res_open.stats.iterations == 0
+    ast = AStar(config("astar")).plan(grid_from(opened), start, goal)
+    assert res_open.cost == pytest.approx(ast.cost)
+    planner.apply_revision([(0, 2)], True)  # free in the base map -> sealed column
+    res_sealed = planner.plan(grid, start, goal)
+    assert not res_sealed.success and res_sealed.path == [] and res_sealed.cost == 0.0
+    assert res_sealed.stats.iterations == 1
+    planner.apply_revision([(0, 2)], False)  # the reversible half: open it again
+    res_back = planner.plan(grid, start, goal)
+    assert res_back.success and _path_is_connected(grid, res_back.path)
+    assert (0, 2) in res_back.path  # the reopened gate is the only crossing again
+    assert res_back.cost == pytest.approx(res_open.cost)
+    assert res_back.stats.iterations == 2
+
+
+def test_lpa_star_emits_obstacle_changed_and_per_round_trace() -> None:
+    # Replay contract: one obstacle_changed per flipped cell (carrying the post-flip
+    # state), one planning_finished per plan() round (last wins) with cumulative
+    # metrics, and path_found only on rounds that actually reach the goal.
+    grid = grid_from(["..#..", "..#..", "..#.."])
+    buf = io.StringIO()
+    rec = TraceRecorder(buf)
+    planner = LpaStar(config("lpa_star"))
+    res0 = planner.plan(grid, (1, 0), (1, 4), rec)
+    assert not res0.success
+    planner.apply_revision([(1, 2)], False)  # open the wall -> reachable again
+    res1 = planner.plan(grid, (1, 0), (1, 4), rec)
+    assert res1.success and (1, 2) in res1.path
+    events = [json.loads(line) for line in buf.getvalue().splitlines()]
+    kinds = [e["event"] for e in events]
+    changed = [e for e in events if e["event"] == "obstacle_changed"]
+    assert len(changed) == 1 and changed[0]["state"] == [1, 2] and changed[0]["blocked"] is False
+    assert kinds.count("path_found") == 1  # round 0 was unreachable -> no path_found
+    finished = [e for e in events if e["event"] == "planning_finished"]
+    assert len(finished) == 2  # one per plan() round; the driver's _report reads the last
+    assert finished[0]["success"] is False and finished[1]["success"] is True
+    metrics = finished[1]["metrics"]
+    assert {"runtime_sec", "path_cost", "expanded_nodes", "replan_count"} <= metrics.keys()
+    assert metrics["replan_count"] == 1.0
+
+
+def test_lpa_star_apply_revision_before_plan_raises() -> None:
+    # The model (and the recorder it emits through) is seeded in plan(); a revision
+    # before that has no model to repair.
+    planner = LpaStar(config("lpa_star"))
+    with pytest.raises(RuntimeError):
+        planner.apply_revision([(0, 0)], True)
+
+
+def test_lpa_star_rejects_moved_endpoints() -> None:
+    # Fixed start/goal IS the algorithm; re-rooting is D* Lite's job.
+    grid = open_grid(3, 3)
+    planner = LpaStar(config("lpa_star"))
+    planner.plan(grid, (1, 0), (1, 2))
+    with pytest.raises(ValueError):
+        planner.plan(grid, (1, 0), (2, 2))
 
 
 def test_dstar_lite_reaches_goal_without_replan_on_open_grid() -> None:
