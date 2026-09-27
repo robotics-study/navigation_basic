@@ -1,0 +1,9 @@
+# Two agents crossing almost head-on along x in the open 15 m arena. The 0.9 m
+# lateral offset breaks the exact left/right symmetry so even plain VO (which
+# assumes the other agent holds course) commits to one side instead of locking
+# into the reciprocal-dance oscillation -- the offset keeps this a pass/avoid
+# test; the perfectly symmetric dance is shown in the doc demo preset instead.
+map: ../../grid/open_arena.yaml
+agents:
+  - {start: [2.5, 7.05], theta: 0.0,     goal: [12.5, 7.05], radius: 0.3}
+  - {start: [12.5, 7.95], theta: 3.14159, goal: [2.5, 7.95], radius: 0.3}

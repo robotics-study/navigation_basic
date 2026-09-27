@@ -1,0 +1,94 @@
+algorithm: vo
+category: local_planning
+params:
+  - name: max_speed
+    type: float
+    default: 1.2
+    min: 0.01
+    max: 10.0
+    description: 최대 속력 (m/s). 선호속도 v_pref 와 후보 속도 격자의 반경 상한. (Fiorini & Shiller 1998)
+  - name: max_omega
+    type: float
+    default: 4.0
+    min: 0.01
+    max: 20.0
+    description: 최대 각속도 (rad/s). 선택 속도벡터를 즉시 그 방향으로 돌릴 수 있다는 holonomic 근사를 위해 높게 잡는다.
+  - name: heading_gain
+    type: float
+    default: 6.0
+    min: 0.01
+    max: 50.0
+    description: 선택 속도벡터 방향으로의 turn-rate 비례 게인.
+  - name: agent_radius
+    type: float
+    default: 0.3
+    min: 0.01
+    max: 5.0
+    description: 이 로봇의 충돌 반경 (meters). 이웃/장애물 반경과 합산해 결합 반경을 만든다.
+  - name: neighbor_dist
+    type: float
+    default: 4.0
+    min: 0.1
+    max: 50.0
+    description: 이 거리 이내의 동적 이웃/정적 장애물만 회피 대상으로 고려 (meters).
+  - name: time_horizon
+    type: float
+    default: 2.0
+    min: 0.05
+    max: 20.0
+    description: truncated velocity obstacle 의 절단 시간 tau (seconds). (Fiorini & Shiller 1998)
+  - name: obstacle_radius
+    type: float
+    default: 0.25
+    min: 0.01
+    max: 5.0
+    description: 정적 점유 셀 하나를 근사하는 원판 반경 (meters).
+  - name: speed_samples
+    type: int
+    default: 10
+    min: 1
+    max: 50
+    description: 후보 속도 격자의 반경(speed) 방향 구간 수 (결정적 균등 샘플링).
+  - name: angle_samples
+    type: int
+    default: 16
+    min: 3
+    max: 180
+    description: 후보 속도 격자의 각도 방향 샘플 수 (결정적 균등 샘플링).
+  # --- shared closed-loop simulator block (identical across vo/rvo/orca.yaml) ---
+  - name: control_dt
+    type: float
+    default: 0.1
+    min: 0.001
+    max: 1.0
+    description: 제어 주기 (seconds).
+  - name: max_steps
+    type: int
+    default: 800
+    min: 1
+    max: 100000
+    description: 최대 tick 수 (소진 시 TIMEOUT).
+  - name: goal_tolerance
+    type: float
+    default: 0.3
+    min: 0.01
+    max: 5.0
+    description: goal 도달 판정 반경 (meters).
+  - name: footprint_radius
+    type: float
+    default: 0.3
+    min: 0.01
+    max: 5.0
+    description: 정적 장애물 충돌 footprint 반경 (meters).
+  - name: stall_window
+    type: int
+    default: 60
+    min: 1
+    max: 100000
+    description: 정체 판정 sliding window 길이 (ticks).
+  - name: stall_distance
+    type: float
+    default: 0.15
+    min: 0.0
+    max: 5.0
+    description: stall_window 구간 순변위가 이 이하이면 STALLED (meters).

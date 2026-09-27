@@ -105,6 +105,9 @@ visualization, interactive in-browser demos, and a benchmark matrix.*
 | local_planning | Potential Fields | ✅ | ✅ | Khatib (1986) |
 | local_planning | VFH | ✅ | ✅ | Borenstein & Koren (1991) |
 | local_planning | DWA | ✅ | ✅ | Fox, Burgard & Thrun (1997) |
+| local_planning | VO | ✅ | ✅ | Fiorini & Shiller (1998) |
+| local_planning | RVO | ✅ | ✅ | van den Berg, Lin & Manocha (2008) |
+| local_planning | ORCA | ✅ | ✅ | van den Berg, Guy, Lin & Manocha (2011) |
 | local_planning | Pure Pursuit | ✅ | ✅ | Coulter (1992) |
 | local_planning | Stanley | ✅ | ✅ | Thrun et al. (2006) |
 | local_planning | Regulated Pure Pursuit | ✅ | ✅ | Macenski, Singh, Martin & Gines (2023) |

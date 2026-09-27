@@ -62,6 +62,9 @@ _REQUIRED: dict[str, Capability] = {
     "potential_fields": Capability.OBSTACLE_QUERY,
     "vfh": Capability.OBSTACLE_QUERY,
     "dwa": Capability.OBSTACLE_QUERY,
+    "vo": Capability.OBSTACLE_QUERY,
+    "rvo": Capability.OBSTACLE_QUERY,
+    "orca": Capability.OBSTACLE_QUERY,
     "pure_pursuit": Capability.OBSTACLE_QUERY,
     "stanley": Capability.OBSTACLE_QUERY,
     "regulated_pure_pursuit": Capability.OBSTACLE_QUERY,
@@ -75,12 +78,19 @@ _ORDER = ["bfs", "dijkstra", "astar", "ara_star", "jps", "ad_star", "dstar_lite"
           "rrt", "rrt_connect", "rrt_star", "prm_star", "lqr_rrt_star", "kinodynamic_rrt_star",
           "informed_rrt_star", "prm", "fmt_star", "bit_star", "abit_star", "sst",
           "ait_star", "fast_rrt", "eit_star", "fcit_star",
-          "potential_fields", "vfh", "dwa", "pure_pursuit", "stanley", "regulated_pure_pursuit",
+          "potential_fields", "vfh", "dwa", "vo", "rvo", "orca",
+          "pure_pursuit", "stanley", "regulated_pure_pursuit",
           "elastic_bands", "teb", "mpc", "mppi"]
 # Path trackers follow a given reference path rather than seeking a bare goal, so a
 # scenario without one is a shape mismatch (not a capability mismatch) — reported the
 # same "incompatible" way, from a static table so bench still never imports algorithms.
 _NEEDS_PATH = {"pure_pursuit", "stanley", "regulated_pure_pursuit", "elastic_bands", "teb"}
+# Velocity-obstacle planners (VO/RVO/ORCA) avoid moving neighbors, which the static
+# single-agent bench matrix cannot express (load_scenario structurally rejects the
+# `agents:` schema those demos use). Running them on a goal-only scenario would yield
+# a meaningless uniformly-failing row, so they are marked "incompatible" the same
+# static way as _NEEDS_PATH — their reciprocal machinery is covered by demos + tests.
+_NEEDS_DYNAMIC = {"vo", "rvo", "orca"}
 
 
 @dataclass
@@ -159,6 +169,8 @@ def _run_one(
     if not grid.supports(_REQUIRED[algo]):
         return Row(scenario_path.name, algo, "incompatible", {})
     if algo in _NEEDS_PATH and not scenario.reference_path:
+        return Row(scenario_path.name, algo, "incompatible", {})
+    if algo in _NEEDS_DYNAMIC:
         return Row(scenario_path.name, algo, "incompatible", {})
 
     demo = demos_dir / f"demo_{algo}.py"

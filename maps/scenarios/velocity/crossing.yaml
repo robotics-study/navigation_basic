@@ -1,0 +1,9 @@
+# One planner-driven agent crossing the path of a single non-cooperative mover
+# that drives straight through at a fixed 0.6 m/s (scripted_velocity). This is
+# VO's canonical single-robot-vs-moving-obstacle case: the planner alone must
+# yield, since the mover never reacts. The mover's speed is set so it reaches
+# the crossing region at roughly the same time as the planner.
+map: ../../grid/open_arena.yaml
+agents:
+  - {start: [7.5, 2.5], theta: 1.5708, goal: [7.5, 12.5], radius: 0.3}
+  - {start: [2.5, 7.5], theta: 0.0, goal: [12.5, 7.5], radius: 0.3, scripted_velocity: [0.6, 0.0]}

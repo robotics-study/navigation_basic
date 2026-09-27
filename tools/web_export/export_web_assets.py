@@ -5,8 +5,14 @@ The docs SPA (document/) replays real demo traces. Benchmark-budget traces can b
 huge (GB for sampling planners), so this tool generates traces with the demo's
 default (small) budgets and gzips them for static serving.
 
+The scenario defaults to `<map>_s1` (single-robot). The velocity-obstacle family
+(VO/RVO/ORCA) runs multi-agent scenarios named after the scenario itself
+(`--scenario velocity/head_on`); --maps still names the grid map exported as JSON.
+
 Usage:
     python tools/web_export/export_web_assets.py --algos astar --maps maze01,open01
+    python tools/web_export/export_web_assets.py --algos vo,rvo,orca \
+        --maps open_arena --scenario velocity/head_on
 """
 
 from __future__ import annotations
@@ -93,8 +99,13 @@ def params_file(algo: str, overrides: dict[str, str], tmp: Path) -> Path:
     벤치마크 기본 예산(예: PRM num_samples=1500)은 웹 재생 파일로는 수 MB 라,
     웹 자산은 더 작은 예산으로 다시 굴린다. 파라미터는 trace 의
     planning_started 에 기록되므로 재생/parity 는 그대로 성립한다.
+
+    두 config 카테고리를 순서대로 찾는다 — 알고리즘 파일명은 카테고리 간에
+    충돌하지 않는다(bench 와 같은 규칙).
     """
     src = REPO / "configs" / "global_planning" / f"{algo}.yaml"
+    if not src.exists():
+        src = REPO / "configs" / "local_planning" / f"{algo}.yaml"
     if not overrides:
         return src
     doc = yaml.safe_load(src.read_text())
@@ -107,11 +118,11 @@ def params_file(algo: str, overrides: dict[str, str], tmp: Path) -> Path:
     return out
 
 
-def run_demo(algo: str, map_name: str, impl: str, trace_path: Path,
+def run_demo(algo: str, map_name: str, scenario: Path, impl: str, trace_path: Path,
              params_path: Path) -> bool:
     common = [
         "--map", str(REPO / "maps" / "grid" / f"{map_name}.yaml"),
-        "--scenario", str(REPO / "maps" / "scenarios" / f"{map_name}_s1.yaml"),
+        "--scenario", str(scenario),
         "--params", str(params_path),
         "--trace", str(trace_path),
     ]
@@ -130,13 +141,14 @@ def run_demo(algo: str, map_name: str, impl: str, trace_path: Path,
     return True
 
 
-def export_traces(algo: str, map_name: str, overrides: dict[str, str]) -> None:
+def export_traces(algo: str, map_name: str, scenario: Path,
+                  overrides: dict[str, str]) -> None:
     # C++/Python 데모는 동일 이벤트 열을 방출하므로 웹 자산은 py 한 벌만 만든다.
     for impl in ("py",):
         with tempfile.TemporaryDirectory() as tmp:
             trace = Path(tmp) / "trace.jsonl"
             params_path = params_file(algo, overrides, Path(tmp))
-            if not run_demo(algo, map_name, impl, trace, params_path):
+            if not run_demo(algo, map_name, scenario, impl, trace, params_path):
                 continue
             events = sum(1 for _ in trace.open())
             if events > MAX_EVENTS:
@@ -158,6 +170,9 @@ def main() -> None:
         "--algos", default="", help="comma-separated algorithm slugs (empty: maps only)"
     )
     parser.add_argument("--maps", required=True, help="comma-separated grid map names")
+    parser.add_argument("--scenario", default="",
+                        help="scenario name under maps/scenarios/ (default: <map>_s1 per map). "
+                        "Multi-agent velocity scenarios are named after the scenario itself, e.g. velocity/head_on.")
     parser.add_argument("--set", action="append", default=[], metavar="KEY=VALUE",
                         help="param default override for the demo run (repeatable)")
     args = parser.parse_args()
@@ -165,8 +180,9 @@ def main() -> None:
     overrides = dict(kv.split("=", 1) for kv in args.set)
     for map_name in args.maps.split(","):
         export_map(map_name)
+        scenario = REPO / "maps" / "scenarios" / f"{args.scenario or f'{map_name}_s1'}.yaml"
         for algo in algos:
-            export_traces(algo, map_name, overrides)
+            export_traces(algo, map_name, scenario, overrides)
 
 
 if __name__ == "__main__":

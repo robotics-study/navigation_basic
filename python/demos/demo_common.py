@@ -16,11 +16,15 @@ from navigation.core.planner import GlobalPlanner, LocalPlanner
 from navigation.core.trace import open_trace
 from navigation.core.types import Cell, LocalTask, PlanResult, Point, Pose, RobotState
 from navigation.local_planning.simulation import SimConfig, simulate
+from navigation.local_planning.velocity._velocity_obstacle import VelocityObstaclePlanner
+from navigation.local_planning.velocity.agent_scenario import load_agent_scenario
+from navigation.local_planning.velocity.agent_sim import simulate_agents
 from navigation.maps.loader import load_map, load_scenario
 from navigation.maps.occupancy_grid import OccupancyGrid2D
 
 PlannerFactory = Callable[[ParamSet], GlobalPlanner]
 LocalPlannerFactory = Callable[[ParamSet], LocalPlanner]
+VelocityPlannerFactory = Callable[[ParamSet], VelocityObstaclePlanner]
 
 
 def _parse_args(name: str) -> argparse.Namespace:
@@ -119,6 +123,44 @@ def run_local(name: str, factory: LocalPlannerFactory) -> None:
         "min_clearance": round(result.min_clearance, 4),
         "steps": result.steps,
     }
+    print(json.dumps(summary))
+
+
+def run_agents(name: str, factory: VelocityPlannerFactory) -> None:
+    # Multi-agent assembly for the velocity-obstacle family (VO/RVO/ORCA):
+    # wires an AgentScenario (N bodies, one goal each, some possibly scripted
+    # non-cooperative movers) instead of run_local's single-agent Scenario, and
+    # hands the run to simulate_agents, whose tick loop owns termination + the
+    # per-body trace order.
+    args = _parse_args(name)
+    params = ParamSet.from_yaml(args.params)
+    seed = params.get_int("seed") if params.has("seed") else args.seed
+    grid = load_map(args.map, seed=seed, connectivity=args.connectivity)
+    assert isinstance(grid, OccupancyGrid2D)
+    scenario = load_agent_scenario(args.scenario)
+    config = SimConfig(
+        control_dt=params.get_float("control_dt"),
+        max_steps=params.get_int("max_steps"),
+        goal_tolerance=params.get_float("goal_tolerance"),
+        footprint_radius=params.get_float("footprint_radius"),
+        stall_window=params.get_int("stall_window"),
+        stall_distance=params.get_float("stall_distance"),
+    )
+    planners: list[VelocityObstaclePlanner | None] = [
+        None if spec.scripted_velocity is not None else factory(params) for spec in scenario.agents
+    ]
+    with open_trace(args.trace) as recorder:
+        recorder.planning_started(name, args.map, params.values())
+        results = simulate_agents(planners, list(scenario.agents), grid, config, recorder)
+    summary = [
+        {
+            "agent": k,
+            "status": result.status.value,
+            "steps": result.steps,
+            "min_pair_clearance": round(result.min_pair_clearance, 4),
+        }
+        for k, result in enumerate(results)
+    ]
     print(json.dumps(summary))
 
 
