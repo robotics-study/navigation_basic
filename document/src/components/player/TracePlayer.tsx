@@ -32,6 +32,8 @@ interface TracePlayerProps {
     autoPlay?: boolean;
     // sandbox 상호작용 passthrough — 입력이 바뀌면 부모가 timeline을 새로 만든다.
     onPaintCell?: (row: number, col: number, occupied: boolean) => void;
+    // 페인팅 붓의 점유 기준 (lifelong replanner sandbox용, GridCanvas 참조).
+    paintOccupied?: boolean[];
     onMoveStart?: (cell: Cell) => void;
     onMoveGoal?: (cell: Cell) => void;
     // 맵/시작/목표를 preset 초기값으로 되돌린다. 있으면 리셋 버튼이 붙는다.
@@ -57,7 +59,7 @@ const TracePlayer = ({
                          carLength,
                          panel = 340, showTree, overlayPath, truePath,
                          shadowCells, autoPlay = true,
-                         onPaintCell, onMoveStart, onMoveGoal, onReset, footer,
+                         onPaintCell, paintOccupied, onMoveStart, onMoveGoal, onReset, footer,
                      }: TracePlayerProps) => {
     const t = useTr()
     const [step, setStep] = useState(autoPlay ? 0 : timeline.steps)
@@ -155,7 +157,8 @@ const TracePlayer = ({
                         start={start} goal={goal} showTree={showTree} overlayPath={overlayPath}
                         truePath={truePath} shadowCells={shadowCells}
                         carPose={carPose} goalPose={goalCarPose} carLength={carLength}
-                        onPaintCell={onPaintCell} onMoveStart={onMoveStart} onMoveGoal={onMoveGoal}/>
+                        onPaintCell={onPaintCell} paintOccupied={paintOccupied}
+                        onMoveStart={onMoveStart} onMoveGoal={onMoveGoal}/>
 
             <div className="flex items-center gap-1.5 text-xs text-muted w-full" style={{maxWidth: panel}}>
                 {playing

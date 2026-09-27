@@ -42,6 +42,16 @@ const RUNNERS = {
     bfs: (m, s, g) => engines.runBFS({map: m, start: s, goal: g, connectivity: 8}),
     dijkstra: (m, s, g) => engines.runAStar(
         {map: m, start: s, goal: g, heuristicWeight: 0, connectivity: 8}),
+    // 시나리오 maps/scenarios/lpa_replan01_s1.yaml 를 JS로 옮긴 것: rev1이 col-8 행
+    // 8~11 벽으로 row 10 통로를 막고 rev2가 (10,8)을 다시 연다. start/goal은 다른
+    // grid 알고리즘처럼 마지막 path_found 양끝에서 자동으로 들어온다.
+    lpa_star: (m, s, g) => engines.runLpaStar({
+        map: m, start: s, goal: g,
+        revisions: [
+            {cells: [[8, 8], [9, 8], [10, 8], [11, 8]], blocked: true},
+            {cells: [[10, 8]], blocked: false},
+        ],
+    }).events,
     dstar_lite: (m, s, g, p) => engines.runDStarLite(
         {map: m, start: s, goal: g, sensorRadius: p.sensor_radius ?? 3}).events,
     ara_star: (m, s, g, p) => engines.runARAStar(
@@ -324,6 +334,7 @@ const CHECKS = [
     {algo: "astar", maps: ["maze01", "open01"], exact: false},
     {algo: "bfs", maps: ["maze01", "open01", "bfs_hopcost01"], exact: true},
     {algo: "dijkstra", maps: ["maze01", "open01"], exact: false},
+    {algo: "lpa_star", maps: ["lpa_replan01"], exact: true},
     {algo: "dstar_lite", maps: ["dstar_trap01", "maze01"], exact: true},
     {algo: "ara_star", maps: ["wastar_greedy01", "maze01"], exact: false},
     {algo: "ad_star", maps: ["dstar_trap01", "maze01"], exact: true},
