@@ -82,9 +82,10 @@ class TraceRecorder {
   // tick's ego forbidden region(s) in velocity space -- truncated cones (VO/RVO,
   // length-6 entries) or half-planes (ORCA, length-4), one per nearby obstacle.
   // `constraints` is a top-level array like `bins`/`band` because the numeric-only
-  // `data` map cannot carry nested arrays; omitted when empty so the event still
-  // carries the pref/new velocity in `data`. `data` holds {pref_vx, pref_vy,
-  // new_vx, new_vy}.
+  // `data` map cannot carry nested arrays; omitted when empty, which means either no
+  // obstacle was nearby or the pair had already penetrated (so nothing was consulted
+  // and the planner commanded a standstill) -- either way data holds {pref_vx,
+  // pref_vy, new_vx, new_vy}.
   template <class State>
   void velocity_obstacle(const State& s, const std::vector<std::vector<double>>& constraints,
                          const EventData& data = {}) {

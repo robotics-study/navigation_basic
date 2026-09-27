@@ -33,6 +33,11 @@ _EPS = 1e-9
 # Added to an infeasible (VO/RVO-cone-violating) candidate's cost so any
 # feasible candidate always outranks it, however close the infeasible one sits
 # to v_pref. Not tunable (only its relative dominance over real costs matters).
+#
+# This only ranks *sampled* candidates when the polar grid happens to hold no
+# admissible sample -- a resolution artifact, not an unavoidable collision. A pair
+# that has already penetrated never reaches scoring at all (`already_overlapping`
+# short-circuits to a standstill before any cone is built).
 _PENALTY = 1e6
 
 
@@ -48,8 +53,13 @@ class Cone:
     """Truncated velocity obstacle (Fiorini & Shiller 1998): the set of
     (absolute) velocities that, held for `tau` seconds, put the agent inside
     `radius` of the obstacle. `left`/`right` are unit boundary rays from
-    `apex` along the two tangents; `full` marks an already-overlapping pair
-    (radius >= dist), whose VO is the entire velocity plane."""
+    `apex` along the two tangents.
+
+    A cone is only ever built for a pair that does NOT yet overlap: at
+    ``dist <= radius`` there is no tangent line to construct and every relative
+    velocity keeps the pair inside the combined radius, so the family short-circuits
+    to a standstill in `VelocityObstaclePlanner.command_with_neighbors` before this
+    geometry is consulted (see `already_overlapping`)."""
 
     apex: Point
     axis: Point
@@ -57,7 +67,6 @@ class Cone:
     dist: float
     radius: float
     tau: float
-    full: bool
     left: Point
     right: Point
 
@@ -93,22 +102,10 @@ def velocity_to_command(
 
 
 def truncated_vo_cone(rel_pos: Point, combined_radius: float, apex_vel: Point, tau: float) -> Cone:
+    # Only ever called for a non-overlapping pair (dist > combined_radius): the
+    # caller short-circuits on overlap, which is why no `full`-cone branch exists.
     px, py = rel_pos
     dist = math.hypot(px, py)
-    if dist <= combined_radius + _EPS:
-        # Already overlapping: every relative velocity leads to (deeper)
-        # penetration, so the forbidden region is the whole plane.
-        return Cone(
-            apex=apex_vel,
-            axis=(1.0, 0.0),
-            cos_half=-1.0,
-            dist=dist,
-            radius=combined_radius,
-            tau=tau,
-            full=True,
-            left=(1.0, 0.0),
-            right=(1.0, 0.0),
-        )
     ux, uy = px / dist, py / dist
     sin_half = combined_radius / dist
     cos_half = math.sqrt(max(0.0, 1.0 - sin_half * sin_half))
@@ -121,15 +118,12 @@ def truncated_vo_cone(rel_pos: Point, combined_radius: float, apex_vel: Point, t
         dist=dist,
         radius=combined_radius,
         tau=tau,
-        full=False,
         left=left,
         right=right,
     )
 
 
 def in_velocity_obstacle(v: Point, cone: Cone) -> bool:
-    if cone.full:
-        return True
     wx, wy = v[0] - cone.apex[0], v[1] - cone.apex[1]
     wlen = math.hypot(wx, wy)
     if wlen < _EPS:
@@ -205,6 +199,24 @@ def static_obstacles(
 
 def _dist(a: Point, b: Point) -> float:
     return math.hypot(a[0] - b[0], a[1] - b[1])
+
+
+def already_overlapping(
+    obstacles: Sequence[DynamicObstacle], pos: Point, agent_radius: float
+) -> bool:
+    """True once any obstacle disc already overlaps the agent's own disc.
+
+    At that distance the algorithm has run out of what it can decide: VO/RVO's
+    cone degenerates to the whole velocity plane (every relative velocity keeps
+    the pair inside the combined radius, so no tangent boundary is left to steer
+    by), and ORCA's half-plane loses both tangent legs -- its cutoff-circle branch
+    would then push along an axis derived from a near-zero relative position.
+    Rather than let a tie-break pick an arbitrary velocity out of a fully forbidden
+    set, the whole family commands a standstill and lets the simulator end the
+    episode as COLLISION. This is the honest output, not a fallback: VO has no
+    admissible velocity to select once penetration has already happened.
+    """
+    return any(_dist(o.position, pos) <= agent_radius + o.radius for o in obstacles)
 
 
 def select_sampled_velocity(
@@ -486,8 +498,25 @@ class VelocityObstaclePlanner(ObstacleLocalPlanner, ABC):
         recorder: TraceRecorder | None = None,
     ) -> VelocityCommand:
         x, y, theta = state.pose
-        statics = static_obstacles(space, (x, y), self._neighbor_dist, self._obstacle_radius)
+        pos = (x, y)
+        statics = static_obstacles(space, pos, self._neighbor_dist, self._obstacle_radius)
         v_pref = preferred_velocity(state.pose, task.goal, self._max_speed)
+        all_obstacles = tuple(neighbors) + statics
+        if already_overlapping(all_obstacles, pos, self._agent_radius):
+            # Nothing to select from: emit the tick with an EMPTY constraint set (no
+            # cone/half-plane was ever consulted) and a standstill.
+            if recorder is not None:
+                recorder.velocity_obstacle(
+                    (x, y, theta),
+                    (),
+                    data={
+                        "pref_vx": v_pref[0],
+                        "pref_vy": v_pref[1],
+                        "new_vx": 0.0,
+                        "new_vy": 0.0,
+                    },
+                )
+            return VelocityCommand(0.0, 0.0)
         v_new, constraints = self._select_velocity(v_pref, tuple(neighbors), statics, state, dt)
         if recorder is not None:
             recorder.velocity_obstacle(

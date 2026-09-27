@@ -1,3 +1,4 @@
+#include <cmath>
 #include <fstream>
 #include <optional>
 #include <sstream>
@@ -24,6 +25,7 @@
 // to avoid.
 
 using namespace navigation;
+using core::LocalTask;
 using core::ParamSet;
 using core::Point;
 using core::Pose;
@@ -196,4 +198,62 @@ TEST(Rvo, ReciprocityZeroMatchesPlainVoApex) {
   EXPECT_NEAR(at_zero.y, v_other.y, 1e-9);
   EXPECT_NEAR(at_one.x, v_self.x, 1e-9);
   EXPECT_NEAR(at_one.y, v_self.y, 1e-9);
+}
+
+// --- an already-penetrated obstacle leaves nothing to select ------------------
+namespace {
+
+// Trace JSONL helpers (private copies, same shape as test_dwa.cpp's).
+std::vector<std::string> split_lines(const std::string& s) {
+  std::istringstream in(s);
+  std::vector<std::string> out;
+  std::string line;
+  while (std::getline(in, line)) out.push_back(line);
+  return out;
+}
+
+double find_data_value(const std::string& line, const std::string& key) {
+  std::string needle = "\"" + key + "\":";
+  size_t at = line.find(needle);
+  if (at == std::string::npos) return std::nan("");
+  size_t start = at + needle.size();
+  size_t end = line.find_first_of(",}", start);
+  return std::stod(line.substr(start, end - start));
+}
+
+}  // namespace
+
+TEST(Rvo, PenetratedObstacleCommandsStandstill) {
+  // A wall cell directly under the robot satisfies d <= agent_radius +
+  // obstacle_radius. RVO's forbidden region degenerates there (no tangent line
+  // left to build), so no admissible velocity exists at all. The honest command
+  // is a standstill -- before this branch existed every candidate violated and
+  // the tie-break fell through to v_pref, i.e. full speed straight into the
+  // wall the robot already sits inside.
+  auto params = ParamSet::from_yaml(config_path());
+  std::vector<bool> free_cells(3 * 5, true);
+  free_cells[1 * 5 + 2] = false;  // row 1, col 2 (resolution 1.0 -> centre (2.5, 1.5))
+  maps::OccupancyGrid2D grid(3, 5, 1.0, 0.0, 0.0, std::move(free_cells));
+  core::Point centre = grid.cell_to_world(core::Cell{1, 2});
+
+  std::ostringstream os;
+  core::TraceRecorder rec(os);
+  Rvo planner(params);
+  core::VelocityCommand cmd = planner.compute_command(
+      grid, RobotState{Pose{centre.x, centre.y, 0.0}, 0.0, 0.0},
+      LocalTask{Pose{4.5, 1.5, 0.0}, {}}, params.get_float("control_dt"), &rec);
+  EXPECT_DOUBLE_EQ(cmd.v, 0.0);
+  EXPECT_DOUBLE_EQ(cmd.omega, 0.0);
+
+  std::vector<std::string> events;
+  for (const std::string& line : split_lines(os.str())) {
+    if (line.find("\"velocity_obstacle\"") != std::string::npos) events.push_back(line);
+  }
+  ASSERT_EQ(events.size(), 1u);
+  // Nothing was selected from, so no cone / half-plane was ever consulted -- the
+  // event carries only the preferred/chosen velocities (constraints is omitted
+  // when empty, per spec/trace_schema.json).
+  EXPECT_EQ(events[0].find("\"constraints\""), std::string::npos);
+  EXPECT_DOUBLE_EQ(find_data_value(events[0], "new_vx"), 0.0);
+  EXPECT_DOUBLE_EQ(find_data_value(events[0], "new_vy"), 0.0);
 }

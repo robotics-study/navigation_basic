@@ -171,8 +171,10 @@ class TraceRecorder:
         # tick's ego forbidden region(s) in velocity space -- truncated cones (VO/RVO)
         # or half-planes (ORCA), one entry per nearby obstacle. A top-level array like
         # `band`/`bins`/`rollout` because the numeric-only `data` map cannot carry
-        # nested arrays; omitted when empty (no obstacle nearby) so the event still
-        # carries the pref/new velocity in `data` without an empty array on the wire.
+        # nested arrays; omitted when empty, which means either no obstacle was nearby
+        # or the pair had already penetrated (so nothing was consulted and the planner
+        # commanded a standstill) -- either way `data.new_vx/new_vy` carries what was
+        # actually chosen.
         fields: dict[str, object] = {"state": list(state)}
         if constraints:
             fields["constraints"] = [list(c) for c in constraints]

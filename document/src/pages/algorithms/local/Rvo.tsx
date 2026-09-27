@@ -394,12 +394,17 @@ return velocity_to_command(best, theta, max_omega, heading_gain)           # 12`
                     <InlineMath math="\text{rvo.py}"/>/<InlineMath math="\text{rvo.cpp}"/> add
                     exactly the reciprocity parameter and the apex-shift call — everything else
                     (cone geometry, candidate grid, penalty scan) is the shared module from VO's
-                    page, unchanged.
+                    page, unchanged. That same module short-circuits to a standstill once a pair
+                    has already penetrated: at that distance there is no tangent left to build and
+                    nothing left to select, so it commands v = 0 rather than picking an arbitrary
+                    velocity out of a fully forbidden set.
                 </p>}
                 ko={<p>
                     <InlineMath math="\text{rvo.py}"/>/<InlineMath math="\text{rvo.cpp}"/>는
                     reciprocity 파라미터와 apex 이동 호출만 추가한다. 나머지(원뿔 기하, 후보
-                    격자, 페널티 스캔)는 VO 페이지의 공유 모듈 그대로다.
+                    격자, 페널티 스캔)는 VO 페이지의 공유 모듈 그대로다. 그 공유 모듈은 쌍이 이미
+                    겹친 순간에도 정지로 단락한다. 그때는 만들 접선이 없고 고을 속도도 남지 않으니,
+                    금지된 집합 전체에서 임의의 속도를 고르는 대신 v = 0을 명령한다.
                 </p>}
             />
             <CodeTabs

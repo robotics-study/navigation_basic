@@ -349,10 +349,14 @@ return velocity_to_command(best, theta, max_omega, heading_gain)           # 11`
                         ]}/>
                         <p>
                             When the obstacle already overlaps the robot's own disc
-                            (<InlineMath math="d \le r"/>), the right triangle above no longer exists —
-                            there is no external tangent line at all, and the honest forbidden region
-                            is every velocity whatsoever, which is exactly the <InlineMath math="\text{full}"/>{" "}
-                            flag's fallback case rather than a divide-by-zero. <InlineMath math="\blacksquare"/>
+                            (<InlineMath math="d \le r"/>) the right triangle above no longer exists.
+                            There is no external tangent line at all, so there is no cone to build and
+                            nothing left to choose from: every relative velocity keeps the pair inside
+                            the combined radius. The implementation therefore never evaluates a cone in
+                            that state — it short-circuits to a standstill, and the simulator ends the
+                            episode as COLLISION. That is the honest output rather than a fallback: once
+                            penetration has happened VO simply has no admissible velocity left to select.{" "}
+                            <InlineMath math="\blacksquare"/>
                         </p>
                     </>}
                     ko={<>
@@ -396,10 +400,12 @@ return velocity_to_command(best, theta, max_omega, heading_gain)           # 11`
                         ]}/>
                         <p>
                             obstacle이 이미 로봇 자신의 원판과 겹친 경우
-                            (<InlineMath math="d \le r"/>)에는 위 직각삼각형 자체가 존재하지
-                            않는다. 바깥 접선이 아예 없고, 정직한 금지 영역은 속도 전체다. 이는
-                            0으로 나누기가 아니라 정확히 <InlineMath math="\text{full}"/> 플래그의
-                            fallback 케이스다. <InlineMath math="\blacksquare"/>
+                            (<InlineMath math="d \le r"/>)에는 위 직각삼각형 자체가 존재하지 않는다.
+                            바깥 접선이 아예 없으니 만들 원뿔도 없고 고을 속도도 남지 않는다. 어떤 상대
+                            속도든 결합 반경 안에 머무르기 때문이다. 그래서 구현은 그 상태에서 원뿔을 아예
+                            계산하지 않고 정지를 명령하고, 시뮬레이터는 에피소드를 COLLISION으로 끝낸다.
+                            이건 fallback이 아니라 정직한 출력이다. 침투가 이미 일어난 뒤에는 VO에 선택할
+                            admissible 속도가 남지 않는다. <InlineMath math="\blacksquare"/>
                         </p>
                     </>}
                 />

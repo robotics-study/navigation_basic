@@ -133,25 +133,19 @@ core::VelocityCommand velocity_to_command(const core::Point& v_new, double theta
 
 Cone truncated_vo_cone(const core::Point& rel_pos, double combined_radius,
                        const core::Point& apex_vel, double tau) {
+  // Only ever called for a non-overlapping pair (dist > combined_radius): the
+  // caller short-circuits on overlap, which is why no `full`-cone branch exists.
   double px = rel_pos.x, py = rel_pos.y;
   double dist = std::hypot(px, py);
-  if (dist <= combined_radius + kEps) {
-    // Already overlapping: every relative velocity leads to (deeper)
-    // penetration, so the forbidden region is the whole plane.
-    return Cone{apex_vel,        core::Point{1.0, 0.0}, -1.0, dist, combined_radius,
-               tau, true, core::Point{1.0, 0.0}, core::Point{1.0, 0.0}};
-  }
   double ux = px / dist, uy = py / dist;
   double sin_half = combined_radius / dist;
   double cos_half = std::sqrt(std::max(0.0, 1.0 - sin_half * sin_half));
   core::Point left{ux * cos_half - uy * sin_half, ux * sin_half + uy * cos_half};
   core::Point right{ux * cos_half + uy * sin_half, -ux * sin_half + uy * cos_half};
-  return Cone{apex_vel, core::Point{ux, uy}, cos_half, dist, combined_radius, tau, false, left,
-             right};
+  return Cone{apex_vel, core::Point{ux, uy}, cos_half, dist, combined_radius, tau, left, right};
 }
 
 bool in_velocity_obstacle(const core::Point& v, const Cone& cone) {
-  if (cone.full) return true;
   double wx = v.x - cone.apex.x, wy = v.y - cone.apex.y;
   double wlen = std::hypot(wx, wy);
   if (wlen < kEps) return false;  // relative rest never collides
@@ -204,6 +198,14 @@ std::vector<DynamicObstacle> static_obstacles(core::ObstacleQuery& space, const 
     out.push_back(DynamicObstacle{p, core::Point{0.0, 0.0}, obstacle_radius});
   }
   return out;
+}
+
+bool already_overlapping(const std::vector<DynamicObstacle>& obstacles, const core::Point& pos,
+                         double agent_radius) {
+  for (const DynamicObstacle& o : obstacles) {
+    if (dist_pts(o.position, pos) <= agent_radius + o.radius) return true;
+  }
+  return false;
 }
 
 VelocitySelection select_sampled_velocity(
@@ -379,6 +381,19 @@ core::VelocityCommand VelocityObstaclePlanner::command_with_neighbors(
   std::vector<DynamicObstacle> statics =
       static_obstacles(space, core::Point{x, y}, neighbor_dist_, obstacle_radius_);
   core::Point v_pref = preferred_velocity(state.pose, task.goal, max_speed_);
+  std::vector<DynamicObstacle> all_obstacles = neighbors;
+  all_obstacles.insert(all_obstacles.end(), statics.begin(), statics.end());
+  if (already_overlapping(all_obstacles, core::Point{x, y}, agent_radius_)) {
+    // Nothing to select from: emit the tick with an EMPTY constraint set (no
+    // cone/half-plane was ever consulted) and a standstill.
+    if (recorder != nullptr) {
+      recorder->velocity_obstacle(
+          core::Pose{x, y, theta}, {},
+          core::TraceRecorder::EventData{{"pref_vx", v_pref.x}, {"pref_vy", v_pref.y},
+                                         {"new_vx", 0.0}, {"new_vy", 0.0}});
+    }
+    return core::VelocityCommand{0.0, 0.0};
+  }
   VelocitySelection sel = select_velocity(v_pref, neighbors, statics, state, dt);
   if (recorder != nullptr) {
     recorder->velocity_obstacle(

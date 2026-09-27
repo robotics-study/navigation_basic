@@ -6,16 +6,19 @@ episode must fail honestly rather than report a false REACHED)."""
 
 from __future__ import annotations
 
+import io
+import json
 from pathlib import Path
 from typing import Any
 
 import numpy as np
 import pytest
 import yaml
-from conftest import REPO_ROOT
+from conftest import REPO_ROOT, grid_from
 
 from navigation.core.params import ParamError, ParamSet
-from navigation.core.types import RobotState
+from navigation.core.trace import TraceRecorder
+from navigation.core.types import LocalTask, RobotState
 from navigation.local_planning.simulation import SimConfig, SimStatus
 from navigation.local_planning.velocity.agent_scenario import load_agent_scenario
 from navigation.local_planning.velocity.agent_sim import AgentSpec, simulate_agents
@@ -136,3 +139,33 @@ def test_rerun_is_deterministic(tmp_path: Path) -> None:
         assert len(r2.trajectory) == len(r1.trajectory)
         for p1, p2 in zip(r1.trajectory, r2.trajectory, strict=True):
             assert p1 == pytest.approx(p2)
+
+
+# --- an already-penetrated obstacle leaves nothing to select -------------------
+def test_penetrated_obstacle_commands_standstill(tmp_path: Path) -> None:
+    """A wall cell directly under the robot satisfies d <= agent_radius +
+    obstacle_radius. VO's forbidden region degenerates there (no tangent line
+    left to build), so no admissible velocity exists at all. The honest command is
+    a standstill -- before this branch existed every candidate violated and the
+    tie-break fell through to v_pref, i.e. full speed straight into the wall the
+    robot already sits inside."""
+    grid = grid_from([".....", "..#..", "....."])
+    x, y = grid.cell_to_world(1, 2)  # resolution 1.0 -> (2.5, 1.5), an occupied centre
+    params = _config(tmp_path)
+    buf = io.StringIO()
+    recorder = TraceRecorder(buf)
+    planner = Vo(params)
+    cmd = planner.compute_command(
+        grid, RobotState(pose=(x, y, 0.0)), LocalTask(goal=(4.5, 1.5)),
+        params.get_float("control_dt"), recorder)
+    assert cmd.v == 0.0 and cmd.omega == 0.0
+
+    events = [json.loads(line) for line in buf.getvalue().splitlines()]
+    events = [e for e in events if e["event"] == "velocity_obstacle"]
+    assert len(events) == 1
+    # Nothing was selected from, so no cone / half-plane was ever consulted -- the
+    # event carries only the preferred/chosen velocities (constraints is omitted
+    # when empty, per spec/trace_schema.json).
+    assert "constraints" not in events[0]
+    assert events[0]["data"]["new_vx"] == 0.0
+    assert events[0]["data"]["new_vy"] == 0.0

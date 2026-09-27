@@ -31,6 +31,11 @@ constexpr double kEps = 1e-9;
 // feasible candidate always outranks it, however close the infeasible one
 // sits to v_pref. Not tunable (only its relative dominance over real costs
 // matters).
+//
+// This only ranks *sampled* candidates when the polar grid happens to hold no
+// admissible sample -- a resolution artifact, not an unavoidable collision. A pair
+// that has already penetrated never reaches scoring at all (already_overlapping
+// short-circuits to a standstill before any cone is built).
 constexpr double kPenalty = 1e6;
 
 struct DynamicObstacle {
@@ -41,9 +46,14 @@ struct DynamicObstacle {
 
 // Truncated velocity obstacle (Fiorini & Shiller 1998): the set of (absolute)
 // velocities that, held for `tau` seconds, put the agent inside `radius` of
-// the obstacle. `left`/`right` are unit boundary rays from `apex` along the
-// two tangents; `full` marks an already-overlapping pair (radius >= dist),
-// whose VO is the entire velocity plane.
+// the obstacle. `left`/`right` are unit boundary rays from `apex` along the two
+// tangents.
+//
+// A cone is only ever built for a pair that does NOT yet overlap: at
+// dist <= radius there is no tangent line to construct and every relative
+// velocity keeps the pair inside the combined radius, so the family short-circuits
+// to a standstill in VelocityObstaclePlanner::command_with_neighbors before this
+// geometry is consulted (see already_overlapping).
 struct Cone {
   core::Point apex;
   core::Point axis;
@@ -51,7 +61,6 @@ struct Cone {
   double dist = 0.0;
   double radius = 0.0;
   double tau = 0.0;
-  bool full = false;
   core::Point left;
   core::Point right;
 };
@@ -90,6 +99,20 @@ core::Point rvo_apex(const core::Point& v_self, const core::Point& v_other, doub
 // fully unobstructed tick costs exactly 0 and wins every tie.
 std::vector<core::Point> sample_reachable_velocities(const core::Point& v_pref, double max_speed,
                                                       int speed_samples, int angle_samples);
+
+// True once any obstacle disc already overlaps the agent's own disc.
+//
+// At that distance the algorithm has run out of what it can decide: VO/RVO's cone
+// degenerates to the whole velocity plane (every relative velocity keeps the pair
+// inside the combined radius, so no tangent boundary is left to steer by), and
+// ORCA's half-plane loses both tangent legs -- its cutoff-circle branch would then
+// push along an axis derived from a near-zero relative position. Rather than let a
+// tie-break pick an arbitrary velocity out of a fully forbidden set, the whole
+// family commands a standstill and lets the simulator end the episode as COLLISION.
+// This is the honest output, not a fallback: VO has no admissible velocity to
+// select once penetration has already happened.
+bool already_overlapping(const std::vector<DynamicObstacle>& obstacles, const core::Point& pos,
+                         double agent_radius);
 
 // Occupied cells within `sensor_radius` folded into velocity-0 obstacles so a
 // single VO/RVO/ORCA code path handles static walls and moving agents alike.

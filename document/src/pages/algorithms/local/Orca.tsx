@@ -468,12 +468,17 @@ return velocity_to_command(v_new, theta, max_omega, heading_gain)           # 9`
                     <InlineMath math="\text{orca.py}"/>/<InlineMath math="\text{orca.cpp}"/> build
                     the two half-plane batches and wire the 2D/3D linear program together — the
                     half-plane construction and both solvers live in the same shared module as
-                    VO and RVO's cone machinery.
+                    VO and RVO's cone machinery. That module also short-circuits once a pair has
+                    already penetrated: with both tangent legs gone the half-plane derivation
+                    degenerates, so ORCA commands a standstill instead of letting the linear
+                    program pick an arbitrary direction out of an empty feasible set.
                 </p>}
                 ko={<p>
                     <InlineMath math="\text{orca.py}"/>/<InlineMath math="\text{orca.cpp}"/>는 두
                     half-plane 묶음을 만들고 2D/3D 선형계획을 이어 붙인다. half-plane 구성과 두
-                    solver 모두 VO·RVO의 원뿔 기반과 같은 공유 모듈에 있다.
+                    solver 모두 VO·RVO의 원뿔 기반과 같은 공유 모듈에 있다. 그 모듈은 쌍이 이미 겹친
+                    순간에도 단락한다. 두 접선이 사라져 half-plane 유도가 퇴화하므로, feasible 집합이
+                    비어 임의 방향을 고르는 대신 정지를 명령한다.
                 </p>}
             />
             <CodeTabs

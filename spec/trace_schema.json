@@ -104,7 +104,7 @@
     "constraints": {
       "type": "array",
       "items": { "type": "array", "items": { "type": "number" }, "minItems": 4, "maxItems": 6 },
-      "description": "velocity_obstacle 전용: 속도공간 금지영역. 길이 6 = [apex_x,apex_y,left_x,left_y,right_x,right_y] (VO/RVO 절단 원뿔: apex=속도공간 꼭짓점, left/right=경계 단위벡터). 길이 4 = [point_x,point_y,normal_x,normal_y] (ORCA half-plane: feasible 는 dot(v-point,normal)>=0). data 는 스칼라 맵이라 배열을 담을 수 없으므로 bins/rollout/band 와 같은 top-level 배열로 둔다."
+      "description": "velocity_obstacle 전용: 속도공간 금지영역. 길이 6 = [apex_x,apex_y,left_x,left_y,right_x,right_y] (VO/RVO 절단 원뿔: apex=속도공간 꼭짓점, left/right=경계 단위벡터). 길이 4 = [point_x,point_y,normal_x,normal_y] (ORCA half-plane: feasible 는 dot(v-point,normal)>=0). 빈 배열은 planner가 어떤 금지 영역도 참조하지 않고 정지를 명령한 tick이다: 쌍이 이미 겹치면 (d <= r_self + r_other) VO/RVO는 만들 접선이 없고 ORCA 유도는 퇴화하므로 선택지가 없다. data 는 스칼라 맵이라 배열을 담을 수 없으므로 bins/rollout/band 와 같은 top-level 배열로 둔다."
     }
   },
   "$defs": {

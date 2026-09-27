@@ -17,6 +17,11 @@ export type Point = [number, number];
 export const EPS = 1e-9;
 // infeasible(원뿔/half-plane 위반) 후보 비용에 더하는 페널티 — feasible 후보가
 // v_pref에 아무리 가까운 infeasible 후보보다도 항상 이기게 한다 (python _PENALTY 미러).
+//
+// 이건 극좌표 후보 격자가 우연히 admissible 표본을 하나도 담지 못한 경우(해상도
+// 문제이지 불가피한 충돌이 아님)에만 채점을 순서대로 정한다. 이미 침투가 일어난
+// 쌍은 채점 자체에 도달하지 않는다 — alreadyOverlapping이 원뿔을 만들기 전에
+// 정지로 단락시킨다.
 export const PENALTY = 1e6;
 
 export interface DynamicObstacle {
@@ -27,8 +32,11 @@ export interface DynamicObstacle {
 
 // Truncated velocity obstacle(Fiorini & Shiller 1998): apex를 tau초 유지하면
 // obstacle의 radius 안으로 들어가는 (절대) 속도 집합. left/right는 apex에서
-// 두 접선 방향의 단위 벡터. full은 이미 겹친 쌍(radius >= dist)이라 금지 영역이
-// 속도 평면 전체임을 뜻한다.
+// 두 접선 방향의 단위 벡터.
+//
+// 원뿔은 겹치지 않은 쌍에 대해서만 만들어진다: dist <= radius에서는 만들 접선이
+// 없고 어떤 상대 속도든 결합 반경 안에 머무르므로, 세 엔진 모두 이 기하를 참조하기
+// 전에 commandWithNeighbors에서 정지로 단락한다(alreadyOverlapping 참고).
 export interface Cone {
     apex: Point;
     axis: Point;
@@ -36,7 +44,6 @@ export interface Cone {
     dist: number;
     radius: number;
     tau: number;
-    full: boolean;
     left: Point;
     right: Point;
 }
@@ -72,27 +79,20 @@ export function velocityToCommand(
 export function truncatedVoCone(
     relPos: Point, combinedRadius: number, apexVel: Point, tau: number,
 ): Cone {
+    // 겹치지 않은 쌍에 대해서만 호출된다(dist > combinedRadius): 호출자가 겹침에서
+    // 단락하므로 full-원뿔 분기는 존재하지 않는다.
     const [px, py] = relPos
     const dist = Math.hypot(px, py)
-    if (dist <= combinedRadius + EPS) {
-        // 이미 겹친 상태: 어떤 상대 속도든 (더 깊은) 침투로 이어지므로 금지
-        // 영역이 평면 전체다.
-        return {
-            apex: apexVel, axis: [1, 0], cosHalf: -1, dist, radius: combinedRadius, tau,
-            full: true, left: [1, 0], right: [1, 0],
-        }
-    }
     const ux = px / dist
     const uy = py / dist
     const sinHalf = combinedRadius / dist
     const cosHalf = Math.sqrt(Math.max(0, 1 - sinHalf * sinHalf))
     const left: Point = [ux * cosHalf - uy * sinHalf, ux * sinHalf + uy * cosHalf]
     const right: Point = [ux * cosHalf + uy * sinHalf, -ux * sinHalf + uy * cosHalf]
-    return {apex: apexVel, axis: [ux, uy], cosHalf, dist, radius: combinedRadius, tau, full: false, left, right}
+    return {apex: apexVel, axis: [ux, uy], cosHalf, dist, radius: combinedRadius, tau, left, right}
 }
 
 export function inVelocityObstacle(v: Point, cone: Cone): boolean {
-    if (cone.full) return true
     const wx = v[0] - cone.apex[0]
     const wy = v[1] - cone.apex[1]
     const wlen = Math.hypot(wx, wy)
@@ -157,6 +157,21 @@ export function staticObstacles(
 }
 
 const dist = (a: Point, b: Point): number => Math.hypot(a[0] - b[0], a[1] - b[1])
+
+// obstacle 원판 하나가 agent 자신의 원판과 이미 겹치면 true.
+//
+// 그 거리에서는 알고리즘이 결정할 수 있는 것이 다 떨어진다. VO/RVO의 원뿔은 속도
+// 평면 전체로 붕괴하고(어떤 상대 속도든 결합 반경 안에 머무르니 방향을 정을 접선이
+// 남지 않는다), ORCA의 half-plane 유도는 두 접선을 잃는다 — cutoff 원 분기는 거의
+// 0인 상대 위치에서 만든 축을 따라 밀게 된다. 금지된 집합 전체에서 동률 처리가 임의의
+// 속도를 고르는 대신, 세 엔진 모두 정지를 명령하고 시뮬레이터는 에피소드를 COLLISION으로
+// 끝낸다. 이건 fallback이 아니라 정직한 출력이다: 침투가 이미 일어난 뒤에는 VO에 선택할
+// admissible 속도가 없다.
+export function alreadyOverlapping(
+    obstacles: DynamicObstacle[], pos: Point, agentRadius: number,
+): boolean {
+    return obstacles.some((o) => dist(o.position, pos) <= agentRadius + o.radius)
+}
 
 export type ApexOf = (o: DynamicObstacle) => Point;
 
@@ -403,6 +418,19 @@ export function commandWithNeighbors(
     const [x, y, theta] = state.pose
     const statics = staticObstacles(map, [x, y], opts.neighborDist, opts.obstacleRadius)
     const vPref = preferredVelocity(state.pose, goal, opts.maxSpeed)
+    if (alreadyOverlapping([...neighbors, ...statics], [x, y], opts.agentRadius)) {
+        // 선택할 것이 없다: constraint 빈 상태로 tick을 방출하고(원뿔/half-plane을
+        // 아예 참조하지 않았다) 정지한다.
+        if (emit) {
+            emit({
+                event: "velocity_obstacle",
+                state: [x, y, theta],
+                constraints: [],
+                data: {pref_vx: vPref[0], pref_vy: vPref[1], new_vx: 0, new_vy: 0},
+            })
+        }
+        return {v: 0, omega: 0}
+    }
     const [vNew, constraints] = selectVelocity(vPref, neighbors, statics, state, dt)
     if (emit) {
         emit({
