@@ -35,6 +35,16 @@ def load_map(path: str | Path, seed: int = 0, connectivity: int = 8) -> MapBase:
     )
 
 
+@dataclass(frozen=True)
+class Revision:
+    """One cost-change batch (spec/map_formats.md `revisions`): every cell containing
+    one of `cells` (world coords) flips to `blocked` between two plan() rounds. Only
+    lifelong replanners (LPA*) consume revisions; static planners ignore the field."""
+
+    cells: tuple[Point, ...]
+    blocked: bool = True
+
+
 @dataclass
 class Scenario:
     map_path: str  # resolved absolute path to the map yaml
@@ -47,6 +57,10 @@ class Scenario:
     # Optional reference path (world waypoints) for tracking-family local planners.
     # Defaulted to empty so existing scenarios (no field) load unchanged.
     reference_path: tuple[Point, ...] = ()
+    # Optional cost-change batches for lifelong replanners (LPA*). World coords like
+    # start/goal — the demo driver converts to cells via world_to_cell. Defaulted to
+    # empty so every pre-LPA* scenario loads unchanged.
+    revisions: tuple[Revision, ...] = ()
 
 
 def load_scenario(path: str | Path) -> Scenario:
@@ -66,6 +80,14 @@ def load_scenario(path: str | Path) -> Scenario:
         if raw_reference_path is not None
         else ()
     )
+    # Optional revisions block (lifelong replanners only); `blocked` defaults true.
+    revisions: tuple[Revision, ...] = tuple(
+        Revision(
+            cells=tuple((float(pt[0]), float(pt[1])) for pt in rev["cells"]),
+            blocked=bool(rev.get("blocked", True)),
+        )
+        for rev in (raw.get("revisions") or ())
+    )
     return Scenario(
         map_path=str(map_path),
         start=(float(start[0]), float(start[1])),
@@ -73,4 +95,5 @@ def load_scenario(path: str | Path) -> Scenario:
         start_theta=float(raw.get("start_theta", 0.0)),
         goal_theta=float(raw.get("goal_theta", 0.0)),
         reference_path=reference_path,
+        revisions=revisions,
     )

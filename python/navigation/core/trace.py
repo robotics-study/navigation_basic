@@ -185,6 +185,13 @@ class TraceRecorder:
         # Dynamic replanning (D* Lite): a cell newly sensed as blocked.
         self._emit("obstacle_revealed", {"state": list(state)})
 
+    def obstacle_changed(self, state: State, blocked: bool) -> None:
+        # Lifelong replanning (LPA*): a cell whose true occupancy flipped — the cost
+        # change the planner is TOLD about (vs obstacle_revealed, what a sensoring
+        # robot discovers itself). `blocked` is the post-flip state: True builds a
+        # wall, False removes one.
+        self._emit("obstacle_changed", {"state": list(state), "blocked": blocked})
+
     def path_found(self, path: Sequence[State]) -> None:
         self._emit("path_found", {"path": [list(s) for s in path]})
 

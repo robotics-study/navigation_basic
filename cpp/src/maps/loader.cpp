@@ -66,6 +66,17 @@ Scenario load_scenario(const std::string& path) {
       sc.reference_path.push_back({pt.seq.at(0).as_double(), pt.seq.at(1).as_double()});
     }
   }
+  // Optional revisions block (lifelong replanners only); `blocked` defaults true.
+  if (root.has("revisions")) {
+    for (const YamlNode& rev : root.at("revisions").seq) {
+      Revision r;
+      for (const YamlNode& pt : rev.at("cells").seq) {
+        r.cells.push_back({pt.seq.at(0).as_double(), pt.seq.at(1).as_double()});
+      }
+      if (rev.has("blocked")) r.blocked = rev.at("blocked").as_bool();
+      sc.revisions.push_back(std::move(r));
+    }
+  }
   return sc;
 }
 

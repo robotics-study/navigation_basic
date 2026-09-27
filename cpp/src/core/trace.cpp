@@ -171,6 +171,14 @@ void TraceRecorder::ev_robot_moved(const std::vector<double>& s, int agent,
   end_event();
 }
 
+void TraceRecorder::ev_obstacle_changed(const std::vector<double>& s, bool blocked) {
+  begin_event("obstacle_changed");
+  os_ << ",\"state\":";
+  write_array(os_, s);
+  os_ << ",\"blocked\":" << (blocked ? "true" : "false");
+  end_event();
+}
+
 void TraceRecorder::ev_velocity_obstacle(const std::vector<double>& s,
                                          const std::vector<std::vector<double>>& constraints,
                                          const EventData* data) {
