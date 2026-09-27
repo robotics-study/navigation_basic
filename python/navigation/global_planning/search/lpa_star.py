@@ -1,7 +1,8 @@
 """LPA* — Lifelong Planning A*: incremental replanning on a KNOWN map whose edge costs change.
 
-Koenig & Likhachev (2002); journal version Koenig, Likhachev & Furcy (2004). The
-simple version of the paper, verbatim: g(s)/rhs(s) estimate the start distance of s
+Koenig & Likhachev (2001, "Incremental A*", NIPS 14 — the conference paper that
+introduced LPA*); journal version Koenig, Likhachev & Furcy (2004). The simple
+version of the journal paper, verbatim: g(s)/rhs(s) estimate the start distance of s
 (FORWARD search — D* Lite's backward twin), U holds exactly the locally-inconsistent
 vertices keyed by [min(g,rhs)+h(goal,s); min(g,rhs)], and a cost change re-seeds only
 the affected vertices' rhs. The heuristic reference is the FIXED goal, so keys stay
@@ -264,14 +265,15 @@ class LpaStar(GlobalPlanner[Cell, "DynamicGridSpace[Cell]"]):
 
     def apply_revision(self, cells: list[Cell], blocked: bool) -> None:
         """The paper's Main(): 'wait for changes in edge costs; for all directed edges
-        (u,v) with changed edge costs, UpdateVertex(v)'. Flipping a cell flips every
-        incident edge (a blocked cell is an impassable one), so the vertices whose
-        predecessor set changed are the flipped cell itself and its passable
-        neighbours — exactly what gets UpdateVertex'd. A newly-blocked cell leaves U
-        instead: a blocked vertex must never pop, or it would propagate g through a
-        wall (its stale finite g/rhs stay stored but are unreachable — every rhs is
-        computed over passable predecessors only). No-op flips (already in that state
-        in the MODEL) change no edge cost, so they emit nothing and update nothing."""
+        (u,v) with changed edge costs, UpdateVertex(v)'. A cell freed by a flip gets
+        exactly that — itself and its passable neighbours, the vertices whose
+        predecessor set actually changed. A newly-BLOCKED cell is not updated but
+        popped from U: a live entry carrying its stale finite key could otherwise pop
+        mid-burst and churn g/rhs pointlessly (wasted expansions, node_expanded noise
+        on a wall cell). Its stale values can never reach another cell anyway — every
+        rhs is computed over passable predecessors only. No-op flips (already in that
+        state in the MODEL) change no edge cost, so they emit nothing and update
+        nothing."""
         space = self._space
         if space is None:
             raise RuntimeError(

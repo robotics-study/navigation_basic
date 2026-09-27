@@ -13,15 +13,15 @@
 
 namespace navigation::global_planning {
 
-// LPA* (Koenig & Likhachev 2002; journal Koenig, Likhachev & Furcy 2004), simple
-// version — the forward, fixed-start twin of D* Lite: g/rhs estimate the START
-// distance and the heuristic's reference (the goal) never moves, so keys stay
-// comparable across replans without any k_m offset. plan() runs one burst per call;
-// apply_revision() is the paper's Main() loop step — the cost change the planner is
-// TOLD about (vs D* Lite sensing it). State persists ACROSS plan() calls: round 0
-// seeds the model from occupied_cells() and later rounds are repair bursts. The
-// Python mirror (python/.../search/lpa_star.py) is bit-identical move for move, so
-// both languages emit identical traces.
+// LPA* (Koenig & Likhachev 2001, "Incremental A*", NIPS 14; journal version Koenig,
+// Likhachev & Furcy 2004), simple version — the forward, fixed-start twin of D* Lite:
+// g/rhs estimate the START distance and the heuristic's reference (the goal) never
+// moves, so keys stay comparable across replans without any k_m offset. plan() runs
+// one burst per call; apply_revision() is the paper's Main() loop step — the cost
+// change the planner is TOLD about (vs D* Lite sensing it). State persists ACROSS
+// plan() calls: round 0 seeds the model from occupied_cells() and later rounds are
+// repair bursts. The Python mirror (python/.../search/lpa_star.py) is bit-identical
+// move for move, so both languages emit identical traces.
 class LpaStarPlanner final : public core::DynamicGridPlanner {
  public:
   explicit LpaStarPlanner(core::ParamSet params) : core::DynamicGridPlanner(std::move(params)) {}
@@ -39,9 +39,9 @@ class LpaStarPlanner final : public core::DynamicGridPlanner {
                                     core::TraceRecorder* recorder) override;
 
   // The paper's Main(): flip each cell's passability in the MODEL (a flip is a
-  // no-op iff the model already holds that state — ground truth never moves),
-  // UpdateVertex the flipped cell and its passable neighbours, and emit one
-  // obstacle_changed event per real flip.
+  // no-op iff the model already holds that state — ground truth never moves). A
+  // freed cell gets UpdateVertex'd (itself + its passable neighbours); a newly-
+  // blocked cell is popped from U instead. One obstacle_changed event per real flip.
   void apply_revision(const std::vector<core::Cell>& cells, bool blocked);
 
  private:

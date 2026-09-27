@@ -6,7 +6,8 @@ import {Cell} from "../trace/timeline";
 // bit-identical — 같은 DELTAS 순서, 같은 strict-< 최솟값 선택, 같은 heap tie-break
 // (key 다음 삽입 counter)로 python trace와 이벤트 열까지 일치한다. LPA*는 고정
 // start/goal의 forward 탐색: g/rhs는 시작 거리 추정이고 heuristic 기준(goal)이
-// 움직이지 않으므로 D* Lite와 달리 k_m 오프셋이 없다 (Koenig & Likhachev 2002).
+// 움직이지 않으므로 D* Lite와 달리 k_m 오프셋이 없다 (Koenig & Likhachev 2001,
+// "Incremental A*"; 저널 버전 Koenig, Likhachev & Furcy 2004).
 export interface LpaStarRevision {
     cells: Cell[];      // 반전할 셀들 (world가 아니라 grid cell — 데모 시나리오와 동일)
     blocked: boolean;   // 반전 후 상태: true 면 벽 생성, false 면 free 복원
@@ -218,10 +219,11 @@ export function runLpaStar({map, start, goal, revisions}: LpaStarOptions): LpaSt
 
     round()   // round 0 — 시드된 모델 위의 전체 burst
     for (const rev of revisions) {
-        // 논문의 Main(): edge cost 변경을 "알려받고" — 뒤집힌 셀과 그 통과 가능
-        // neighbor만 UpdateVertex. MODEL 상태가 무엇을 바꿨는지 결정한다 (ground
-        // truth가 아니라) 그래서 free→blocked→free 왕복이 합법이다. no-op 반전은
-        // 어떤 edge cost도 바꾸지 않으므로 아무것도 방출하지 않는다.
+        // 논문의 Main(): 열린 셀은 자기와 통과 가능 neighbor를 UpdateVertex, 막히는
+        // 셀은 U에서 제거한다(막힌 vertex가 낡은 키로 pop 되어 헛확장하는 일 없이).
+        // MODEL 상태가 무엇을 바꿨는지 결정한다 (ground truth가 아니라) 그래서
+        // free→blocked→free 왕복이 합법이다. no-op 반전은 어떤 edge cost도 바꾸지
+        // 않으므로 아무것도 방출하지 않는다.
         for (const c of rev.cells) {
             const wasBlocked = blocked.has(idx(c))
             if (wasBlocked === rev.blocked) continue

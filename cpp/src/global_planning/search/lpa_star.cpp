@@ -224,14 +224,14 @@ core::PlanResult<core::Cell> LpaStarPlanner::plan(DynamicGridSpace<Cell>& space,
 }
 
 // The paper's Main(): 'wait for changes in edge costs; for all directed edges (u,v)
-// with changed edge costs, UpdateVertex(v)'. Flipping a cell flips every incident
-// edge (a blocked cell is an impassable one), so the vertices whose predecessor set
-// changed are the flipped cell itself and its passable neighbours — exactly what
-// gets UpdateVertex'd. A newly-blocked cell leaves U instead: a blocked vertex must
-// never pop, or it would propagate g through a wall (its stale finite g/rhs stay
-// stored but are unreachable — every rhs is computed over passable predecessors
-// only). No-op flips (already in that state IN THE MODEL) change no edge cost, so
-// they emit nothing and update nothing.
+// with changed edge costs, UpdateVertex(v)'. A cell freed by a flip gets exactly
+// that — itself and its passable neighbours, the vertices whose predecessor set
+// actually changed. A newly-BLOCKED cell is not updated but popped from U: a live
+// entry carrying its stale finite key could otherwise pop mid-burst and churn g/rhs
+// pointlessly (wasted expansions, node_expanded noise on a wall cell). Its stale
+// values can never reach another cell anyway — every rhs is computed over passable
+// predecessors only. No-op flips (already in that state IN THE MODEL) change no edge
+// cost, so they emit nothing and update nothing.
 void LpaStarPlanner::apply_revision(const std::vector<Cell>& cells, bool blocked) {
   if (!seeded_) {
     throw std::runtime_error(

@@ -26,20 +26,21 @@ const LpaStar = () => {
             <T
                 en={<p>
                     A* assumes the map is known and fixed. D* Lite handled the case where the
-                    map is unknown. LPA* (Koenig &amp; Likhachev, 2002; journal version Koenig,
-                    Likhachev &amp; Furcy, 2004) handles the mirror setting: the map is fully
-                    known from round 0 — what changes are the costs themselves. A door closes, a
-                    corridor opens, and the planner is <em>told</em> about it. Re-running A* on
-                    every change throws away an entire search that was mostly still correct.
-                    LPA* keeps its g/rhs estimates alive between planning runs and repairs only
-                    the region the change actually invalidates.
+                    map is unknown. LPA* (Koenig &amp; Likhachev, 2001 — published as{" "}
+                    <em>Incremental A*</em>; journal version Koenig, Likhachev &amp; Furcy, 2004)
+                    handles the mirror setting: the map is fully known from round 0 — what changes
+                    are the costs themselves. A door closes, a corridor opens, and the planner is{" "}
+                    <em>told</em> about it. Re-running A* on every change throws away an entire
+                    search that was mostly still correct. LPA* keeps its g/rhs estimates alive
+                    between planning runs and repairs only the region the change actually
+                    invalidates.
                 </p>}
                 ko={<p>
                     A*는 지도가 알려져 있고 고정되어 있다고 가정했다. D* Lite는 지도를 모르는
-                    경우를 다뤘다. LPA*(Koenig &amp; Likhachev, 2002, 저널 버전은 Koenig,
-                    Likhachev &amp; Furcy, 2004)은 그 반대편 설정을 다룬다. 지도는 round 0부터
-                    완전히 알려져 있고, 바뀌는 것은 cost 자체다. 문이 닫히고 통로가 열리고,
-                    planner는 그것을 <em>알려받는다</em>. 변경마다 A*를 다시 돌린다면 대부분
+                    경우를 다뤘다. LPA*(Koenig &amp; Likhachev 2001 논문 <em>Incremental A*</em>,
+                    저널 버전은 Koenig, Likhachev &amp; Furcy 2004)은 그 반대편 설정을 다룬다.
+                    지도는 round 0부터 완전히 알려져 있고, 바뀌는 것은 cost 자체다. 문이 닫히고
+                    통로가 열리고, planner는 그것을 <em>알려받는다</em>. 변경마다 A*를 다시 돌린다면 대부분
                     여전히 옳았던 탐색 전체를 버리는 일이다. LPA*는 g/rhs 추정치를 계획 실행
                     사이에 살려 두고, 변경이 실제로 무효화한 영역만 수리한다.
                 </p>}
@@ -213,8 +214,9 @@ main:                                                                        # 4
     seed the model from the known map;  rhs[start] ← 0;  insert start
     compute_shortest_path()                                                  # 5
     forever, on each communicated flip of cell u:                            # 6
-        update_vertex(u);  update_vertex(each passable neighbour of u)
-        compute_shortest_path()`}/>
+        freed:   update_vertex(u)
+        blocked: remove u from U (see 2)
+        update_vertex(each passable neighbour of u);  compute_shortest_path()`}/>
             <T
                 en={<ol>
                     <li>The key mirrors A*'s <InlineMath math="f"/>: estimated total cost through{" "}
@@ -238,10 +240,12 @@ main:                                                                        # 4
                         is dead code in this variant: without an offset, a popped key can only be
                         stale from the pop itself. It stays verbatim from the paper's pseudocode,
                         provably inert.</li>
-                    <li>A communicated flip flips the cell in the model and UpdateVertex's exactly
-                        that cell and its passable neighbours — the vertices whose predecessor set
-                        actually changed — then re-runs the bounded best-first pass. A no-op flip
-                        (already in that state) changes no edge cost, so it updates nothing.</li>
+                    <li>A communicated flip flips the cell in the model. A freed cell gets
+                        UpdateVertex'd — itself, then its passable neighbours, the vertices whose
+                        predecessor set actually changed; a newly blocked one is instead removed
+                        from U (the pop of item 2). Either way the bounded best-first pass re-runs.
+                        A no-op flip (already in that state) changes no edge cost, so it updates
+                        nothing.</li>
                 </ol>}
                 ko={<ol>
                     <li>key는 A*의 <InlineMath math="f"/>와 같은 꼴이다. <InlineMath math="s"/>를
@@ -262,10 +266,11 @@ main:                                                                        # 4
                     <li>key-invariant 분기(popped를 새 key로 재삽입하는 것)는 이 변형에서 dead
                         code다. 오프셋이 없으니 popped key는 pop 자체로 낡은 것일 수뿐 없다. 논문
                         pseudocode 그대로 두고 있고, 증명된 상태로 무해하다.</li>
-                    <li>전달된 반전은 모델에서 셀을 뒤집고, predecessor 집합이 실제로 바뀐
-                        정확히 그 셀과 통과 가능 이웃들만 UpdateVertex한 뒤 한정된 best-first
-                        패스를 다시 돌린다. no-op 반전(이미 그 상태)은 간선 비용을
-                        바꾸지 않으니 아무것도 갱신하지 않는다.</li>
+                    <li>전달된 반전은 모델에서 셀을 뒤집는다. 열린 셀은 자기 자신과 통과 가능
+                        이웃들을 UpdateVertex한다 — predecessor 집합이 실제로 바뀐 정확히 그들.
+                        막힌 셀은 대신 U에서 빠진다(항목 2의 pop). 어느 쪽이든 한정된 best-first
+                        패스가 다시 돈다. no-op 반전(이미 그 상태)은 간선 비용을 바꾸지 않으니
+                        아무것도 갱신하지 않는다.</li>
                 </ol>}
             />
 
@@ -427,11 +432,11 @@ main:                                                                        # 4
             <ol>
                 <li>
                     S. Koenig, M. Likhachev,{" "}
-                    <a href="https://cdn.aaai.org/AAAI/2002/AAAI02-072.pdf" target="_blank"
-                       rel="noopener noreferrer">
-                        <em>D* Lite</em>
+                    <a href="https://proceedings.neurips.cc/paper/2001/hash/a591024321c5e2bdbd23ed35f0574dde-Abstract.html"
+                       target="_blank" rel="noopener noreferrer">
+                        <em>Incremental A*</em>
                     </a>,
-                    AAAI Conference on Artificial Intelligence, 2002.
+                    Advances in Neural Information Processing Systems (NIPS), 2001.
                 </li>
                 <li>
                     S. Koenig, M. Likhachev, D. Furcy,{" "}

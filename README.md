@@ -52,7 +52,7 @@ visualization, interactive in-browser demos, and a benchmark matrix.*
 |---|---|---|
 | [BFS](https://robotics-study.github.io/navigation_basic/algo/bfs) — Moore 1959 | [Dijkstra](https://robotics-study.github.io/navigation_basic/algo/dijkstra) — Dijkstra 1959 | [A*](https://robotics-study.github.io/navigation_basic/algo/astar) — Hart et al. 1968 |
 | [JPS](https://robotics-study.github.io/navigation_basic/algo/jps) — Harabor & Grastien 2011 | [Theta*](https://robotics-study.github.io/navigation_basic/algo/theta_star) — Nash et al. 2007 | [Lazy Theta*](https://robotics-study.github.io/navigation_basic/algo/lazy_theta_star) — Nash, Koenig & Tovey 2010 |
-| [Visibility A*](https://robotics-study.github.io/navigation_basic/algo/visibility_astar) — cell-centre any-angle | [Anya](https://robotics-study.github.io/navigation_basic/algo/anya) — Harabor et al. 2016 | [LPA*](https://robotics-study.github.io/navigation_basic/algo/lpa_star) — Koenig & Likhachev 2002 |
+| [Visibility A*](https://robotics-study.github.io/navigation_basic/algo/visibility_astar) — cell-centre any-angle | [Anya](https://robotics-study.github.io/navigation_basic/algo/anya) — Harabor et al. 2016 | [LPA*](https://robotics-study.github.io/navigation_basic/algo/lpa_star) — Koenig & Likhachev 2001 |
 | [D* Lite](https://robotics-study.github.io/navigation_basic/algo/dstar_lite) — Koenig & Likhachev 2002 | [ARA*](https://robotics-study.github.io/navigation_basic/algo/ara_star) — Likhachev, Gordon & Thrun 2003 | [AD*](https://robotics-study.github.io/navigation_basic/algo/ad_star) — Likhachev et al. 2005 |
 | [Hybrid A*](https://robotics-study.github.io/navigation_basic/algo/hybrid_astar) — Dolgov et al. 2008 | [PRM](https://robotics-study.github.io/navigation_basic/algo/prm) — Kavraki et al. 1996 | [PRM*](https://robotics-study.github.io/navigation_basic/algo/prm_star) — Karaman & Frazzoli 2011 |
 | [RRT](https://robotics-study.github.io/navigation_basic/algo/rrt) — LaValle 1998 | [RRT-Connect](https://robotics-study.github.io/navigation_basic/algo/rrt_connect) — Kuffner & LaValle 2000 | [RRT*](https://robotics-study.github.io/navigation_basic/algo/rrt_star) — Karaman & Frazzoli 2011 |
@@ -80,7 +80,7 @@ visualization, interactive in-browser demos, and a benchmark matrix.*
 | global_planning | ARA* | ✅ | ✅ | Likhachev, Gordon & Thrun (2003) |
 | global_planning | AD* | ✅ | ✅ | Likhachev, Ferguson, Gordon, Stentz & Thrun (2005) |
 | global_planning | JPS | ✅ | ✅ | Harabor & Grastien (2011) |
-| global_planning | LPA* | ✅ | ✅ | Koenig & Likhachev (2002) · Koenig, Likhachev & Furcy (2004) |
+| global_planning | LPA* | ✅ | ✅ | Koenig & Likhachev (2001) · Koenig, Likhachev & Furcy (2004) |
 | global_planning | D* Lite | ✅ | ✅ | Koenig & Likhachev (2002) |
 | global_planning | Theta* | ✅ | ✅ | Nash, Daniel, Koenig & Felner (2007) |
 | global_planning | Lazy Theta* | ✅ | ✅ | Nash, Koenig & Tovey (2010) |
