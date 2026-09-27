@@ -12,7 +12,7 @@
       "description": "알고리즘 식별자. 파일명(확장자 제외) 및 trace 의 algorithm 필드와 일치해야 한다."
     },
     "category": {
-      "enum": ["global_planning", "local_planning", "multi_agent"]
+      "enum": ["global_planning", "local_planning"]
     },
     "params": {
       "type": "array",

@@ -70,7 +70,7 @@ class TraceRecorder {
   void robot_moved(const State& s, const EventData& data = {}) {
     ev_state("robot_moved", to_trace(s), nullptr, ptr(data));
   }
-  // Multi-agent velocity-obstacle harness only: which body this tick's pose
+  // Velocity-obstacle (VO/RVO/ORCA) harness only: which body this tick's pose
   // belongs to. A distinct overload (not a defaulted parameter on the one above)
   // so every pre-existing single-robot robot_moved call stays byte-identical --
   // the `agent` field is emitted only when a caller passes an index here.

@@ -178,7 +178,7 @@ class VelocityObstaclePlanner : public core::ObstacleLocalPlanner {
 
   // ABC entry point: static-avoidance-only mode (no neighbors) so this
   // planner remains a drop-in ObstacleLocalPlanner for the single-robot
-  // simulator; the multi-agent harness calls command_with_neighbors directly.
+  // simulator; the multi-body harness calls command_with_neighbors directly.
   core::VelocityCommand compute_command(core::ObstacleQuery& space, const core::RobotState& state,
                                         const core::LocalTask& task, double dt,
                                         core::TraceRecorder* recorder) override;

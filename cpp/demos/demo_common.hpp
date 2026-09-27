@@ -237,9 +237,9 @@ inline int run_local(int argc, char** argv, const std::string& name, Factory fac
   return 0;
 }
 
-// Multi-agent assembly for the velocity-obstacle family (VO/RVO/ORCA): wires
+// Multi-body assembly for the velocity-obstacle family (VO/RVO/ORCA): wires
 // an AgentScenario (N bodies, one goal each, some possibly scripted
-// non-cooperative movers) instead of run_local's single-agent Scenario, and
+// non-cooperative movers) instead of run_local's single-robot Scenario, and
 // hands the run to simulate_agents, whose tick loop owns termination + the
 // per-body trace order. `Factory` is any callable `(const ParamSet&) ->
 // ConcretePlanner` (deduced, not std::function), mirroring run_local.

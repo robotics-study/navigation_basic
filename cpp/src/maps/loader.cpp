@@ -45,8 +45,8 @@ std::unique_ptr<core::MapBase> load_map(const std::string& path, unsigned seed, 
 
 Scenario load_scenario(const std::string& path) {
   YamlNode root = core::parse_yaml_file(path);
-  // Multi-agent scenarios (an `agents` field) belong to the multi_agent category,
-  // not this single-agent loader; reject them rather than silently ignoring.
+  // This repo is single-robot planning only: a scenario with an `agents` field belongs
+  // to the sibling MRMP project. Reject them rather than silently ignoring.
   if (root.has("agents")) {
     throw std::runtime_error("load_scenario: multi-agent scenarios are out of scope");
   }

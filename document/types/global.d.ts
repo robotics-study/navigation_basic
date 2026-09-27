@@ -7,10 +7,11 @@ export interface Localized<T = string> {
 }
 
 // 대분류(section) → 중분류(category) 2단 구조. section 은 저장소 최상위 카테고리
-// (global_planning / local_planning / multi_agent)와 1:1 이고, category 는 그 안의
-// 알고리즘 계열이다. search/sampling 은 global_planning 하위 디렉토리와 일치한다.
-export type AlgoSection = "global" | "local" | "multi";
-export type AlgoCategory = "search" | "sampling" | "local" | "multi";
+// (global_planning / local_planning)와 1:1 이고, category 는 그 안의 알고리즘 계열이다.
+// search/sampling 은 global_planning 하위 디렉토리와 일치한다. multi-agent 알고리즘은
+// 이 저장소의 범위가 아니다 (자매 저장소 MRMP 로 이동).
+export type AlgoSection = "global" | "local";
+export type AlgoCategory = "search" | "sampling" | "local";
 
 export interface ISupportedExample {
     python?: boolean,

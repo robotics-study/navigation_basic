@@ -357,7 +357,6 @@ export const CATEGORIES: Array<{
     {key: "search", title: {en: "Graph Search", ko: "Graph Search"}},
     {key: "sampling", title: {en: "Sampling", ko: "Sampling"}},
     {key: "local", title: {en: "Local Planning", ko: "Local Planning"}},
-    {key: "multi", title: {en: "Multi-Agent", ko: "Multi-Agent"}},
 ];
 
 // 대분류 — 홈의 큰 섹션이자 사이드바 disclosure 단위. 파일 구조(pages/algorithms/<section>/)도
@@ -389,15 +388,6 @@ export const SECTIONS: Array<{
                 "Potential Fields, VFH, Pure Pursuit, DWA, MPC.",
         },
         categories: ["local"],
-    },
-    {
-        key: "multi",
-        title: {en: "Multi-Agent", ko: "Multi-Agent"},
-        desc: {
-            en: "Coordinating many robots without collisions: prioritized, joint-space, and conflict-based search.",
-            ko: "여러 로봇을 충돌 없이 조율하는 계획: prioritized, joint-space, conflict-based search.",
-        },
-        categories: ["multi"],
     },
 ];
 

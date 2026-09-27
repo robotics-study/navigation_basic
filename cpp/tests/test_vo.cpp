@@ -18,7 +18,7 @@
 #include "test_util.hpp"
 
 // VO (Fiorini & Shiller 1998): a candidate-velocity grid outside every nearby
-// obstacle's truncated cone. Verified via the multi-agent harness on the
+// obstacle's truncated cone. Verified via the multi-body harness on the
 // shared head_on/circle_swap scenarios (reciprocal avoidance succeeds) and a
 // scripted-mover narrow corridor (avoidance is geometrically impossible, so
 // the episode must fail honestly rather than report a false REACHED).

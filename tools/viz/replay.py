@@ -83,7 +83,7 @@ _HEADING_COLOR = "#1e293b"
 # tick only. Warm gold keeps it clear of the marks it always coexists with (robot
 # trail teal, path gradient purple/magenta/red, reference-path/heading slate).
 _BAND_COLOR = "#ca8a04"
-# Velocity-obstacle family (VO/RVO/ORCA) multi-agent replay: each body gets a
+# Velocity-obstacle family (VO/RVO/ORCA) multi-body replay: each body gets a
 # footprint disc + heading + trail in a distinct CVD-safe hue, cycled by agent
 # index (index 0 shares the single-robot trail teal). Ego (agent 0) additionally
 # shows its velocity-space decision as two world-space arrows: the preferred
@@ -94,7 +94,7 @@ _AGENT_PALETTE = ("#0d9488", "#c2179b", "#2563eb", "#ca8a04", "#7c3aed", "#e5484
 _VPREF_COLOR = "#2563eb"
 _VNEW_COLOR = "#f59e0b"
 # Replay receives only pose + (v, omega) per body through the trace, never a
-# per-agent radius channel, so multi-agent footprints render at a nominal disc
+# per-agent radius channel, so multi-body footprints render at a nominal disc
 # radius (the velocity scenarios' shared agent radius) purely for visualization.
 _AGENT_FOOTPRINT_RADIUS = 0.3
 
@@ -134,7 +134,7 @@ def _ramp_cmap(stops: tuple[str, ...]) -> LinearSegmentedColormap:
 
 @dataclass
 class AgentTrack:
-    """One body's executed poses in a multi-agent velocity-obstacle trace,
+    """One body's executed poses in a multi-body velocity-obstacle trace,
     parallel to Scene.robot for the single-robot case but kept per agent index."""
 
     positions: list[Point] = field(default_factory=list)
@@ -327,7 +327,7 @@ def build_scene(
             state = ev["state"]
             heading = float(state[2]) if len(state) >= 3 else math.nan
             if "agent" in ev:
-                # Multi-agent (velocity-obstacle) trace: bucket per body so each
+                # Multi-body (velocity-obstacle) trace: bucket per body so each
                 # gets its own trail/footprint/heading, keeping the single-robot
                 # `robot` list empty and its render path untouched.
                 track = scene.agent_tracks.setdefault(int(ev["agent"]), AgentTrack())

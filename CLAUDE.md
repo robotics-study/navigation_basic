@@ -4,13 +4,14 @@
 
 ## 프로젝트 개요
 
-세 카테고리의 planning 알고리즘을 공통 추상화 위에 구현한다:
+**단일 로봇** planning 알고리즘만 다룬다. 두 카테고리의 알고리즘을 공통 추상화 위에 구현한다:
 
 | 카테고리 | 알고리즘 (계획) | 베이스 클래스 |
 |---|---|---|
 | global_planning | Dijkstra, A*, RRT, RRT-Connect, RRT*, Informed RRT* | `GlobalPlanner` |
 | local_planning | DWA, Pure Pursuit, VFH, MPC | `LocalPlanner` |
-| multi_agent | Prioritized A*, Joint-space A*, CBS | `MultiAgentPlanner` |
+
+여러 로봇의 조율(MAPF: Prioritized A*, Joint-space A*, CBS)은 이 저장소의 범위가 아니다 — 자매 저장소 [MRMP](https://github.com/robotics-study/MRMP-Multi-Agent-Motion-Planning--study) 에서 다룬다. velocity-obstacle 계열(VO/RVO/ORCA)은 local_planning 으로 남고, 시나리오의 여러 몸체는 조율 대상이 아니라 회피해야 할 움직이는 장애물 시뮬레이션이다.
 
 모든 알고리즘은 추상 클래스 기반으로 다음 세 가지가 자동으로 성립해야 한다:
 1. **Performance estimate** — 공통 metric(runtime, path length/cost, expanded nodes, success rate)을 benchmark runner가 수집.
@@ -34,16 +35,14 @@
 │   └── scenarios/               #   start/goal/agents 시나리오 (yaml, 맵 참조)
 ├── configs/                     # 알고리즘별 파라미터 yaml (언어 공용)
 │   ├── global_planning/         #   astar.yaml, rrt_star.yaml, ...
-│   ├── local_planning/
-│   └── multi_agent/
+│   └── local_planning/
 ├── cpp/
 │   ├── CMakeLists.txt
 │   ├── include/navigation/
 │   │   ├── core/                # planner.hpp, params.hpp, trace.hpp, types.hpp, capabilities.hpp
 │   │   ├── maps/                # occupancy_grid.hpp, graph_map.hpp, topology_map.hpp, continuous_map.hpp, loader.hpp
 │   │   ├── global_planning/
-│   │   ├── local_planning/
-│   │   └── multi_agent/
+│   │   └── local_planning/
 │   ├── src/                     # include/와 동일 구조의 구현
 │   ├── demos/                   # demo_astar.cpp 등 — 실행 시 trace 파일 출력
 │   └── tests/                   # GoogleTest
@@ -53,8 +52,7 @@
 │   │   ├── core/                # planner.py, params.py, trace.py, types.py, capabilities.py
 │   │   ├── maps/                # cpp include/navigation/maps/ 와 1:1 미러
 │   │   ├── global_planning/
-│   │   ├── local_planning/
-│   │   └── multi_agent/
+│   │   └── local_planning/
 │   ├── demos/
 │   └── tests/                   # pytest
 └── tools/                       # Python. navigation 패키지에 의존 (설치 후 사용)
@@ -67,7 +65,7 @@
 ### 의존 방향 (위반은 리뷰 Critical)
 - `core` 는 stdlib(+ Eigen / numpy)만 의존한다. 알고리즘·맵 모듈을 알지 못한다.
 - `maps` 는 `core` 만 의존한다.
-- 알고리즘 모듈(`global_planning`, `local_planning`, `multi_agent`)은 `core` 의 추상 인터페이스에만 의존한다. **구체 맵 클래스 직접 참조 금지**, 알고리즘 모듈 간 상호 의존 금지.
+- 알고리즘 모듈(`global_planning`, `local_planning`)은 `core` 의 추상 인터페이스에만 의존한다. **구체 맵 클래스 직접 참조 금지**, 알고리즘 모듈 간 상호 의존 금지.
 - `tools/viz`, `tools/bench` 는 trace/param/map 포맷(spec)과 `core`/`maps` 로더에만 의존한다. 알고리즘 내부 상태 접근 금지 — 시각화에 필요한 모든 정보는 trace 이벤트로 방출되어야 한다.
 - `demos` 는 최상위 조립 계층: 알고리즘 + maps + configs 를 묶기만 한다. 로직 금지.
 
@@ -81,7 +79,7 @@
 
 | capability | 핵심 메서드 | 요구 알고리즘 |
 |---|---|---|
-| `DiscreteSpace` | `neighbors(state) -> [(state, cost)]`, `heuristic(a, b)` | Dijkstra, A*, CBS low-level |
+| `DiscreteSpace` | `neighbors(state) -> [(state, cost)]`, `heuristic(a, b)` | Dijkstra, A* |
 | `SamplingSpace` | `sample()`, `is_state_valid(s)`, `is_motion_valid(a, b)`, `distance(a, b)`, `steer(a, b, eta)` | RRT 계열 |
 | `ObstacleQuery` | `is_collision(footprint, pose)`, `distance_to_nearest(p)` | DWA, VFH, MPC 등 local planner |
 
@@ -103,13 +101,13 @@
 - 같은 yaml 을 C++/Python 양쪽이 그대로 읽는다.
 
 ### Trace (step-by-step 시각화의 계약)
-- 알고리즘은 탐색 진행을 `TraceRecorder` 로 방출한다: 예) `node_expanded`, `edge_added`, `sample_drawn`, `rewire`, `candidate_evaluated`, `path_found`, `constraint_added`(CBS). 이벤트 목록/필드는 `spec/trace_schema.json` 이 정의한다.
+- 알고리즘은 탐색 진행을 `TraceRecorder` 로 방출한다: 예) `node_expanded`, `edge_added`, `sample_drawn`, `rewire`, `candidate_evaluated`, `obstacle_revealed`/`obstacle_changed`, `velocity_obstacle`, `path_found`. 이벤트 목록/필드는 `spec/trace_schema.json` 이 정의한다.
 - trace 는 JSON Lines 파일로 저장되며 `tools/viz/replay.py` 가 맵 위에 step-by-step 재생한다. C++ 데모도 같은 포맷을 출력하므로 시각화 코드는 언어당 하나가 아니라 **하나**다.
 - trace 방출은 기본 off(성능 측정 시) / demo·viz 시 on. hot loop 에서 recorder 가 null 이면 zero-cost 여야 한다.
 - **데모 산출물 형식 (룰)**: 모든 알고리즘의 demo trace 는 `replay.py` 로 (1) 애니메이션 **GIF** (`--gif`, 탐색 진행 + 최종 경로) 와 (2) 탐색 중간 과정 **PNG 스냅샷** 세트 (`--snapshots`, 진행률 균등 분할) 로 렌더링 가능해야 한다. 산출물은 두 언어 데모 각각에 대해 `out/viz/<algo>/py/`, `out/viz/<algo>/cpp/` 아래에 둔다 (`out/` 은 gitignore — 커밋하지 않는다).
 
 ### Benchmark
-- `tools/bench` 는 (map, scenario, algorithm, params) 조합 매트릭스를 실행하고 metric 을 수집한다: 성공 여부, wall time, path cost/length, expanded nodes / samples, (multi-agent) sum-of-costs·makespan.
+- `tools/bench` 는 (map, scenario, algorithm, params) 조합 매트릭스를 실행하고 metric 을 수집한다: 성공 여부, wall time, path cost/length, expanded nodes / samples. local planning 은 closed-loop 지표(time_to_goal, distance_traveled, min_clearance, steps)를 추가로 수집한다.
 - 동일 시나리오에 대한 C++ vs Python 비교도 이 러너로 수행한다 (각 언어의 CLI runner 를 subprocess 로 호출, 결과는 공용 JSON 으로 수집).
 
 ## 빌드 / 테스트 / 실행
@@ -158,7 +156,7 @@ python tools/bench/run_matrix.py --maps maps/ --algos global_planning --out out/
 
 ## 문서 사이트 (document/)
 
-React 18 + Vite + TS + Tailwind SPA. 2D 는 Konva, 3D 는 Babylon(필요 시 도입), 수식은 KaTeX, 이중언어는 `<T en ko>`. 대분류(Global/Local Planning, Multi-Agent)는 저장소 최상위 카테고리와 1:1 미러. 빌드/검증: `cd document && yarn build`, dev 서버 `yarn dev`.
+React 18 + Vite + TS + Tailwind SPA. 2D 는 Konva, 3D 는 Babylon(필요 시 도입), 수식은 KaTeX, 이중언어는 `<T en ko>`. 대분류(Global/Local Planning)는 저장소 최상위 카테고리와 1:1 미러. 빌드/검증: `cd document && yarn build`, dev 서버 `yarn dev`.
 
 ### 알고리즘 페이지 규칙 (순서 고정)
 

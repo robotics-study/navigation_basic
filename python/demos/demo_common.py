@@ -179,9 +179,9 @@ def run_local(name: str, factory: LocalPlannerFactory) -> None:
 
 
 def run_agents(name: str, factory: VelocityPlannerFactory) -> None:
-    # Multi-agent assembly for the velocity-obstacle family (VO/RVO/ORCA):
+    # Multi-body assembly for the velocity-obstacle family (VO/RVO/ORCA):
     # wires an AgentScenario (N bodies, one goal each, some possibly scripted
-    # non-cooperative movers) instead of run_local's single-agent Scenario, and
+    # non-cooperative movers) instead of run_local's single-robot Scenario, and
     # hands the run to simulate_agents, whose tick loop owns termination + the
     # per-body trace order.
     args = _parse_args(name)

@@ -87,7 +87,7 @@ _ORDER = ["bfs", "dijkstra", "astar", "ara_star", "jps", "ad_star", "lpa_star", 
 # same "incompatible" way, from a static table so bench still never imports algorithms.
 _NEEDS_PATH = {"pure_pursuit", "stanley", "regulated_pure_pursuit", "elastic_bands", "teb"}
 # Velocity-obstacle planners (VO/RVO/ORCA) avoid moving neighbors, which the static
-# single-agent bench matrix cannot express (load_scenario structurally rejects the
+# single-robot bench matrix cannot express (load_scenario structurally rejects the
 # `agents:` schema those demos use). Running them on a goal-only scenario would yield
 # a meaningless uniformly-failing row, so they are marked "incompatible" the same
 # static way as _NEEDS_PATH — their reciprocal machinery is covered by demos + tests.

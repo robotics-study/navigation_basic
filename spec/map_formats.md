@@ -73,7 +73,9 @@ obstacles:
 
 ## scenario (`maps/scenarios/`)
 
-맵 위에서 실행할 문제 정의. 단일 agent 는 `start`/`goal`, multi-agent 는 `agents` 를 쓴다 (둘 중 하나만).
+맵 위에서 실행할 문제 정의. 단일 로봇은 `start`/`goal`, velocity-obstacle 계열(VO/RVO/ORCA)의
+다중 몸체 시뮬레이션은 `agents` 를 쓴다 (둘 중 하나만). 여러 로봇의 조율(MAPF)은 이 저장소가 아니라
+자매 저장소 MRMP 가 다루고, 여기의 `agents` 는 회피 대상이 되는 움직이는 장애물들의 움직임 정의다.
 
 ```yaml
 map: ../grid/maze01.yaml     # 시나리오 파일 기준 상대 경로
@@ -93,10 +95,11 @@ goal_theta: 0.0            # goal 방향 (라디안, world). 생략 시 0.0
 #     blocked: true          # 생략 시 true
 #   - cells: [[6.75, 3.75]]
 #     blocked: false         # 이 셀들은 free 로 바뀐다 (점유 상태는 기본 맵이나 앞선 revisions 배치의 산물)
-# --- multi-agent 형식 ---
+# --- velocity-obstacle (VO/RVO/ORCA) 다중 몸체 형식 — agent_scenario.py 가 별도 로드 ---
 # agents:
-#   - { start: [0.5, 0.5], goal: [9.5, 9.5] }
-#   - { start: [9.5, 0.5], goal: [0.5, 9.5] }
+#   - { start: [0.5, 0.5], theta: 0.0, goal: [9.5, 9.5], radius: 0.3 }
+#   - { start: [9.5, 0.5], theta: 0.0, goal: [0.5, 9.5], radius: 0.3,
+#       scripted_velocity: [0.6, 0.0] }   # 비협조 몸체: 고정 속도로 직진만
 ```
 
 - `start_theta`/`goal_theta` 는 선택. Hybrid A\* 같은 SE(2) kinodynamic planner 만 사용하며, discrete/sampling planner 는 무시한다. 생략 시 heading 0.0 으로 로드된다.

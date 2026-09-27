@@ -68,8 +68,8 @@ def load_scenario(path: str | Path) -> Scenario:
     with open(path, encoding="utf-8") as fh:
         raw = yaml.safe_load(fh)
     if "agents" in raw:
-        # reference_path only extends the single-agent problem definition, so this
-        # rejection is unrelated to it and applies to every category, not just one.
+        # This repo is single-robot planning only: an `agents` scenario belongs to the
+        # sibling MRMP project. Reject it rather than silently ignoring it.
         raise ValueError("multi-agent scenarios are not supported by load_scenario")
     map_path = (path.parent / raw["map"]).resolve()
     start = raw["start"]

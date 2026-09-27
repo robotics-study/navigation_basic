@@ -29,17 +29,7 @@ const data: ISectionIntro[] = [
             {en: "The Problem", ko: "문제 정의"},
             {en: "Families of Local Planners", ko: "Local planner의 계열"},
             {en: "Two Geometries Up Close", ko: "두 기하를 가까이서"},
-            {en: "What Is Coming", ko: "구현 예정"},
-        ],
-    },
-    {
-        key: "multi",
-        contents: lazy(() => import("./MultiAgent")),
-        sections: [
-            {en: "The Problem", ko: "문제 정의"},
-            {en: "Why It Is Hard", ko: "왜 어려운가"},
-            {en: "Decoupled, Coupled, and In Between", ko: "Decoupled, Coupled, 그리고 그 사이"},
-            {en: "What Is Coming", ko: "구현 예정"},
+            {en: "What Comes Next", ko: "다음"},
         ],
     },
 ]

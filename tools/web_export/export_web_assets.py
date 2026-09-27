@@ -6,7 +6,7 @@ huge (GB for sampling planners), so this tool generates traces with the demo's
 default (small) budgets and gzips them for static serving.
 
 The scenario defaults to `<map>_s1` (single-robot). The velocity-obstacle family
-(VO/RVO/ORCA) runs multi-agent scenarios named after the scenario itself
+(VO/RVO/ORCA) runs multi-body scenarios named after the scenario itself
 (`--scenario velocity/head_on`); --maps still names the grid map exported as JSON.
 
 Usage:
@@ -172,7 +172,7 @@ def main() -> None:
     parser.add_argument("--maps", required=True, help="comma-separated grid map names")
     parser.add_argument("--scenario", default="",
                         help="scenario name under maps/scenarios/ (default: <map>_s1 per map). "
-                        "Multi-agent velocity scenarios are named after the scenario itself, e.g. velocity/head_on.")
+                        "Velocity-obstacle (multi-body) scenarios are named after the scenario itself, e.g. velocity/head_on.")
     parser.add_argument("--set", action="append", default=[], metavar="KEY=VALUE",
                         help="param default override for the demo run (repeatable)")
     args = parser.parse_args()

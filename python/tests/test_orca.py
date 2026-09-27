@@ -1,7 +1,7 @@
 """ORCA (van den Berg, Guy, Lin & Manocha 2011): an exact half-plane per
 obstacle plus a deterministic 2D linear program, falling back to a
 penetration-minimizing 3D solve when jointly infeasible. Verified via the
-multi-agent harness (reciprocal avoidance on the shared scenarios) and direct
+multi-body harness (reciprocal avoidance on the shared scenarios) and direct
 linear-program unit tests (closest-feasible-point selection, and the
 hot-path-never-raises fallback contract)."""
 

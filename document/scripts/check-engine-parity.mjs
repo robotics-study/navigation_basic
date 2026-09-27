@@ -418,11 +418,11 @@ const CHECKS = [
     // 다중 속도장류 3종: open_arena 맵의 head_on 시나리오(두 몸체 모두 planner 구동).
     // metric은 ego 중심(agent 0): steps는 정수 exact, min_pair_clearance는 다른
     // 폐루프 엔진들과 같은 이유로 1e-3 ULP 여유를 둔다. success는 양쪽 모두 true.
-    {algo: "vo", maps: ["open_arena"], multiAgent: true,
+    {algo: "vo", maps: ["open_arena"], multiBody: true,
      metricKeys: [{key: "steps", tol: 0}, {key: "min_pair_clearance", tol: 1e-3}]},
-    {algo: "rvo", maps: ["open_arena"], multiAgent: true,
+    {algo: "rvo", maps: ["open_arena"], multiBody: true,
      metricKeys: [{key: "steps", tol: 0}, {key: "min_pair_clearance", tol: 1e-3}]},
-    {algo: "orca", maps: ["open_arena"], multiAgent: true,
+    {algo: "orca", maps: ["open_arena"], multiBody: true,
      metricKeys: [{key: "steps", tol: 0}, {key: "min_pair_clearance", tol: 1e-3}]},
 ];
 
@@ -440,8 +440,8 @@ for (const check of CHECKS) {
         const expected = finalOf(events);
         const map = loadMap(name);
         let got;
-        if (check.multiAgent) {
-            // 다중 에이전트 trace에는 path_found가 없다 -- start/goal은 RUNNERS에
+        if (check.multiBody) {
+            // 다중 몸체 trace에는 path_found가 없다 -- start/goal은 RUNNERS에
             // 시나리오 값으로 하드코딩돼 있고 (s/g 자리에 undefined를 넘긴다) 비교는
             // ego 중심 planning_finished metric으로만 이루어진다.
             got = finalOf(RUNNERS[algo](map, undefined, undefined, started.params ?? {}));
