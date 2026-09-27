@@ -87,6 +87,12 @@ goal_theta: 0.0            # goal 방향 (라디안, world). 생략 시 0.0
 #   - [0.5, 0.5]
 #   - [2.0, 3.0]
 #   - [9.5, 9.5]
+# --- replanning (선택, LPA* 계열만 소비) ---
+# revisions:
+#   - cells: [[4.75, 0.75], [4.75, 1.25]]
+#     blocked: true          # 생략 시 true
+#   - cells: [[6.75, 3.75]]
+#     blocked: false         # 이 셀들은 맵에 이미 점유돼 있어야 한다 (반전 후 free)
 # --- multi-agent 형식 ---
 # agents:
 #   - { start: [0.5, 0.5], goal: [9.5, 9.5] }
@@ -95,3 +101,4 @@ goal_theta: 0.0            # goal 방향 (라디안, world). 생략 시 0.0
 
 - `start_theta`/`goal_theta` 는 선택. Hybrid A\* 같은 SE(2) kinodynamic planner 만 사용하며, discrete/sampling planner 는 무시한다. 생략 시 heading 0.0 으로 로드된다.
 - `reference_path` 는 선택: world 좌표 웨이포인트 리스트 `[[x, y], ...]`. Pure Pursuit 같은 추종(tracking) 계열 local planner 만 사용하며, 생략 시 참조 경로 없음(goal-seek 전용)으로 로드된다.
+- `revisions` 는 선택: LPA* 같은 lifelong replanner 만 소비한다 — 정적 planner 와 나머지 로더는 필드 자체를 무시하고, 정적 planner 는 라운드 0의 기본 맵만으로 계획하므로 시나리오가 공유돼도 의미가 유지된다. 각 항목은 `(cells, blocked)` 한 묶음이고 `blocked` 생략 시 기본 `true`. `cells` 는 world 좌표 `(x, y)` 리스트 — 데모 드라이버가 `world_to_cell` 로 grid cell 을 변환해 planner 에게 전달한다 (LPA* 는 라운드 0 에서 맵의 실제 점유 전체를 모델로 시딩하고, revision 적용 후 plan() 을 재호출해 repair burst 를 돌린다).
