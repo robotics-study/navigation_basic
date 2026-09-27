@@ -126,7 +126,7 @@ class TraceRecorder:
         # Dynamic replanning (D* Lite): the robot's new executed cell. Also reused by
         # the local-planning simulator for every closed-loop tick's executed pose,
         # where `data` optionally carries the (v, omega) command that produced it.
-        # `agent` (multi-agent velocity-obstacle harness only): which body this tick's
+        # `agent` (velocity-obstacle VO/RVO/ORCA harness only): which body this tick's
         # pose belongs to. Omitted when None so every pre-existing single-robot trace
         # (global replanning, local_planning.simulate) stays byte-identical.
         fields: dict[str, object] = {"state": list(state)}

@@ -485,7 +485,7 @@ class VelocityObstaclePlanner(ObstacleLocalPlanner, ABC):
     ) -> VelocityCommand:
         # ABC entry point: static-avoidance-only mode (no neighbors) so this
         # planner remains a drop-in ObstacleLocalPlanner for the single-robot
-        # simulator; the multi-agent harness calls command_with_neighbors directly.
+        # simulator; the multi-body harness calls command_with_neighbors directly.
         return self.command_with_neighbors(space, state, task, (), dt, recorder)
 
     def command_with_neighbors(

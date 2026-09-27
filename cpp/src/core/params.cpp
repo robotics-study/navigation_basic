@@ -34,8 +34,7 @@ ParamSet ParamSet::from_yaml(const std::string& path) {
   ParamSet set;
   set.algorithm_ = root.at("algorithm").as_string();
   set.category_ = root.at("category").as_string();
-  if (set.category_ != "global_planning" && set.category_ != "local_planning" &&
-      set.category_ != "multi_agent") {
+  if (set.category_ != "global_planning" && set.category_ != "local_planning") {
     fail("unknown category '" + set.category_ + "'");
   }
 

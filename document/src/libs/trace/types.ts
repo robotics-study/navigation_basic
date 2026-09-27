@@ -7,8 +7,6 @@ export type TraceEventType =
     | "sample_drawn"
     | "rewire"
     | "candidate_evaluated"
-    | "constraint_added"
-    | "conflict_found"
     | "robot_moved"
     | "obstacle_revealed"
     | "obstacle_changed"

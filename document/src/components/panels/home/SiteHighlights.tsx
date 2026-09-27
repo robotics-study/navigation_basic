@@ -13,12 +13,14 @@ const SiteHighlights = () => {
     const cards: Array<{kicker: string; title: string; desc: string}> = [
         {
             kicker: t(`${total} algorithms`, `${total}개 알고리즘`),
-            title: t("BFS to LQR-RRT*, in lineage order", "BFS에서 LQR-RRT*까지, 계보순"),
+            title: t("Single-robot planning, in lineage order", "단일 로봇 planning을 계보순으로"),
             desc: t(
-                `${search} graph-search and ${sampling} sampling planners, each page building on ` +
-                "the one before it. Local planning and multi-agent are next.",
-                `${search}개의 graph-search와 ${sampling}개의 sampling planner를 앞 페이지 위에 ` +
-                "다음 페이지가 쌓이는 순서로 읽는다. Local planning과 multi-agent가 다음 차례다.",
+                `${search} graph-search and ${sampling} sampling planners for global planning, ` +
+                "plus reactive avoidance and path tracking for local planning. Each page builds " +
+                "on the one before it. Multi-robot coordination lives in the sibling MRMP study.",
+                `${search}개의 graph-search와 ${sampling}개의 sampling planner로 global planning을, ` +
+                "반응형 회피와 경로 추종으로 local planning을 다룬다. 앞 페이지 위에 다음 " +
+                "페이지가 쌓이는 순서로 읽는다. 여러 로봇의 조율은 자매 저장소 MRMP 스터디에서 다룬다.",
             ),
         },
         {

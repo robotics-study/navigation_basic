@@ -199,25 +199,27 @@ const LocalPlanning = () => {
             ]}/>
             <LocalPursuitGeometry/>
 
-            <h2>{t("What Is Coming", "구현 예정")}</h2>
+            <h2>{t("What Comes Next", "다음")}</h2>
             <T
                 en={<p>
-                    The reactive branch (<strong>Potential Fields</strong>, <strong>VFH</strong>,{" "}
-                    <strong>DWA</strong>), the geometric tracking branch (<strong>Pure
-                    Pursuit</strong>, <strong>Stanley</strong>, <strong>Regulated Pure
-                    Pursuit</strong>), and the band-deformation pair (<strong>Elastic
-                    Bands</strong>, <strong>Timed Elastic Band</strong>) are all written. What
-                    remains closes the optimization lineage: <strong>MPC</strong> and{" "}
-                    <strong>MPPI</strong> with full receding-horizon trajectory optimization.
+                    Every branch is now written: reactive (<strong>Potential Fields</strong>,{" "}
+                    <strong>VFH</strong>, <strong>DWA</strong>), geometric tracking ({" "}
+                    <strong>Pure Pursuit</strong>, <strong>Stanley</strong>,{" "}
+                    <strong>Regulated Pure Pursuit</strong>), band deformation ({" "}
+                    <strong>Elastic Bands</strong>, <strong>Timed Elastic Band</strong>), and{" "}
+                    the optimization pair (<strong>MPC</strong>, <strong>MPPI</strong>). What{" "}
+                    comes after local planning — coordinating many robots at once — is out of
+                    scope for this site: it lives in the sibling MRMP study.
                 </p>}
                 ko={<p>
-                    반응형 가지(<strong>Potential Fields</strong>, <strong>VFH</strong>,{" "}
-                    <strong>DWA</strong>), 기하학적 추종 가지(<strong>Pure Pursuit</strong>,{" "}
-                    <strong>Stanley</strong>, <strong>Regulated Pure Pursuit</strong>), 그리고
-                    밴드 변형 짝(<strong>Elastic Bands</strong>, <strong>Timed Elastic
-                    Band</strong>)까지 모두 채워졌다. 남은 것은 최적화 계보의 마무리다.{" "}
-                    <strong>MPC</strong>와 <strong>MPPI</strong>가 receding-horizon 궤적
-                    최적화로 이 섹션을 완성한다.
+                    모든 가지를 채웠다. 반응형 가지(<strong>Potential Fields</strong>,{" "}
+                    <strong>VFH</strong>, <strong>DWA</strong>), 기하학적 추종 가지({" "}
+                    <strong>Pure Pursuit</strong>, <strong>Stanley</strong>,{" "}
+                    <strong>Regulated Pure Pursuit</strong>), 밴드 변형 짝({" "}
+                    <strong>Elastic Bands</strong>, <strong>Timed Elastic Band</strong>), 그리고{" "}
+                    최적화 짝(<strong>MPC</strong>, <strong>MPPI</strong>)까지. local planning
+                    뒤에 오는 여러 로봇의 동시 조율은 이 사이트의 범위가 아니다. 자매 저장소{" "}
+                    MRMP 스터디에서 다룬다.
                 </p>}
             />
         </>

@@ -1,4 +1,4 @@
-"""Multi-agent closed-loop harness for the velocity-obstacle family.
+"""Multi-body closed-loop harness for the velocity-obstacle family.
 
 N bodies share one map; each is either driven by its own VelocityObstaclePlanner
 or moves at a fixed scripted velocity (a non-cooperative mover for single-planner
@@ -78,7 +78,7 @@ def simulate_agents(
     (approximately stationary) DynamicObstacle snapshot to its neighbors.
 
     With a recorder the run ends on one ego-centric (agent 0) `planning_finished`
-    event, the multi-agent analogue of the single-robot simulator's `_finish`:
+    event, the multi-body analogue of the single-robot simulator's `_finish`:
     steps/min_pair_clearance are shared by every body (one tick counter, one
     pairwise minimum), while success/collided/stalled carry only agent 0's status.
     The live TS engines emit the identical event, which is what the engine-parity

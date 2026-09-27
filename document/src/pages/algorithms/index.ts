@@ -679,10 +679,6 @@ const data: IAlgoData[] = [
             {en: "References", ko: "References"},
         ],
     },
-    // ---- Multi-agent (구현 예정) ----
-    {slug: "prioritized_astar", title: {en: "Prioritized A*", ko: "Prioritized A*"}, category: "multi"},
-    {slug: "joint_astar", title: {en: "Joint-space A*", ko: "Joint-space A*"}, category: "multi"},
-    {slug: "cbs", title: {en: "CBS", ko: "CBS"}, category: "multi"},
 ]
 
 export default data

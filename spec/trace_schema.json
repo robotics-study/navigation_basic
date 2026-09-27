@@ -23,8 +23,6 @@
         "sample_drawn",
         "rewire",
         "candidate_evaluated",
-        "constraint_added",
-        "conflict_found",
         "robot_moved",
         "obstacle_revealed",
         "obstacle_changed",
@@ -39,7 +37,7 @@
     "agent": {
       "type": "integer",
       "minimum": 0,
-      "description": "multi-agent 전용: 이벤트가 속한 agent 인덱스."
+      "description": "velocity-obstacle 계열(VO/RVO/ORCA) 전용: 이벤트가 속한 몸체(body)의 인덱스. 0은 ego."
     },
     "state": {
       "$ref": "#/$defs/state",
@@ -84,7 +82,7 @@
     },
     "metrics": {
       "type": "object",
-      "description": "planning_finished 전용: runtime_sec, path_cost, expanded_nodes, samples, sum_of_costs, makespan 등 공통 metric. local planning 은 time_to_goal, distance_traveled, min_clearance, steps, collided(0|1), stalled(0|1) 을 추가로 담는다. 다중(VO/RVO/ORCA)은 ego 중심 4개만 담는다: steps(모든 몸체가 공유한 tick 수), collided(0|1), stalled(0|1), min_pair_clearance(전체 페어 최소 gap)."
+      "description": "planning_finished 전용: runtime_sec, path_cost, expanded_nodes, samples 등 공통 metric. local planning 은 time_to_goal, distance_traveled, min_clearance, steps, collided(0|1), stalled(0|1) 을 추가로 담는다. 다중 몸체 시뮬레이션(VO/RVO/ORCA)은 ego 중심 4개만 담는다: steps(모든 몸체가 공유한 tick 수), collided(0|1), stalled(0|1), min_pair_clearance(전체 페어 최소 gap)."
     },
     "data": {
       "type": "object",

@@ -82,7 +82,6 @@ const Home = () => {
                     <span className="chip">Sampling</span>
                     <span className="chip">RRT*</span>
                     <span className="chip">Local Planning</span>
-                    <span className="chip">Multi-Agent</span>
                     <span className="chip">C++ / Python</span>
                 </div>
                 <div className="lander-btns">
