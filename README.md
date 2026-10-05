@@ -10,7 +10,7 @@
 
 같은 추상화 설계를 두 언어로 미러링하고, 언어 공용 trace 포맷으로 탐색 과정을 재생하며,<br>
 (map × algorithm × language) 매트릭스로 벤치마크한다. 여러 로봇의 조율(MAPF)은 이 저장소가 아니라<br>
-자매 저장소 [MRMP](https://github.com/robotics-study/MRMP-Multi-Agent-Motion-Planning--study) 에서 다룬다.
+자매 저장소 [MRMP](https://github.com/robotics-study/mrmp_introduction) 에서 다룬다.
 
 *Single-robot navigation planning algorithms, mirrored in C++20 and Python — with step-by-step
 visualization, interactive in-browser demos, and a benchmark matrix. Multi-agent (MAPF) lives in
