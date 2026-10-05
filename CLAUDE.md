@@ -11,7 +11,7 @@
 | global_planning | Dijkstra, A*, RRT, RRT-Connect, RRT*, Informed RRT* | `GlobalPlanner` |
 | local_planning | DWA, Pure Pursuit, VFH, MPC | `LocalPlanner` |
 
-여러 로봇의 조율(MAPF: Prioritized A*, Joint-space A*, CBS)은 이 저장소의 범위가 아니다 — 자매 저장소 [MRMP](https://github.com/robotics-study/MRMP-Multi-Agent-Motion-Planning--study) 에서 다룬다. velocity-obstacle 계열(VO/RVO/ORCA)은 local_planning 으로 남고, 시나리오의 여러 몸체는 조율 대상이 아니라 회피해야 할 움직이는 장애물 시뮬레이션이다.
+여러 로봇의 조율(MAPF: Prioritized A*, Joint-space A*, CBS)은 이 저장소의 범위가 아니다 — 자매 저장소 [MRMP](https://github.com/robotics-study/mrmp_introduction) 에서 다룬다. velocity-obstacle 계열(VO/RVO/ORCA)은 local_planning 으로 남고, 시나리오의 여러 몸체는 조율 대상이 아니라 회피해야 할 움직이는 장애물 시뮬레이션이다.
 
 모든 알고리즘은 추상 클래스 기반으로 다음 세 가지가 자동으로 성립해야 한다:
 1. **Performance estimate** — 공통 metric(runtime, path length/cost, expanded nodes, success rate)을 benchmark runner가 수집.
