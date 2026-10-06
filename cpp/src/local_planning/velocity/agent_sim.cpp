@@ -1,5 +1,5 @@
-#include "navigation/core/libm.hpp"
 #include "navigation/local_planning/velocity/agent_sim.hpp"
+#include "navigation/core/libm.hpp"
 
 #include <algorithm>
 #include <cassert>

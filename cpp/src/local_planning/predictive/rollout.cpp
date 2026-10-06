@@ -1,5 +1,5 @@
-#include "navigation/core/libm.hpp"
 #include "navigation/local_planning/predictive/rollout.hpp"
+#include "navigation/core/libm.hpp"
 
 #include <algorithm>
 #include <cmath>

@@ -1,5 +1,5 @@
-#include "navigation/core/libm.hpp"
 #include "navigation/global_planning/sampling/sst.hpp"
+#include "navigation/core/libm.hpp"
 
 #include <algorithm>
 #include <chrono>

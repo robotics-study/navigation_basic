@@ -1,5 +1,5 @@
-#include "navigation/core/libm.hpp"
 #include "navigation/local_planning/predictive/mppi.hpp"
+#include "navigation/core/libm.hpp"
 
 #include <cmath>
 #include <utility>
