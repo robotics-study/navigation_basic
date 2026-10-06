@@ -1,4 +1,5 @@
 #include "navigation/local_planning/tracking/pure_pursuit.hpp"
+#include "navigation/core/libm.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -35,7 +36,7 @@ core::VelocityCommand PurePursuitPlanner::compute_command(core::ObstacleQuery& s
   const core::Point target = lookahead_point(path, progress_index_, robot_xy, lookahead_distance);
 
   const double alpha = wrap_to_pi(std::atan2(target.y - y, target.x - x) - theta);
-  const double kappa = 2.0 * std::sin(alpha) / lookahead_distance;
+  const double kappa = 2.0 * core::libm_sin(alpha) / lookahead_distance;
 
   const double max_speed = params_.get_float("max_speed");
   const double slow_radius = params_.get_float("slow_radius");

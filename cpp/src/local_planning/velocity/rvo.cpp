@@ -1,4 +1,5 @@
 #include "navigation/local_planning/velocity/rvo.hpp"
+#include "navigation/core/libm.hpp"
 
 #include <cmath>
 #include <utility>
@@ -17,7 +18,7 @@ VelocitySelection Rvo::select_velocity(const core::Point& v_pref,
                                        const core::RobotState& state, double /*dt*/) {
   double theta = state.pose.theta;
   core::Point pos{state.pose.x, state.pose.y};
-  core::Point v_self{state.v * std::cos(theta), state.v * std::sin(theta)};
+  core::Point v_self{state.v * core::libm_cos(theta), state.v * core::libm_sin(theta)};
   double reciprocity = reciprocity_;
   std::vector<DynamicObstacle> obstacles = neighbors;
   obstacles.insert(obstacles.end(), statics.begin(), statics.end());

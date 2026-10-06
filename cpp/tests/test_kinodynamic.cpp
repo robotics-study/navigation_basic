@@ -6,6 +6,7 @@
 
 #include <gtest/gtest.h>
 
+#include "navigation/core/libm.hpp"
 #include "navigation/global_planning/search/hybrid_astar.hpp"
 #include "test_util.hpp"
 
@@ -118,7 +119,7 @@ TEST(Kinodynamic, HybridAStarUsesReverseWhenEnabled) {
     const Pose& a = r.path[i];
     const Pose& b = r.path[i + 1];
     // Reverse: displacement opposite the heading (dot < 0).
-    if ((b.x - a.x) * std::cos(a.theta) + (b.y - a.y) * std::sin(a.theta) < 0.0) has_reverse = true;
+    if ((b.x - a.x) * core::libm_cos(a.theta) + (b.y - a.y) * core::libm_sin(a.theta) < 0.0) has_reverse = true;
   }
   EXPECT_TRUE(has_reverse);
 }

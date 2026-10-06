@@ -73,6 +73,8 @@
 - C++과 Python은 **같은 설계를 각자 idiomatic 하게** 구현한다. 클래스/메서드 개념 이름, 파라미터 이름, trace 이벤트는 동일해야 한다 (표기만 언어 컨벤션: C++ `snake_case` 멤버 / Python `snake_case`).
 - 알고리즘 추가/변경은 원칙적으로 두 언어 동시 반영. 한쪽만 구현된 상태는 README parity 표에 명시하고 남겨두지 않는 것을 원칙으로 한다.
 - 언어 간 공유물(trace schema, param yaml, map 데이터, 시나리오)은 반드시 `spec/`, `configs/`, `maps/` 에 두고 양쪽에서 로드한다. 언어 디렉토리 안에 복제 금지.
+- **초월함수 C++↔Python 비트 동일 (libm 라우팅)**: Python 의 `math.sin/cos` 와 `atan2` 는 libSystem 스칼라 구현이고 `np.hypot` 도 같은 libSystem hypot 을 부른다. Apple clang 은 같은 인자의 `(sin, cos)` 호출 쌍을 SIMD 구현 `__sincos_stret` 로 접고 이 변형은 스칼라와 드문 입력(프로브: ≈0.4%)에서 1 ulp 어긋난다 — 그래서 C++ 는 sin/cos 를 dlsym 으로 해석한 함수 포인터(`core/libm`)로만 호출해 Python 과 비트 단위로 같게 만든다. atan2 는 접기가 없어 std 직접 호출 그대로 — 양쪽 모두 libSystem 이라 이미 비트 동일. **hypot 은 라우팅하지 않는다**: C++ `std::hypot` == `np.hypot`(같은 libSystem)이지만 Python 의 `math.hypot` 은 CPython 자체 구현(fdlibm 계보, libSystem 과 ≈16% 입력에서 다름)이라 소스 수준에서 같게 만들 수 없고, 초월함수가 개입하는 알고리즘은 이미 허용오차 비교라 설계상 흡수. sqrt/floor 는 IEEE 정확 반올림이라 어디서나 동일. 회귀 골든: `test_libm`(양 언어, 발산 입력 hex 고정).
+- **JS 엔진은 초월함수 계보가 별개**: 브라우저(V8/JSC) 의 Math.sin/cos/atan2/hypot 은 fdlibm 계보로 libSystem 과 드문 입력에서 다른 ulp 를 낸다(프로브: sin ≈4%, atan2 ≈18%, hypot ≈35%). 그래서 비트 동일 계약은 C++↔Python 사이에서만 성립하고, JS↔Python 대조는 정수+sqrt 만 쓰는 경로만 exact(true), 초월함수가 개입하는 알고리즘은 허용오차(costTol/metric tol)로 비교한다 — check-engine-parity.mjs 의 exact/tol 설계가 이 사실에 기대 있다.
 
 ### 맵 추상화 — capability 모델
 알고리즘은 구체 맵 타입이 아니라 **capability 인터페이스**를 요구한다. 맵 타입은 지원 가능한 capability 를 구현하고, 하나의 맵을 여러 알고리즘에 붙여 테스트할 수 있다.

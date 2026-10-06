@@ -1,4 +1,5 @@
 #include "navigation/local_planning/tracking/regulated_pure_pursuit.hpp"
+#include "navigation/core/libm.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -32,12 +33,12 @@ constexpr double kArcAlphaMargin = 0.05;
 // time since the collision check walks distance, not ticks).
 core::Pose propagate_arc(const core::Pose& pose, double kappa, double s) {
   if (std::fabs(kappa) < kKappaEps) {
-    return core::Pose{pose.x + s * std::cos(pose.theta), pose.y + s * std::sin(pose.theta),
+    return core::Pose{pose.x + s * core::libm_cos(pose.theta), pose.y + s * core::libm_sin(pose.theta),
                       pose.theta};
   }
   double new_theta = pose.theta + kappa * s;
-  double x2 = pose.x + (std::sin(new_theta) - std::sin(pose.theta)) / kappa;
-  double y2 = pose.y - (std::cos(new_theta) - std::cos(pose.theta)) / kappa;
+  double x2 = pose.x + (core::libm_sin(new_theta) - core::libm_sin(pose.theta)) / kappa;
+  double y2 = pose.y - (core::libm_cos(new_theta) - core::libm_cos(pose.theta)) / kappa;
   return core::Pose{x2, y2, wrap_to_pi(new_theta)};
 }
 
@@ -69,7 +70,7 @@ core::VelocityCommand RegulatedPurePursuitPlanner::compute_command(
   // 3. Commanded curvature (Coulter 1992 geometry, independently recomputed
   // here rather than imported -- see the header's class comment).
   const double alpha = wrap_to_pi(std::atan2(target.y - y, target.x - x) - theta);
-  const double kappa = 2.0 * std::sin(alpha) / lookahead_distance;
+  const double kappa = 2.0 * core::libm_sin(alpha) / lookahead_distance;
 
   // 4. Speed regulation: v is the minimum of three independent caps.
   const double max_speed = params_.get_float("max_speed");
@@ -124,7 +125,7 @@ core::VelocityCommand RegulatedPurePursuitPlanner::compute_command(
   if (std::fabs(alpha) < kArcAlphaMargin || std::fabs(alpha) > M_PI - kArcAlphaMargin) {
     arc_length = lookahead_distance;
   } else {
-    arc_length = lookahead_distance * alpha / std::sin(alpha);
+    arc_length = lookahead_distance * alpha / core::libm_sin(alpha);
   }
 
   const double collision_check_step = params_.get_float("collision_check_step");

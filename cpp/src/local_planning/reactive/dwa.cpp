@@ -1,4 +1,5 @@
 #include "navigation/local_planning/reactive/dwa.hpp"
+#include "navigation/core/libm.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -54,12 +55,12 @@ void DwaPlanner::rollout(const core::Pose& pose, double v, double omega,
   for (int k = 1; k <= sim_steps_; ++k) {
     const double t = sim_time_ * static_cast<double>(k) / static_cast<double>(sim_steps_);
     if (std::fabs(omega) < kOmegaEps) {
-      out.push_back(core::Pose{x + v * t * std::cos(theta), y + v * t * std::sin(theta), theta});
+      out.push_back(core::Pose{x + v * t * core::libm_cos(theta), y + v * t * core::libm_sin(theta), theta});
       continue;
     }
     const double new_theta = theta + omega * t;
-    const double px = x + (v / omega) * (std::sin(new_theta) - std::sin(theta));
-    const double py = y - (v / omega) * (std::cos(new_theta) - std::cos(theta));
+    const double px = x + (v / omega) * (core::libm_sin(new_theta) - core::libm_sin(theta));
+    const double py = y - (v / omega) * (core::libm_cos(new_theta) - core::libm_cos(theta));
     out.push_back(core::Pose{px, py, wrap_to_pi(new_theta)});
   }
 }

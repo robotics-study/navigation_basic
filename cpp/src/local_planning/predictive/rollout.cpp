@@ -1,4 +1,5 @@
 #include "navigation/local_planning/predictive/rollout.hpp"
+#include "navigation/core/libm.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -27,11 +28,11 @@ core::Pose unicycle_step(const core::Pose& s, const Control& u, double h) {
   const double x = s.x, y = s.y, theta = s.theta;
   const double v = u.first, omega = u.second;
   if (std::fabs(omega) < kOmegaEps) {
-    return core::Pose{x + v * h * std::cos(theta), y + v * h * std::sin(theta), theta};
+    return core::Pose{x + v * h * core::libm_cos(theta), y + v * h * core::libm_sin(theta), theta};
   }
   const double new_theta = theta + omega * h;
-  const double x2 = x + (v / omega) * (std::sin(new_theta) - std::sin(theta));
-  const double y2 = y - (v / omega) * (std::cos(new_theta) - std::cos(theta));
+  const double x2 = x + (v / omega) * (core::libm_sin(new_theta) - core::libm_sin(theta));
+  const double y2 = y - (v / omega) * (core::libm_cos(new_theta) - core::libm_cos(theta));
   return core::Pose{x2, y2, wrap_to_pi(new_theta)};
 }
 

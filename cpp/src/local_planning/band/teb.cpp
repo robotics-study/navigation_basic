@@ -1,4 +1,5 @@
 #include "navigation/local_planning/band/teb.hpp"
+#include "navigation/core/libm.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -267,16 +268,16 @@ void TebPlanner::gradient_step(std::vector<core::Pose>& poses, std::vector<doubl
   // (f) nonholonomic two-pose-arc kinematics (Rösmann 2012).
   for (size_t i = 0; i + 1 < n; ++i) {
     const double th_i = poses[i].theta, th_i1 = poses[i + 1].theta;
-    const double cos_sum = std::cos(th_i) + std::cos(th_i1);
-    const double sin_sum = std::sin(th_i) + std::sin(th_i1);
+    const double cos_sum = core::libm_cos(th_i) + core::libm_cos(th_i1);
+    const double sin_sum = core::libm_sin(th_i) + core::libm_sin(th_i1);
     const double h_i = cos_sum * dys[i] - sin_sum * dxs[i];
     const double c = 2.0 * w_kinematics_ * h_i;
     gx[i] += c * sin_sum;
     gx[i + 1] -= c * sin_sum;
     gy[i] -= c * cos_sum;
     gy[i + 1] += c * cos_sum;
-    gth[i] += c * (-std::sin(th_i) * dys[i] - std::cos(th_i) * dxs[i]);
-    gth[i + 1] += c * (-std::sin(th_i1) * dys[i] - std::cos(th_i1) * dxs[i]);
+    gth[i] += c * (-core::libm_sin(th_i) * dys[i] - core::libm_cos(th_i) * dxs[i]);
+    gth[i + 1] += c * (-core::libm_sin(th_i1) * dys[i] - core::libm_cos(th_i1) * dxs[i]);
   }
 
   // (e) time optimality.
@@ -330,7 +331,7 @@ double TebPlanner::total_cost(const std::vector<core::Pose>& poses, const std::v
   for (size_t i = 0; i + 1 < n; ++i) {
     const double th_i = poses[i].theta, th_i1 = poses[i + 1].theta;
     const double dx = poses[i + 1].x - poses[i].x, dy = poses[i + 1].y - poses[i].y;
-    const double h_i = (std::cos(th_i) + std::cos(th_i1)) * dy - (std::sin(th_i) + std::sin(th_i1)) * dx;
+    const double h_i = (core::libm_cos(th_i) + core::libm_cos(th_i1)) * dy - (core::libm_sin(th_i) + core::libm_sin(th_i1)) * dx;
     total += w_kinematics_ * h_i * h_i;
   }
   total += w_time_ * std::accumulate(dts.begin(), dts.end(), 0.0);
@@ -403,7 +404,7 @@ core::VelocityCommand TebPlanner::compute_command(core::ObstacleQuery& space,
     dts_ = std::move(dts);
     if (recorder) emit_band(*recorder, poses_, dts_, 0, 0.0);
     const double alpha = wrap_to_pi(std::atan2(local_goal.y - y, local_goal.x - x) - theta);
-    const double v_cmd = v_max_ * std::max(std::cos(alpha), 0.0);
+    const double v_cmd = v_max_ * std::max(core::libm_cos(alpha), 0.0);
     const double omega_cmd = clamp((omega_max_ / M_PI) * alpha, omega_max_);
     return core::VelocityCommand{v_cmd, omega_cmd};
   }
@@ -432,7 +433,7 @@ core::VelocityCommand TebPlanner::compute_command(core::ObstacleQuery& space,
   const double dx0 = poses[1].x - poses[0].x;
   const double dy0 = poses[1].y - poses[0].y;
   const double ell0 = std::sqrt(dx0 * dx0 + dy0 * dy0);
-  const double sigma = (dx0 * std::cos(theta) + dy0 * std::sin(theta) >= 0.0) ? 1.0 : -1.0;
+  const double sigma = (dx0 * core::libm_cos(theta) + dy0 * core::libm_sin(theta) >= 0.0) ? 1.0 : -1.0;
   const double v_cmd = clamp(sigma * ell0 / dts[0], v_max_);
   const double omega_cmd = clamp(wrap_to_pi(poses[1].theta - poses[0].theta) / dts[0], omega_max_);
   return core::VelocityCommand{v_cmd, omega_cmd};

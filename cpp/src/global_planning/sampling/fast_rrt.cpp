@@ -1,4 +1,5 @@
 #include "navigation/global_planning/sampling/fast_rrt.hpp"
+#include "navigation/core/libm.hpp"
 
 #include <chrono>
 #include <cmath>
@@ -94,7 +95,7 @@ core::PlanResult<Point> FastRrtPlanner::plan(SamplingSpace<Point>& space, const 
     if (!extended) {
       for (int a = 0; a < steering_attempts; ++a) {
         double th = angle(rng);
-        Point dir{q_near.x + step_size * std::cos(th), q_near.y + step_size * std::sin(th)};
+        Point dir{q_near.x + step_size * core::libm_cos(th), q_near.y + step_size * core::libm_sin(th)};
         Point cand = space.steer(q_near, dir, step_size);
         if (space.is_motion_valid(q_near, cand)) {
           q_new = cand;

@@ -1,4 +1,5 @@
 #include "navigation/local_planning/velocity/agent_sim.hpp"
+#include "navigation/core/libm.hpp"
 
 #include <algorithm>
 #include <cassert>
@@ -83,7 +84,7 @@ std::vector<AgentResult> simulate_agents(const std::vector<VelocityObstaclePlann
       } else {
         const core::VelocityCommand& cmd = *commands[k];
         core::Pose new_pose = integrate_unicycle(states[k].pose, cmd, config.control_dt);
-        world_vel[k] = core::Point{cmd.v * std::cos(new_pose.theta), cmd.v * std::sin(new_pose.theta)};
+        world_vel[k] = core::Point{cmd.v * core::libm_cos(new_pose.theta), cmd.v * core::libm_sin(new_pose.theta)};
         new_states[k] = core::RobotState{new_pose, cmd.v, cmd.omega};
       }
     }

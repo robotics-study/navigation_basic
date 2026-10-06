@@ -1,4 +1,5 @@
 #include "navigation/local_planning/band/elastic_bands.hpp"
+#include "navigation/core/libm.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -225,7 +226,7 @@ core::VelocityCommand ElasticBandsPlanner::compute_command(core::ObstacleQuery& 
   // tracking family's lookahead-circle intersection doesn't apply here.
   const core::Point target = point_at_arclength(centers_, lookahead_distance_);
   const double alpha = wrap_to_pi(std::atan2(target.y - y, target.x - x) - theta);
-  const double v = v_max_ * std::max(std::cos(alpha), 0.0);
+  const double v = v_max_ * std::max(core::libm_cos(alpha), 0.0);
   const double omega = std::max(-omega_max_, std::min(omega_max_, heading_gain_ * alpha));
   return core::VelocityCommand{v, omega};
 }

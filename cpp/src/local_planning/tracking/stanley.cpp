@@ -1,4 +1,5 @@
 #include "navigation/local_planning/tracking/stanley.hpp"
+#include "navigation/core/libm.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -43,7 +44,7 @@ core::VelocityCommand StanleyPlanner::compute_command(core::ObstacleQuery& space
   // Front-axle point: the original paper defines both errors here (Thrun
   // 2006 sec. 9.2), not at the robot's rear-axle/center pose.
   const double wheelbase = params_.get_float("wheelbase");
-  const core::Point front{x + wheelbase * std::cos(theta), y + wheelbase * std::sin(theta)};
+  const core::Point front{x + wheelbase * core::libm_cos(theta), y + wheelbase * core::libm_sin(theta)};
 
   progress_index_ = advance_progress_index(path, front, progress_index_);
   // The tangent divides by the segment length, so a duplicated waypoint
