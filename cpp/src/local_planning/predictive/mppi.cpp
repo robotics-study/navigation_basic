@@ -1,3 +1,4 @@
+#include "navigation/core/libm.hpp"
 #include "navigation/local_planning/predictive/mppi.hpp"
 
 #include <cmath>
@@ -40,8 +41,8 @@ double MppiPlanner::gaussian() {
   const double u1 = 1.0 - unit_(rng_);
   const double u2 = unit_(rng_);
   const double magnitude = std::sqrt(-2.0 * std::log(u1));
-  spare_ = magnitude * std::sin(2.0 * M_PI * u2);
-  return magnitude * std::cos(2.0 * M_PI * u2);
+  spare_ = magnitude * core::libm_sin(2.0 * M_PI * u2);
+  return magnitude * core::libm_cos(2.0 * M_PI * u2);
 }
 
 void MppiPlanner::emit_band(core::TraceRecorder& recorder, const core::Pose& s0,

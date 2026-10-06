@@ -1,3 +1,4 @@
+#include "navigation/core/libm.hpp"
 #include "navigation/global_planning/sampling/sampling_common.hpp"
 
 #include <algorithm>
@@ -183,10 +184,10 @@ Point informed_sample(SamplingSpace<Point>& space, const Point& start, const Poi
   double theta = std::atan2(goal.y - start.y, goal.x - start.x);
   double ang = unit(rng) * kTwoPi;
   double rad = std::sqrt(unit(rng));
-  double ux = rad * std::cos(ang) * r1;
-  double uy = rad * std::sin(ang) * r2;
-  double x = cx + std::cos(theta) * ux - std::sin(theta) * uy;
-  double y = cy + std::sin(theta) * ux + std::cos(theta) * uy;
+  double ux = rad * core::libm_cos(ang) * r1;
+  double uy = rad * core::libm_sin(ang) * r2;
+  double x = cx + core::libm_cos(theta) * ux - core::libm_sin(theta) * uy;
+  double y = cy + core::libm_sin(theta) * ux + core::libm_cos(theta) * uy;
   return Point{x, y};
 }
 

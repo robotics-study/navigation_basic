@@ -1,3 +1,4 @@
+#include "navigation/core/libm.hpp"
 #include "navigation/local_planning/reactive/vfh.hpp"
 
 #include <algorithm>
@@ -245,8 +246,8 @@ core::VelocityCommand VfhPlanner::compute_command(core::ObstacleQuery& space, co
             {"threshold", threshold_}, {"target_direction", goal_dir}, {"selected_direction", theta_sel}});
     for (size_t i = 0; i < candidates.size(); ++i) {
       const double direction = candidates[i];
-      const core::Point probe{x + window_radius_ * std::cos(direction),
-                              y + window_radius_ * std::sin(direction)};
+      const core::Point probe{x + window_radius_ * core::libm_cos(direction),
+                              y + window_radius_ * core::libm_sin(direction)};
       recorder->candidate_evaluated(
           probe, costs[i],
           core::TraceRecorder::EventData{{"direction", direction},

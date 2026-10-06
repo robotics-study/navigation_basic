@@ -1,3 +1,4 @@
+#include "navigation/core/libm.hpp"
 #include "navigation/global_planning/sampling/sst.hpp"
 
 #include <algorithm>
@@ -125,8 +126,8 @@ core::PlanResult<Point> SstPlanner::plan(SamplingSpace<Point>& space, const Poin
     out_wps.clear();
     for (int k = 0; k < n_sub; ++k) {
       theta += omega * dt;
-      x += v * std::cos(theta) * dt;
-      y += v * std::sin(theta) * dt;
+      x += v * core::libm_cos(theta) * dt;
+      y += v * core::libm_sin(theta) * dt;
       Point p{x, y};
       // 웨이포인트 간격(0.2 m)과 반경이 같은 자릿수라 disc 사슬이 몸체 여유를 근사하고,
       // 점 수준 corner-cut 은 supercover chord 검사가 마저 막는다.

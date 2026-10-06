@@ -1,3 +1,4 @@
+#include "navigation/core/libm.hpp"
 #include "navigation/local_planning/simulation.hpp"
 
 #include <algorithm>
@@ -15,12 +16,12 @@ core::Pose integrate_unicycle(const core::Pose& pose, const core::VelocityComman
   // path shape actually straightens out; a straight-line step at 1e-9 rad/s
   // is indistinguishable from the arc solution to any solver's precision.
   if (std::abs(cmd.omega) < 1e-9) {
-    return core::Pose{pose.x + cmd.v * dt * std::cos(pose.theta),
-                      pose.y + cmd.v * dt * std::sin(pose.theta), pose.theta};
+    return core::Pose{pose.x + cmd.v * dt * core::libm_cos(pose.theta),
+                      pose.y + cmd.v * dt * core::libm_sin(pose.theta), pose.theta};
   }
   double theta_next = pose.theta + cmd.omega * dt;
-  double x = pose.x + (cmd.v / cmd.omega) * (std::sin(theta_next) - std::sin(pose.theta));
-  double y = pose.y - (cmd.v / cmd.omega) * (std::cos(theta_next) - std::cos(pose.theta));
+  double x = pose.x + (cmd.v / cmd.omega) * (core::libm_sin(theta_next) - core::libm_sin(pose.theta));
+  double y = pose.y - (cmd.v / cmd.omega) * (core::libm_cos(theta_next) - core::libm_cos(pose.theta));
   return core::Pose{x, y, wrap_to_pi(theta_next)};
 }
 

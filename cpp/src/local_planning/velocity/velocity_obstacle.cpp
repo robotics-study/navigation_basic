@@ -1,3 +1,4 @@
+#include "navigation/core/libm.hpp"
 #include "navigation/local_planning/velocity/velocity_obstacle.hpp"
 
 #include <algorithm>
@@ -185,7 +186,7 @@ std::vector<core::Point> sample_reachable_velocities(const core::Point& v_pref, 
     double s = max_speed * static_cast<double>(si) / static_cast<double>(speed_samples);
     for (int ai = 0; ai < angle_samples; ++ai) {
       double ang = 2.0 * M_PI * static_cast<double>(ai) / static_cast<double>(angle_samples);
-      out.push_back(core::Point{s * std::cos(ang), s * std::sin(ang)});
+      out.push_back(core::Point{s * core::libm_cos(ang), s * core::libm_sin(ang)});
     }
   }
   return out;

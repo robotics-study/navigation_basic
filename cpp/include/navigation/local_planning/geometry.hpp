@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "navigation/core/capabilities.hpp"
+#include "navigation/core/libm.hpp"
 #include "navigation/core/types.hpp"
 
 // Geometry shared across the local_planning category. The angle utility and the
@@ -40,7 +41,7 @@ inline double wrap_to_pi(double angle) {
 inline core::VelocityCommand heading_command(double theta_err, double gain, double max_speed,
                                              double max_omega) {
   double omega = std::max(-max_omega, std::min(max_omega, gain * theta_err));
-  double v = max_speed * std::max(0.0, std::cos(theta_err));
+  double v = max_speed * std::max(0.0, core::libm_cos(theta_err));
   return core::VelocityCommand{v, omega};
 }
 

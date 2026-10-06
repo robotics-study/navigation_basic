@@ -1,3 +1,4 @@
+#include "navigation/core/libm.hpp"
 #include "navigation/global_planning/search/hybrid_astar.hpp"
 
 #include <chrono>
@@ -72,10 +73,10 @@ struct Primitive {
 Pose integrate(const Pose& p, double kappa, double L) {
   double theta2 = p.theta + kappa * L;
   if (std::abs(kappa) < kStraightEps) {
-    return {p.x + L * std::cos(p.theta), p.y + L * std::sin(p.theta), theta2};
+    return {p.x + L * core::libm_cos(p.theta), p.y + L * core::libm_sin(p.theta), theta2};
   }
-  return {p.x + (std::sin(theta2) - std::sin(p.theta)) / kappa,
-          p.y - (std::cos(theta2) - std::cos(p.theta)) / kappa, theta2};
+  return {p.x + (core::libm_sin(theta2) - core::libm_sin(p.theta)) / kappa,
+          p.y - (core::libm_cos(theta2) - core::libm_cos(p.theta)) / kappa, theta2};
 }
 
 }  // namespace

@@ -5,6 +5,7 @@
 
 #include <gtest/gtest.h>
 
+#include "navigation/core/libm.hpp"
 #include "navigation/core/planner.hpp"
 #include "navigation/core/trace.hpp"
 #include "navigation/core/types.hpp"
@@ -311,8 +312,8 @@ TEST(LocalSim, IntegrateUnicycleArcBranchMatchesClosedForm) {
   double v = 1.0, omega = 0.5, dt = 0.2, theta0 = 0.3;
   Pose p = local_planning::integrate_unicycle(Pose{1.0, 2.0, theta0}, VelocityCommand{v, omega}, dt);
   double theta1 = theta0 + omega * dt;
-  double expected_x = 1.0 + (v / omega) * (std::sin(theta1) - std::sin(theta0));
-  double expected_y = 2.0 - (v / omega) * (std::cos(theta1) - std::cos(theta0));
+  double expected_x = 1.0 + (v / omega) * (core::libm_sin(theta1) - core::libm_sin(theta0));
+  double expected_y = 2.0 - (v / omega) * (core::libm_cos(theta1) - core::libm_cos(theta0));
   EXPECT_NEAR(p.x, expected_x, 1e-12);
   EXPECT_NEAR(p.y, expected_y, 1e-12);
   EXPECT_NEAR(p.theta, local_planning::wrap_to_pi(theta1), 1e-12);

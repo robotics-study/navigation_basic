@@ -73,6 +73,7 @@
 - C++과 Python은 **같은 설계를 각자 idiomatic 하게** 구현한다. 클래스/메서드 개념 이름, 파라미터 이름, trace 이벤트는 동일해야 한다 (표기만 언어 컨벤션: C++ `snake_case` 멤버 / Python `snake_case`).
 - 알고리즘 추가/변경은 원칙적으로 두 언어 동시 반영. 한쪽만 구현된 상태는 README parity 표에 명시하고 남겨두지 않는 것을 원칙으로 한다.
 - 언어 간 공유물(trace schema, param yaml, map 데이터, 시나리오)은 반드시 `spec/`, `configs/`, `maps/` 에 두고 양쪽에서 로드한다. 언어 디렉토리 안에 복제 금지.
+- **초월함수 비트 동일 (libm 라우팅)**: Python 은 `math.sin/cos/atan2/log` = libSystem 스칼라 구현을 부르고 sqrt/floor 는 하드웨어 명령(정확한 반올림)이다. Apple clang 은 같은 인자의 `(sin, cos)` 호출 쌍을 SIMD 구현 `__sincos_stret` 로 접고 이 변형은 스칼라와 드문 입력(≈0.4%)에서 1 ulp 어긋난다. 그래서 C++ 는 sin/cos 를 dlsym 으로 해석한 함수 포인터(`core/libm`)로만 호출한다 — 접을 수 없게 만들어야 Python 과 같은 스칼라 구현을 부른다. atan2/log 는 쌍 접기가 없어 직접 libcall 그대로, sqrt/floor 는 하드웨어 명령이라 그대로. 회귀 골든: `test_libm`(양 언어, 발산 입력 hex 고정).
 
 ### 맵 추상화 — capability 모델
 알고리즘은 구체 맵 타입이 아니라 **capability 인터페이스**를 요구한다. 맵 타입은 지원 가능한 capability 를 구현하고, 하나의 맵을 여러 알고리즘에 붙여 테스트할 수 있다.
